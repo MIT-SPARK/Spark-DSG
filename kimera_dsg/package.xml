@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>kimera_dsg</name>
+  <version>1.0.0</version>
+  <description>Kimera Dynamic Scene Graph (DSG) type definitions and core library code</description>
+
+  <author email="arosinol@mit.edu">Antoni Rosinol</author>
+  <maintainer email="na26933@mit.edu">Nathan Hughes</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>pcl_ros</depend>
+  <depend>libgoogle-glog-dev</depend>
+  <depend>eigen</depend>
+
+  <export>
+  </export>
+
+</package>
