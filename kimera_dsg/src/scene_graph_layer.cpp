@@ -1,128 +1,145 @@
-﻿#include "kimera_scene_graph_definitions/scene_graph_layer.h"
+﻿#include "kimera_dsg/scene_graph_layer.h"
 
+#include <glog/logging.h>
 #include <pcl/search/kdtree.h>
 
 namespace kimera {
 
-SceneGraphLayer::SceneGraphLayer()
-    : SceneGraphLayer(LayerId::kInvalidLayerId) {}
+using EdgeInfo = SceneGraphLayer::EdgeInfo;
+using EdgeRef = SceneGraphLayer::EdgeRef;
+using NodeRef = SceneGraphLayer::NodeRef;
 
-SceneGraphLayer::SceneGraphLayer(const LayerId& layer_id)
-    : layer_id_(layer_id),
-      node_map_(),
-      next_intra_layer_edge_id_(0u),
-      intra_layer_edge_map_() {}
+SceneGraphLayer::SceneGraphLayer(LayerId layer_id)
+    : id(layer_id), last_edge_idx_(0u), nodes(nodes_), edges(edges_) {}
 
-ColorPointCloud::Ptr SceneGraphLayer::convertLayerToPcl(
-    std::map<int, NodeId>* cloud_to_graph_ids,
-    std::vector<NodeId>* vertex_ids) const {
-  ColorPointCloud::Ptr skeleton_graph_cloud(new ColorPointCloud);
-  // Get a list of all vertices
-  skeleton_graph_cloud->resize(getNumberOfNodes());
-  size_t i = 0u;
-  for (const std::pair<NodeId, SceneGraphNode>& node : node_map_) {
-    CHECK_EQ(node.first, node.second.node_id_);
-    CHECK(node.second.layer_id_ == layer_id_);
-    const NodePosition& position = node.second.attributes_.position_;
-    ColorPoint point;
-    point.x = position.x;
-    point.y = position.y;
-    point.z = position.z;
-    skeleton_graph_cloud->at(i) = point;
-    if (cloud_to_graph_ids) (*cloud_to_graph_ids)[i] = node.first;
-    if (vertex_ids) vertex_ids->push_back(node.first);
-    ++i;
-  }
-  CHECK_EQ(i, getNumberOfNodes());
-  return skeleton_graph_cloud;
+bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
+  return nodes_
+      .emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
+      .second;
 }
 
-bool SceneGraphLayer::findNearestSceneGraphNode(
-    const NodePosition& query_point,
-    std::vector<SceneGraphNode>* nearest_scene_graph_nodes,
-    const size_t& k_nearest_neighbors) {
-  CHECK_NOTNULL(nearest_scene_graph_nodes)->reserve(k_nearest_neighbors);
-  nearest_scene_graph_nodes->clear();
-  if (getNumberOfNodes() == 0) {
-    VLOG(5) << "No nodes in layer with id: " << kimera::to_underlying(layer_id_)
-            << ", early-stop nearest-neighbor query...";
+bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
+  if (!node) {
+    LOG(ERROR) << "Attempted to add an unitialized node to layer " << id;
     return false;
   }
 
-  // Convert Centroid to ColorPoint
-  ColorPoint query_point_pcl;
-  query_point_pcl.x = query_point.x;
-  query_point_pcl.y = query_point.y;
-  query_point_pcl.z = query_point.z;
-
-  // Create kdtree for Nearest-Neighbor queries.
-  // TODO(Toni): cache the kdtree! Re-building it for each query is a waste.
-  pcl::KdTreeFLANN<ColorPoint> kdtree;
-  std::map<int, NodeId> cloud_to_graph_ids;
-  std::vector<NodeId> vertex_ids;
-  ColorPointCloud::Ptr graph_pcl_converted =
-      convertLayerToPcl(&cloud_to_graph_ids, &vertex_ids);
-  kdtree.setInputCloud(graph_pcl_converted);
-
-  // Compute nearest skeleton vertex
-  std::vector<int> nn_indices(k_nearest_neighbors);
-  std::vector<float> nn_squared_distances(k_nearest_neighbors);
-  if (kdtree.nearestKSearch(query_point_pcl,
-                            k_nearest_neighbors,
-                            nn_indices,
-                            nn_squared_distances) > 0) {
-    // Get node ids from cloud ids:
-    for (const auto& nn_idx : nn_indices) {
-      const NodeId& node_id = cloud_to_graph_ids[nn_idx];
-      const SceneGraphNode& scene_node = getNode(node_id);
-      nearest_scene_graph_nodes->push_back(scene_node);
-    }
-    return true;
-  } else {
-    VLOG(5) << "No nearest neighbor find in layer id: "
-            << kimera::to_underlying(layer_id_)
-            << " for 3D point: " << query_point;
+  if (node->layer != id) {
+    LOG(WARNING) << "Attempted to add a node with layer " << node->layer
+                 << " to layer " << id;
     return false;
   }
-}
 
-bool SceneGraphLayer::addNode(const SceneGraphNode& node) {
-  if (hasNode(node.node_id_)) {
+  if (nodes_.count(node->id) != 0) {
     return false;
-  } else {
-    node_map_[node.node_id_] = node;
-    return true;
   }
+
+  NodeId to_insert = node->id;
+  nodes_[to_insert] = std::move(node);
+  return true;
 }
 
-void SceneGraphLayer::addIntraLayerEdge(SceneGraphEdge* edge) {
-  CHECK_NOTNULL(edge);
-  CHECK(!edge->isInterLayerEdge())
-      << "Use addIntraLayerEdge on a layer only for "
-         "intra-layer edges. Use addInterEdge on the "
-         "scene-graph for inter-layer edges.";
+bool SceneGraphLayer::insertEdge(NodeId source,
+                                 NodeId target,
+                                 EdgeInfo::Ptr&& edge_info) {
+  if (hasEdge(source, target)) {
+    return false;
+  }
 
-  int64_t edge_id = next_intra_layer_edge_id_++;
-  CHECK(!hasEdge(edge_id)) << "Adding an already existing edge...";
+  if (nodes_.count(source) == 0) {
+    // TODO(nathan) maybe consider logging here
+    return false;
+  }
 
-  // Update edge id
-  edge->edge_id_ = edge_id;
+  if (nodes_.count(target) == 0) {
+    // TODO(nathan) maybe consider logging here
+    return false;
+  }
 
-  // Then, update intra layer edge map
-  intra_layer_edge_map_[edge_id] = *edge;
+  last_edge_idx_++;
+  edges_.emplace(std::piecewise_construct,
+                 std::forward_as_tuple(last_edge_idx_),
+                 std::forward_as_tuple(source,
+                                       target,
+                                       (edge_info == nullptr)
+                                           ? std::make_unique<EdgeInfo>()
+                                           : std::move(edge_info)));
+  edges_info_[source][target] = last_edge_idx_;
+  edges_info_[target][source] = last_edge_idx_;
+  nodes_[source]->siblings_.insert(target);
+  nodes_[target]->siblings_.insert(source);
+  return true;
+}
 
-  // Update node's edges maps
-  CHECK(edge->start_layer_id_ == layer_id_);
-  CHECK(hasNode(edge->start_node_id_));
-  SceneGraphNode& start_vertex = node_map_[edge->start_node_id_];
-  start_vertex.siblings_edge_map_[edge_id] = *edge;
+bool SceneGraphLayer::hasNode(NodeId node_id) const {
+  return nodes_.count(node_id) != 0;
+}
 
-  CHECK(edge->end_layer_id_ == layer_id_);
-  CHECK(hasNode(edge->end_node_id_));
-  SceneGraphNode& end_vertex = node_map_[edge->end_node_id_];
-  end_vertex.siblings_edge_map_[edge_id] = *edge;
+bool SceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
+  return edges_info_.count(source) != 0 &&
+         edges_info_.at(source).count(target) != 0;
+}
 
-  CHECK(edge->isEdgeValid()) << edge->print();
+// TODO(nathan) look at gtsam casting
+std::optional<NodeRef> SceneGraphLayer::getNode(NodeId node_id) const {
+  if (!hasNode(node_id)) {
+    return std::nullopt;
+  }
+
+  // TODO(nathan) consider assert instead
+  CHECK(nodes_.at(node_id) != nullptr) << "Unitialized node found!";
+  return std::cref(*(nodes_.at(node_id)));
+}
+
+std::optional<EdgeRef> SceneGraphLayer::getEdge(NodeId source,
+                                                NodeId target) const {
+  if (!hasEdge(source, target)) {
+    return std::nullopt;
+  }
+
+  size_t edge_idx = edges_info_.at(source).at(target);
+  return std::cref(edges_.at(edge_idx));
+}
+
+bool SceneGraphLayer::removeNode(NodeId node_id) {
+  if (!hasNode(node_id)) {
+    return false;
+  }
+
+  // remove all edges connecting to node
+  std::set<NodeId> targets_to_erase = nodes_.at(node_id)->siblings_;
+  for (const auto& target : targets_to_erase) {
+    removeEdge(node_id, target);
+  }
+
+  // remove the actual node
+  nodes_.erase(node_id);
+  // gets rid of the leftover map if it exists
+  edges_info_.erase(node_id);
+  return true;
+}
+
+bool SceneGraphLayer::removeEdge(NodeId source, NodeId target) {
+  if (!hasEdge(source, target)) {
+    return false;
+  }
+
+  size_t edge_idx = edges_info_.at(source).at(target);
+  edges_info_[source].erase(target);
+  edges_info_[target].erase(source);
+  edges_.erase(edge_idx);
+  nodes_[source]->siblings_.erase(target);
+  nodes_[target]->siblings_.erase(source);
+  return true;
+}
+
+Eigen::Vector3d SceneGraphLayer::getPosition(NodeId node) const {
+  if (!hasNode(node)) {
+    throw std::out_of_range("node " + NodeSymbol(node).getLabel() +
+                            " is not in the layer");
+  }
+
+  return nodes_.at(node)->attributes().position;
 }
 
 }  // namespace kimera

@@ -1,60 +1,52 @@
-#include "kimera_scene_graph_definitions/scene_graph_node.h"
+#include "kimera_dsg/scene_graph_node.h"
+
+#include <glog/logging.h>
 
 namespace kimera {
 
-std::string NodeAttributes::print() const {
-  std::stringstream ss;
-  // clang-format off
-    ss << "Attributes: \n"
-       << "Timestamp : " << std::to_string(timestamp_) << '\n'
-       << "Position : " << position_ << '\n'
-       << "Color : " << color_ << '\n'
-       << "Semantic Label: " << std::to_string(semantic_label_) << '\n'
-       << "Name: " << name_ << '\n'
-       << "Bounding Box: " << bounding_box_ << '\n';
-  // clang-format on
-  return ss.str();
+NodeAttributes::NodeAttributes() : position(Eigen::Vector3d::Zero()) {}
+
+NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos) : position(pos) {}
+
+std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
+  out << "Attributes: " << std::endl
+      << "  - Position : " << position.transpose() << std::endl;
+  return out;
 }
 
-SceneGraphNode::SceneGraphNode()
-    : attributes_(),
-      node_id_(-1),
-      layer_id_(LayerId::kInvalidLayerId),
-      siblings_edge_map_(),
-      parent_edge_(),
-      children_edge_map_() {}
-
-bool SceneGraphNode::checkSiblingEdgeMap() const {
-  for (const std::pair<EdgeId, SceneGraphEdge>& edge_pair :
-       siblings_edge_map_) {
-    const SceneGraphEdge& edge = edge_pair.second;
-    if (edge.start_node_id_ != node_id_ && edge.end_node_id_ != node_id_) {
-      // The current edge is not connected to this node...
-      return false;
-    } else {
-      CHECK_EQ(edge.start_node_id_, edge.end_node_id_);
-      if (edge.start_node_id_ == node_id_ &&
-          edge.start_layer_id_ != layer_id_) {
-        // The current edge start node is this node, but the layers do not
-        // match...
-        return false;
-      }
-      if (edge.end_node_id_ == node_id_ && edge.end_layer_id_ != layer_id_) {
-        // The current edge end node is this node, but the layers do not
-        // match...
-        return false;
-      }
-    }
-  }
-  return true;
+std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs) {
+  return attrs.fill_ostream(out);
 }
 
-std::string SceneGraphNode::print() const {
-  std::stringstream ss;
-  ss << " - Node Id " << std::to_string(node_id_) << '\n'
-     << " - Layer Id " << to_underlying(layer_id_) << '\n'
-     << attributes_.print();
-  return ss.str();
+SceneGraphNode::SceneGraphNode(NodeId node_id,
+                               LayerId layer_id,
+                               NodeAttributes::Ptr&& attrs)
+    : id(node_id),
+      layer(layer_id),
+      attributes_(std::move(attrs)),
+      has_parent_(false),
+      siblings(siblings_),
+      children(children_) {}
+
+std::ostream& SceneGraphNode::fill_ostream(std::ostream& out) const {
+  out << " Node <id=" << id << ", layer=" << layer << ">" << std::endl;
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
+  return node.fill_ostream(out);
+}
+
+NodeSymbol::NodeSymbol(char key, NodeId index) {
+  value_.symbol.key = key;
+  value_.symbol.index = index;
+}
+
+NodeSymbol::NodeSymbol(NodeId value) { value_.value = value; }
+
+std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol) {
+  out << symbol.value_.symbol.key << "(" << symbol.value_.symbol.index << ")";
+  return out;
 }
 
 }  // namespace kimera

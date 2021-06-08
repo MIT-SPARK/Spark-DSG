@@ -1,145 +1,202 @@
 #pragma once
+#include "kimera_dsg/iterable_wrapper.h"
+#include "kimera_dsg/scene_graph_node.h"
 
 #include <map>
+#include <optional>
 #include <vector>
-
-// For serialization
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-
-#include "kimera_scene_graph_definitions/scene_graph_edge.h"
-#include "kimera_scene_graph_definitions/scene_graph_node.h"
-#include "kimera_scene_graph_definitions/scene_graph_types.h"
 
 namespace kimera {
 
-struct BaseSceneGraphLayer {
- public:
-  virtual ~BaseSceneGraphLayer() = default;
+/**
+ * @brief Collection of information for an edge
+ * @note most of the fields are unused but will hopefully make using
+ *       the DSG classes more flexible later
+ */
+struct SceneGraphEdgeInfo {
+  using Ptr = std::unique_ptr<SceneGraphEdgeInfo>;
+  bool directed = false;
+  bool weighted = false;
+  double weight = 1.0;
 };
 
+/**
+ * @brief Edge representation
+ * @note not designed to be constructable by the user (internal book-keeping
+ * done by layer and graph)
+ */
+struct SceneGraphEdge {
+  using Info = SceneGraphEdgeInfo;
+
+  SceneGraphEdge(NodeId source, NodeId target, Info::Ptr&& info)
+      : source(source), target(target), info(std::move(info)) {}
+
+  NodeId source;
+  NodeId target;
+  Info::Ptr info;
+};
+
+// TODO(nathan) think about inheritance
+/**
+ * @brief A layer in the scene graph (which is a graph itself)
+ *
+ * This class handles book-keeping for adding to and removing nodes from a layer
+ * as well as adding or removing edges between nodes in a layer (i.e. siblings).
+ * It is technically safe to add edges directly in the layer class
+ * but it is probably preferable to use the scene graph as much as
+ * possible to also handle parent child relationships.
+ */
 class SceneGraphLayer {
  public:
-  // EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  SceneGraphLayer();  // for serialization in a map...
-  SceneGraphLayer(const LayerId& layer_id);
+  using Ptr = std::unique_ptr<SceneGraphLayer>;
+  using Node = SceneGraphNode;
+  using Nodes = std::map<NodeId, Node::Ptr>;
+  using NodeRef = std::reference_wrapper<const Node>;
+  using Edge = SceneGraphEdge;
+  // map allows for easier removal than vector
+  using Edges = std::map<size_t, Edge>;
+  using EdgeInfo = SceneGraphEdge::Info;
+  using EdgeRef = std::reference_wrapper<const Edge>;
+  using EdgeLookup = std::map<NodeId, std::map<NodeId, size_t>>;
+  friend class SceneGraph;
+
+  /**
+   * @brief Makes an empty layer with the specified layer id
+   * @param layer_id layer id of the layer to be constructed
+   */
+  explicit SceneGraphLayer(LayerId layer_id);
+
   virtual ~SceneGraphLayer() = default;
 
+  /**
+   * @brief Add an edge to the layer
+   *
+   * Checks that the edge doesn't already exist and
+   * that the source and target already exist
+   *
+   * @param source start node
+   * @param target end node
+   * @param edge_info optional edge attributes (will use
+   *        default edge attributes if not supplied)
+   * @returns true if the edge was successfully added
+   */
+  bool insertEdge(NodeId source,
+                  NodeId target,
+                  EdgeInfo::Ptr&& edge_info = nullptr);
+
+  /**
+   * @brief Check whether the layer has the specified node
+   * @param node_id node to check for
+   * @returns true if the requested node exists in the layer
+   */
+  bool hasNode(NodeId node_id) const;
+
+  /**
+   * @brief Check whether the layer has the specificied edge
+   * @param source first node to check for
+   * @param target second node to check for
+   * @returns true if the requested edge exists in the layer
+   */
+  bool hasEdge(NodeId source, NodeId target) const;
+
+  /**
+   * @brief Get a particular node in the layer
+   *
+   * This can be used to update the node attributes, though
+   * information about the node (i.e. siblings, etc) cannot
+   * be modified
+   *
+   * @param node_id node to get
+   * @returns a potentially valid node constant reference
+   */
+  std::optional<NodeRef> getNode(NodeId node_id) const;
+
+  /**
+   * @brief Get a particular edge in the layer
+   *
+   * This can be used to update the edge "info", though
+   * information about the edge (i.e. source and target) cannot
+   * be modified
+   *
+   * @param source source of edge to get
+   * @param target target of edge to get
+   * @returns a potentially valid edge constant reference
+   */
+  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const;
+
+  /**
+   * @brief remove a node if it exists
+   * @param node_id node to remove
+   * @returns true if the node existed prior to removal
+   */
+  bool removeNode(NodeId node_id);
+
+  /**
+   * @brief remove an edge if it exists
+   * @param source source of edge to remove
+   * @param target target of edge to remove
+   * @returns true if the edge existed prior to removal
+   */
+  bool removeEdge(NodeId source, NodeId target);
+
+  /**
+   * @brief Number of nodes in the layer
+   */
+  inline size_t numNodes() const { return nodes_.size(); }
+
+  /**
+   * @brief Number of edges in the layer
+   */
+  inline size_t numEdges() const { return edges_.size(); }
+
+  /**
+   * @brief Get the position of a node in the layer with bounds checking
+   */
+  Eigen::Vector3d getPosition(NodeId node) const;
+
+  //! ID of the layer
+  const LayerId id;
+
+ protected:
+  /**
+   * @brief construct and add a node to the layer
+   * @param node_id node to create
+   * @param attrs node attributes
+   * @returns true if emplace into internal map was successful
+   */
+  bool emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs);
+
+  /**
+   * @brief add a node to the layer
+   *
+   * Checks that the layer id matches the current layer, that the node
+   * is not null and the node doesn't already exist
+   *
+   * @param node to add
+   * @returns true if the node was added successfully
+   */
+  bool insertNode(Node::Ptr&& node);
+
+  size_t last_edge_idx_;
+  Nodes nodes_;
+  Edges edges_;
+  EdgeLookup edges_info_;
+
  public:
-  //! Getters
-  inline LayerId getLayerId() const { return layer_id_; }
-
-  /// Copies, but at least you are safe
-  inline NodeIdMap getNodeIdMap() const { return node_map_; }
-  inline EdgeIdMap getEdgeIdMap() const { return intra_layer_edge_map_; }
-
-  /// Doesn't copy, but be careful, it can lead to dangling references.
-  /// We return a const bcs you are not supposed to modify these maps directly.
-  inline const NodeIdMap& getNodeIdMapMutable() { return node_map_; }
-  inline const EdgeIdMap& getEdgeIdMapMutable() {
-    return intra_layer_edge_map_;
-  }
-
-  inline SceneGraphNode getNode(const NodeId& node_id) const {
-    CHECK(hasNode(node_id));
-    return node_map_.at(node_id);
-  }
-  inline SceneGraphEdge getIntraLayerEdge(const EdgeId& edge_id) const {
-    CHECK(hasEdge(edge_id));
-    return intra_layer_edge_map_.at(edge_id);
-  }
-  // Not threadsafe
-  inline SceneGraphNode& getNodeMutable(const NodeId& node_id) {
-    CHECK(hasNode(node_id));
-    return node_map_.at(node_id);
-  }
-  // Not threadsafe
-  inline SceneGraphEdge& getIntraLayerEdgeMutable(const EdgeId& edge_id) {
-    CHECK(hasEdge(edge_id));
-    return intra_layer_edge_map_.at(edge_id);
-  }
-
-  inline size_t getNumberOfNodes() const { return node_map_.size(); }
-
-  inline size_t getNumberOfEdges() const {
-    return intra_layer_edge_map_.size();
-  }
-
-  //! Setters
-  inline void setLayerId(const LayerId& layer_id) { layer_id_ = layer_id; }
-
-  //! Checkers
-  inline bool hasNode(const NodeId& node_id) const {
-    return node_map_.find(node_id) != node_map_.end();
-  }
-
-  inline bool hasEdge(const EdgeId& edge_id) const {
-    return intra_layer_edge_map_.find(edge_id) != intra_layer_edge_map_.end();
-  }
-
-  //! Utils
-  ColorPointCloud::Ptr convertLayerToPcl(
-      std::map<int, NodeId>* cloud_to_graph_ids = nullptr,
-      std::vector<NodeId>* vertex_ids = nullptr) const;
-
+  // exposure of iterable members for private containers
+  // placing them after the private container members ensures
+  // that the containers are initialized before the iterable
+  // wrappers
   /**
-   * @brief findNearestSceneGraphNode Finds the nearest scene graph
-   * node to a query 3D point (query_point).
-   * Internally, it converts the scene graph layer to a pointcloud and builds
-   * a kd-tree out of it to answer NN queries.
-   * @param[in] query_point 3D point for which we want to find its nearest
-   * neighbor in the given layer_id.
-   * @param[out] nearest_scene_graph_node The actual scene-graph node (or nodes)
-   * that are the nearest to the query_point.
-   * @param[in] k_nearest_neighbors Number of nearest neighbors to find
-   * @return True if we found a nearest neighbor, false otherwise.
+   * @brief constant iterable over the nodes
+   * See @IterableWrapper for full details.
    */
-  bool findNearestSceneGraphNode(
-      const NodePosition& query_point,
-      std::vector<SceneGraphNode>* nearest_scene_graph_nodes,
-      const size_t& k_nearest_neighbors = 1u);
-
- protected:
-  //! Protected adders
+  IterableWrapper<Nodes> nodes;
   /**
-   * @brief addNode This is protected because it should not be called by the
-   * user directly (rather use the addNode of the scene graph!).
-   * @param node SceneGraph node to be added
-   * @return True if the node id was not there, false otherwise
+   * @brief constant iterable over the edges
+   * See #IterableWrapper for full details.
    */
-  bool addNode(const SceneGraphNode& node);
-
-  /**
-   * @brief addIntraLayerEdge This is protected because it should not be called
-   * by the user directly (rather use the addEdge of the scene graph!).
-   * @param edge Edge to be added, the edge itself is updated with an edge id
-   * given by the layer it is in.
-   */
-  void addIntraLayerEdge(SceneGraphEdge* edge);
-
-  friend class boost::serialization::access;
-  template <class Archive>
-  void serialize(Archive& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_NVP(layer_id_);
-    ar& BOOST_SERIALIZATION_NVP(node_map_);
-    ar& BOOST_SERIALIZATION_NVP(next_intra_layer_edge_id_);
-    ar& BOOST_SERIALIZATION_NVP(intra_layer_edge_map_);
-  }
-
- protected:
-  LayerId layer_id_ = LayerId::kInvalidLayerId;
-
-  NodeIdMap node_map_;
-
-  EdgeId next_intra_layer_edge_id_ = 0u;
-  EdgeIdMap intra_layer_edge_map_;
-
-  // Give SceneGraph access to private members of Layer
-  friend class SceneGraph;
+  IterableWrapper<Edges> edges;
 };
-
-//! A map from layer id to a SceneGraphLayer representing
-//! the whole scene graph as a collection of layers.
-typedef std::map<LayerId, SceneGraphLayer> LayerIdMap;
 
 }  // namespace kimera
