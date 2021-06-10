@@ -9,12 +9,24 @@
 namespace kimera {
 
 // TODO(nathan) handle this better (kimera semantics is uint8, but...)
+/**
+ * @brief Typedef representing the semantic class of an object or other node
+ */
 typedef uint8_t SemanticLabel;
 
+/**
+ * @brief Base class for any node with additional semantic meaning.
+ */
 struct SemanticNodeAttributes : public NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  /**
+   * @brief pointer type for node
+   */
   using Ptr = std::unique_ptr<SemanticNodeAttributes>;
+  /**
+   * @brief alias between color type and Eigen vector of uint8_t
+   */
   using ColorVector = Eigen::Matrix<uint8_t, 3, 1>;
 
   /**
@@ -37,10 +49,23 @@ struct SemanticNodeAttributes : public NodeAttributes {
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 };
 
+/**
+ * @brief Additional node attributes for an object
+ *
+ * In addition to the normal semantic properties, an object also potentially has
+ * a pose, a collection of vertices that it is comprised of in the mesh, and a
+ * bounding box.
+ */
 struct ObjectNodeAttributes : public SemanticNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  /**
+   * @brief desired pointer type of node
+   */
   using Ptr = std::unique_ptr<ObjectNodeAttributes>;
+  /**
+   * @brief color type for node
+   */
   using ColorVector = SemanticNodeAttributes::ColorVector;
 
   /**
@@ -61,10 +86,22 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 };
 
+/**
+ * @brief Additional node attributes for a room
+ * In addition to the normal semantic properties, a room has a collection of
+ * vertices that it is comprised of in the mesh (mainly for internal use when
+ * constructing the scene graph)
+ */
 struct RoomNodeAttributes : public SemanticNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  /**
+   * @brief desired pointer type of node
+   */
   using Ptr = std::unique_ptr<RoomNodeAttributes>;
+  /**
+   * @brief color type for node
+   */
   using ColorVector = SemanticNodeAttributes::ColorVector;
 
   /**

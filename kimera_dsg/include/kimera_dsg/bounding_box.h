@@ -6,18 +6,36 @@
 
 namespace kimera {
 
+/**
+ * @brief Bounding box representation
+ *
+ * Union of AABB and OBB bounding box formats. Can directly be extracted from
+ * point-cloud if needed
+ */
 struct BoundingBox {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   /**
    * @brief type of bounding box (defaults to AABB)
    */
-  enum class Type : int { INVALID = 0, AABB = 1, OBB = 2 } type = Type::INVALID;
+  enum class Type : int {
+    INVALID = 0,          /**< an invalid bounding box */
+    AABB = 1,             /**< an axis-aligned bounding box */
+    OBB = 2               /**< an orientation bounding box */
+  } type = Type::INVALID; /**< type of the current bounding box */
 
+  /**
+   * @brief Construct an INVALID (unitialized) bounding box
+   */
   BoundingBox();
 
+  // TODO(nathan) fix calculating position for this constructor
+  /**
+   * @brief Construct an AABB bounding box
+   */
   BoundingBox(const Eigen::Vector3f& min, const Eigen::Vector3f& max);
 
+  /**
+   * @brief Construct an OBB bounding box
+   */
   BoundingBox(const Eigen::Vector3f& min,
               const Eigen::Vector3f& max,
               const Eigen::Vector3f world_P_center,
@@ -34,13 +52,19 @@ struct BoundingBox {
   //! world orientation (only for OBB)
   Eigen::Quaternionf world_R_center;
 
-  friend std::ostream& operator<<(std::ostream& os,
+  /**
+   * @brief output bounding box information
+   * @param out output stream
+   * @param bounding_box bounding box to print
+   * @returns original output stream
+   */
+  friend std::ostream& operator<<(std::ostream& out,
                                   const BoundingBox& bounding_box);
 
   // TODO(nathan) PCL switches to std::shared at some point.
-  // template deduction doesn't handle derived typenames well, so we can't
-  // just use Ptr and CostPtr
-  // static method rather than namespaced function to make using Type easier
+  /**
+   * @brief construct a bounding box directly from a pointcloud
+   */
   template <typename CloudT>
   static BoundingBox extract(const boost::shared_ptr<const CloudT>& cloud,
                              Type type = Type::AABB) {
@@ -71,6 +95,7 @@ struct BoundingBox {
     Eigen::Matrix3f pcl_rotation;
     BoundingBox box;
     box.type = type;
+    // TODO(nathan) consider using constructors
     switch (type) {
       case Type::AABB:
         estimator.getAABB(pcl_min, pcl_max);
@@ -94,7 +119,9 @@ struct BoundingBox {
     return box;
   }
 
-  // TODO(nathan) PCL switches to std::shared at some point.
+  /**
+   * @brief extract bounding box directly from pointcloud
+   */
   template <typename CloudT>
   static BoundingBox extract(const boost::shared_ptr<CloudT>& cloud,
                              Type type = Type::AABB) {
@@ -103,6 +130,9 @@ struct BoundingBox {
     }
     return extract(boost::const_pointer_cast<const CloudT>(cloud), type);
   }
+
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 }  // namespace kimera

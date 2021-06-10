@@ -40,7 +40,14 @@ exhale_args = {
     "createTreeView": True,
     "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
-    "exhaleDoxygenStdin": "INPUT = ../kimera_dsg/include",
+    "exhaleDoxygenStdin": """
+        INPUT = ../kimera_dsg/include
+        EXTRACT_PRIVATE = NO
+        EXTRACT_ALL = NO
+        MACRO_EXPANSION = YES
+        EXPAND_ONLY_PREDEF = YES
+        PREDEFINED += __attribute__((x))=
+    """,
 }
 
 # Add any paths that contain templates here, relative to this directory.

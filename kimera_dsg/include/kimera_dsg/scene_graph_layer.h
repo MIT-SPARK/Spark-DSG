@@ -14,9 +14,13 @@ namespace kimera {
  *       the DSG classes more flexible later
  */
 struct SceneGraphEdgeInfo {
+  //! desired pointer type for the edge attributes
   using Ptr = std::unique_ptr<SceneGraphEdgeInfo>;
+  //! whether or not the edge is directed
   bool directed = false;
+  //! whether or not the edge weight is valid
   bool weighted = false;
+  //! the weight of the edge
   double weight = 1.0;
 };
 
@@ -26,13 +30,18 @@ struct SceneGraphEdgeInfo {
  * done by layer and graph)
  */
 struct SceneGraphEdge {
+  //! attributes of the edge
   using Info = SceneGraphEdgeInfo;
 
+  //! construct and edge from some info
   SceneGraphEdge(NodeId source, NodeId target, Info::Ptr&& info)
       : source(source), target(target), info(std::move(info)) {}
 
+  //! start of edge (by convention the parent)
   NodeId source;
+  //! end of edge (by convention the child)
   NodeId target;
+  //! attributes about the edge
   Info::Ptr info;
 };
 
@@ -48,15 +57,23 @@ struct SceneGraphEdge {
  */
 class SceneGraphLayer {
  public:
+  //! desired pointer type for the layer
   using Ptr = std::unique_ptr<SceneGraphLayer>;
+  //! node type of the layer
   using Node = SceneGraphNode;
+  //! node container for the layer
   using Nodes = std::map<NodeId, Node::Ptr>;
+  //! node reference for the layer
   using NodeRef = std::reference_wrapper<const Node>;
+  //! edge type for the layer
   using Edge = SceneGraphEdge;
-  // map allows for easier removal than vector
+  //! edge container type for the layer
   using Edges = std::map<size_t, Edge>;
+  //! edge attributes type for the layer
   using EdgeInfo = SceneGraphEdge::Info;
+  //! edge reference type for the layer
   using EdgeRef = std::reference_wrapper<const Edge>;
+  //! type for a mapping between node id and edge index
   using EdgeLookup = std::map<NodeId, std::map<NodeId, size_t>>;
   friend class SceneGraph;
 
@@ -177,9 +194,13 @@ class SceneGraphLayer {
    */
   bool insertNode(Node::Ptr&& node);
 
+  //! internal edge index counter
   size_t last_edge_idx_;
+  //! internal node container
   Nodes nodes_;
+  //! internal edge container
   Edges edges_;
+  //! internal mapping between node id and edge index
   EdgeLookup edges_info_;
 
  public:
@@ -189,12 +210,12 @@ class SceneGraphLayer {
   // wrappers
   /**
    * @brief constant iterable over the nodes
-   * See @IterableWrapper for full details.
+   * See #kimera::IterableWrapper for full details.
    */
   IterableWrapper<Nodes> nodes;
   /**
    * @brief constant iterable over the edges
-   * See #IterableWrapper for full details.
+   * See #kimera::IterableWrapper for full details.
    */
   IterableWrapper<Edges> edges;
 };

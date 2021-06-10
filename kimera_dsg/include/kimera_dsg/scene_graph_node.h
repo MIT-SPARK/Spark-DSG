@@ -12,19 +12,23 @@
 
 namespace kimera {
 
+/**
+ * @brief Base node attributes.
+ *
+ * All nodes have a pointer to node attributes (that contain most of the useful
+ * information about the node). As every node has to be spatially consistent
+ * with the quantity it represents, every node must have a position.
+ */
 struct NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! desired node pointer type
   using Ptr = std::unique_ptr<NodeAttributes>;
 
-  /**
-   * @brief Make a default set of attributes
-   */
+  //! Make a default set of attributes
   NodeAttributes();
 
-  /**
-   * @brief Set the node position
-   */
+  //! Set the node position
   explicit NodeAttributes(const Eigen::Vector3d& position);
 
   virtual ~NodeAttributes() = default;
@@ -33,24 +37,34 @@ struct NodeAttributes {
   Eigen::Vector3d position;
 
   /**
-   * @brief output information about the node attributes
+   * @brief output attribute information
    * @param out output stream
-   * @param attrs attributes to output
+   * @param attrs attributes to print
+   * @returns original output stream
    */
   friend std::ostream& operator<<(std::ostream& out,
                                   const NodeAttributes& attrs);
 
  protected:
-  /**
-   * @brief actually output information to the std::ostream
-   */
+  //! actually output information to the std::ostream
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 };
 
+/**
+ * @brief Node in the scene graph
+ *
+ * Nodes are primarily specialized by their attributes, and not by node type.
+ * Every node has a constant iterator over the node's siblings (other nodes
+ * connected to it in the same layer) and children (nodes connected to it in a
+ * lower layer). Nodes can also have a parent (node with conceptual ownership in
+ * a higher layer).
+ */
 class SceneGraphNode {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! attribute type of the node
   using Attributes = NodeAttributes;
+  //! desired pointer type of the node (unique)
   using Ptr = std::unique_ptr<SceneGraphNode>;
   friend class SceneGraphLayer;
   friend class SceneGraph;
@@ -107,6 +121,10 @@ class SceneGraphNode {
     return parent_;
   }
 
+  /**
+   * @brief get a reference to the attributes of the node (with an optional
+   * template argument to perform a cast to the desired attribute type
+   */
   template <typename Derived = NodeAttributes>
   Derived& attributes() const {
     static_assert(
@@ -119,61 +137,83 @@ class SceneGraphNode {
   const NodeId id;
   //! ID of the layer the node belongs to
   const LayerId layer;
+
   /**
-   * @brief print information about the node
+   * @brief output node information
    * @param out output stream
-   * @param node node to output
+   * @param node node to print
+   * @returns original output stream
    */
   friend std::ostream& operator<<(std::ostream& out,
                                   const SceneGraphNode& node);
 
  protected:
+  /**
+   * @brief internal function for outputing information to a ostream
+   * @param out ostream to output info to
+   */
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 
+  /**
+   * @brief set the parent for a node
+   * @note only for internal (scene-graph) use
+   * @param parent_id new parent of node
+   */
   inline void setParent_(NodeId parent_id) {
-    // TODO(nathan) consider rejecting if parent already set
     has_parent_ = true;
     parent_ = parent_id;
   }
 
-  // TODO(nathan) rethink parent to avoid an invalid id
+  /**
+   * @brief remove a parent from a node
+   * @note only for internal (scene-graph) use
+   */
   inline void clearParent_() { has_parent_ = false; }
 
+  //! pointer to attributes
   const Attributes::Ptr attributes_;
 
+  //! whether or not the node has a parent
   bool has_parent_;
+  //! node id of parent (if valid)
   NodeId parent_;
+  //! sibling node ids (maintained by layer)
   std::set<NodeId> siblings_;
+  //! children node ids (maintained by graph)
   std::set<NodeId> children_;
 
  public:
   /**
    * @brief constant iterable over the node's sibilings
-   * See @IterableWrapper for full details.
+   * See #kimera::IterableWrapper for full details.
    */
   IterableWrapper<std::set<NodeId>> siblings;
   /**
    * @brief constant iterable over the node's children
-   * See @IterableWrapper for full details.
+   * See #kimera::IterableWrapper for full details.
    */
   IterableWrapper<std::set<NodeId>> children;
 };
 
+/**
+ * @brief A more human readable way to specify node ids
+ *
+ * Modeled after gtsam::Symbol, this class uses a character and a index to
+ * create a unique key for the node. This is accomplished by setting the first 8
+ * MSB to the character and the other 56 LSB to the index (through a union
+ * between a NodeId and a bitfield). For the most part, this class is
+ * transparent and supports implicit casting to NodeId (i.e. you can use this
+ * anywhere you need a NodeId).
+ */
 class NodeSymbol {
  public:
-  /**
-   * @brief Make a node symbol in a human readable form
-   */
+  //! Make a node symbol in a human readable form
   NodeSymbol(char key, NodeId idx);
 
-  /**
-   * @brief Make a node id directly from a node ID
-   */
+  //! Make a node id directly from a node ID
   NodeSymbol(NodeId value);
 
-  /**
-   * @brief cast the symobl directly to a node ID
-   */
+  //! cast the symobl directly to a node ID
   inline operator NodeId() const { return value_.value; }
 
   /**
@@ -188,28 +228,33 @@ class NodeSymbol {
    */
   inline char category() const { return value_.symbol.key; }
 
-  /**
-   * @brief pre-increment the index portion of the symbol
-   */
+  //! pre-increment the index portion of the symbol
   NodeSymbol& operator++() {
     value_.symbol.index++;
     return *this;
   }
 
-  /**
-   * @brief post-increment the index portion of the symbol
-   */
+  //! post-increment the index portion of the symbol
   NodeSymbol operator++(int) {
     NodeSymbol old = *this;
     value_.symbol.index++;
     return old;
   }
 
+  //! get a string representation of the symbol
   inline std::string getLabel() const {
     std::stringstream ss;
     ss << *this;
     return ss.str();
   }
+
+  /**
+   * @brief output node symbol information
+   * @param out output stream
+   * @param symbol symbol to print
+   * @returns original output stream
+   */
+  friend std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol);
 
  private:
   union {
@@ -219,8 +264,6 @@ class NodeSymbol {
       char key : 8;
     } symbol;
   } value_;
-
-  friend std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol);
 };
 
 }  // namespace kimera

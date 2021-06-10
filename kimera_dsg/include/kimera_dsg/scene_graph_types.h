@@ -2,6 +2,9 @@
 #include <cstdint>
 #include <string>
 
+/**
+ * @brief kimera namespace
+ */
 namespace kimera {
 
 using NodeId = uint64_t;     //!< Node label
@@ -9,18 +12,23 @@ using LayerId = uint64_t;    //!< Layer label
 using Timestamp = uint64_t;  //!< Timestamp type
 
 /**
- * @brief The LayerId enum The numbering is important, as it determines the
+ * @brief Layer enum hierarchy corresponding to original DSG paper(s)
+ * @note The numbering is important, as it determines the
  * layer hierarchy: a higher number corresponds to parents.
  */
 enum class KimeraDsgLayers : LayerId {
   INVALID = 0,
-  OBJECTS = 1,
-  AGENTS = 2,
-  PLACES = 3,
-  ROOMS = 4,
-  BUILDINGS = 5
+  OBJECTS = 1, //< Object node layer (static)
+  AGENTS = 2, //< Agent node layer (dynamic)
+  PLACES = 3, //< Places node layer (as well as structure)
+  ROOMS = 4, //< Room node layer
+  BUILDINGS = 5 //< Building node layer
 };
 
+// TODO(nathan) this belongs in the builder probably
+/**
+ * @brief helper function to with layer id to string correspondence
+ */
 inline std::string getStringFromLayerId(KimeraDsgLayers layer_id) {
   switch (layer_id) {
     case KimeraDsgLayers::BUILDINGS:

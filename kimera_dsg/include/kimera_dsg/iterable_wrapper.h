@@ -16,10 +16,25 @@ namespace kimera {
 template <typename Iter>
 class IterableWrapper {
  public:
+  /**
+   * @brief value type of underlying container
+   */
   using value_type = typename Iter::value_type;
+  /**
+   * @brief reference type of underlying container
+   */
   using reference = typename Iter::reference;
+  /**
+   * @brief const reference type of underlying container
+   */
   using const_reference = typename Iter::const_reference;
+  /**
+   * @brief const iterator type of underlying container
+   */
   using const_iterator = typename Iter::const_iterator;
+  /**
+   * @brief size type of underlying container
+   */
   using size_type = typename Iter::size_type;
 
   /**

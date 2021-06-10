@@ -6,20 +6,36 @@
 
 namespace kimera {
 
+/**
+ * @brief A representation of a scene graph
+ */
 class SceneGraph {
  public:
+  //! desired pointer type of the scene graph
   using Ptr = std::shared_ptr<SceneGraph>;
+  //! alias to the layer type of the scene graph
   using Layer = SceneGraphLayer;
+  //! reference type for a layer in the graph
   using LayerRef = std::reference_wrapper<const Layer>;
+  //! container type for the layers of the graph
   using Layers = std::map<LayerId, Layer::Ptr>;
+  //! container type for the layer ids
   using LayerIds = std::vector<LayerId>;
+  //! alias to layer node type
   using Node = Layer::Node;
+  //! alias to layer node reference type
   using NodeRef = Layer::NodeRef;
+  //! container used for speeding up the lookup of nodes
   using NodeLayerLookup = std::map<NodeId, LayerId>;
+  //! alias to the layer edge type
   using Edge = Layer::Edge;
+  //! alias to the layer edge info type
   using EdgeInfo = Layer::EdgeInfo;
+  //! alias to the layer edge reference type
   using EdgeRef = Layer::EdgeRef;
+  //! alias to the layer edge container type
   using Edges = Layer::Edges;
+  //! alias to the container storing node-to-node connections
   using EdgeLookup = Layer::EdgeLookup;
 
   /**
@@ -183,11 +199,17 @@ class SceneGraph {
   Eigen::Vector3d getPosition(NodeId node) const;
 
  protected:
+  //! last edge inserted
   size_t last_edge_idx_;
+  //! desired layer hierarchy of the graph
   LayerIds layer_ids_;
+  //! map between layer id and allocated layers
   Layers layers_;
+  //! inter-layer edges
   Edges inter_layer_edges_;
+  //! map between node ids and inter-layer edges indices
   EdgeLookup inter_layer_edges_info_;
+  //! map between node id and layer id
   NodeLayerLookup node_layer_lookup_;
 
  private:
@@ -200,11 +222,24 @@ class SceneGraph {
   Node* getChildNode_(NodeId source, NodeId target) const;
 
  public:
+  /**
+   * @brief constant iterator around the layers
+   * See #kimera::IterableWrapper for more details
+   */
   IterableWrapper<Layers> layers;
 
+  /**
+   * @brief constant iterator around the inter-layer edges
+   *
+   * @note inter-layer edges are edges between nodes in different layers
+   * See #kimera::IterableWrapper for more details
+   */
   IterableWrapper<Edges> inter_layer_edges;
 };
 
+/**
+ * @brief Return a container of the layer hierarchy from #kimera::KimeraDsgLayers
+ */
 SceneGraph::LayerIds getDefaultLayerIds();
 
 }  // namespace kimera
