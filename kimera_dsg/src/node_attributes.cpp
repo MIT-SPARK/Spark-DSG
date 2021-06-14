@@ -36,4 +36,14 @@ std::ostream& RoomNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
+PlaceNodeAttributes::PlaceNodeAttributes(double distance, unsigned int num_basis_points)
+    : SemanticNodeAttributes(), distance(distance), num_basis_points(num_basis_points) {}
+
+std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
+  PlaceNodeAttributes::fill_ostream(out);
+  out << " - distance: " << distance;
+  out << " - num_basis_points: " << num_basis_points;
+  return out;
+}
+
 }  // namespace kimera

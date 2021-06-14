@@ -118,4 +118,36 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 };
 
+/**
+ * @brief Additional node attributes for a place
+ * In addition to the normal semantic properties, a room has the minimum
+ * distance to an obstacle and the number of basis points for that vertex in the
+ * GVD
+ */
+struct PlaceNodeAttributes : public SemanticNodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! desired pointer type of node
+  using Ptr = std::unique_ptr<PlaceNodeAttributes>;
+  //! color type for node
+  using ColorVector = SemanticNodeAttributes::ColorVector;
+
+  /**
+   * @brief make places node attributes
+   * @param distance distance to nearest obstalce
+   * @param num_basis_points number of basis points of the places node
+   */
+  PlaceNodeAttributes(double distance, unsigned int num_basis_points);
+
+  virtual ~PlaceNodeAttributes() = default;
+
+  //! distance to nearest obstacle
+  double distance;
+  //! number of equidistant obstacles
+  unsigned int num_basis_points;
+
+ protected:
+  virtual std::ostream& fill_ostream(std::ostream& out) const;
+};
+
 }  // namespace kimera
