@@ -42,8 +42,7 @@ struct NodeAttributes {
    * @param attrs attributes to print
    * @returns original output stream
    */
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const NodeAttributes& attrs);
+  friend std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs);
 
  protected:
   //! actually output information to the std::ostream
@@ -127,9 +126,8 @@ class SceneGraphNode {
    */
   template <typename Derived = NodeAttributes>
   Derived& attributes() const {
-    static_assert(
-        std::is_base_of<NodeAttributes, Derived>::value,
-        "attributes can only be downcast to a derived NodeAttributes class");
+    static_assert(std::is_base_of<NodeAttributes, Derived>::value,
+                  "attributes can only be downcast to a derived NodeAttributes class");
     return dynamic_cast<Derived&>(*attributes_);
   }
 
@@ -144,8 +142,7 @@ class SceneGraphNode {
    * @param node node to print
    * @returns original output stream
    */
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const SceneGraphNode& node);
+  friend std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node);
 
  protected:
   /**

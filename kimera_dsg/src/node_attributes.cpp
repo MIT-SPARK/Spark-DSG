@@ -3,10 +3,7 @@
 namespace kimera {
 
 SemanticNodeAttributes::SemanticNodeAttributes()
-    : NodeAttributes(),
-      name(""),
-      color(ColorVector::Zero()),
-      semantic_label(0u) {}
+    : NodeAttributes(), name(""), color(ColorVector::Zero()), semantic_label(0u) {}
 
 std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
   // TODO(nathan) think about printing out rotation here
@@ -34,8 +31,7 @@ std::ostream& RoomNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-PlaceNodeAttributes::PlaceNodeAttributes(double distance,
-                                         unsigned int num_basis_points)
+PlaceNodeAttributes::PlaceNodeAttributes(double distance, unsigned int num_basis_points)
     : SemanticNodeAttributes(),
       distance(distance),
       num_basis_points(num_basis_points) {}

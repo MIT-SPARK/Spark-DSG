@@ -18,11 +18,11 @@ using Timestamp = uint64_t;  //!< Timestamp type
  */
 enum class KimeraDsgLayers : LayerId {
   INVALID = 0,
-  MESH = 1, //< Mesh layer
-  OBJECTS = 2, //< Object node layer (static) as well as agents
-  PLACES = 3, //< Places node layer (as well as structure)
-  ROOMS = 4, //< Room node layer
-  BUILDINGS = 5 //< Building node layer
+  MESH = 1,      //< Mesh layer
+  OBJECTS = 2,   //< Object node layer (static) as well as agents
+  PLACES = 3,    //< Places node layer (as well as structure)
+  ROOMS = 4,     //< Room node layer
+  BUILDINGS = 5  //< Building node layer
 };
 
 // TODO(nathan) this is awkward to use, reconsider maybe

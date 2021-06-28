@@ -95,9 +95,7 @@ class SceneGraphLayer {
    *        default edge attributes if not supplied)
    * @returns true if the edge was successfully added
    */
-  bool insertEdge(NodeId source,
-                  NodeId target,
-                  EdgeInfo::Ptr&& edge_info = nullptr);
+  bool insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_info = nullptr);
 
   /**
    * @brief Check whether the layer has the specified node

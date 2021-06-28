@@ -58,8 +58,7 @@ struct BoundingBox {
    * @param bounding_box bounding box to print
    * @returns original output stream
    */
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const BoundingBox& bounding_box);
+  friend std::ostream& operator<<(std::ostream& out, const BoundingBox& bounding_box);
 
   // TODO(nathan) PCL switches to std::shared at some point.
   /**
@@ -80,9 +79,9 @@ struct BoundingBox {
       throw std::runtime_error("Can't make a bounding box of type INVALID!");
     }
 
-    VLOG(5) << "Eigen alignment: min -> " << EIGEN_MIN_ALIGN_BYTES
-            << " max (ideal) -> " << EIGEN_IDEAL_MAX_ALIGN_BYTES << " max -> "
-            << EIGEN_MAX_ALIGN_BYTES << std::endl;
+    VLOG(5) << "Eigen alignment: min -> " << EIGEN_MIN_ALIGN_BYTES << " max (ideal) -> "
+            << EIGEN_IDEAL_MAX_ALIGN_BYTES << " max -> " << EIGEN_MAX_ALIGN_BYTES
+            << std::endl;
 
     using PointT = typename CloudT::PointType;
     pcl::MomentOfInertiaEstimation<PointT> estimator;

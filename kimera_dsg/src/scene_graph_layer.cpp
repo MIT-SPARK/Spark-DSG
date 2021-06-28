@@ -13,8 +13,7 @@ SceneGraphLayer::SceneGraphLayer(LayerId layer_id)
     : id(layer_id), last_edge_idx_(0u), nodes(nodes_), edges(edges_) {}
 
 bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
-  return nodes_
-      .emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
+  return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
       .second;
 }
 
@@ -25,8 +24,8 @@ bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
   }
 
   if (node->layer != id) {
-    LOG(WARNING) << "Attempted to add a node with layer " << node->layer
-                 << " to layer " << id;
+    LOG(WARNING) << "Attempted to add a node with layer " << node->layer << " to layer "
+                 << id;
     return false;
   }
 
@@ -57,13 +56,13 @@ bool SceneGraphLayer::insertEdge(NodeId source,
   }
 
   last_edge_idx_++;
-  edges_.emplace(std::piecewise_construct,
-                 std::forward_as_tuple(last_edge_idx_),
-                 std::forward_as_tuple(source,
-                                       target,
-                                       (edge_info == nullptr)
-                                           ? std::make_unique<EdgeInfo>()
-                                           : std::move(edge_info)));
+  edges_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(last_edge_idx_),
+      std::forward_as_tuple(source,
+                            target,
+                            (edge_info == nullptr) ? std::make_unique<EdgeInfo>()
+                                                   : std::move(edge_info)));
   edges_info_[source][target] = last_edge_idx_;
   edges_info_[target][source] = last_edge_idx_;
   nodes_[source]->siblings_.insert(target);
@@ -76,8 +75,7 @@ bool SceneGraphLayer::hasNode(NodeId node_id) const {
 }
 
 bool SceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
-  return edges_info_.count(source) != 0 &&
-         edges_info_.at(source).count(target) != 0;
+  return edges_info_.count(source) != 0 && edges_info_.at(source).count(target) != 0;
 }
 
 // TODO(nathan) look at gtsam casting
@@ -91,8 +89,7 @@ std::optional<NodeRef> SceneGraphLayer::getNode(NodeId node_id) const {
   return std::cref(*(nodes_.at(node_id)));
 }
 
-std::optional<EdgeRef> SceneGraphLayer::getEdge(NodeId source,
-                                                NodeId target) const {
+std::optional<EdgeRef> SceneGraphLayer::getEdge(NodeId source, NodeId target) const {
   if (!hasEdge(source, target)) {
     return std::nullopt;
   }

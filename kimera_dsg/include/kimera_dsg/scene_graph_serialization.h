@@ -17,110 +17,110 @@
 //#include "kimera_scene_graph/scene_graph_node.h"
 
 //// Non-intrusive serialization functions
-//namespace boost {
+// namespace boost {
 
-//namespace serialization {
+// namespace serialization {
 
-//template <class Archive>
-//void serialize(Archive& ar,
-               //kimera_dsg::SceneGraphEdge& edge,
-               //const unsigned int [>version<]) {
-  //ar& BOOST_SERIALIZATION_NVP(edge.edge_id_);
-  //ar& BOOST_SERIALIZATION_NVP(edge.start_layer_id_);
-  //ar& BOOST_SERIALIZATION_NVP(edge.start_node_id_);
-  //ar& BOOST_SERIALIZATION_NVP(edge.end_layer_id_);
-  //ar& BOOST_SERIALIZATION_NVP(edge.end_node_id_);
+// template <class Archive>
+// void serialize(Archive& ar,
+// kimera_dsg::SceneGraphEdge& edge,
+// const unsigned int [>version<]) {
+// ar& BOOST_SERIALIZATION_NVP(edge.edge_id_);
+// ar& BOOST_SERIALIZATION_NVP(edge.start_layer_id_);
+// ar& BOOST_SERIALIZATION_NVP(edge.start_node_id_);
+// ar& BOOST_SERIALIZATION_NVP(edge.end_layer_id_);
+// ar& BOOST_SERIALIZATION_NVP(edge.end_node_id_);
 //}
 
-//template <class Archive>
-//void serialize(Archive& ar,
-               //kimera_dsg::SceneGraphNode& node,
-               //const unsigned int [>version<]) {
-  //ar& BOOST_SERIALIZATION_NVP(node.attributes_);
-  //ar& BOOST_SERIALIZATION_NVP(node.node_id_);
-  //ar& BOOST_SERIALIZATION_NVP(node.layer_id_);
-  //ar& BOOST_SERIALIZATION_NVP(node.siblings_edge_map_);
-  //ar& BOOST_SERIALIZATION_NVP(node.parent_edge_);
-  //ar& BOOST_SERIALIZATION_NVP(node.children_edge_map_);
+// template <class Archive>
+// void serialize(Archive& ar,
+// kimera_dsg::SceneGraphNode& node,
+// const unsigned int [>version<]) {
+// ar& BOOST_SERIALIZATION_NVP(node.attributes_);
+// ar& BOOST_SERIALIZATION_NVP(node.node_id_);
+// ar& BOOST_SERIALIZATION_NVP(node.layer_id_);
+// ar& BOOST_SERIALIZATION_NVP(node.siblings_edge_map_);
+// ar& BOOST_SERIALIZATION_NVP(node.parent_edge_);
+// ar& BOOST_SERIALIZATION_NVP(node.children_edge_map_);
 //}
 
-//template <class Archive>
-//void serialize(Archive& ar,
-               //kimera_dsg::NodeAttributes& attributes,
-               //const unsigned int [>version<]) {
-  //ar& BOOST_SERIALIZATION_NVP(attributes.timestamp_);
-  //// Need to provide PCL Point serialization
-  //ar& BOOST_SERIALIZATION_NVP(attributes.position_);
-  //// Need to provide Eigen serialization
-  //ar& BOOST_SERIALIZATION_NVP(attributes.color_);
-  //ar& BOOST_SERIALIZATION_NVP(attributes.semantic_label_);
-  //ar& BOOST_SERIALIZATION_NVP(attributes.name_);
-  //// Need to provide PCL serialization.
-  //// ar& BOOST_SERIALIZATION_NVP(attributes.pcl_);
-  //// Need to provide bounding box serialization.
-  //ar& BOOST_SERIALIZATION_NVP(attributes.bounding_box_);
+// template <class Archive>
+// void serialize(Archive& ar,
+// kimera_dsg::NodeAttributes& attributes,
+// const unsigned int [>version<]) {
+// ar& BOOST_SERIALIZATION_NVP(attributes.timestamp_);
+//// Need to provide PCL Point serialization
+// ar& BOOST_SERIALIZATION_NVP(attributes.position_);
+//// Need to provide Eigen serialization
+// ar& BOOST_SERIALIZATION_NVP(attributes.color_);
+// ar& BOOST_SERIALIZATION_NVP(attributes.semantic_label_);
+// ar& BOOST_SERIALIZATION_NVP(attributes.name_);
+//// Need to provide PCL serialization.
+//// ar& BOOST_SERIALIZATION_NVP(attributes.pcl_);
+//// Need to provide bounding box serialization.
+// ar& BOOST_SERIALIZATION_NVP(attributes.bounding_box_);
 //}
 
-//template <class Archive>
-//void serialize(Archive& ar,
-               //pcl::PointXYZRGB& point,
-               //const unsigned int [>version<]) {
-  //ar& BOOST_SERIALIZATION_NVP(point.x);
-  //ar& BOOST_SERIALIZATION_NVP(point.y);
-  //ar& BOOST_SERIALIZATION_NVP(point.z);
-  //ar& BOOST_SERIALIZATION_NVP(point.r);
-  //ar& BOOST_SERIALIZATION_NVP(point.g);
-  //ar& BOOST_SERIALIZATION_NVP(point.b);
+// template <class Archive>
+// void serialize(Archive& ar,
+// pcl::PointXYZRGB& point,
+// const unsigned int [>version<]) {
+// ar& BOOST_SERIALIZATION_NVP(point.x);
+// ar& BOOST_SERIALIZATION_NVP(point.y);
+// ar& BOOST_SERIALIZATION_NVP(point.z);
+// ar& BOOST_SERIALIZATION_NVP(point.r);
+// ar& BOOST_SERIALIZATION_NVP(point.g);
+// ar& BOOST_SERIALIZATION_NVP(point.b);
 //}
 
 //}  // namespace serialization
 
 //}  // namespace boost
 
-//namespace kimera_dsg {
+// namespace kimera_dsg {
 
-//template <class T>
-//void save(const T& object, const std::string& filename) {
-  //std::ofstream ofstream(filename.c_str());
-  //boost::archive::text_oarchive oa(ofstream);
-  //oa << object;
+// template <class T>
+// void save(const T& object, const std::string& filename) {
+// std::ofstream ofstream(filename.c_str());
+// boost::archive::text_oarchive oa(ofstream);
+// oa << object;
 //}
 
-//template <class T>
-//void load(const std::string& filename, T* object) {
-  //CHECK_NOTNULL(object);
-  //std::ifstream ifstream(filename.c_str());
-  //boost::archive::text_iarchive ia(ifstream);
-  //ia >> *object;
+// template <class T>
+// void load(const std::string& filename, T* object) {
+// CHECK_NOTNULL(object);
+// std::ifstream ifstream(filename.c_str());
+// boost::archive::text_iarchive ia(ifstream);
+// ia >> *object;
 //}
 
-  //friend class boost::serialization::access;
+// friend class boost::serialization::access;
 
 //// layer
-  //template <class Archive>
-  //void serialize(Archive& ar, const unsigned int [>version<]) {
-    //ar& BOOST_SERIALIZATION_NVP(layer_id_);
-    //ar& BOOST_SERIALIZATION_NVP(node_map_);
-    //ar& BOOST_SERIALIZATION_NVP(next_intra_layer_edge_id_);
-    //ar& BOOST_SERIALIZATION_NVP(intra_layer_edge_map_);
-  //}
+// template <class Archive>
+// void serialize(Archive& ar, const unsigned int [>version<]) {
+// ar& BOOST_SERIALIZATION_NVP(layer_id_);
+// ar& BOOST_SERIALIZATION_NVP(node_map_);
+// ar& BOOST_SERIALIZATION_NVP(next_intra_layer_edge_id_);
+// ar& BOOST_SERIALIZATION_NVP(intra_layer_edge_map_);
+//}
 
-  //// For serialization (save/load) of the scene-graph
-  //friend class boost::serialization::access;
-  //template <class Archive>
-  //void serialize(Archive& ar, const unsigned int [>version<]) {
-    //ar& BOOST_SERIALIZATION_NVP(database_);
-    //ar& BOOST_SERIALIZATION_NVP(next_inter_layer_edge_id_);
-    //ar& BOOST_SERIALIZATION_NVP(inter_layer_edge_map_);
-  //}
+//// For serialization (save/load) of the scene-graph
+// friend class boost::serialization::access;
+// template <class Archive>
+// void serialize(Archive& ar, const unsigned int [>version<]) {
+// ar& BOOST_SERIALIZATION_NVP(database_);
+// ar& BOOST_SERIALIZATION_NVP(next_inter_layer_edge_id_);
+// ar& BOOST_SERIALIZATION_NVP(inter_layer_edge_map_);
+//}
 
-  //friend class boost::serialization::access;
-  //template <class Archive>
-  //void serialize(Archive& ar, const unsigned int [>version<]) {
-    //// TODO(nathan) consider serializing type
-    //ar& BOOST_SERIALIZATION_NVP(max_);
-    //ar& BOOST_SERIALIZATION_NVP(min_);
-    //ar& BOOST_SERIALIZATION_NVP(position_);
-  //}
+// friend class boost::serialization::access;
+// template <class Archive>
+// void serialize(Archive& ar, const unsigned int [>version<]) {
+//// TODO(nathan) consider serializing type
+// ar& BOOST_SERIALIZATION_NVP(max_);
+// ar& BOOST_SERIALIZATION_NVP(min_);
+// ar& BOOST_SERIALIZATION_NVP(position_);
+//}
 
 /*}*/  // namespace kimera_dsg

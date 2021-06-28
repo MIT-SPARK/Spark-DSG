@@ -4,7 +4,6 @@
 
 #include <kimera_dsg/bounding_box.h>
 
-
 using kimera::BoundingBox;
 using pcl::PointXYZ;
 
@@ -106,8 +105,7 @@ TEST(BoundingBoxTests, PCLConstructorOBB) {
   EXPECT_NEAR(0.0f, (box.max - expected_max).norm(), TOLERANCE);
   // position and rotation are especially bad
   EXPECT_NEAR(0.0f, (box.world_P_center - expected_position).norm(), 0.1f);
-  EXPECT_NEAR(
-      0.0f, expected_rotation.angularDistance(box.world_R_center), 0.1f);
+  EXPECT_NEAR(0.0f, expected_rotation.angularDistance(box.world_R_center), 0.1f);
 }
 
 pcl::PointXYZRGB makeRGBPoint(float x, float y, float z) {
@@ -119,8 +117,7 @@ pcl::PointXYZRGB makeRGBPoint(float x, float y, float z) {
 }
 
 TEST(BoundingBoxTests, PCLConstructorAABBColor) {
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(
-      new pcl::PointCloud<pcl::PointXYZRGB>());
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
   // lower and upper x
   cloud->push_back(makeRGBPoint(1.0f, 0.0f, 0.0f));
   cloud->push_back(makeRGBPoint(-1.0f, 0.0f, 0.0f));

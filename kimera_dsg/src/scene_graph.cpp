@@ -19,8 +19,7 @@ SceneGraph::SceneGraph(const std::vector<LayerId>& layer_ids)
       inter_layer_edges(inter_layer_edges_) {
   if (layer_ids.empty()) {
     // TODO(nathan) custom exception
-    throw std::runtime_error(
-        "Scene graph cannot be initialized with no layers");
+    throw std::runtime_error("Scene graph cannot be initialized with no layers");
   }
 
   initialize_();
@@ -33,8 +32,7 @@ void SceneGraph::initialize_() {
 
   // TODO(nathan) reconsider if we actually need this
   for (const auto& id_layer_pair : layers_) {
-    CHECK(id_layer_pair.second)
-        << "Layer " << id_layer_pair.first << " was null!";
+    CHECK(id_layer_pair.second) << "Layer " << id_layer_pair.first << " was null!";
   }
 }
 
@@ -108,9 +106,7 @@ Node* SceneGraph::getChildNode_(NodeId source, NodeId target) const {
              : layers_.at(target_layer)->nodes_.at(target).get();
 }
 
-bool SceneGraph::insertEdge(NodeId source,
-                            NodeId target,
-                            EdgeInfo::Ptr&& edge_info) {
+bool SceneGraph::insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_info) {
   if (hasEdge(source, target)) {
     return false;
   }
@@ -129,8 +125,7 @@ bool SceneGraph::insertEdge(NodeId source,
   LayerId source_layer = node_layer_lookup_.at(source);
   LayerId target_layer = node_layer_lookup_.at(target);
   if (source_layer == target_layer) {
-    return layers_[source_layer]->insertEdge(
-        source, target, std::move(edge_info));
+    return layers_[source_layer]->insertEdge(source, target, std::move(edge_info));
   }
 
   // TODO(nathan) consider warning for non-adjacent edges
@@ -154,9 +149,8 @@ bool SceneGraph::insertEdge(NodeId source,
       std::forward_as_tuple(last_edge_idx_),
       std::forward_as_tuple(source,
                             target,
-                            (edge_info == nullptr)
-                                ? std::make_unique<EdgeInfo>()
-                                : std::move(edge_info)));
+                            (edge_info == nullptr) ? std::make_unique<EdgeInfo>()
+                                                   : std::move(edge_info)));
   inter_layer_edges_info_[source][target] = last_edge_idx_;
   inter_layer_edges_info_[target][source] = last_edge_idx_;
   return true;
@@ -297,7 +291,6 @@ size_t SceneGraph::numEdges() const {
   return total_edges;
 }
 
-
 Eigen::Vector3d SceneGraph::getPosition(NodeId node) const {
   if (!hasNode(node)) {
     throw std::out_of_range("node " + NodeSymbol(node).getLabel() +
@@ -315,6 +308,5 @@ SceneGraph::LayerIds getDefaultLayerIds() {
                                    to_underlying(KimeraDsgLayers::BUILDINGS)};
   return default_ids;
 }
-
 
 }  // namespace kimera
