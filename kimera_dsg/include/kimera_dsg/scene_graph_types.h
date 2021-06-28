@@ -18,32 +18,14 @@ using Timestamp = uint64_t;  //!< Timestamp type
  */
 enum class KimeraDsgLayers : LayerId {
   INVALID = 0,
-  OBJECTS = 1, //< Object node layer (static)
-  AGENTS = 2, //< Agent node layer (dynamic)
+  MESH = 1, //< Mesh layer
+  OBJECTS = 2, //< Object node layer (static) as well as agents
   PLACES = 3, //< Places node layer (as well as structure)
   ROOMS = 4, //< Room node layer
   BUILDINGS = 5 //< Building node layer
 };
 
-// TODO(nathan) this belongs in the builder probably
-/**
- * @brief helper function to with layer id to string correspondence
- */
-inline std::string getStringFromLayerId(KimeraDsgLayers layer_id) {
-  switch (layer_id) {
-    case KimeraDsgLayers::BUILDINGS:
-      return "B";
-    case KimeraDsgLayers::ROOMS:
-      return "R";
-    case KimeraDsgLayers::PLACES:
-      return "P";
-    case KimeraDsgLayers::OBJECTS:
-      return "O";
-    default:
-      return "NA";
-  }
-}
-
+// TODO(nathan) this is awkward to use, reconsider maybe
 /**
  * @brief Coerce enum value to something that might be formatted correctly
  */

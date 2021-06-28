@@ -3,6 +3,7 @@
 
 #include <map>
 #include <memory>
+#include <type_traits>
 
 namespace kimera {
 
@@ -62,9 +63,7 @@ class SceneGraph {
    * @param attrs node attributes
    * @returns true if the node was added successfully
    */
-  bool emplaceNode(LayerId layer_id,
-                   NodeId node_id,
-                   NodeAttributes::Ptr&& attrs);
+  bool emplaceNode(LayerId layer_id, NodeId node_id, NodeAttributes::Ptr&& attrs);
 
   /**
    * @brief add a node to the graph
@@ -91,16 +90,31 @@ class SceneGraph {
    *        default edge attributes if not supplied)
    * @returns true if the edge was successfully added
    */
-  bool insertEdge(NodeId source,
-                  NodeId target,
-                  EdgeInfo::Ptr&& edge_info = nullptr);
+  bool insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_info = nullptr);
 
   /**
    * @brief check if a given layer exists
    * @param layer_id layer to check for
    * @returns true if the given layer exists
    */
-  bool hasLayer(LayerId layer_id) const;
+  virtual bool hasLayer(LayerId layer_id) const;
+
+  // TODO(nathan) this is clunky because of inheritance
+  /**
+   * @brief Check if a given layer exists
+   *
+   * Convenience function to handle automatically casting an enum
+   * to LayerId
+   *
+   * @param layer_id Layer to check for
+   * @returns Returns true if the given layer exists
+   */
+  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+  bool hasLayer(E e) const {
+    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
+                  "type passed must be compatible with layer id");
+    return hasLayer(static_cast<LayerId>(e));
+  }
 
   /**
    * @brief check if a given node exists
@@ -127,6 +141,18 @@ class SceneGraph {
    * @returns a potentially valid constant reference to the requested layer
    */
   std::optional<LayerRef> getLayer(LayerId layer_id) const;
+
+  // TODO(nathan) might not need this
+  /**
+   * @brief Get a layer if the layer exists
+   * @returns a potentially valid constant reference to the requested layer
+   */
+  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+  std::optional<LayerRef> getLayer(E e) const {
+    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
+                  "type passed must be compatible with layer id");
+    return getLayer(static_cast<LayerId>(e));
+  }
 
   /**
    * @brief Get a particular node in the graph
@@ -158,7 +184,7 @@ class SceneGraph {
    * @param node_id node to remove
    * @returns true if the node existed prior to removal
    */
-  bool removeNode(NodeId node_id);
+  virtual bool removeNode(NodeId node_id);
 
   /**
    * @brief remove an edge if it exists

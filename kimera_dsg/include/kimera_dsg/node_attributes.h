@@ -1,6 +1,5 @@
 #pragma once
 #include "kimera_dsg/bounding_box.h"
-#include "kimera_dsg/pcl_types.h"
 #include "kimera_dsg/scene_graph_node.h"
 
 #include <ostream>
@@ -77,10 +76,8 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
 
   //! Whether or not the object is known (and registered)
   bool registered;
-  //! rotation of object w.r.t. world (makes world_T_object with position)
+  //! rotation of object w.r.t. world (only valid when registerd)
   Eigen::Quaterniond world_R_object;
-  //! Point cloud that comprises object (will be null for registered objects)
-  ColorPointCloud::Ptr points;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
@@ -88,9 +85,8 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
 
 /**
  * @brief Additional node attributes for a room
- * In addition to the normal semantic properties, a room has a collection of
- * vertices that it is comprised of in the mesh (mainly for internal use when
- * constructing the scene graph)
+ * For now, a room has identical attributes to any semantic node,
+ * but that may change
  */
 struct RoomNodeAttributes : public SemanticNodeAttributes {
  public:
@@ -110,9 +106,6 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   RoomNodeAttributes();
 
   virtual ~RoomNodeAttributes() = default;
-
-  //! Point cloud that comprises room
-  ColorPointCloud::Ptr points;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;

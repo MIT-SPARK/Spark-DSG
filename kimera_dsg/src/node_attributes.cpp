@@ -18,8 +18,7 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-ObjectNodeAttributes::ObjectNodeAttributes()
-    : SemanticNodeAttributes(), points(nullptr) {}
+ObjectNodeAttributes::ObjectNodeAttributes() : SemanticNodeAttributes() {}
 
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   // TODO(nathan) think about printing out rotation here
@@ -28,16 +27,18 @@ std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-RoomNodeAttributes::RoomNodeAttributes()
-    : SemanticNodeAttributes(), points(nullptr) {}
+RoomNodeAttributes::RoomNodeAttributes() : SemanticNodeAttributes() {}
 
 std::ostream& RoomNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
   return out;
 }
 
-PlaceNodeAttributes::PlaceNodeAttributes(double distance, unsigned int num_basis_points)
-    : SemanticNodeAttributes(), distance(distance), num_basis_points(num_basis_points) {}
+PlaceNodeAttributes::PlaceNodeAttributes(double distance,
+                                         unsigned int num_basis_points)
+    : SemanticNodeAttributes(),
+      distance(distance),
+      num_basis_points(num_basis_points) {}
 
 std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   PlaceNodeAttributes::fill_ostream(out);

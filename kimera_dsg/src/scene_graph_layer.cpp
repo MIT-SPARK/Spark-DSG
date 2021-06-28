@@ -30,7 +30,7 @@ bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
     return false;
   }
 
-  if (nodes_.count(node->id) != 0) {
+  if (hasNode(node->id)) {
     return false;
   }
 
@@ -46,12 +46,12 @@ bool SceneGraphLayer::insertEdge(NodeId source,
     return false;
   }
 
-  if (nodes_.count(source) == 0) {
+  if (!hasNode(source)) {
     // TODO(nathan) maybe consider logging here
     return false;
   }
 
-  if (nodes_.count(target) == 0) {
+  if (!hasNode(target)) {
     // TODO(nathan) maybe consider logging here
     return false;
   }
@@ -124,10 +124,18 @@ bool SceneGraphLayer::removeEdge(NodeId source, NodeId target) {
     return false;
   }
 
-  size_t edge_idx = edges_info_.at(source).at(target);
-  edges_info_[source].erase(target);
-  edges_info_[target].erase(source);
-  edges_.erase(edge_idx);
+  edges_.erase(edges_info_.at(source).at(target));
+
+  edges_info_.at(source).erase(target);
+  if (edges_info_.at(source).empty()) {
+    edges_info_.erase(source);
+  }
+
+  edges_info_.at(target).erase(source);
+  if (edges_info_.at(target).empty()) {
+    edges_info_.erase(target);
+  }
+
   nodes_[source]->siblings_.erase(target);
   nodes_[target]->siblings_.erase(source);
   return true;

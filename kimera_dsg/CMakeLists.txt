@@ -32,8 +32,8 @@ catkin_package(
 
 add_library(
   ${PROJECT_NAME}
-  src/bounding_box.cpp src/node_attributes.cpp src/scene_graph_node.cpp
-  src/scene_graph_layer.cpp src/scene_graph.cpp
+  src/bounding_box.cpp src/dynamic_scene_graph.cpp src/node_attributes.cpp
+  src/scene_graph_node.cpp src/scene_graph_layer.cpp src/scene_graph.cpp
 )
 target_include_directories(
   ${PROJECT_NAME} PUBLIC include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
@@ -45,7 +45,8 @@ if(CATKIN_ENABLE_TESTING)
   pkg_check_modules(gflags REQUIRED IMPORTED_TARGET gflags)
   catkin_add_gtest(
     utest_${PROJECT_NAME}
-    tests/utest_main.cpp tests/utest_bounding_box.cpp tests/utest_scene_graph_node.cpp
+    tests/utest_main.cpp tests/utest_bounding_box.cpp
+    tests/utest_dynamic_scene_graph.cpp tests/utest_scene_graph_node.cpp
     tests/utest_scene_graph_layer.cpp tests/utest_scene_graph.cpp
   )
   target_link_libraries(

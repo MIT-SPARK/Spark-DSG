@@ -18,6 +18,7 @@ SceneGraph::SceneGraph(const std::vector<LayerId>& layer_ids)
       layers(layers_),
       inter_layer_edges(inter_layer_edges_) {
   if (layer_ids.empty()) {
+    // TODO(nathan) custom exception
     throw std::runtime_error(
         "Scene graph cannot be initialized with no layers");
   }
@@ -244,10 +245,17 @@ bool SceneGraph::removeNode(NodeId node_id) {
 }
 
 void SceneGraph::removeInterLayerEdge_(NodeId source, NodeId target) {
-  size_t edge_idx = inter_layer_edges_info_.at(source).at(target);
-  inter_layer_edges_info_[source].erase(target);
-  inter_layer_edges_info_[target].erase(source);
-  inter_layer_edges_.erase(edge_idx);
+  inter_layer_edges_.erase(inter_layer_edges_info_.at(source).at(target));
+  inter_layer_edges_info_.at(source).erase(target);
+  if (inter_layer_edges_info_.at(source).empty()) {
+    inter_layer_edges_info_.erase(source);
+  }
+
+  inter_layer_edges_info_.at(target).erase(source);
+  if (inter_layer_edges_info_.at(target).empty()) {
+    inter_layer_edges_info_.erase(target);
+  }
+
   Node* parent = getParentNode_(source, target);
   Node* child = getChildNode_(source, target);
   parent->children_.erase(child->id);

@@ -1,5 +1,4 @@
 #pragma once
-#include "kimera_dsg/iterable_wrapper.h"
 #include "kimera_dsg/scene_graph_node.h"
 
 #include <map>
@@ -45,7 +44,6 @@ struct SceneGraphEdge {
   Info::Ptr info;
 };
 
-// TODO(nathan) think about inheritance
 /**
  * @brief A layer in the scene graph (which is a graph itself)
  *
@@ -209,15 +207,13 @@ class SceneGraphLayer {
   // that the containers are initialized before the iterable
   // wrappers
   /**
-   * @brief constant iterable over the nodes
-   * See #kimera::IterableWrapper for full details.
+   * @brief constant node container
    */
-  IterableWrapper<Nodes> nodes;
+  const Nodes& nodes;
   /**
-   * @brief constant iterable over the edges
-   * See #kimera::IterableWrapper for full details.
+   * @brief constant edge container
    */
-  IterableWrapper<Edges> edges;
+  const Edges& edges;
 };
 
 }  // namespace kimera
