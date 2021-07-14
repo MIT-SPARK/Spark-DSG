@@ -125,14 +125,22 @@ class DynamicSceneGraph : public SceneGraph {
 
   virtual size_t numEdges() const override;
 
-  //! Layer id that the mesh uses
-  const LayerId mesh_layer_id;
+  inline LayerId getMeshLayerId() const { return mesh_layer_id_; }
 
   inline pcl::PolygonMesh::ConstPtr getMesh() const { return mesh_; }
 
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr getMeshCloudForNode(NodeId node) const;
 
+  virtual nlohmann::json toJson(const JsonExportConfig& config) const override;
+
+  virtual void fillFromJson(const JsonExportConfig& config,
+                            const NodeAttributeFactory& node_attr_factory,
+                            const EdgeInfoFactory& edge_info_factory,
+                            const nlohmann::json& record) override;
+
  protected:
+  LayerId mesh_layer_id_;
+
   bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
 
   void clearMeshEdges();

@@ -1,6 +1,10 @@
 ﻿#include "kimera_dsg/scene_graph.h"
+#include "kimera_dsg/attribute_serialization.h"
+#include "kimera_dsg/serialization_helpers.h"
 
 #include <glog/logging.h>
+
+#include <fstream>
 
 namespace kimera {
 
@@ -13,10 +17,7 @@ using EdgeInfo = SceneGraph::EdgeInfo;
 SceneGraph::SceneGraph() : SceneGraph(getDefaultLayerIds()) {}
 
 SceneGraph::SceneGraph(const std::vector<LayerId>& layer_ids)
-    : last_edge_idx_(0),
-      layer_ids_(layer_ids),
-      layers(layers_),
-      inter_layer_edges(inter_layer_edges_) {
+    : last_edge_idx_(0), layer_ids_(layer_ids) {
   if (layer_ids.empty()) {
     // TODO(nathan) custom exception
     throw std::runtime_error("Scene graph cannot be initialized with no layers");
@@ -299,6 +300,114 @@ Eigen::Vector3d SceneGraph::getPosition(NodeId node) const {
 
   LayerId layer = node_layer_lookup_.at(node);
   return layers_.at(layer)->getPosition(node);
+}
+
+json SceneGraph::toJson(const JsonExportConfig& config) const {
+  json to_return;
+  to_return["directed"] = false;
+  to_return["multigraph"] = false;
+  to_return["nodes"] = json::array();
+  to_return[config.edge_key] = json::array();
+  to_return["layer_ids"] = layer_ids_;
+
+  for (const auto& id_layer_pair : layers_) {
+    for (const auto& id_node_pair : id_layer_pair.second->nodes_) {
+      const Node& node = *(id_node_pair.second);
+      json node_json = json{{config.name_key, node.id}, {"layer", node.layer}};
+      node_json["attributes"] = node.attributes().toJson();
+      to_return["nodes"].push_back(node_json);
+    }
+
+    for (const auto& id_edge_pair : id_layer_pair.second->edges_) {
+      const Edge& edge = id_edge_pair.second;
+      json edge_json =
+          json{{config.source_key, edge.source}, {config.target_key, edge.target}};
+      edge_json["info"] = edge.info->toJson();
+      to_return[config.edge_key].push_back(edge_json);
+    }
+  }
+
+  for (const auto& id_edge_pair : inter_layer_edges_) {
+    const Edge& edge = id_edge_pair.second;
+    json edge_json =
+        json{{config.source_key, edge.source}, {config.target_key, edge.target}};
+    edge_json["info"] = edge.info->toJson();
+    to_return[config.edge_key].push_back(edge_json);
+  }
+
+  return to_return;
+}
+
+void SceneGraph::fillFromJson(const JsonExportConfig& config,
+                              const NodeAttributeFactory& node_attr_factory,
+                              const EdgeInfoFactory& edge_info_factory,
+                              const json& record) {
+  // we have to clear after setting the layer ids to get the right layers initialized
+  layer_ids_ = record.at("layer_ids").get<LayerIds>();
+  clear();
+
+  for (const auto& node : record.at("nodes")) {
+    auto id = node.at(config.name_key).get<NodeId>();
+    auto layer = node.at("layer").get<LayerId>();
+    NodeAttributes::Ptr attrs = node_attr_factory.create(node.at("attributes"));
+    emplaceNode(layer, id, std::move(attrs));
+  }
+
+  for (const auto& edge : record.at(config.edge_key)) {
+    auto source = edge.at(config.source_key).get<NodeId>();
+    auto target = edge.at(config.target_key).get<NodeId>();
+    EdgeInfo::Ptr info = edge_info_factory.create(edge.at("info"));
+    insertEdge(source, target, std::move(info));
+  }
+}
+
+namespace {
+
+inline bool extensionIsBson(const std::string& filepath) {
+  if (filepath.size() < 4) {
+    return false;
+  }
+  return filepath.substr(filepath.size() - 4) == "bson";
+}
+
+}  // namespace
+
+void SceneGraph::save(const std::string& filepath, bool force_bson) const {
+  nlohmann::json graph_json = toJson(JsonExportConfig());
+  if (force_bson || extensionIsBson(filepath)) {
+    graph_json["compact"] = true;
+    graph_json["schema"] = 0;
+    std::vector<uint8_t> data = nlohmann::json::to_bson(graph_json);
+    std::ofstream outfile(filepath, std::ios::out | std::ios::binary);
+    // uint8_t -> char should be a safe cast for this case
+    outfile.write(reinterpret_cast<char*>(data.data()), data.size());
+  } else {
+    std::ofstream outfile(filepath);
+    outfile << graph_json;
+  }
+}
+
+void SceneGraph::load(const std::string& filepath, bool force_bson) {
+  nlohmann::json graph_json;
+  if (force_bson || extensionIsBson(filepath)) {
+    std::ifstream infile(filepath, std::ios::in | std::ios::binary);
+    infile.seekg(0, std::ios::end);
+    std::streampos file_size = infile.tellg();
+    infile.seekg(0, std::ios::beg);
+
+    std::vector<uint8_t> data(file_size);
+    // uint8_t -> char should be a safe cast for this case
+    infile.read(reinterpret_cast<char*>(data.data()), data.size());
+    graph_json = json::from_bson(data);
+  } else {
+    std::ifstream infile(filepath);
+    infile >> graph_json;
+  }
+
+  fillFromJson(JsonExportConfig(),
+               NodeAttributeFactory::Default(),
+               EdgeInfoFactory::Default(),
+               graph_json);
 }
 
 SceneGraph::LayerIds getDefaultLayerIds() {

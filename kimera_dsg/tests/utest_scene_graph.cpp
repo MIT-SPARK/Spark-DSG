@@ -166,7 +166,6 @@ TEST(SceneGraphTests, EdgeAttributesCorrect) {
 
   // actually add the edge
   EdgeInfo::Ptr info = std::make_unique<EdgeInfo>();
-  info->directed = true;
   info->weighted = true;
   info->weight = 0.5;
   EXPECT_TRUE(graph.insertEdge(0, 1, std::move(info)));
@@ -179,7 +178,6 @@ TEST(SceneGraphTests, EdgeAttributesCorrect) {
   EXPECT_EQ(0u, edge.source);
   EXPECT_EQ(1u, edge.target);
   ASSERT_TRUE(edge.info != nullptr);
-  EXPECT_TRUE(edge.info->directed);
   EXPECT_TRUE(edge.info->weighted);
   EXPECT_EQ(0.5, edge.info->weight);
 
@@ -193,7 +191,6 @@ TEST(SceneGraphTests, EdgeAttributesCorrect) {
   EXPECT_EQ(0u, swapped_edge.source);
   EXPECT_EQ(1u, swapped_edge.target);
   ASSERT_TRUE(swapped_edge.info != nullptr);
-  EXPECT_TRUE(swapped_edge.info->directed);
   EXPECT_TRUE(swapped_edge.info->weighted);
   EXPECT_EQ(0.5, swapped_edge.info->weight);
 }

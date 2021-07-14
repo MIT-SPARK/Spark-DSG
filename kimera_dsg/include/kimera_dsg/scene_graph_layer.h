@@ -1,9 +1,15 @@
 #pragma once
+#include "kimera_dsg/node_symbol.h"
 #include "kimera_dsg/scene_graph_node.h"
 
 #include <map>
 #include <optional>
 #include <vector>
+
+#define REGISTER_EDGE_INFO_TYPE(classname, json_store)                    \
+  static_assert(std::is_base_of<SceneGraphEdgeInfo, classname>::value,    \
+                "invalid registered derived type of SceneGraphEdgeInfo"); \
+  json_store[classname::TYPE_KEY] = #classname
 
 namespace kimera {
 
@@ -15,12 +21,17 @@ namespace kimera {
 struct SceneGraphEdgeInfo {
   //! desired pointer type for the edge attributes
   using Ptr = std::unique_ptr<SceneGraphEdgeInfo>;
-  //! whether or not the edge is directed
-  bool directed = false;
+
+  static inline constexpr char TYPE_KEY[] = "type";
+
   //! whether or not the edge weight is valid
   bool weighted = false;
   //! the weight of the edge
   double weight = 1.0;
+
+  virtual nlohmann::json toJson() const;
+
+  virtual void fillFromJson(const nlohmann::json& record);
 };
 
 /**
@@ -200,18 +211,14 @@ class SceneGraphLayer {
   EdgeLookup edges_info_;
 
  public:
-  // exposure of iterable members for private containers
-  // placing them after the private container members ensures
-  // that the containers are initialized before the iterable
-  // wrappers
   /**
    * @brief constant node container
    */
-  const Nodes& nodes;
+  inline const Nodes& nodes() const { return nodes_; };
   /**
    * @brief constant edge container
    */
-  const Edges& edges;
+  inline const Edges& edges() const { return edges_; };
 };
 
 }  // namespace kimera

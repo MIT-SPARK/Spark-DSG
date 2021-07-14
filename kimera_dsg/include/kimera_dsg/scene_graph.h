@@ -1,4 +1,5 @@
 #pragma once
+#include "kimera_dsg/attribute_serialization.h"
 #include "kimera_dsg/scene_graph_layer.h"
 
 #include <map>
@@ -38,6 +39,13 @@ class SceneGraph {
   using Edges = Layer::Edges;
   //! alias to the container storing node-to-node connections
   using EdgeLookup = Layer::EdgeLookup;
+
+  struct JsonExportConfig {
+    std::string edge_key = "edges";
+    std::string name_key = "id";
+    std::string source_key = "source";
+    std::string target_key = "target";
+  };
 
   /**
    * @brief Construct the scene graph (with a default layer factory)
@@ -224,6 +232,19 @@ class SceneGraph {
    */
   Eigen::Vector3d getPosition(NodeId node) const;
 
+  virtual nlohmann::json toJson(const JsonExportConfig& config) const;
+
+  virtual void fillFromJson(const JsonExportConfig& config,
+                            const NodeAttributeFactory& node_attr_factory,
+                            const EdgeInfoFactory& edge_info_factory,
+                            const nlohmann::json& record);
+
+  // TODO(nathan) add full argument list versions of load and save
+
+  void save(const std::string& filepath, bool force_bson = false) const;
+
+  void load(const std::string& filepath, bool force_bson = false);
+
  protected:
   //! last edge inserted
   size_t last_edge_idx_;
@@ -250,17 +271,15 @@ class SceneGraph {
  public:
   /**
    * @brief constant iterator around the layers
-   * See #kimera::IterableWrapper for more details
    */
-  IterableWrapper<Layers> layers;
+  inline const Layers& layers() const { return layers_; };
 
   /**
    * @brief constant iterator around the inter-layer edges
    *
    * @note inter-layer edges are edges between nodes in different layers
-   * See #kimera::IterableWrapper for more details
    */
-  IterableWrapper<Edges> inter_layer_edges;
+  inline const Edges& inter_layer_edges() const { return inter_layer_edges_; };
 };
 
 /**

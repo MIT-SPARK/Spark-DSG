@@ -44,6 +44,10 @@ struct SemanticNodeAttributes : public NodeAttributes {
   //! semantic label of object
   SemanticLabel semantic_label;
 
+  virtual nlohmann::json toJson() const override;
+
+  virtual void fillFromJson(const nlohmann::json& record) override;
+
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 };
@@ -79,6 +83,10 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   //! rotation of object w.r.t. world (only valid when registerd)
   Eigen::Quaterniond world_R_object;
 
+  virtual nlohmann::json toJson() const override;
+
+  virtual void fillFromJson(const nlohmann::json& record) override;
+
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 };
@@ -107,6 +115,10 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~RoomNodeAttributes() = default;
 
+  virtual nlohmann::json toJson() const override;
+
+  virtual void fillFromJson(const nlohmann::json& record) override;
+
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 };
@@ -125,6 +137,8 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   //! color type for node
   using ColorVector = SemanticNodeAttributes::ColorVector;
 
+  PlaceNodeAttributes();
+
   /**
    * @brief make places node attributes
    * @param distance distance to nearest obstalce
@@ -138,6 +152,10 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   double distance;
   //! number of equidistant obstacles
   unsigned int num_basis_points;
+
+  virtual nlohmann::json toJson() const override;
+
+  virtual void fillFromJson(const nlohmann::json& record) override;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;

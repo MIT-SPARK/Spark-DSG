@@ -7,10 +7,19 @@ std::ostream& operator<<(std::ostream& out, const Eigen::Quaternionf& q) {
   return out;
 }
 
-BoundingBox::BoundingBox() : type(Type::INVALID) {}
+BoundingBox::BoundingBox()
+    : type(Type::INVALID),
+      min(Eigen::Vector3f::Zero()),
+      max(Eigen::Vector3f::Zero()),
+      world_P_center(Eigen::Vector3f::Zero()),
+      world_R_center(Eigen::Quaternionf::Identity()) {}
 
 BoundingBox::BoundingBox(const Eigen::Vector3f& min, const Eigen::Vector3f& max)
-    : type(Type::AABB), min(min), max(max) {}
+    : type(Type::AABB),
+      min(min),
+      max(max),
+      world_P_center(Eigen::Vector3f::Zero()),
+      world_R_center(Eigen::Quaternionf::Identity()) {}
 
 BoundingBox::BoundingBox(const Eigen::Vector3f& min,
                          const Eigen::Vector3f& max,

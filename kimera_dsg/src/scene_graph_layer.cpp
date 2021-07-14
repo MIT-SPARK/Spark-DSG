@@ -5,12 +5,22 @@
 
 namespace kimera {
 
+nlohmann::json SceneGraphEdgeInfo::toJson() const {
+  nlohmann::json to_return{{"weighted", weighted}, {"weight", weight}};
+  REGISTER_EDGE_INFO_TYPE(SceneGraphEdgeInfo, to_return);
+  return to_return;
+}
+
+void SceneGraphEdgeInfo::fillFromJson(const nlohmann::json& record) {
+  weighted = record.at("weighted").get<bool>();
+  weight = record.at("weight").get<double>();
+}
+
 using EdgeInfo = SceneGraphLayer::EdgeInfo;
 using EdgeRef = SceneGraphLayer::EdgeRef;
 using NodeRef = SceneGraphLayer::NodeRef;
 
-SceneGraphLayer::SceneGraphLayer(LayerId layer_id)
-    : id(layer_id), last_edge_idx_(0u), nodes(nodes_), edges(edges_) {}
+SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id), last_edge_idx_(0u) {}
 
 bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
   return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))

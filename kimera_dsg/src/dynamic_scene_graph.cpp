@@ -1,4 +1,5 @@
 #include "kimera_dsg/dynamic_scene_graph.h"
+#include "kimera_dsg/serialization_helpers.h"
 
 #include <glog/logging.h>
 #include <pcl/conversions.h>
@@ -13,7 +14,7 @@ DynamicSceneGraph::DynamicSceneGraph(LayerId mesh_layer_id)
     : DynamicSceneGraph(getDefaultLayerIds(), mesh_layer_id) {}
 
 DynamicSceneGraph::DynamicSceneGraph(const LayerIds& factory, LayerId mesh_layer_id)
-    : SceneGraph(factory), mesh_layer_id(mesh_layer_id), next_mesh_edge_idx_(0) {
+    : SceneGraph(factory), mesh_layer_id_(mesh_layer_id), next_mesh_edge_idx_(0) {
   if (std::find(factory.begin(), factory.end(), mesh_layer_id) != factory.end()) {
     // TODO(nathan) custom exception
     // TODO(nathan) more informative error message
@@ -110,7 +111,7 @@ bool DynamicSceneGraph::insertMeshEdge(NodeId source, size_t mesh_vertex) {
 }
 
 bool DynamicSceneGraph::hasLayer(LayerId layer_id) const {
-  if (layer_id != mesh_layer_id) {
+  if (layer_id != mesh_layer_id_) {
     return SceneGraph::hasLayer(layer_id);
   }
 
@@ -186,6 +187,47 @@ ColorPointCloud::Ptr DynamicSceneGraph::getMeshCloudForNode(NodeId node) const {
   }
 
   return cloud;
+}
+
+json DynamicSceneGraph::toJson(const JsonExportConfig& config) const {
+  json to_return = SceneGraph::toJson(config);
+  to_return["mesh_layer_id"] = mesh_layer_id_;
+  if (!mesh_) {
+    return to_return;
+  }
+
+  json mesh_json = *mesh_;
+  to_return["mesh"] = mesh_json;
+
+  to_return["mesh_edges"] = json::array();
+  for (const auto& id_edge_pair : mesh_edges_) {
+    to_return.at("mesh_edges")
+        .push_back(json{{config.source_key, id_edge_pair.second.source_node},
+                        {config.target_key, id_edge_pair.second.mesh_vertex}});
+  }
+
+  return to_return;
+}
+
+void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
+                                     const NodeAttributeFactory& node_attr_factory,
+                                     const EdgeInfoFactory& edge_info_factory,
+                                     const json& record) {
+  SceneGraph::fillFromJson(config, node_attr_factory, edge_info_factory, record);
+  mesh_layer_id_ = record.at("mesh_layer_id").get<LayerId>();
+
+  if (record.contains("mesh")) {
+    Mesh::Ptr mesh(new Mesh());
+    *mesh = record.at("mesh").get<Mesh>();
+    // clear all previous edges
+    setMesh(mesh, true);
+
+    for (const auto& edge : record.at("mesh_edges")) {
+      auto source = edge.at(config.source_key).get<NodeId>();
+      auto target = edge.at(config.target_key).get<size_t>();
+      insertMeshEdge(source, target);
+    }
+  }
 }
 
 }  // namespace kimera

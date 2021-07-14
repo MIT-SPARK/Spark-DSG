@@ -114,7 +114,6 @@ TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
 
   // actually add the edge
   EdgeInfo::Ptr info = std::make_unique<EdgeInfo>();
-  info->directed = true;
   info->weighted = true;
   info->weight = 0.5;
   EXPECT_TRUE(layer.insertEdge(0, 1, std::move(info)));
@@ -127,7 +126,6 @@ TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
   EXPECT_EQ(0u, edge.source);
   EXPECT_EQ(1u, edge.target);
   ASSERT_TRUE(edge.info != nullptr);
-  EXPECT_TRUE(edge.info->directed);
   EXPECT_TRUE(edge.info->weighted);
   EXPECT_EQ(0.5, edge.info->weight);
 
@@ -141,7 +139,6 @@ TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
   EXPECT_EQ(0u, swapped_edge.source);
   EXPECT_EQ(1u, swapped_edge.target);
   ASSERT_TRUE(swapped_edge.info != nullptr);
-  EXPECT_TRUE(swapped_edge.info->directed);
   EXPECT_TRUE(swapped_edge.info->weighted);
   EXPECT_EQ(0.5, swapped_edge.info->weight);
 }
@@ -159,7 +156,7 @@ TEST(SceneGraphLayerTests, BasicNodeIterationCorrect) {
 
   // nodes may be stored unordered in the future
   std::set<int64_t> actual_ids;
-  for (const auto& id_node_pair : layer.nodes) {
+  for (const auto& id_node_pair : layer.nodes()) {
     ASSERT_TRUE(id_node_pair.second != nullptr);
     EXPECT_EQ(id_node_pair.first, id_node_pair.second->id);
     actual_ids.insert(id_node_pair.second->id);
@@ -184,7 +181,7 @@ TEST(SceneGraphLayerTests, BasicEdgeIterationCorrect) {
 
   // nodes may be stored unordered in the future
   std::set<NodeId> actual_targets;
-  for (const auto& id_edge_pair : layer.edges) {
+  for (const auto& id_edge_pair : layer.edges()) {
     const Edge& edge = id_edge_pair.second;
     ASSERT_TRUE(edge.info != nullptr);
     EXPECT_EQ(edge.source + 1, edge.target);
@@ -233,7 +230,7 @@ TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
   EXPECT_TRUE(layer.removeEdge(0, 1));
   EXPECT_EQ(0u, layer.numEdges());
 
-  for (const auto& node_id_pair : layer.nodes) {
+  for (const auto& node_id_pair : layer.nodes()) {
     EXPECT_FALSE(node_id_pair.second->hasSiblings());
   }
 }
