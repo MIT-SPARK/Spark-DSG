@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>kimera_dsg_python</name>
+    <version>0.0.1</version>
+    <description>python bindings for serialized scene graphs</description>
+
+    <author email="lisapeng@mit.edu">Lisa Peng</author>
+    <maintainer email="na26933@mit.edu">Nathan Hughes</maintainer>
+
+    <license>BSD</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <depend>kimera_dsg</depend>
+</package>

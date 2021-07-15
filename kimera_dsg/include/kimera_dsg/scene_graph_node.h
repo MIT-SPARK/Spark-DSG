@@ -143,6 +143,10 @@ class SceneGraphNode {
     return dynamic_cast<Derived&>(*attributes_);
   }
 
+  NodeAttributes* getAttributesPtr() const {
+    return attributes_.get();
+  }
+
   //! ID of the node
   const NodeId id;
   //! ID of the layer the node belongs to

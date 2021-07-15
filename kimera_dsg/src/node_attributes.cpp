@@ -5,6 +5,8 @@ using nlohmann::json;
 
 namespace kimera {
 
+// TODO(nathan) output stream operators are ugly
+
 #define WRITE_FIELD_TO_JSON(record, field) record[#field] = field
 
 #define READ_FIELD_FROM_JSON(record, field) \
@@ -14,9 +16,8 @@ SemanticNodeAttributes::SemanticNodeAttributes()
     : NodeAttributes(), name(""), color(ColorVector::Zero()), semantic_label(0u) {}
 
 std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
-  // TODO(nathan) think about printing out rotation here
   NodeAttributes::fill_ostream(out);
-  out << "  - Color : " << color << std::endl
+  out << "  - Color : " << color.cast<float>().transpose() << std::endl
       << "  - Name: " << name << std::endl
       << "  - Bounding Box: " << bounding_box << std::endl
       << "  - Semantic Label: " << std::to_string(semantic_label) << std::endl;
@@ -42,7 +43,7 @@ void SemanticNodeAttributes::fillFromJson(const json& record) {
 }
 
 ObjectNodeAttributes::ObjectNodeAttributes()
-    : world_R_object(Eigen::Quaterniond::Identity()), SemanticNodeAttributes() {}
+    : SemanticNodeAttributes(), world_R_object(Eigen::Quaterniond::Identity()) {}
 
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   // TODO(nathan) think about printing out rotation here

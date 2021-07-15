@@ -24,11 +24,11 @@ TEST(BoundingBoxTests, AABBConstructor) {
   Eigen::Vector3f min;
   min << 1.0f, 2.0f, 3.0f;
   Eigen::Vector3f max;
-  min << 3.0f, 4.0f, 5.0f;
+  max << 3.0f, 4.0f, 5.0f;
   BoundingBox box(min, max);
   EXPECT_EQ(BoundingBox::Type::AABB, box.type);
-  EXPECT_EQ(0.0, (min - box.min).norm());
-  EXPECT_EQ(0.0, (max - box.max).norm());
+  EXPECT_EQ(min, box.min);
+  EXPECT_EQ(max, box.max);
 }
 
 TEST(BoundingBoxTests, OBBConstructor) {

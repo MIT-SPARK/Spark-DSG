@@ -27,6 +27,7 @@ pkg_check_modules(glog REQUIRED IMPORTED_TARGET libglog)
 # TODO(nathan) export this into catkin
 
 # TODO(nathan) move this to separate cmake file
+# TODO(nathan) custom targets instead of execute_process
 configure_file(cmake/json.CMakeLists.txt.in json-download/CMakeLists.txt)
 execute_process(
   COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
@@ -54,7 +55,7 @@ find_package(nlohmann_json)
 catkin_package(
   CATKIN_DEPENDS pcl_ros
   DEPENDS Boost
-  INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS}
+  INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS} ${CATKIN_DEVEL_PREFIX}/include
   LIBRARIES ${PROJECT_NAME}
 )
 

@@ -48,11 +48,11 @@ struct SceneGraphEdge {
       : source(source), target(target), info(std::move(info)) {}
 
   //! start of edge (by convention the parent)
-  NodeId source;
+  const NodeId source;
   //! end of edge (by convention the child)
-  NodeId target;
+  const NodeId target;
   //! attributes about the edge
-  Info::Ptr info;
+  const Info::Ptr info;
 };
 
 /**

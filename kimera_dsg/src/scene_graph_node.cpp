@@ -1,4 +1,5 @@
 #include "kimera_dsg/scene_graph_node.h"
+#include "kimera_dsg/node_symbol.h"
 #include "kimera_dsg/serialization_helpers.h"
 
 #include <glog/logging.h>
@@ -38,7 +39,7 @@ SceneGraphNode::SceneGraphNode(NodeId node_id,
     : id(node_id), layer(layer_id), attributes_(std::move(attrs)), has_parent_(false) {}
 
 std::ostream& SceneGraphNode::fill_ostream(std::ostream& out) const {
-  out << " Node <id=" << id << ", layer=" << layer << ">" << std::endl;
+  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer << ">";
   return out;
 }
 

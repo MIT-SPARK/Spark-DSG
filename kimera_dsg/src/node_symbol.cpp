@@ -10,7 +10,11 @@ NodeSymbol::NodeSymbol(char key, NodeId index) {
 NodeSymbol::NodeSymbol(NodeId value) { value_.value = value; }
 
 std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol) {
-  out << symbol.value_.symbol.key << "(" << symbol.value_.symbol.index << ")";
+  if (std::isalpha(symbol.value_.symbol.key)) {
+    out << symbol.value_.symbol.key << "(" << symbol.value_.symbol.index << ")";
+  } else {
+    out << symbol.value_.value;
+  }
   return out;
 }
 
