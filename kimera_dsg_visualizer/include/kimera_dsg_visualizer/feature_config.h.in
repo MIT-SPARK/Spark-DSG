@@ -1,0 +1,2 @@
+#pragma once
+#define ENABLE_PGMO_FEATURES() @PGMO_FOUND@

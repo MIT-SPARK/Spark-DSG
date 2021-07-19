@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<launch>
+  <arg name="scene_graph"/>
+  <arg name="scene_graph_dir" default="$(find kimera_scene_graph)/output"/>
+  <arg name="scene_graph_path" value="$(arg scene_graph_dir)/$(arg scene_graph)"/>
+
+  <arg name="viz_config_dir" default="$(find kimera_dsg_visualizer)/config"/>
+  <arg name="visualizer_ns" value="/kimera_dsg_visualizer"/>
+  <arg name="include_rviz" default="true"/>
+
+  <arg name="verbosity" default="0"/>
+  <arg name="debug" default="false"/>
+
+  <arg name="launch-prefix" default="gdb --args" if="$(arg debug)"/>
+  <arg name="launch-prefix" default="" unless="$(arg debug)"/>
+
+  <include file="$(find kimera_dsg_visualizer)/launch/includes/kimera_dsg_visualizer_base.xml"
+           pass_all_args="true"/>
+
+  <node name="kimera_dsg_visualizer_node"
+        pkg="kimera_dsg_visualizer"
+        type="kimera_dsg_visualizer_node"
+        output="screen"
+        required="true"
+        args="-alsologtostderr -colorlogtostderr -v=$(arg verbosity)">
+    <param name="visualizer_ns" value="$(arg visualizer_ns)"/>
+    <param name="scene_graph_input_path" value="$(arg scene_graph_path)"/>
+  </node>
+
+</launch>

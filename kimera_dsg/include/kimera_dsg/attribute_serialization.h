@@ -2,9 +2,9 @@
 #include "kimera_dsg/node_attributes.h"
 #include "kimera_dsg/scene_graph_layer.h"
 
-#include <glog/logging.h>
-
 #include <nlohmann/json.hpp>
+
+#include <sstream>
 
 using json = nlohmann::json;
 
@@ -26,30 +26,38 @@ class AttributeFactory {
   }
 
   typename T::Ptr create(const json& record) const {
+    // TODO(nathan) rework exceptions here
     std::string attr_type;
     try {
       std::string type_key(T::TYPE_KEY);
       attr_type = record.at(type_key).get<std::string>();
     } catch (const nlohmann::detail::type_error& e) {
-      LOG(FATAL) << e.what() << " when reading type: " << record;
+      std::stringstream ss;
+      ss << e.what() << " when reading type: " << record;
+      throw std::domain_error(ss.str());
     }
 
     auto map_func = factory_map_.find(attr_type);
     if (map_func == factory_map_.end()) {
-      VLOG(1) << "Failed to find parser function for type: " << attr_type;
+      std::stringstream ss;
+      ss << "Failed to find parser function for type: " << attr_type;
+      throw std::domain_error(ss.str());
       return nullptr;
     }
 
     if (map_func->second == nullptr) {
-      VLOG(1) << "Invalid parser for type: " << attr_type;
-      return nullptr;
+      std::stringstream ss;
+      ss << "invalid parser function for type: " << attr_type;
+      throw std::domain_error(ss.str());
     }
 
     typename T::Ptr to_return = map_func->second();
     try {
       to_return->fillFromJson(record);
     } catch (const nlohmann::detail::type_error& e) {
-      LOG(FATAL) << e.what() << " when converting: " << record;
+      std::stringstream ss;
+      ss << e.what() << " when converting: " << record;
+      throw std::domain_error(ss.str());
     }
     return to_return;
   }
