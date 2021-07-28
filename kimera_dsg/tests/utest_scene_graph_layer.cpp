@@ -16,6 +16,7 @@ class TestableSceneGraphLayer : public SceneGraphLayer {
   TestableSceneGraphLayer(kimera::LayerId id) : SceneGraphLayer(id) {}
   using SceneGraphLayer::emplaceNode;
   using SceneGraphLayer::insertNode;
+  using SceneGraphLayer::removeNode;
 };
 
 // Test that an empty layer has no nodes and edges

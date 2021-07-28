@@ -287,7 +287,6 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
       .def("has_edge", &SceneGraphLayer::hasEdge)
       .def("get_node", &SceneGraphLayer::getNode)
       .def("get_edge", &SceneGraphLayer::getEdge)
-      .def("remove_node", &SceneGraphLayer::removeNode)
       .def("remove_edge", &SceneGraphLayer::removeEdge)
       .def("num_nodes", &SceneGraphLayer::numNodes)
       .def("num_edges", &SceneGraphLayer::numEdges)

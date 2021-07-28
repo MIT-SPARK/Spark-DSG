@@ -47,7 +47,7 @@ catkin_package(
 add_library(
   ${PROJECT_NAME}
   src/dynamic_scene_graph_visualizer.cpp src/scene_graph_visualizer.cpp
-  src/visualizer_utils.cpp
+  src/visualizer_types.cpp src/visualizer_utils.cpp
 )
 
 target_include_directories(

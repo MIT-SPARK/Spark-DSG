@@ -18,4 +18,8 @@ inline double getZOffset(const LayerConfig& config,
   return config.z_offset_scale * visualizer_config.layer_z_step;
 }
 
+VisualizerConfig getVisualizerConfig(const std::string& visualizer_namespace);
+
+LayerConfig getLayerConfig(const std::string& layer_namespace);
+
 } // namespace kimera

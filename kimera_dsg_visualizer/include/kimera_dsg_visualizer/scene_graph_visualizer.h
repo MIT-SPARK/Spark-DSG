@@ -13,7 +13,6 @@
 
 namespace kimera {
 
-// TODO(nathan) this name is a slight misnomer w.r.t. to how visualize works...
 class SceneGraphVisualizer {
  public:
   using RqtMutexPtr = std::unique_ptr<boost::recursive_mutex>;

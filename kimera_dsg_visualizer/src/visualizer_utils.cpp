@@ -10,6 +10,7 @@ namespace kimera {
 using visualization_msgs::Marker;
 using visualization_msgs::MarkerArray;
 using Node = SceneGraphLayer::Node;
+using dsg_utils::makeColorMsg;
 
 namespace {
 
@@ -44,15 +45,6 @@ inline void fillPoseWithIdentity(geometry_msgs::Pose& pose) {
   Eigen::Vector3d identity_pos = Eigen::Vector3d::Zero();
   tf2::convert(identity_pos, pose.position);
   tf2::convert(Eigen::Quaterniond::Identity(), pose.orientation);
-}
-
-inline std_msgs::ColorRGBA makeColorMsg(const NodeColor& color, double alpha = 1.0) {
-  std_msgs::ColorRGBA msg;
-  msg.r = static_cast<double>(color(0)) / 255.0;
-  msg.g = static_cast<double>(color(1)) / 255.0;
-  msg.b = static_cast<double>(color(2)) / 255.0;
-  msg.a = alpha;
-  return msg;
 }
 
 }  // namespace

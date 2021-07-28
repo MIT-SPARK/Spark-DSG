@@ -1,11 +1,22 @@
 #pragma once
 #include "kimera_dsg_visualizer/visualizer_types.h"
 
+#include <std_msgs/ColorRGBA.h>
+
 #include <algorithm>
 #include <opencv2/imgproc.hpp>
 
 namespace kimera {
 namespace dsg_utils {
+
+inline std_msgs::ColorRGBA makeColorMsg(const NodeColor& color, double alpha = 1.0) {
+  std_msgs::ColorRGBA msg;
+  msg.r = static_cast<double>(color(0)) / 255.0;
+  msg.g = static_cast<double>(color(1)) / 255.0;
+  msg.b = static_cast<double>(color(2)) / 255.0;
+  msg.a = alpha;
+  return msg;
+}
 
 inline double lerp(double min, double max, double ratio) {
   return (max - min) * ratio + min;

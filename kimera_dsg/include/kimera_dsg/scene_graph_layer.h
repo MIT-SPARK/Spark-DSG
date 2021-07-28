@@ -149,13 +149,6 @@ class SceneGraphLayer {
   std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const;
 
   /**
-   * @brief remove a node if it exists
-   * @param node_id node to remove
-   * @returns true if the node existed prior to removal
-   */
-  bool removeNode(NodeId node_id);
-
-  /**
    * @brief remove an edge if it exists
    * @param source source of edge to remove
    * @param target target of edge to remove
@@ -201,6 +194,13 @@ class SceneGraphLayer {
    */
   bool insertNode(Node::Ptr&& node);
 
+  /**
+   * @brief remove a node if it exists
+   * @param node_id node to remove
+   * @returns true if the node existed prior to removal
+   */
+  bool removeNode(NodeId node_id);
+
   //! internal edge index counter
   size_t last_edge_idx_;
   //! internal node container
@@ -219,6 +219,29 @@ class SceneGraphLayer {
    * @brief constant edge container
    */
   inline const Edges& edges() const { return edges_; };
+};
+
+/**
+ * @brief A standalone layer not intendend for use with a scene graph
+ *
+ * This version of a layer exposes methods for adding and remove nodes, something that
+ * is typically done at the graph level for book-keeping.
+ */
+class IsolatedSceneGraphLayer : public SceneGraphLayer {
+ public:
+  using Ptr = std::unique_ptr<IsolatedSceneGraphLayer>;
+
+  /**
+   * @brief Makes an empty layer with the specified layer id
+   * @param layer_id layer id of the layer to be constructed
+   */
+  explicit IsolatedSceneGraphLayer(LayerId layer_id) : SceneGraphLayer(layer_id) {}
+
+  virtual ~IsolatedSceneGraphLayer() = default;
+
+  using SceneGraphLayer::emplaceNode;
+
+  using SceneGraphLayer::removeNode;
 };
 
 }  // namespace kimera
