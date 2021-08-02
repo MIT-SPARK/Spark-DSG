@@ -22,23 +22,19 @@ inline double getRatio(double min, double max, double value) {
   return ratio;
 }
 
-inline NodeColor getDistanceColor(const VisualizerConfig& config, double distance) {
-  if (config.places_max_distance <= config.places_min_distance) {
+inline NodeColor getDistanceColor(const VisualizerConfig& config,
+                                  const ColormapConfig& colors,
+                                  double distance) {
+  if (config.places_colormap_max_distance <= config.places_colormap_min_distance) {
     // TODO(nathan) consider warning
     return NodeColor::Zero();
   }
 
-  dsg_utils::HlsColorMapConfig hls_config{config.places_min_hue,
-                                          config.places_max_hue,
-                                          config.places_min_saturation,
-                                          config.places_max_saturation,
-                                          config.places_min_luminance,
-                                          config.places_max_luminance};
+  double ratio = getRatio(config.places_colormap_min_distance,
+                          config.places_colormap_max_distance,
+                          distance);
 
-  double ratio =
-      getRatio(config.places_min_distance, config.places_max_distance, distance);
-
-  return dsg_utils::interpolateColorMap(hls_config, ratio);
+  return dsg_utils::interpolateColorMap(colors, ratio);
 }
 
 inline void fillPoseWithIdentity(geometry_msgs::Pose& pose) {
@@ -139,11 +135,6 @@ Marker makeCentroidMarkers(const LayerConfig& config,
       desired_color = *layer_color;
     } else if (!node_colors_valid) {
       desired_color << 1.0, 0.0, 0.0;
-    } else if (visualizer_config.color_places_by_distance &&
-               layer.id == to_underlying(KimeraDsgLayers::PLACES)) {
-      desired_color = getDistanceColor(
-          visualizer_config,
-          id_node_pair.second->attributes<PlaceNodeAttributes>().distance);
     } else {
       try {
         desired_color = id_node_pair.second->attributes<SemanticNodeAttributes>().color;
@@ -154,6 +145,42 @@ Marker makeCentroidMarkers(const LayerConfig& config,
     }
 
     marker.colors.push_back(makeColorMsg(desired_color, config.marker_alpha));
+  }
+
+  return marker;
+}
+
+Marker makeCentroidMarkers(const LayerConfig& config,
+                           const SceneGraphLayer& layer,
+                           const VisualizerConfig& visualizer_config,
+                           const ColormapConfig& colors,
+                           const std::string& marker_namespace) {
+  Marker marker;
+  marker.type = config.use_sphere_marker ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.id = layer.id;
+  marker.ns = marker_namespace;
+
+  marker.scale.x = config.marker_scale;
+  marker.scale.y = config.marker_scale;
+  marker.scale.z = config.marker_scale;
+
+  fillPoseWithIdentity(marker.pose);
+
+  marker.points.reserve(layer.numNodes());
+  marker.colors.reserve(layer.numNodes());
+  for (const auto& id_node_pair : layer.nodes()) {
+    geometry_msgs::Point node_centroid;
+    tf2::convert(id_node_pair.second->attributes().position, node_centroid);
+    node_centroid.z += getZOffset(config, visualizer_config);
+    marker.points.push_back(node_centroid);
+
+    NodeColor node_color = getDistanceColor(
+        visualizer_config,
+        colors,
+        id_node_pair.second->attributes<PlaceNodeAttributes>().distance);
+
+    marker.colors.push_back(makeColorMsg(node_color, config.marker_alpha));
   }
 
   return marker;

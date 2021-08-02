@@ -1,12 +1,14 @@
 #pragma once
 #include <kimera_dsg_visualizer/LayerVisualizerConfig.h>
 #include <kimera_dsg_visualizer/VisualizerConfig.h>
+#include <kimera_dsg_visualizer/ColormapConfig.h>
 #include <kimera_dsg/node_attributes.h>
 
 namespace kimera {
 
 using LayerConfig = kimera_dsg_visualizer::LayerVisualizerConfig;
 using VisualizerConfig = kimera_dsg_visualizer::VisualizerConfig;
+using ColormapConfig = kimera_dsg_visualizer::ColormapConfig;
 using NodeColor = SemanticNodeAttributes::ColorVector;
 
 inline double getZOffset(const LayerConfig& config,
@@ -21,5 +23,7 @@ inline double getZOffset(const LayerConfig& config,
 VisualizerConfig getVisualizerConfig(const std::string& visualizer_namespace);
 
 LayerConfig getLayerConfig(const std::string& layer_namespace);
+
+ColormapConfig getColormapConfig(const std::string& colormap_namespace);
 
 } // namespace kimera

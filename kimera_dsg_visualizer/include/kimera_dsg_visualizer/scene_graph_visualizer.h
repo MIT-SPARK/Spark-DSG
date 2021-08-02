@@ -19,7 +19,7 @@ class SceneGraphVisualizer {
   using LayerRqtServer = dynamic_reconfigure::Server<LayerConfig>;
   using LayerRqtCb = LayerRqtServer::CallbackType;
   using RqtServer = dynamic_reconfigure::Server<VisualizerConfig>;
-  using RqtCb = RqtServer::CallbackType;
+  using ColormapRqtServer = dynamic_reconfigure::Server<ColormapConfig>;
 
   SceneGraphVisualizer(const ros::NodeHandle& nh,
                        const SceneGraph::LayerIds& layer_ids);
@@ -38,6 +38,8 @@ class SceneGraphVisualizer {
   virtual bool redraw();
 
   void configUpdateCb(VisualizerConfig& config, uint32_t level);
+
+  void colormapUpdateCb(ColormapConfig& config, uint32_t level);
 
   void layerConfigUpdateCb(LayerId layer_id, LayerConfig& config, uint32_t level);
 
@@ -85,12 +87,15 @@ class SceneGraphVisualizer {
 
   std::unique_ptr<RqtServer> config_server_;
   RqtMutexPtr config_server_mutex_;
+  std::unique_ptr<ColormapRqtServer> colormap_server_;
+  RqtMutexPtr colormap_server_mutex_;
   std::map<LayerId, RqtMutexPtr> layer_config_server_mutexes_;
   std::map<LayerId, std::unique_ptr<LayerRqtServer>> layer_config_servers_;
   std::map<LayerId, LayerRqtCb> layer_config_cb_;
 
   std::map<LayerId, LayerConfig> layer_configs_;
   VisualizerConfig visualizer_config_;
+  ColormapConfig places_colormap_;
 
   ros::Publisher semantic_instance_centroid_pub_;
   ros::Publisher bounding_box_pub_;

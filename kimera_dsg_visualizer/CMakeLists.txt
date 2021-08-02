@@ -34,7 +34,7 @@ configure_file(
 )
 
 generate_dynamic_reconfigure_options(
-  cfg/VisualizerConfig.cfg cfg/LayerVisualizerConfig.cfg
+  cfg/ColormapConfig.cfg cfg/LayerVisualizerConfig.cfg cfg/VisualizerConfig.cfg
 )
 
 catkin_package(

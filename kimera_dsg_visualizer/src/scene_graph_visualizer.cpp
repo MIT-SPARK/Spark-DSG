@@ -40,8 +40,6 @@ void SceneGraphVisualizer::start() {
 void SceneGraphVisualizer::setupDynamicReconfigure(
     const SceneGraph::LayerIds& layer_ids) {
   visualizer_config_ = getVisualizerConfig(visualizer_ns_);
-
-  // required for "safely" updating the rqt server
   config_server_mutex_ = std::make_unique<boost::recursive_mutex>();
   config_server_ = std::make_unique<RqtServer>(*config_server_mutex_,
                                                ros::NodeHandle(visualizer_ns_));
@@ -49,9 +47,21 @@ void SceneGraphVisualizer::setupDynamicReconfigure(
     boost::recursive_mutex::scoped_lock lock(*config_server_mutex_);
     config_server_->updateConfig(visualizer_config_);
   }
-
   config_server_->setCallback(
       boost::bind(&SceneGraphVisualizer::configUpdateCb, this, _1, _2));
+
+  const std::string colormap_ns = visualizer_ns_ + "/places_colormap";
+  places_colormap_ = getColormapConfig(colormap_ns);
+
+  colormap_server_mutex_ = std::make_unique<boost::recursive_mutex>();
+  colormap_server_ = std::make_unique<ColormapRqtServer>(*colormap_server_mutex_,
+                                                         ros::NodeHandle(colormap_ns));
+  {  // critical region for dynamic reconfigure (probably unneeded)
+    boost::recursive_mutex::scoped_lock lock(*colormap_server_mutex_);
+    colormap_server_->updateConfig(places_colormap_);
+  }
+  colormap_server_->setCallback(
+      boost::bind(&SceneGraphVisualizer::colormapUpdateCb, this, _1, _2));
 
   for (const auto& layer : layer_ids) {
     const std::string layer_ns = visualizer_layer_ns_ + std::to_string(layer);
@@ -74,6 +84,11 @@ void SceneGraphVisualizer::setupDynamicReconfigure(
 
 void SceneGraphVisualizer::configUpdateCb(VisualizerConfig& config, uint32_t) {
   visualizer_config_ = config;
+  need_redraw_ = true;
+}
+
+void SceneGraphVisualizer::colormapUpdateCb(ColormapConfig& config, uint32_t) {
+  places_colormap_ = config;
   need_redraw_ = true;
 }
 
@@ -131,8 +146,14 @@ void SceneGraphVisualizer::handleCentroids(const SceneGraphLayer& layer,
                                            MarkerArray& markers) const {
   const std::string ns = "layer_centroids";
   if (config.visualize) {
-    Marker marker =
-        makeCentroidMarkers(config, layer, visualizer_config_, std::nullopt, ns);
+    Marker marker;
+    if (layer.id == to_underlying(KimeraDsgLayers::PLACES) &&
+        visualizer_config_.color_places_by_distance) {
+      marker =
+          makeCentroidMarkers(config, layer, visualizer_config_, places_colormap_, ns);
+    } else {
+      marker = makeCentroidMarkers(config, layer, visualizer_config_, std::nullopt, ns);
+    }
     fillHeader(marker, current_time);
     markers.markers.push_back(marker);
   } else {

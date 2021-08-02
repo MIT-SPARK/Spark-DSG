@@ -19,14 +19,8 @@ VisualizerConfig getVisualizerConfig(const std::string& visualizer_namespace) {
   READ_PARAM(nh, config, mesh_layer_offset);
   READ_PARAM(nh, config, collapse_layers);
   READ_PARAM(nh, config, color_places_by_distance);
-  READ_PARAM(nh, config, places_min_distance);
-  READ_PARAM(nh, config, places_max_distance);
-  READ_PARAM(nh, config, places_min_hue);
-  READ_PARAM(nh, config, places_min_saturation);
-  READ_PARAM(nh, config, places_min_luminance);
-  READ_PARAM(nh, config, places_max_hue);
-  READ_PARAM(nh, config, places_max_saturation);
-  READ_PARAM(nh, config, places_max_luminance);
+  READ_PARAM(nh, config, places_colormap_min_distance);
+  READ_PARAM(nh, config, places_colormap_max_distance);
   return config;
 }
 
@@ -52,6 +46,18 @@ LayerConfig getLayerConfig(const std::string& layer_namespace) {
   READ_PARAM(nh, config, intralayer_edge_alpha);
   READ_PARAM(nh, config, intralayer_edge_use_color);
   READ_PARAM(nh, config, intralayer_edge_insertion_skip);
+  return config;
+}
+
+ColormapConfig getColormapConfig(const std::string& colormap_namespace) {
+  ros::NodeHandle nh(colormap_namespace);
+  ColormapConfig config;
+  READ_PARAM(nh, config, min_hue);
+  READ_PARAM(nh, config, max_hue);
+  READ_PARAM(nh, config, min_saturation);
+  READ_PARAM(nh, config, max_saturation);
+  READ_PARAM(nh, config, min_luminance);
+  READ_PARAM(nh, config, max_luminance);
   return config;
 }
 

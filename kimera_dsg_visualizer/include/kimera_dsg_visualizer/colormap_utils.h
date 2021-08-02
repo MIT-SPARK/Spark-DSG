@@ -22,16 +22,7 @@ inline double lerp(double min, double max, double ratio) {
   return (max - min) * ratio + min;
 }
 
-struct HlsColorMapConfig {
-  double min_hue;
-  double max_hue;
-  double min_saturation;
-  double max_saturation;
-  double min_luminance;
-  double max_luminance;
-};
-
-inline NodeColor interpolateColorMap(const HlsColorMapConfig& config, double ratio) {
+inline NodeColor interpolateColorMap(const ColormapConfig& config, double ratio) {
   // override ratio input to be in [0, 1]
   ratio = std::clamp(ratio, 0.0, 1.0);
 

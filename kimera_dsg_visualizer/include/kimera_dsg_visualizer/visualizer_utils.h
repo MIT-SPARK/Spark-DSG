@@ -27,6 +27,13 @@ visualization_msgs::Marker makeCentroidMarkers(
     std::optional<NodeColor> layer_color = std::nullopt,
     const std::string& marker_namespace = "layer_centroids");
 
+visualization_msgs::Marker makeCentroidMarkers(
+    const LayerConfig& config,
+    const SceneGraphLayer& layer,
+    const VisualizerConfig& visualizer_config,
+    const ColormapConfig& colors,
+    const std::string& marker_namespace = "layer_centroids");
+
 visualization_msgs::MarkerArray makeGraphEdgeMarkers(
     const SceneGraph& scene_graph,
     const std::map<LayerId, LayerConfig>& configs,
