@@ -10,6 +10,7 @@ using NodeRef = kimera::SceneGraphLayer::NodeRef;
 using Edge = kimera::SceneGraphLayer::Edge;
 using EdgeInfo = kimera::SceneGraphLayer::EdgeInfo;
 using EdgeRef = kimera::SceneGraphLayer::EdgeRef;
+using NodeSet = std::unordered_set<NodeId>;
 
 class TestableSceneGraphLayer : public SceneGraphLayer {
  public:
@@ -254,5 +255,85 @@ TEST(SceneGraphLayerTests, getPositionCorrect) {
     FAIL();
   } catch (const std::out_of_range&) {
     SUCCEED();
+  }
+}
+
+TEST(SceneGraphLayerTests, GetNeighborhoodCorrect) {
+  TestableSceneGraphLayer layer(1);
+
+  layer.emplaceNode(0, std::make_unique<NodeAttributes>());
+  for (size_t i = 1; i < 7; ++i) {
+    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+    layer.insertEdge(i - 1, i);
+  }
+
+  {  // one hop at start of chain
+    NodeSet expected{0, 1};
+    NodeSet result = layer.getNeighborhood(0);
+    EXPECT_EQ(expected.size(), result.size());
+    for (const auto node : result) {
+      EXPECT_TRUE(expected.count(node)) << "Missing " << node;
+    }
+  }
+
+  {  // full chain (3 hops at middle of chain)
+    NodeSet expected{0, 1, 2, 3, 4, 5, 6};
+    NodeSet result = layer.getNeighborhood(3, 3);
+    EXPECT_EQ(expected.size(), result.size());
+    for (const auto node : result) {
+      EXPECT_TRUE(expected.count(node)) << "Missing " << node;
+    }
+  }
+}
+
+TEST(SceneGraphLayerTests, GetNeighborhoodFromSetCorrect) {
+  TestableSceneGraphLayer layer(1);
+
+  layer.emplaceNode(0, std::make_unique<NodeAttributes>());
+  for (size_t i = 1; i < 7; ++i) {
+    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+    layer.insertEdge(i - 1, i);
+  }
+
+  {  // single node
+    NodeSet query{0};
+    NodeSet expected{0, 1};
+    NodeSet result = layer.getNeighborhood(query);
+    EXPECT_EQ(expected.size(), result.size());
+    for (const auto node : result) {
+      EXPECT_TRUE(expected.count(node)) << "Missing " << node;
+    }
+  }
+
+  {  // one hop at start and end of chain
+    NodeSet query{0, 6};
+    NodeSet expected{0, 1, 5, 6};
+    NodeSet result = layer.getNeighborhood(query);
+    EXPECT_EQ(expected.size(), result.size());
+    for (const auto node : result) {
+      EXPECT_TRUE(expected.count(node)) << "Missing " << node;
+    }
+  }
+
+  {  // full chain (3 hops at ends of chain)
+    NodeSet query{0, 6};
+    NodeSet expected{0, 1, 2, 3, 4, 5, 6};
+    NodeSet result = layer.getNeighborhood(query, 3);
+    EXPECT_EQ(expected.size(), result.size());
+    for (const auto node : result) {
+      EXPECT_TRUE(expected.count(node)) << "Missing " << node;
+    }
+  }
+
+  {  // chain with a loop and 2 hops (original implementation short-circuited visiting
+     // too early)
+    layer.insertEdge(0, 6);
+    NodeSet query{0, 6};
+    NodeSet expected{0, 1, 2, 4, 5, 6};
+    NodeSet result = layer.getNeighborhood(query, 2);
+    EXPECT_EQ(expected.size(), result.size());
+    for (const auto node : result) {
+      EXPECT_TRUE(expected.count(node)) << "Missing " << node;
+    }
   }
 }

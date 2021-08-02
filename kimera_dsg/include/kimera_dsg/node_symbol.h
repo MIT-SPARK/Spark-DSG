@@ -1,7 +1,7 @@
 #pragma once
-#include "kimera_dsg/scene_graph_types.h"
-#include <sstream>
 #include <ostream>
+#include <sstream>
+#include "kimera_dsg/scene_graph_types.h"
 
 namespace kimera {
 
@@ -75,5 +75,21 @@ class NodeSymbol {
     } symbol;
   } value_;
 };
+
+template <typename Container>
+std::string displayNodeSymbolContainer(const Container& set) {
+  std::stringstream ss;
+  ss << "[";
+  auto iter = set.begin();
+  while (iter != set.end()) {
+    ss << NodeSymbol(*iter).getLabel();
+    ++iter;
+    if (iter != set.end()) {
+      ss << ", ";
+    }
+  }
+  ss << "]";
+  return ss.str();
+}
 
 }  // namespace kimera

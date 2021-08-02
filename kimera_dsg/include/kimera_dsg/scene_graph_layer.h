@@ -1,9 +1,11 @@
 #pragma once
+#include "kimera_dsg/graph_utilities.h"
 #include "kimera_dsg/node_symbol.h"
 #include "kimera_dsg/scene_graph_node.h"
 
 #include <map>
 #include <optional>
+#include <unordered_set>
 #include <vector>
 
 #define REGISTER_EDGE_INFO_TYPE(classname, json_store)                    \
@@ -174,7 +176,27 @@ class SceneGraphLayer {
   //! ID of the layer
   const LayerId id;
 
+  /**
+   * @brief Get the immediate neighborhood of a node via BFS
+   * @param node Node to get the neighborhood of
+   * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
+   */
+  std::unordered_set<NodeId> getNeighborhood(NodeId node, size_t num_hops = 1) const;
+
+  /**
+   * @brief Get the immediate neighborhood of a set of nodes via BFS
+   * @param nodes Nodes to get the neighborhood of
+   * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
+   */
+  std::unordered_set<NodeId> getNeighborhood(const std::unordered_set<NodeId>& nodes,
+                                             size_t num_hops = 1) const;
+
  protected:
+  void fillNeighborhoodForNode(NodeId node,
+                               size_t num_hops,
+                               std::unordered_set<NodeId>& result,
+                               std::map<NodeId, size_t>& costs) const;
+
   /**
    * @brief construct and add a node to the layer
    * @param node_id node to create
@@ -243,5 +265,22 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
 
   using SceneGraphLayer::removeNode;
 };
+
+namespace graph_utilities {
+
+template <>
+struct graph_traits<SceneGraphLayer> {
+  using visitor = const std::function<void(const SceneGraphLayer&, NodeId)>&;
+
+  static inline std::set<NodeId> neighbors(const SceneGraphLayer& graph, NodeId node) {
+    return graph.getNode(node)->get().siblings();
+  }
+
+  static inline bool contains(const SceneGraphLayer& graph, NodeId node) {
+    return graph.hasNode(node);
+  }
+};
+
+}  // namespace graph_utilities
 
 }  // namespace kimera

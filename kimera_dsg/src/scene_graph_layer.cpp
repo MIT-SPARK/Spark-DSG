@@ -2,6 +2,7 @@
 
 #include <glog/logging.h>
 #include <pcl/search/kdtree.h>
+#include <queue>
 
 namespace kimera {
 
@@ -51,6 +52,11 @@ bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
 bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
                                  EdgeInfo::Ptr&& edge_info) {
+  if (source == target) {
+    LOG(WARNING) << "Attempted to add a self-edge";
+    return false;
+  }
+
   if (hasEdge(source, target)) {
     return false;
   }
@@ -155,6 +161,26 @@ Eigen::Vector3d SceneGraphLayer::getPosition(NodeId node) const {
   }
 
   return nodes_.at(node)->attributes().position;
+}
+
+using NodeSet = std::unordered_set<NodeId>;
+
+NodeSet SceneGraphLayer::getNeighborhood(NodeId node, size_t num_hops) const {
+  NodeSet result;
+  graph_utilities::breadthFirstSearch(
+      *this, node, num_hops, [&](const SceneGraphLayer&, NodeId visited) {
+        result.insert(visited);
+      });
+  return result;
+}
+
+NodeSet SceneGraphLayer::getNeighborhood(const NodeSet& nodes, size_t num_hops) const {
+  NodeSet result;
+  graph_utilities::breadthFirstSearch(
+      *this, nodes, num_hops, [&](const SceneGraphLayer&, NodeId visited) {
+        result.insert(visited);
+      });
+  return result;
 }
 
 }  // namespace kimera
