@@ -11,7 +11,7 @@ Welcome to Kimera-DSG's documentation!
    :caption: Contents:
 
    cpp_api/kimera_dsg_cpp_api
-
+   python_api
 
 Indices and tables
 ==================

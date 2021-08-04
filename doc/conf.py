@@ -27,7 +27,18 @@ author = "Toni Rosinol et al."
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.mathjax", "sphinx_rtd_theme", "breathe", "exhale"]
+extensions = [
+    "sphinx.ext.mathjax",
+    "sphinx_rtd_theme",
+    "breathe",
+    "exhale",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+]
+
+autosummary_generate = True
 
 breathe_projects = {"Kimera-DSG": "./_build/doxyoutput/xml"}
 breathe_default_project = "Kimera-DSG"
@@ -40,12 +51,15 @@ exhale_args = {
     "createTreeView": True,
     "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
+    "verboseBuild": False,
     "exhaleDoxygenStdin": """
         INPUT = ../kimera_dsg/include
         EXTRACT_PRIVATE = NO
         EXTRACT_ALL = NO
         MACRO_EXPANSION = YES
         EXPAND_ONLY_PREDEF = YES
+        EXCLUDE_PATTERNS = "*serialization_helpers*"
+        EXCLUDE_SYMBOLS = "nlohmann*"
         PREDEFINED += __attribute__((x))=
     """,
 }
@@ -64,8 +78,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = "sphinx_rtd_theme"
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
+# html_theme = "alabaster"
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -73,5 +87,5 @@ html_theme = "alabaster"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-primary_domain = "cpp"
-highlight_language = "cpp"
+primary_domain = "py"
+highlight_language = "default"
