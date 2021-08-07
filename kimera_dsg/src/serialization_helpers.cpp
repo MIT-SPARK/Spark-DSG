@@ -38,7 +38,7 @@ void from_json(const json& j, pcl::PolygonMesh& mesh) {
 
   for (const auto& face : j.at("faces")) {
     pcl::Vertices face_indices;
-    face_indices.vertices = face.get<std::vector<uint32_t>>();
+    face_indices.vertices = face.get<std::vector<std::uint32_t>>();
     mesh.polygons.push_back(face_indices);
   }
 }

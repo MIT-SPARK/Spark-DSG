@@ -138,7 +138,7 @@ Marker makeCentroidMarkers(const LayerConfig& config,
     } else {
       try {
         desired_color = id_node_pair.second->attributes<SemanticNodeAttributes>().color;
-      } catch (const std::bad_cast) {
+      } catch (const std::bad_cast&) {
         node_colors_valid = false;
         desired_color << 1.0, 0.0, 0.0;
       }
