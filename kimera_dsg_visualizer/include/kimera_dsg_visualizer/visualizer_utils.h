@@ -8,6 +8,8 @@
 
 namespace kimera {
 
+using ColorFunction = std::function<NodeColor(const SceneGraphNode&)>;
+
 visualization_msgs::Marker makeBoundingBoxMarker(
     const LayerConfig& config,
     const SceneGraphNode& node,
@@ -33,6 +35,13 @@ visualization_msgs::Marker makeCentroidMarkers(
     const VisualizerConfig& visualizer_config,
     const ColormapConfig& colors,
     const std::string& marker_namespace = "layer_centroids");
+
+visualization_msgs::Marker makeCentroidMarkers(
+    const LayerConfig& config,
+    const SceneGraphLayer& layer,
+    const VisualizerConfig& visualizer_config,
+    const std::string& marker_namespace,
+    const ColorFunction& color_func);
 
 visualization_msgs::MarkerArray makeGraphEdgeMarkers(
     const SceneGraph& scene_graph,

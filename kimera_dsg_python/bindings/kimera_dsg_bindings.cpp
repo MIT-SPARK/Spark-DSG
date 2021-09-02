@@ -170,12 +170,7 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
       .def_readwrite("min", &BoundingBox::min)
       .def_readwrite("max", &BoundingBox::max)
       .def_readwrite("world_P_center", &BoundingBox::world_P_center)
-      .def_property(
-          "world_R_center",
-          [](const BoundingBox &box) { return Quaternion<float>(box.world_R_center); },
-          [](BoundingBox &box, const Quaternion<float> &rot) {
-            box.world_R_center = rot;
-          })
+      .def_readwrite("world_R_center", &BoundingBox::world_R_center)
       .def("__repr__", [](const BoundingBox &box) {
         std::stringstream ss;
         ss << box;

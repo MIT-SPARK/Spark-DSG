@@ -184,7 +184,7 @@ class SceneGraphNode {
   inline void clearParent_() { has_parent_ = false; }
 
   //! pointer to attributes
-  const Attributes::Ptr attributes_;
+  Attributes::Ptr attributes_;
 
   //! whether or not the node has a parent
   bool has_parent_;

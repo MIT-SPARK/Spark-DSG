@@ -41,15 +41,41 @@ void DynamicSceneGraphVisualizer::visualizeMesh(const pcl::PolygonMesh& mesh,
   msg.header.stamp = ros::Time::now();  // TODO(nathan) unify time
   msg.mesh = kimera_pgmo::PolygonMeshToTriangleMeshMsg(mesh);
 
+  // TODO(nathan) this could be rethought to not conflict with dsg publisher
   if (rgb_mesh) {
     rgb_mesh_pub_.publish(msg);
   } else {
     semantic_mesh_pub_.publish(msg);
   }
 }
+
 #else
 void DynamicSceneGraphVisualizer::visualizeMesh(const pcl::PolygonMesh&,
                                                 bool rgb_mesh) const {
+  ROS_WARN(
+      "DSG Visualizer not built with PGMO. You should rebuild the "
+      "kimera_dsg_visualizer package with kimera_pgmo installed enable mesh "
+      "visualization");
+}
+#endif
+
+#if ENABLE_PGMO_FEATURES()
+void DynamicSceneGraphVisualizer::visualizeDsgMesh() const {
+  if (!scene_graph_->hasMesh()) {
+    ROS_ERROR("Attempting to visualize unitialized mesh");
+    return;
+  }
+
+  mesh_msgs::TriangleMeshStamped msg;
+  msg.header.frame_id = world_frame_;
+  msg.header.stamp = ros::Time::now();
+  // vertices and meshes are guaranteed to not be null (from hasMesh)
+  msg.mesh = kimera_pgmo::PolygonMeshToTriangleMeshMsg(*scene_graph_->getMeshVertices(),
+                                                       *scene_graph_->getMeshFaces());
+  semantic_mesh_pub_.publish(msg);
+}
+#else
+void DynamicSceneGraphVisualizer::visualizeDsgMesh() const {
   ROS_WARN(
       "DSG Visualizer not built with PGMO. You should rebuild the "
       "kimera_dsg_visualizer package with kimera_pgmo installed enable mesh "
@@ -92,11 +118,15 @@ bool DynamicSceneGraphVisualizer::redraw() {
     return false;
   }
 
-  if (!scene_graph_->hasLayer(scene_graph_->getMeshLayerId())) {
+  for (const auto& plugin : plugins_) {
+    plugin->draw(*scene_graph_);
+  }
+
+  if (!scene_graph_->hasMesh()) {
     return false;
   }
 
-  visualizeMesh(*(scene_graph_->getMesh()), false);
+  visualizeDsgMesh();
   return true;
 }
 

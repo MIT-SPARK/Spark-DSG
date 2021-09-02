@@ -8,6 +8,7 @@ using kimera::SceneGraphLayer;
 using Node = kimera::SceneGraphLayer::Node;
 using NodeRef = kimera::SceneGraphLayer::NodeRef;
 using Edge = kimera::SceneGraphLayer::Edge;
+using Edges = kimera::SceneGraphLayer::Edges;
 using EdgeInfo = kimera::SceneGraphLayer::EdgeInfo;
 using EdgeRef = kimera::SceneGraphLayer::EdgeRef;
 using NodeSet = std::unordered_set<NodeId>;
@@ -335,5 +336,61 @@ TEST(SceneGraphLayerTests, GetNeighborhoodFromSetCorrect) {
     for (const auto node : result) {
       EXPECT_TRUE(expected.count(node)) << "Missing " << node;
     }
+  }
+}
+
+TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
+  TestableSceneGraphLayer layer(1);
+
+  layer.emplaceNode(0, std::make_unique<NodeAttributes>());
+  for (size_t i = 1; i < 7; ++i) {
+    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+    layer.insertEdge(i - 1, i);
+  }
+
+
+  TestableSceneGraphLayer deserialized_layer(1);
+
+  { // no nodes -> empty result on deserialization
+    std::unordered_set<NodeId> nodes;
+    std::string contents = layer.serializeLayer(nodes);
+    std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
+    ASSERT_TRUE(edges != nullptr);
+    EXPECT_TRUE(edges->empty());
+    EXPECT_EQ(0u, deserialized_layer.numNodes());
+    EXPECT_EQ(0u, deserialized_layer.numEdges());
+  }
+
+  { // first node -> 1 edge
+    std::unordered_set<NodeId> nodes{0};
+    std::string contents = layer.serializeLayer(nodes);
+    std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
+    ASSERT_TRUE(edges != nullptr);
+    EXPECT_EQ(1u, edges->size());
+    EXPECT_EQ(1u, deserialized_layer.numNodes());
+    EXPECT_EQ(0u, deserialized_layer.numEdges());
+    ASSERT_TRUE(edges->count(0));
+    EXPECT_EQ(0u, edges->at(0).source);
+    EXPECT_EQ(1u, edges->at(0).target);
+  }
+
+  { // second node -> 2 edges
+    std::unordered_set<NodeId> nodes{1};
+    std::string contents = layer.serializeLayer(nodes);
+    std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
+    ASSERT_TRUE(edges != nullptr);
+    EXPECT_EQ(2u, edges->size());
+    EXPECT_EQ(1u, deserialized_layer.numNodes());
+    EXPECT_EQ(0u, deserialized_layer.numEdges());
+  }
+
+  { // all nodes -> 12 edges
+    std::unordered_set<NodeId> nodes{0, 1, 2, 3, 4, 5, 6};
+    std::string contents = layer.serializeLayer(nodes);
+    std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
+    ASSERT_TRUE(edges != nullptr);
+    EXPECT_EQ(12u, edges->size());
+    EXPECT_EQ(7u, deserialized_layer.numNodes());
+    EXPECT_EQ(0u, deserialized_layer.numEdges());
   }
 }

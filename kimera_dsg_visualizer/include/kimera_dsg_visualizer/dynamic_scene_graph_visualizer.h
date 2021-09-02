@@ -1,4 +1,5 @@
 #pragma once
+#include "kimera_dsg_visualizer/dsg_visualizer_plugin.h"
 #include "kimera_dsg_visualizer/scene_graph_visualizer.h"
 
 #include <pcl/PolygonMesh.h>
@@ -16,10 +17,18 @@ class DynamicSceneGraphVisualizer : public SceneGraphVisualizer {
 
   void visualizeWalls(const pcl::PolygonMesh& mesh) const;
 
- protected:
   virtual bool redraw() override;
 
+  void addPlugin(const std::shared_ptr<DsgVisualizerPlugin>& plugin) {
+    plugins_.push_back(plugin);
+  }
+
  protected:
+  void visualizeDsgMesh() const;
+
+ protected:
+  std::list<std::shared_ptr<DsgVisualizerPlugin>> plugins_;
+
   ros::Publisher wall_pub_;
   ros::Publisher semantic_mesh_pub_;
   ros::Publisher rgb_mesh_pub_;

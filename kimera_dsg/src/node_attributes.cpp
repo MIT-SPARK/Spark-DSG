@@ -12,6 +12,12 @@ namespace kimera {
 #define READ_FIELD_FROM_JSON(record, field) \
   field = record.at(#field).get<decltype(field)>();
 
+#define READ_FIELD_FROM_JSON_SAFE(record, field)      \
+  if (record.contains(#field)) {                      \
+    field = record.at(#field).get<decltype(field)>(); \
+  }                                                   \
+  static_assert(true, "")
+
 SemanticNodeAttributes::SemanticNodeAttributes()
     : NodeAttributes(), name(""), color(ColorVector::Zero()), semantic_label(0u) {}
 
@@ -95,6 +101,9 @@ std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   PlaceNodeAttributes::fill_ostream(out);
   out << " - distance: " << distance;
   out << " - num_basis_points: " << num_basis_points;
+  std::chrono::duration<double> last_updated_s = last_update_time;
+  out << " - last_updated: " << last_updated_s.count() << " [s]"
+      << " (" << last_update_time.count() << " [ns])";
   return out;
 }
 
@@ -103,6 +112,9 @@ json PlaceNodeAttributes::toJson() const {
   REGISTER_JSON_ATTR_TYPE(PlaceNodeAttributes, to_return);
   WRITE_FIELD_TO_JSON(to_return, distance);
   WRITE_FIELD_TO_JSON(to_return, num_basis_points);
+  WRITE_FIELD_TO_JSON(to_return, voxblox_mesh_connections);
+  WRITE_FIELD_TO_JSON(to_return, pcl_mesh_connections);
+  to_return["last_update_time"] = last_update_time.count();
   return to_return;
 }
 
@@ -110,6 +122,12 @@ void PlaceNodeAttributes::fillFromJson(const json& record) {
   SemanticNodeAttributes::fillFromJson(record);
   READ_FIELD_FROM_JSON(record, distance);
   READ_FIELD_FROM_JSON(record, num_basis_points);
+  READ_FIELD_FROM_JSON_SAFE(record, voxblox_mesh_connections);
+  READ_FIELD_FROM_JSON_SAFE(record, pcl_mesh_connections);
+  if (record.contains("last_update_time")) {
+    last_update_time = std::chrono::nanoseconds(
+        record.at("last_update_time").get<std::chrono::nanoseconds::rep>());
+  }
 }
 
 }  // namespace kimera

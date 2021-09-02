@@ -2,8 +2,10 @@
 #include "kimera_dsg/bounding_box.h"
 #include "kimera_dsg/scene_graph_node.h"
 
+#include <list>
 #include <ostream>
 #include <string>
+#include <chrono>
 
 namespace kimera {
 
@@ -124,6 +126,15 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
 };
 
 /**
+ * @brief Information related to place to mesh coorespondence
+ */
+struct NearestVertexInfo {
+  int32_t block[3];
+  double voxel_pos[3];
+  size_t vertex;
+};
+
+/**
  * @brief Additional node attributes for a place
  * In addition to the normal semantic properties, a room has the minimum
  * distance to an obstacle and the number of basis points for that vertex in the
@@ -152,6 +163,12 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   double distance;
   //! number of equidistant obstacles
   unsigned int num_basis_points;
+  //! voxblox mesh vertices that are closest to this place
+  std::list<NearestVertexInfo> voxblox_mesh_connections;
+  //! pcl mesh vertices that are closest to this place
+  std::list<size_t> pcl_mesh_connections;
+  //! last time the place was updated
+  std::chrono::nanoseconds last_update_time;
 
   virtual nlohmann::json toJson() const override;
 

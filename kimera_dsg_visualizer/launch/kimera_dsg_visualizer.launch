@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-15"?>
 <launch>
   <arg name="scene_graph"/>
-  <arg name="scene_graph_dir" default="$(find kimera_scene_graph)/output"/>
+  <arg name="scene_graph_dir" default="$(find kimera_dsg_builder)/output"/>
   <arg name="scene_graph_path" value="$(arg scene_graph_dir)/$(arg scene_graph)"/>
 
   <arg name="viz_config_dir" default="$(find kimera_dsg_visualizer)/config"/>

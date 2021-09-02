@@ -3,7 +3,6 @@
 
 #include <kimera_dsg/scene_graph_layer.h>
 #include <tf2_eigen/tf2_eigen.h>
-#include <opencv2/imgproc.hpp>
 
 namespace kimera {
 
@@ -59,17 +58,22 @@ Marker makeBoundingBoxMarker(const LayerConfig& config,
 
   BoundingBox bounding_box = node.attributes<ObjectNodeAttributes>().bounding_box;
 
+  Eigen::Quaternionf world_q_center =
+      bounding_box.type == BoundingBox::Type::OBB
+          ? Eigen::Quaternionf(bounding_box.world_R_center)
+          : Eigen::Quaternionf::Identity();
+
   switch (bounding_box.type) {
     case BoundingBox::Type::OBB:
       marker.pose.position =
           tf2::toMsg(bounding_box.world_P_center.cast<double>().eval());
-      tf2::convert(bounding_box.world_R_center.cast<double>(), marker.pose.orientation);
+      tf2::convert(world_q_center.cast<double>(), marker.pose.orientation);
       marker.pose.position.z += getZOffset(config, visualizer_config);
       break;
     case BoundingBox::Type::AABB:
       marker.pose.position =
           tf2::toMsg(bounding_box.world_P_center.cast<double>().eval());
-      tf2::convert(Eigen::Quaterniond::Identity(), marker.pose.orientation);
+      tf2::convert(world_q_center.cast<double>(), marker.pose.orientation);
       marker.pose.position.z += getZOffset(config, visualizer_config);
       break;
     default:
@@ -107,47 +111,20 @@ Marker makeCentroidMarkers(const LayerConfig& config,
                            const VisualizerConfig& visualizer_config,
                            std::optional<NodeColor> layer_color,
                            const std::string& marker_namespace) {
-  Marker marker;
-  marker.type = config.use_sphere_marker ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
-  marker.action = visualization_msgs::Marker::ADD;
-  marker.id = layer.id;
-  marker.ns = marker_namespace;
-
-  marker.scale.x = config.marker_scale;
-  marker.scale.y = config.marker_scale;
-  marker.scale.z = config.marker_scale;
-
-  fillPoseWithIdentity(marker.pose);
-
-  bool node_colors_valid = true;
-  marker.points.reserve(layer.numNodes());
-  marker.colors.reserve(layer.numNodes());
-  for (const auto& id_node_pair : layer.nodes()) {
-    geometry_msgs::Point node_centroid;
-    tf2::convert(id_node_pair.second->attributes().position, node_centroid);
-    node_centroid.z += getZOffset(config, visualizer_config);
-    marker.points.push_back(node_centroid);
-
-    // get the color of the node
-    // TODO(nathan) refactor or pull out into function
-    NodeColor desired_color;
-    if (layer_color) {
-      desired_color = *layer_color;
-    } else if (!node_colors_valid) {
-      desired_color << 1.0, 0.0, 0.0;
-    } else {
-      try {
-        desired_color = id_node_pair.second->attributes<SemanticNodeAttributes>().color;
-      } catch (const std::bad_cast&) {
-        node_colors_valid = false;
-        desired_color << 1.0, 0.0, 0.0;
-      }
-    }
-
-    marker.colors.push_back(makeColorMsg(desired_color, config.marker_alpha));
-  }
-
-  return marker;
+  return makeCentroidMarkers(config,
+                             layer,
+                             visualizer_config,
+                             marker_namespace,
+                             [&](const SceneGraphNode& node) {
+                               if (layer_color) {
+                                 return *layer_color;
+                               }
+                               try {
+                                 return node.attributes<SemanticNodeAttributes>().color;
+                               } catch (const std::bad_cast&) {
+                                 return NodeColor(1.0, 0.0, 0.0);
+                               }
+                             });
 }
 
 Marker makeCentroidMarkers(const LayerConfig& config,
@@ -155,6 +132,22 @@ Marker makeCentroidMarkers(const LayerConfig& config,
                            const VisualizerConfig& visualizer_config,
                            const ColormapConfig& colors,
                            const std::string& marker_namespace) {
+  return makeCentroidMarkers(
+      config,
+      layer,
+      visualizer_config,
+      marker_namespace,
+      [&](const SceneGraphNode& node) {
+        return getDistanceColor(
+            visualizer_config, colors, node.attributes<PlaceNodeAttributes>().distance);
+      });
+}
+
+Marker makeCentroidMarkers(const LayerConfig& config,
+                           const SceneGraphLayer& layer,
+                           const VisualizerConfig& visualizer_config,
+                           const std::string& marker_namespace,
+                           const ColorFunction& color_func) {
   Marker marker;
   marker.type = config.use_sphere_marker ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
   marker.action = visualization_msgs::Marker::ADD;
@@ -175,12 +168,8 @@ Marker makeCentroidMarkers(const LayerConfig& config,
     node_centroid.z += getZOffset(config, visualizer_config);
     marker.points.push_back(node_centroid);
 
-    NodeColor node_color = getDistanceColor(
-        visualizer_config,
-        colors,
-        id_node_pair.second->attributes<PlaceNodeAttributes>().distance);
-
-    marker.colors.push_back(makeColorMsg(node_color, config.marker_alpha));
+    NodeColor desired_color = color_func(*id_node_pair.second);
+    marker.colors.push_back(makeColorMsg(desired_color, config.marker_alpha));
   }
 
   return marker;
@@ -276,6 +265,10 @@ MarkerArray makeGraphEdgeMarkers(const SceneGraph& graph,
   }
 
   for (const auto& id_marker_pair : layer_markers) {
+    if (id_marker_pair.second.points.empty()) {
+      continue;
+    }
+
     layer_edges.markers.push_back(id_marker_pair.second);
   }
   return layer_edges;
@@ -297,8 +290,8 @@ Marker makeMeshEdgesMarker(const LayerConfig& config,
 
   for (const auto& id_node_pair : layer.nodes()) {
     const Node& node = *id_node_pair.second;
-    auto mesh_points = graph.getMeshCloudForNode(node.id);
-    if (mesh_points == nullptr || mesh_points->size() == 0) {
+    auto mesh_edge_indices = graph.getMeshConnectionIndices(node.id);
+    if (mesh_edge_indices.empty()) {
       continue;
     }
 
@@ -326,12 +319,16 @@ Marker makeMeshEdgesMarker(const LayerConfig& config,
           makeColorMsg(NodeColor::Zero(), config.interlayer_edge_alpha));
     }
 
-    for (size_t i = 0; i < mesh_points->size();
+    for (size_t i = 0; i < mesh_edge_indices.size();
          i += config.interlayer_edge_insertion_skip + 1) {
+      std::optional<Eigen::Vector3d> vertex_pos =
+          graph.getMeshPosition(mesh_edge_indices[i]);
+      if (!vertex_pos) {
+        continue;
+      }
+
       geometry_msgs::Point vertex;
-      vertex.x = mesh_points->at(i).x;
-      vertex.y = mesh_points->at(i).y;
-      vertex.z = mesh_points->at(i).z;
+      tf2::convert(*vertex_pos, vertex);
       if (!visualizer_config.collapse_layers) {
         vertex.z += visualizer_config.mesh_layer_offset;
       }
@@ -377,15 +374,23 @@ Marker makeLayerEdgeMarkers(const LayerConfig& config,
 
   auto edge_iter = layer.edges().begin();
   while (edge_iter != layer.edges().end()) {
-    geometry_msgs::Point source;
-    tf2::convert(layer.getPosition(edge_iter->second.source), source);
-    source.z += getZOffset(config, visualizer_config);
-    marker.points.push_back(source);
+    try {
+      geometry_msgs::Point source;
+      tf2::convert(layer.getPosition(edge_iter->second.source), source);
+      source.z += getZOffset(config, visualizer_config);
+      marker.points.push_back(source);
 
-    geometry_msgs::Point target;
-    tf2::convert(layer.getPosition(edge_iter->second.target), target);
-    target.z += getZOffset(config, visualizer_config);
-    marker.points.push_back(target);
+      geometry_msgs::Point target;
+      tf2::convert(layer.getPosition(edge_iter->second.target), target);
+      target.z += getZOffset(config, visualizer_config);
+      marker.points.push_back(target);
+    } catch (const std::out_of_range&) {
+      const auto& edge = edge_iter->second;
+      LOG(ERROR) << "Invalid edge: " << NodeSymbol(edge.source).getLabel() << " -> "
+                 << NodeSymbol(edge.target).getLabel()
+                 << " source: " << (layer.hasNode(edge.source) ? "yes" : "no")
+                 << " target: " << (layer.hasNode(edge.target) ? "yes" : "no");
+    }
 
     std::advance(edge_iter, config.intralayer_edge_insertion_skip + 1);
   }

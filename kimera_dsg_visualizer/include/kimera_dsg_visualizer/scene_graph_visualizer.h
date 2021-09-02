@@ -28,6 +28,12 @@ class SceneGraphVisualizer {
 
   void start();
 
+  virtual bool redraw();
+
+  inline void setGraphUpdated() {
+    need_redraw_ = true;
+  }
+
   void setGraph(const DynamicSceneGraph::Ptr& scene_graph);
 
   void clear();
@@ -35,7 +41,6 @@ class SceneGraphVisualizer {
  protected:
   void displayLoop(const ros::TimerEvent&);
 
-  virtual bool redraw();
 
   void configUpdateCb(VisualizerConfig& config, uint32_t level);
 

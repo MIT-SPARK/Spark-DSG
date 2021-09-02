@@ -12,14 +12,14 @@ BoundingBox::BoundingBox()
       min(Eigen::Vector3f::Zero()),
       max(Eigen::Vector3f::Zero()),
       world_P_center(Eigen::Vector3f::Zero()),
-      world_R_center(Eigen::Quaternionf::Identity()) {}
+      world_R_center(Eigen::Matrix3f::Identity()) {}
 
 BoundingBox::BoundingBox(const Eigen::Vector3f& min, const Eigen::Vector3f& max)
     : type(Type::AABB),
       min(min),
       max(max),
       world_P_center(Eigen::Vector3f::Zero()),
-      world_R_center(Eigen::Quaternionf::Identity()) {}
+      world_R_center(Eigen::Matrix3f::Identity()) {}
 
 BoundingBox::BoundingBox(const Eigen::Vector3f& min,
                          const Eigen::Vector3f& max,
@@ -29,7 +29,7 @@ BoundingBox::BoundingBox(const Eigen::Vector3f& min,
       min(min),
       max(max),
       world_P_center(world_P_center),
-      world_R_center(world_R_center) {}
+      world_R_center(world_R_center.toRotationMatrix()) {}
 
 std::ostream& operator<<(std::ostream& os, const BoundingBox& box) {
   os << "Bounding box: " << std::endl
@@ -37,9 +37,46 @@ std::ostream& operator<<(std::ostream& os, const BoundingBox& box) {
      << " - Min: " << box.min.transpose() << std::endl;
   if (box.type == BoundingBox::Type::OBB) {
     os << " - Position: " << box.world_P_center.transpose() << std::endl
-       << " - Orientation: " << box.world_R_center << std::endl;
+       << " - Orientation: " << Eigen::Quaternionf(box.world_R_center) << std::endl;
   }
   return os;
 };
+
+// TODO(nathan) consider template instead
+bool BoundingBox::isInside(const Eigen::Vector3d& point) const {
+  const Eigen::Vector3f point_float = point.cast<float>();
+  return isInside(point_float);
+}
+
+bool BoundingBox::isInsideOBB(const Eigen::Vector3f& point_world) const {
+  Eigen::Vector3f point = world_R_center.transpose() * (point_world - world_P_center);
+  return min(0) <= point(0) && point(0) <= max(0) && min(1) <= point(1) &&
+         point(1) <= max(1) && min(2) <= point(2) && point(2) <= max(2);
+}
+
+bool BoundingBox::isInside(const Eigen::Vector3f& point) const {
+  switch (type) {
+    case Type::AABB:
+      return min(0) <= point(0) && point(0) <= max(0) && min(1) <= point(1) &&
+             point(1) <= max(1) && min(2) <= point(2) && point(2) <= max(2);
+    case Type::OBB:
+      return isInsideOBB(point);
+    case Type::INVALID:
+    default:
+      throw std::runtime_error("not implemented for current bounding box type");
+  }
+}
+
+float BoundingBox::volume() const {
+  // TODO(nathan) check this
+  switch (type) {
+    case Type::AABB:
+    case Type::OBB:
+      return (max - min).prod();
+    default:
+    case Type::INVALID:
+      return std::numeric_limits<float>::quiet_NaN();
+  }
+}
 
 }  // namespace kimera

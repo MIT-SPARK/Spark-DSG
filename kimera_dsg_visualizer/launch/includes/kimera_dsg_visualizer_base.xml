@@ -4,10 +4,12 @@
   <arg name="visualizer_ns" value="kimera_dsg_visualizer"/>
   <arg name="include_rviz" default="true"/>
   <arg name="publish_view_transforms" default="true"/>
+  <arg name="world_frame" default="world"/>
 
   <include file="$(find kimera_dsg_visualizer)/launch/includes/kimera_dsg_visualizer_params.xml">
       <arg name="viz_config_dir" value="$(arg viz_config_dir)"/>
       <arg name="visualizer_ns" value="$(arg visualizer_ns)"/>
+      <arg name="world_frame" default="$(arg world_frame)"/>
   </include>
 
   <include file="$(find kimera_dsg_visualizer)/launch/includes/kimera_dsg_visualizer_rviz.xml"

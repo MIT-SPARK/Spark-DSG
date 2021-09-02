@@ -11,16 +11,24 @@ using Edge = kimera::SceneGraph::Edge;
 using EdgeInfo = kimera::SceneGraph::EdgeInfo;
 using EdgeRef = kimera::SceneGraph::EdgeRef;
 
-DynamicSceneGraph::Mesh::Ptr makeMesh(size_t num_points) {
-  DynamicSceneGraph::Mesh::Ptr mesh;
-  mesh.reset(new DynamicSceneGraph::Mesh());
+struct TestMesh {
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr vertices;
+  std::shared_ptr<std::vector<pcl::Vertices>> faces;
 
-  pcl::PointCloud<pcl::PointXYZRGB> cloud;
-  for (size_t i = 0; i < num_points; ++i) {
-    cloud.push_back(pcl::PointXYZRGB());
+  void reset() {
+    vertices.reset();
+    faces.reset();
   }
+};
 
-  pcl::toPCLPointCloud2(cloud, mesh->cloud);
+TestMesh makeMesh(size_t num_points) {
+  TestMesh mesh;
+  mesh.vertices.reset(new pcl::PointCloud<pcl::PointXYZRGBA>());
+  mesh.faces.reset(new std::vector<pcl::Vertices>());
+
+  for (size_t i = 0; i < num_points; ++i) {
+    mesh.vertices->push_back(pcl::PointXYZRGBA());
+  }
 
   return mesh;
 }
@@ -56,11 +64,11 @@ TEST(DynamicSceneGraphTest, NumNodesAndEdges) {
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.insertEdge(0, 1));
 
-  DynamicSceneGraph::Mesh::Ptr mesh = makeMesh(5);
+  TestMesh mesh = makeMesh(5);
 
   EXPECT_EQ(2u, graph.numNodes());
   EXPECT_EQ(1u, graph.numEdges());
-  graph.setMesh(mesh);
+  graph.setMesh(mesh.vertices, mesh.faces);
   EXPECT_EQ(7u, graph.numNodes());
   EXPECT_EQ(1u, graph.numEdges());
 
@@ -75,8 +83,8 @@ TEST(DynamicSceneGraphTest, MeshEdgeInvariantsCorrect) {
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.insertEdge(0, 1));
 
-  DynamicSceneGraph::Mesh::Ptr mesh = makeMesh(5);
-  graph.setMesh(mesh);
+  TestMesh mesh = makeMesh(5);
+  graph.setMesh(mesh.vertices, mesh.faces);
   EXPECT_EQ(1u, graph.numEdges());
 
   EXPECT_TRUE(graph.insertMeshEdge(0, 1));
@@ -107,13 +115,43 @@ TEST(DynamicSceneGraphTest, MeshEdgeInvariantsCorrect) {
   EXPECT_EQ(2u, graph.numEdges());
 }
 
+TEST(DynamicSceneGraphTest, InvalidMeshEdgeInvariantsCorrect) {
+  DynamicSceneGraph graph;
+  EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.insertEdge(0, 1));
+
+  // edges when mesh is invalid don't work
+  EXPECT_FALSE(graph.insertMeshEdge(0, 7, true));
+  EXPECT_EQ(1u, graph.numEdges());
+
+  TestMesh mesh = makeMesh(5);
+  graph.setMesh(mesh.vertices, mesh.faces);
+  EXPECT_EQ(1u, graph.numEdges());
+
+  EXPECT_TRUE(graph.insertMeshEdge(0, 1, true));
+  EXPECT_EQ(2u, graph.numEdges());
+
+  // no repeated edges
+  EXPECT_FALSE(graph.insertMeshEdge(0, 1, true));
+  EXPECT_EQ(2u, graph.numEdges());
+
+  // no edges to invalid nodes
+  EXPECT_FALSE(graph.insertMeshEdge(3, 1, true));
+  EXPECT_EQ(2u, graph.numEdges());
+
+  // edges to invalid mesh vertices works
+  EXPECT_TRUE(graph.insertMeshEdge(0, 8, true));
+  EXPECT_EQ(3u, graph.numEdges());
+}
+
 TEST(DynamicSceneGraphTest, UpdateMeshEdgesCorrect) {
   DynamicSceneGraph graph;
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
 
-  DynamicSceneGraph::Mesh::Ptr mesh = makeMesh(5);
-  graph.setMesh(mesh);
+  TestMesh mesh = makeMesh(5);
+  graph.setMesh(mesh.vertices, mesh.faces);
 
   for (size_t i = 0; i < 5; ++i) {
     graph.insertMeshEdge(0, i);
@@ -123,17 +161,17 @@ TEST(DynamicSceneGraphTest, UpdateMeshEdgesCorrect) {
 
   // adding more vertices doesn't invalidate anything
   mesh = makeMesh(10);
-  graph.setMesh(mesh);
+  graph.setMesh(mesh.vertices, mesh.faces);
   EXPECT_EQ(10u, graph.numEdges());
 
   // adding less vertices does
   mesh = makeMesh(3);
-  graph.setMesh(mesh);
+  graph.setMesh(mesh.vertices, mesh.faces);
   EXPECT_EQ(6u, graph.numEdges());
 
   // forcing invalidation works as expected
   mesh = makeMesh(5);
-  graph.setMesh(mesh, true);
+  graph.setMesh(mesh.vertices, mesh.faces, true);
   EXPECT_EQ(0u, graph.numEdges());
 
   for (size_t i = 0; i < 5; ++i) {
@@ -144,7 +182,7 @@ TEST(DynamicSceneGraphTest, UpdateMeshEdgesCorrect) {
 
   // passing an invalid mesh also resets everything
   mesh.reset();
-  graph.setMesh(mesh);
+  graph.setMesh(mesh.vertices, mesh.faces);
   EXPECT_EQ(0u, graph.numEdges());
 }
 
@@ -153,8 +191,8 @@ TEST(DynamicSceneGraphTest, RemoveNodesCorrect) {
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
 
-  DynamicSceneGraph::Mesh::Ptr mesh = makeMesh(5);
-  graph.setMesh(mesh);
+  TestMesh mesh = makeMesh(5);
+  graph.setMesh(mesh.vertices, mesh.faces);
 
   for (size_t i = 0; i < 5; ++i) {
     graph.insertMeshEdge(0, i);

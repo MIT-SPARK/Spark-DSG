@@ -25,8 +25,8 @@ DynamicSceneGraph::DynamicSceneGraph(const LayerIds& factory, LayerId mesh_layer
 void DynamicSceneGraph::clear() {
   SceneGraph::clear();
 
-  mesh_.reset();
   mesh_vertices_.reset();
+  mesh_faces_.reset();
 
   clearMeshEdges();
 }
@@ -37,17 +37,26 @@ void DynamicSceneGraph::clearMeshEdges() {
   mesh_edges_vertex_lookup_.clear();
 }
 
-void DynamicSceneGraph::setMesh(const Mesh::ConstPtr& mesh, bool invalidate_all_edges) {
-  if (!mesh) {
+void DynamicSceneGraph::setMeshDirectly(const pcl::PolygonMesh& mesh) {
+  mesh_vertices_.reset(new MeshVertices());
+  pcl::fromPCLPointCloud2(mesh.cloud, *mesh_vertices_);
+
+  mesh_faces_.reset(new MeshFaces(mesh.polygons.begin(), mesh.polygons.end()));
+}
+
+void DynamicSceneGraph::setMesh(const MeshVertices::Ptr& vertices,
+                                const std::shared_ptr<MeshFaces>& faces,
+                                bool invalidate_all_edges) {
+  if (!vertices) {
     VLOG(1) << "received empty mesh. resetting all mesh edges";
     mesh_vertices_.reset();
+    mesh_faces_.reset();
     clearMeshEdges();
     return;
   }
 
-  mesh_ = mesh;
-  mesh_vertices_.reset(new ColorPointCloud());
-  pcl::fromPCLPointCloud2(mesh_->cloud, *mesh_vertices_);
+  mesh_faces_ = faces;
+  mesh_vertices_ = vertices;
 
   if (invalidate_all_edges) {
     clearMeshEdges();
@@ -84,7 +93,9 @@ bool DynamicSceneGraph::hasMeshEdge(NodeId source, size_t mesh_vertex) const {
   return true;
 }
 
-bool DynamicSceneGraph::insertMeshEdge(NodeId source, size_t mesh_vertex) {
+bool DynamicSceneGraph::insertMeshEdge(NodeId source,
+                                       size_t mesh_vertex,
+                                       bool allow_invalid_mesh) {
   if (!mesh_vertices_) {
     return false;
   }
@@ -93,7 +104,7 @@ bool DynamicSceneGraph::insertMeshEdge(NodeId source, size_t mesh_vertex) {
     return false;
   }
 
-  if (mesh_vertex >= mesh_vertices_->size()) {
+  if (mesh_vertex >= mesh_vertices_->size() && !allow_invalid_mesh) {
     return false;
   }
 
@@ -115,7 +126,7 @@ bool DynamicSceneGraph::hasLayer(LayerId layer_id) const {
     return SceneGraph::hasLayer(layer_id);
   }
 
-  return mesh_ != nullptr;
+  return hasMesh();
 }
 
 bool DynamicSceneGraph::removeNode(NodeId node) {
@@ -167,37 +178,42 @@ size_t DynamicSceneGraph::numEdges() const {
   return SceneGraph::numEdges() + mesh_edges_.size();
 }
 
-ColorPointCloud::Ptr DynamicSceneGraph::getMeshCloudForNode(NodeId node) const {
-  if (!mesh_ || !mesh_vertices_) {
-    return nullptr;
+std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(size_t idx) const {
+  if (!mesh_vertices_) {
+    return std::nullopt;
   }
 
-  if (!hasNode(node)) {
-    return nullptr;
+  if (idx >= mesh_vertices_->size()) {
+    return std::nullopt;
   }
 
-  ColorPointCloud::Ptr cloud(new ColorPointCloud());
+  const pcl::PointXYZRGBA& point = mesh_vertices_->at(idx);
+  Eigen::Vector3d pos(point.x, point.y, point.z);
+  return pos;
+}
+
+std::vector<size_t> DynamicSceneGraph::getMeshConnectionIndices(NodeId node) const {
+  std::vector<size_t> to_return;
   if (!mesh_edges_node_lookup_.count(node)) {
-    return cloud;
+    return to_return;
   }
 
-  cloud->reserve(mesh_edges_node_lookup_.at(node).size());
-  for (const auto& vertex_edge_pair : mesh_edges_node_lookup_.at(node)) {
-    cloud->push_back(mesh_vertices_->at(vertex_edge_pair.first));
+  for (const auto& id_edge_pair : mesh_edges_node_lookup_.at(node)) {
+    to_return.push_back(id_edge_pair.first);
   }
 
-  return cloud;
+  return to_return;
 }
 
 json DynamicSceneGraph::toJson(const JsonExportConfig& config) const {
   json to_return = SceneGraph::toJson(config);
   to_return["mesh_layer_id"] = mesh_layer_id_;
-  if (!mesh_) {
+  if (!mesh_vertices_ || !mesh_faces_) {
     return to_return;
   }
 
-  json mesh_json = *mesh_;
-  to_return["mesh"] = mesh_json;
+  to_return["mesh"]["vertices"] = *mesh_vertices_;
+  to_return["mesh"]["faces"] = *mesh_faces_;
 
   to_return["mesh_edges"] = json::array();
   for (const auto& id_edge_pair : mesh_edges_) {
@@ -217,10 +233,17 @@ void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
   mesh_layer_id_ = record.at("mesh_layer_id").get<LayerId>();
 
   if (record.contains("mesh")) {
-    Mesh::Ptr mesh(new Mesh());
-    *mesh = record.at("mesh").get<Mesh>();
+    MeshVertices::Ptr new_vertices(new MeshVertices());
+    *new_vertices =
+        record.at("mesh").at("vertices").get<pcl::PointCloud<pcl::PointXYZRGBA>>();
+
+    auto serialized_vertices =
+        record.at("mesh").at("faces").get<std::vector<pcl::Vertices>>();
+    std::shared_ptr<MeshFaces> new_faces(
+        new MeshFaces(serialized_vertices.begin(), serialized_vertices.end()));
+
     // clear all previous edges
-    setMesh(mesh, true);
+    setMesh(new_vertices, new_faces, true);
 
     for (const auto& edge : record.at("mesh_edges")) {
       auto source = edge.at(config.source_key).get<NodeId>();

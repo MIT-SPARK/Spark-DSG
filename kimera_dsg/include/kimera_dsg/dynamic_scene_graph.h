@@ -36,6 +36,10 @@ class DynamicSceneGraph : public SceneGraph {
   using LayerIds = std::vector<LayerId>;
   //! Underlying mesh type for lowest layer
   using Mesh = pcl::PolygonMesh;
+  //! Underlying mesh vertex type
+  using MeshVertices = pcl::PointCloud<pcl::PointXYZRGBA>;
+  //! Underlying mesh triangle type
+  using MeshFaces = std::vector<pcl::Vertices>;
   //! Mesh edge container type
   using MeshEdges = std::map<size_t, MeshEdge>;
 
@@ -63,15 +67,28 @@ class DynamicSceneGraph : public SceneGraph {
   virtual void clear() override;
 
   /**
-   * @brief Update the pointer to the mesh
+   * @brief Set mesh components directly from a polygon mesh
+   * @note doesn't invalidate any edges
+   */
+  void setMeshDirectly(const pcl::PolygonMesh& mesh);
+
+  /**
+   * @brief Set mesh components individually
    *
    * This removes any edges that point to vertices that no longer
    * exist (i.e. if the new mesh is smaller than the old mesh)
    *
-   * @param mesh Mesh to use
+   * @param vertices Mesh vertices
+   * @param faces Mesh triangles
    * @param invalidate_all_edges Clear all existing mesh edges
    */
-  void setMesh(const Mesh::ConstPtr& mesh, bool invalidate_all_edges = false);
+  void setMesh(const MeshVertices::Ptr& vertices,
+               const std::shared_ptr<MeshFaces>& faces,
+               bool invalidate_all_edges = false);
+
+  inline MeshVertices::Ptr getMeshVertices() const { return mesh_vertices_; }
+
+  inline std::shared_ptr<MeshFaces> getMeshFaces() const { return mesh_faces_; }
 
   /**
    * @brief Check whether the layer exists and is valid
@@ -79,6 +96,14 @@ class DynamicSceneGraph : public SceneGraph {
    * @returns Returns true if the layer exists and is valid
    */
   virtual bool hasLayer(LayerId layer_id) const override;
+
+  /**
+   * @brief Check whether the mesh exists and is valid
+   * @returns Returns true if the mesh exists and is valid
+   */
+  inline bool hasMesh() const {
+    return mesh_vertices_ != nullptr && mesh_faces_ != nullptr;
+  }
 
   /**
    * @brief Check if a given layer exists
@@ -107,9 +132,13 @@ class DynamicSceneGraph : public SceneGraph {
    * @brief Add an edge from another node to the mesh
    * @param source Source node id in the scene graph
    * @param mesh_vertex Target mesh vertex index
+   * @param allow_invalid_mesh Allow edge insertion even if the edge points to an
+   * invalid vertice
    * @returns Returns true if edge would be valid and was added
    */
-  bool insertMeshEdge(NodeId source, size_t mesh_vertex);
+  bool insertMeshEdge(NodeId source,
+                      size_t mesh_vertex,
+                      bool allow_invalid_mesh = false);
 
   /**
    * @brief Remove an edge from another node to the mesh
@@ -127,9 +156,9 @@ class DynamicSceneGraph : public SceneGraph {
 
   inline LayerId getMeshLayerId() const { return mesh_layer_id_; }
 
-  inline pcl::PolygonMesh::ConstPtr getMesh() const { return mesh_; }
+  std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id) const;
 
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr getMeshCloudForNode(NodeId node) const;
+  std::vector<size_t> getMeshConnectionIndices(NodeId node) const;
 
   virtual nlohmann::json toJson(const JsonExportConfig& config) const override;
 
@@ -145,8 +174,8 @@ class DynamicSceneGraph : public SceneGraph {
 
   void clearMeshEdges();
 
-  Mesh::ConstPtr mesh_;
-  pcl::PointCloud<pcl::PointXYZRGB>::Ptr mesh_vertices_;
+  MeshVertices::Ptr mesh_vertices_;
+  std::shared_ptr<MeshFaces> mesh_faces_;
 
   size_t next_mesh_edge_idx_;
   MeshEdges mesh_edges_;

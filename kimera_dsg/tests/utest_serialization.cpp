@@ -28,7 +28,8 @@ bool operator==(const BoundingBox& lhs, const BoundingBox& rhs) {
     case BoundingBox::Type::OBB:
       return lhs.min == rhs.min && lhs.max == rhs.max &&
              lhs.world_P_center == rhs.world_P_center &&
-             quaternionsEqual(lhs.world_R_center, rhs.world_R_center);
+             quaternionsEqual(Eigen::Quaternionf(lhs.world_R_center),
+                              Eigen::Quaternionf(rhs.world_R_center));
     default:
       return false;
   }
@@ -229,6 +230,7 @@ TEST(SceneGraphSerializationTests, SerializeNodeAttributes) {
     expected.num_basis_points = 15;
 
     json output = expected.toJson();
+    std::cout << output << std::endl;
 
     NodeAttributes::Ptr result = factory.create(output);
     ASSERT_TRUE(result != nullptr);

@@ -1,5 +1,6 @@
 #pragma once
 #include "kimera_dsg/bounding_box.h"
+#include "kimera_dsg/node_attributes.h"
 
 #include <pcl/PolygonMesh.h>
 
@@ -37,9 +38,13 @@ struct adl_serializer<Eigen::Quaternion<Scalar>> {
 
 namespace pcl {
 
-void to_json(nlohmann::json& j, const pcl::PolygonMesh& mesh);
+void to_json(nlohmann::json& j, const pcl::PointCloud<pcl::PointXYZRGBA> vertices);
 
-void from_json(const nlohmann::json& j, pcl::PolygonMesh& mesh);
+void to_json(nlohmann::json& j, const std::vector<pcl::Vertices>& faces);
+
+void from_json(const nlohmann::json& j, pcl::PointCloud<pcl::PointXYZRGBA>& vertices);
+
+void from_json(const nlohmann::json& j, std::vector<pcl::Vertices>& faces);
 
 }  // namespace pcl
 
@@ -55,5 +60,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(BoundingBox::Type,
 void to_json(nlohmann::json& j, const BoundingBox& b);
 
 void from_json(const nlohmann::json& j, BoundingBox& b);
+
+void to_json(nlohmann::json& j, const NearestVertexInfo& b);
+
+void from_json(const nlohmann::json& j, NearestVertexInfo& b);
 
 }  // namespace kimera

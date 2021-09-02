@@ -54,7 +54,7 @@ struct SceneGraphEdge {
   //! end of edge (by convention the child)
   const NodeId target;
   //! attributes about the edge
-  const Info::Ptr info;
+  Info::Ptr info;
 };
 
 /**
@@ -191,7 +191,13 @@ class SceneGraphLayer {
   std::unordered_set<NodeId> getNeighborhood(const std::unordered_set<NodeId>& nodes,
                                              size_t num_hops = 1) const;
 
+  std::string serializeLayer(const std::unordered_set<NodeId>& nodes) const;
+
+  std::unique_ptr<Edges> deserializeLayer(const std::string& info);
+
  protected:
+  void reset();
+
   void fillNeighborhoodForNode(NodeId node,
                                size_t num_hops,
                                std::unordered_set<NodeId>& result,

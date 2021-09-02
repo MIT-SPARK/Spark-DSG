@@ -228,6 +228,15 @@ class SceneGraph {
   virtual size_t numEdges() const;
 
   /**
+   * @brief Update graph from separate layer
+   * @note Will invalidate the layer and edges passed in
+   * @param other_layer Layer to update from
+   * @param edges Optional edges to add to graph
+   * @return Whether the update was successful or not
+   */
+  bool updateFromLayer(SceneGraphLayer& other_layer, std::unique_ptr<Edges>&& edges = nullptr);
+
+  /**
    * @brief Get the position of a node in the layer with bounds checking
    */
   Eigen::Vector3d getPosition(NodeId node) const;

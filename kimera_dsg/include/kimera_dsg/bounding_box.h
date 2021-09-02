@@ -43,6 +43,12 @@ struct BoundingBox {
 
   virtual ~BoundingBox() = default;
 
+  bool isInside(const Eigen::Vector3d& point) const;
+
+  bool isInside(const Eigen::Vector3f& point) const;
+
+  float volume() const;
+
   //! minimum corner extent
   Eigen::Vector3f min;
   //! maximum corner extent
@@ -50,7 +56,7 @@ struct BoundingBox {
   //! world position (only for OBB)
   Eigen::Vector3f world_P_center;
   //! world orientation (only for OBB)
-  Eigen::Quaternionf world_R_center;
+  Eigen::Matrix3f world_R_center;
 
   /**
    * @brief output bounding box information
@@ -107,7 +113,7 @@ struct BoundingBox {
         box.min << pcl_min.x, pcl_min.y, pcl_min.z;
         box.max << pcl_max.x, pcl_max.y, pcl_max.z;
         box.world_P_center << pcl_position.x, pcl_position.y, pcl_position.z;
-        box.world_R_center = Eigen::Quaternionf(pcl_rotation);
+        box.world_R_center = Eigen::Quaternionf(pcl_rotation).toRotationMatrix();
         break;
       default:
         std::stringstream ss;
@@ -129,6 +135,9 @@ struct BoundingBox {
     }
     return extract(boost::const_pointer_cast<const CloudT>(cloud), type);
   }
+
+ protected:
+  bool isInsideOBB(const Eigen::Vector3f& point_world) const;
 
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -224,6 +224,7 @@ bool SceneGraph::removeNode(NodeId node_id) {
   }
 
   LayerId layer = node_layer_lookup_.at(node_id);
+
   Node* node = layers_[layer]->nodes_.at(node_id).get();
   // TODO(nathan) consider asserts
   if (node->hasParent()) {
@@ -236,6 +237,7 @@ bool SceneGraph::removeNode(NodeId node_id) {
   }
 
   layers_[layer]->removeNode(node_id);
+  node_layer_lookup_.erase(node_id);
   return true;
 }
 
@@ -300,6 +302,50 @@ Eigen::Vector3d SceneGraph::getPosition(NodeId node) const {
 
   LayerId layer = node_layer_lookup_.at(node);
   return layers_.at(layer)->getPosition(node);
+}
+
+bool SceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
+                                 std::unique_ptr<Edges>&& edges) {
+  if (!layers_.count(other_layer.id)) {
+    LOG(ERROR) << "Scene graph does not have layer: " << other_layer.id;
+    return false;
+  }
+
+  Layer& internal_layer = *layers_.at(other_layer.id);
+  for (auto& id_node_pair : other_layer.nodes_) {
+    if (internal_layer.hasNode(id_node_pair.first)) {
+      // just copy the attributes (prior edge information should be preserved)
+      internal_layer.nodes_[id_node_pair.first]->attributes_ =
+          std::move(id_node_pair.second->attributes_);
+    } else {
+      // we need to let the scene graph know about new nodes
+      node_layer_lookup_[id_node_pair.first] = internal_layer.id;
+      internal_layer.nodes_[id_node_pair.first] = std::move(id_node_pair.second);
+    }
+  }
+
+  // we just invalidated all the nodes in the other layer, so we better reset everything
+  other_layer.reset();
+
+  if (!edges) {
+    return true;
+  }
+
+  for (auto& id_edge_pair : *edges) {
+    Edge& edge = id_edge_pair.second;
+    if (internal_layer.hasEdge(edge.source, edge.target)) {
+      // just copy over info
+      auto edge_id = internal_layer.edges_info_.at(edge.source).at(edge.target);
+      internal_layer.edges_.at(edge_id).info = std::move(edge.info);
+      continue;
+    }
+
+    internal_layer.insertEdge(edge.source, edge.target, std::move(edge.info));
+  }
+
+  // we just invalidated all the info for the new edges, so reset the edges
+  edges.reset();
+  return true;
 }
 
 json SceneGraph::toJson(const JsonExportConfig& config) const {

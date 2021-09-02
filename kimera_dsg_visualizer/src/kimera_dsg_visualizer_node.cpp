@@ -24,10 +24,13 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  ROS_DEBUG_STREAM("Loading scene graph from: " << scene_graph_input_path.c_str());
+  ROS_INFO_STREAM("Loading scene graph from: " << scene_graph_input_path.c_str());
   kimera::DynamicSceneGraph::Ptr scene_graph(new kimera::DynamicSceneGraph());
   scene_graph->load(scene_graph_input_path);
-  ROS_DEBUG("Loaded scene graph");
+  ROS_INFO_STREAM("Loaded scene graph: " << scene_graph->numNodes() << " nodes, "
+                                         << scene_graph->numEdges() << ", "
+                                         << "has mesh? "
+                                         << (scene_graph->hasMesh() ? "yes" : "no"));
 
   kimera::DynamicSceneGraphVisualizer scene_graph_visualizer(
       ros::NodeHandle(visualizer_ns), kimera::getDefaultLayerIds());

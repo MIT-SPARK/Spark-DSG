@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/scene_graph.h>
 
+using kimera::IsolatedSceneGraphLayer;
 using kimera::NodeAttributes;
 using kimera::NodeId;
 using kimera::NodeSymbol;
@@ -9,6 +10,7 @@ using kimera::SceneGraphLayer;
 using NodeRef = kimera::SceneGraph::NodeRef;
 using Node = kimera::SceneGraph::Node;
 using Edge = kimera::SceneGraph::Edge;
+using Edges = kimera::SceneGraph::Edges;
 using EdgeInfo = kimera::SceneGraph::EdgeInfo;
 using EdgeRef = kimera::SceneGraph::EdgeRef;
 
@@ -221,6 +223,28 @@ TEST(SceneGraphTests, RemoveNodeSound) {
   EXPECT_EQ(2u, graph.numEdges());
 }
 
+// Test that removeNode -> !hasNode
+TEST(SceneGraphTests, RemoveNodeHasNodeCorrent) {
+  SceneGraph::LayerIds layer_ids{1, 2};
+  SceneGraph graph(layer_ids);
+  const SceneGraphLayer& layer = graph.getLayer(1).value();
+
+  // we can't remove a node that doesn't exist
+  EXPECT_FALSE(graph.removeNode(0));
+  EXPECT_FALSE(graph.hasNode(0));
+
+  EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
+
+  EXPECT_EQ(1u, graph.numNodes());
+  EXPECT_TRUE(graph.hasNode(0));
+  EXPECT_EQ(layer.hasNode(0), graph.hasNode(0));
+  graph.removeNode(0);
+  EXPECT_EQ(0u, graph.numNodes());
+  EXPECT_FALSE(graph.hasNode(0));
+  EXPECT_EQ(layer.hasNode(0), graph.hasNode(0));
+}
+
+
 // Test that removing a edge does what it should
 TEST(SceneGraphTests, RemoveEdgeCorrect) {
   SceneGraph::LayerIds layer_ids{1, 2};
@@ -284,4 +308,85 @@ TEST(SceneGraphTests, getPositionCorrect) {
   } catch (const std::out_of_range&) {
     SUCCEED();
   }
+}
+
+TEST(SceneGraphTests, updateFromInvalidLayerCorrect) {
+  SceneGraph::LayerIds layer_ids{1, 2};
+  SceneGraph graph(layer_ids);
+
+  IsolatedSceneGraphLayer separate_layer(5);
+  std::unique_ptr<Edges> edges(nullptr);
+  EXPECT_FALSE(graph.updateFromLayer(separate_layer, std::move(edges)));
+  EXPECT_EQ(0u, graph.numNodes());
+  EXPECT_EQ(0u, graph.numEdges());
+  EXPECT_EQ(0u, separate_layer.numNodes());
+  EXPECT_EQ(0u, separate_layer.numEdges());
+}
+
+TEST(SceneGraphTests, updateFromEmptyLayerCorrect) {
+  SceneGraph::LayerIds layer_ids{1, 2};
+  SceneGraph graph(layer_ids);
+
+  IsolatedSceneGraphLayer separate_layer(1);
+  std::unique_ptr<Edges> edges(nullptr);
+  EXPECT_TRUE(graph.updateFromLayer(separate_layer, std::move(edges)));
+  EXPECT_EQ(0u, graph.numNodes());
+  EXPECT_EQ(0u, graph.numEdges());
+  EXPECT_EQ(0u, separate_layer.numNodes());
+  EXPECT_EQ(0u, separate_layer.numEdges());
+}
+
+TEST(SceneGraphTests, updateFromLayerCorrect) {
+  SceneGraph::LayerIds layer_ids{1, 2};
+  SceneGraph graph(layer_ids);
+  graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(1, 2, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, 3, std::make_unique<NodeAttributes>());
+  graph.insertEdge(1, 2);
+  graph.insertEdge(1, 3);
+
+  IsolatedSceneGraphLayer separate_layer(1);
+  separate_layer.emplaceNode(1, std::make_unique<NodeAttributes>());
+  separate_layer.emplaceNode(5, std::make_unique<NodeAttributes>());
+  std::unique_ptr<Edges> edges(new Edges);
+  edges->emplace(std::piecewise_construct,
+                 std::forward_as_tuple(0),
+                 std::forward_as_tuple(5, 2, std::make_unique<EdgeInfo>()));
+  edges->emplace(std::piecewise_construct,
+                 std::forward_as_tuple(1),
+                 std::forward_as_tuple(1, 2, std::make_unique<EdgeInfo>()));
+
+  EXPECT_TRUE(graph.updateFromLayer(separate_layer, std::move(edges)));
+  EXPECT_EQ(4u, graph.numNodes());
+  EXPECT_EQ(3u, graph.numEdges());
+  EXPECT_EQ(0u, separate_layer.numNodes());
+  EXPECT_EQ(0u, separate_layer.numEdges());
+  EXPECT_TRUE(graph.hasNode(5));
+  EXPECT_TRUE(graph.hasEdge(5, 2));
+}
+
+TEST(SceneGraphTests, updateFromLayerWithSiblings) {
+  SceneGraph::LayerIds layer_ids{1};
+  SceneGraph graph(layer_ids);
+  graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(1, 2, std::make_unique<NodeAttributes>());
+  graph.insertEdge(1, 2);
+
+  IsolatedSceneGraphLayer separate_layer(1);
+  separate_layer.emplaceNode(2, std::make_unique<NodeAttributes>());
+  std::unique_ptr<Edges> edges(new Edges);
+
+  EXPECT_TRUE(graph.updateFromLayer(separate_layer, std::move(edges)));
+  EXPECT_EQ(2u, graph.numNodes());
+  EXPECT_EQ(1u, graph.numEdges());
+  EXPECT_TRUE(graph.hasNode(1));
+  EXPECT_TRUE(graph.hasNode(2));
+  EXPECT_TRUE(graph.hasEdge(1, 2));
+
+  EXPECT_TRUE(graph.removeNode(2));
+  EXPECT_EQ(1u, graph.numNodes());
+  EXPECT_EQ(0u, graph.numEdges());
+  EXPECT_TRUE(graph.hasNode(1));
+  EXPECT_FALSE(graph.hasNode(2));
+  EXPECT_FALSE(graph.hasEdge(1, 2));
 }

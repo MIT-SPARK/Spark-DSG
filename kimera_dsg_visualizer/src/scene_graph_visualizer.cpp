@@ -100,8 +100,8 @@ void SceneGraphVisualizer::layerConfigUpdateCb(LayerId layer_id,
 }
 
 void SceneGraphVisualizer::setGraph(const DynamicSceneGraph::Ptr& scene_graph) {
-  if (scene_graph == nullptr || scene_graph->empty()) {
-    ROS_WARN("Request to visualize empty scene graph, skipping.");
+  if (scene_graph == nullptr) {
+    ROS_ERROR("Request to visualize invalid scene graph! Ignoring");
     return;
   }
   // TODO(nathan) a mutex here might not be a bad idea
@@ -154,6 +154,11 @@ void SceneGraphVisualizer::handleCentroids(const SceneGraphLayer& layer,
     } else {
       marker = makeCentroidMarkers(config, layer, visualizer_config_, std::nullopt, ns);
     }
+
+    if (marker.points.empty()) {
+      return;
+    }
+
     fillHeader(marker, current_time);
     markers.markers.push_back(marker);
   } else {
@@ -175,6 +180,10 @@ void SceneGraphVisualizer::handleMeshEdges(const SceneGraphLayer& layer,
   if (config.visualize) {
     Marker marker =
         makeMeshEdgesMarker(config, visualizer_config_, *scene_graph_, layer, ns);
+    if (marker.points.empty()) {
+      return;
+    }
+
     fillHeader(marker, current_time);
     markers.markers.push_back(marker);
   } else {
@@ -335,7 +344,12 @@ void SceneGraphVisualizer::displayEdges(const SceneGraph& scene_graph) const {
     LayerConfig config = layer_configs_.at(id_layer_pair.first);
     Marker layer_edge_marker = makeLayerEdgeMarkers(
         config, *(id_layer_pair.second), visualizer_config_, NodeColor::Zero());
+    if (layer_edge_marker.points.empty()) {
+      continue;
+    }
+
     fillHeader(layer_edge_marker, current_time);
+
     edge_markers.markers.push_back(layer_edge_marker);
   }
 
