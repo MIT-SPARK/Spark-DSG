@@ -9,6 +9,9 @@
 namespace kimera {
 
 using ColorPointCloud = pcl::PointCloud<pcl::PointXYZRGB>;
+using DynamicLayerRef = DynamicSceneGraph::DynamicLayerRef;
+using NodeRef = SceneGraph::NodeRef;
+using DynamicNodeRef = DynamicSceneGraph::DynamicNodeRef;
 
 DynamicSceneGraph::DynamicSceneGraph(LayerId mesh_layer_id)
     : DynamicSceneGraph(getDefaultLayerIds(), mesh_layer_id) {}
@@ -29,6 +32,120 @@ void DynamicSceneGraph::clear() {
   mesh_faces_.reset();
 
   clearMeshEdges();
+}
+
+bool DynamicSceneGraph::createDynamicLayer(LayerId layer, char layer_prefix) {
+  if (hasDynamicLayer(layer, layer_prefix)) {
+    return false;
+  }
+
+  if (!dynamic_layers_.count(layer)) {
+    dynamic_layers_[layer] = DynamicLayers();
+  }
+
+  dynamic_layers_[layer].emplace(
+      layer_prefix, std::make_unique<DynamicSceneGraphLayer>(layer, layer_prefix));
+  return true;
+}
+
+bool DynamicSceneGraph::hasDynamicLayer(LayerId layer, char layer_prefix) const {
+  if (!dynamic_layers_.count(layer)) {
+    return 0;
+  }
+
+  return dynamic_layers_.at(layer).count(layer_prefix) != 0;
+}
+
+size_t DynamicSceneGraph::numDynamicLayersOfType(LayerId layer) const {
+  if (!dynamic_layers_.count(layer)) {
+    return 0;
+  }
+
+  return dynamic_layers_.at(layer).size();
+}
+
+size_t DynamicSceneGraph::numDynamicLayers() const {
+  size_t num_layers = 0;
+  for (const auto& id_layer_group : dynamic_layers_) {
+    num_layers += id_layer_group.second.size();
+  }
+  return num_layers;
+}
+
+std::optional<DynamicLayerRef> DynamicSceneGraph::getDynamicLayer(LayerId layer,
+                                                                  char prefix) const {
+  if (!hasDynamicLayer(layer, prefix)) {
+    return std::nullopt;
+  }
+
+  return std::cref(*dynamic_layers_.at(layer).at(prefix));
+}
+
+bool DynamicSceneGraph::emplaceDynamicNode(LayerId layer,
+                                           char prefix,
+                                           std::chrono::nanoseconds timestamp,
+                                           NodeAttributes::Ptr&& attrs,
+                                           bool add_edge_to_previous) {
+  bool has_layer = false;
+  NodeSymbol new_node_id(prefix, 0);
+  if (hasDynamicLayer(layer, prefix)) {
+    has_layer = true;
+    new_node_id = dynamic_layers_[layer][prefix]->next_node_;
+  }
+
+  if (hasNode(new_node_id)) {
+    LOG(ERROR) << "scene graph contains node " << new_node_id.getLabel()
+               << ". fix conflicting prefix: " << prefix;
+    return false;
+  }
+
+  if (!has_layer) {
+    LOG(WARNING) << "creating missing dynamic layer " << layer << prefix;
+    createDynamicLayer(layer, prefix);
+  }
+
+  bool result = dynamic_layers_[layer][prefix]->emplaceNode(
+      timestamp, std::move(attrs), add_edge_to_previous);
+  if (!result) {
+    return false;
+  }
+
+  dynamic_node_lookup_[new_node_id] = {layer, prefix};
+  return true;
+}
+
+bool DynamicSceneGraph::hasNode(NodeId node_id) const {
+  if (SceneGraph::hasNode(node_id)) {
+    return true;
+  }
+
+  return dynamic_node_lookup_.count(node_id);
+}
+
+std::optional<NodeRef> DynamicSceneGraph::getNode(NodeId node_id) const {
+  if (SceneGraph::hasNode(node_id)) {
+    return SceneGraph::getNode(node_id);
+  }
+
+  auto layer_info_iter = dynamic_node_lookup_.find(node_id);
+  if (layer_info_iter == dynamic_node_lookup_.end()) {
+    return std::nullopt;
+  }
+
+  auto info = layer_info_iter->second;
+  const DynamicSceneGraphLayer& layer = *dynamic_layers_.at(info.type).at(info.prefix);
+  const size_t index = NodeSymbol(node_id).categoryId();
+  return std::cref(*static_cast<const SceneGraphNode*>(layer.nodes_.at(index).get()));
+}
+
+std::optional<DynamicNodeRef> DynamicSceneGraph::getDynamicNode(NodeId node_id) const {
+  auto layer_info_iter = dynamic_node_lookup_.find(node_id);
+  if (layer_info_iter == dynamic_node_lookup_.end()) {
+    return std::nullopt;
+  }
+
+  auto layer_info = layer_info_iter->second;
+  return dynamic_layers_.at(layer_info.type).at(layer_info.prefix)->getNode(node_id);
 }
 
 void DynamicSceneGraph::clearMeshEdges() {
@@ -166,12 +283,26 @@ bool DynamicSceneGraph::removeMeshEdge(NodeId source, size_t mesh_vertex) {
 }
 
 size_t DynamicSceneGraph::numLayers() const {
-  return layers_.size() + 1;  // for the mesh
+  const size_t static_size = layers_.size() + 1;  // for the mesh
+
+  size_t unique_dynamic_layers = 0;
+  for (const auto& id_layer_group_pair : dynamic_layers_) {
+    if (!layers_.count(id_layer_group_pair.first) &&
+        id_layer_group_pair.first != mesh_layer_id_) {
+      unique_dynamic_layers++;
+    }
+  }
+
+  return static_size + unique_dynamic_layers;
 }
 
 size_t DynamicSceneGraph::numNodes() const {
-  return SceneGraph::numNodes() +
+  return SceneGraph::numNodes() + numDynamicNodes() +
          ((mesh_vertices_ == nullptr) ? 0 : mesh_vertices_->size());
+}
+
+size_t DynamicSceneGraph::numDynamicNodes() const {
+  return dynamic_node_lookup_.size();
 }
 
 size_t DynamicSceneGraph::numEdges() const {
@@ -229,8 +360,9 @@ void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
                                      const NodeAttributeFactory& node_attr_factory,
                                      const EdgeInfoFactory& edge_info_factory,
                                      const json& record) {
-  SceneGraph::fillFromJson(config, node_attr_factory, edge_info_factory, record);
   mesh_layer_id_ = record.at("mesh_layer_id").get<LayerId>();
+
+  SceneGraph::fillFromJson(config, node_attr_factory, edge_info_factory, record);
 
   if (record.contains("mesh")) {
     MeshVertices::Ptr new_vertices(new MeshVertices());

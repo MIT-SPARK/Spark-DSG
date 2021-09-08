@@ -1,4 +1,5 @@
 #pragma once
+#include "kimera_dsg/dynamic_scene_graph_layer.h"
 #include "kimera_dsg/scene_graph.h"
 
 #include <pcl/PolygonMesh.h>
@@ -6,6 +7,11 @@
 #include <pcl/point_types.h>
 
 namespace kimera {
+
+struct DynamicLayerKey {
+  LayerId type;
+  char prefix;
+};
 
 /**
  * @brief Structure capturing node-edge relationship
@@ -33,7 +39,7 @@ class DynamicSceneGraph : public SceneGraph {
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<DynamicSceneGraph>;
   //! Container type for the layer ids
-  using LayerIds = std::vector<LayerId>;
+  using LayerIds = SceneGraph::LayerIds;
   //! Underlying mesh type for lowest layer
   using Mesh = pcl::PolygonMesh;
   //! Underlying mesh vertex type
@@ -42,19 +48,29 @@ class DynamicSceneGraph : public SceneGraph {
   using MeshFaces = std::vector<pcl::Vertices>;
   //! Mesh edge container type
   using MeshEdges = std::map<size_t, MeshEdge>;
+  //! Dynamic layer type
+  using DynamicLayer = DynamicSceneGraphLayer;
+  //! Dynamic node reference
+  using DynamicNodeRef = DynamicLayer::NodeRef;
+  //! Dynamic layer container type
+  using DynamicLayers = std::map<char, DynamicLayer::Ptr>;
+  //! Dynamic layer reference
+  using DynamicLayerRef = std::reference_wrapper<const DynamicLayer>;
 
   /**
    * @brief Construct the scene graph (with a default layer factory)
    * @param mesh_layer_id Mesh layer id (must be unique)
    */
-  explicit DynamicSceneGraph(LayerId mesh_layer_id = 0);
+  explicit DynamicSceneGraph(
+      LayerId mesh_layer_id = to_underlying(KimeraDsgLayers::MESH));
 
   /**
    * @brief Construct the scene graph (with a provided layer factory)
    * @param factor List of layer ids (not including the mesh)
    * @param mesh_layer_id Mesh layer id (must be unique)
    */
-  DynamicSceneGraph(const LayerIds& factory, LayerId mesh_layer_id = 0);
+  DynamicSceneGraph(const LayerIds& factory,
+                    LayerId mesh_layer_id = to_underlying(KimeraDsgLayers::MESH));
 
   /**
    * @brief Default destructor
@@ -65,6 +81,71 @@ class DynamicSceneGraph : public SceneGraph {
    * @brief Delete all layers and edges
    */
   virtual void clear() override;
+
+  inline bool emplaceNode(LayerId layer_id,
+                          NodeId node_id,
+                          NodeAttributes::Ptr&& attrs) {
+    if (dynamic_node_lookup_.count(node_id)) {
+      return false;
+    }
+
+    return SceneGraph::emplaceNode(layer_id, node_id, std::move(attrs));
+  }
+
+  inline bool insertNode(Node::Ptr&& node) {
+    if (!node) {
+      return false;
+    }
+
+    if (dynamic_node_lookup_.count(node->id)) {
+      return false;
+    }
+
+    return SceneGraph::insertNode(std::move(node));
+  }
+
+  bool createDynamicLayer(LayerId layer, char layer_prefix);
+
+  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+  bool createDynamicLayer(E e, char layer_prefix) {
+    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
+                  "type passed must be compatible with layer id");
+    return createDynamicLayer(static_cast<LayerId>(e), layer_prefix);
+  }
+
+  bool hasDynamicLayer(LayerId layer, char layer_prefix) const;
+
+  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+  bool hasDynamicLayer(E e, char layer_prefix) const {
+    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
+                  "type passed must be compatible with layer id");
+    return hasDynamicLayer(static_cast<LayerId>(e), layer_prefix);
+  }
+
+  size_t numDynamicLayersOfType(LayerId layer) const;
+
+  size_t numDynamicLayers() const;
+
+  std::optional<DynamicLayerRef> getDynamicLayer(LayerId layer_id, char prefix) const;
+
+  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+  std::optional<DynamicLayerRef> getDynamicLayer(E e, char layer_prefix) const {
+    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
+                  "type passed must be compatible with layer id");
+    return getDynamicLayer(static_cast<LayerId>(e), layer_prefix);
+  }
+
+  bool emplaceDynamicNode(LayerId layer_id,
+                          char prefix,
+                          std::chrono::nanoseconds timestamp,
+                          NodeAttributes::Ptr&& attrs,
+                          bool add_edge_to_previous = true);
+
+  virtual bool hasNode(NodeId node_id) const override;
+
+  virtual std::optional<NodeRef> getNode(NodeId node_id) const override;
+
+  std::optional<DynamicNodeRef> getDynamicNode(NodeId node_id) const;
 
   /**
    * @brief Set mesh components directly from a polygon mesh
@@ -152,6 +233,8 @@ class DynamicSceneGraph : public SceneGraph {
 
   virtual size_t numNodes() const override;
 
+  size_t numDynamicNodes() const;
+
   virtual size_t numEdges() const override;
 
   inline LayerId getMeshLayerId() const { return mesh_layer_id_; }
@@ -168,6 +251,7 @@ class DynamicSceneGraph : public SceneGraph {
                             const nlohmann::json& record) override;
 
  protected:
+  // TODO(nathan) consider making const public
   LayerId mesh_layer_id_;
 
   bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
@@ -181,6 +265,24 @@ class DynamicSceneGraph : public SceneGraph {
   MeshEdges mesh_edges_;
   std::map<NodeId, std::map<size_t, size_t>> mesh_edges_node_lookup_;
   std::map<size_t, std::map<NodeId, size_t>> mesh_edges_vertex_lookup_;
+
+  std::map<LayerId, DynamicLayers> dynamic_layers_;
+  std::map<NodeId, DynamicLayerKey> dynamic_node_lookup_;
+
+ public:
+  inline const DynamicLayers& dynamicLayersOfType(LayerId layer_id) const {
+    auto iter = dynamic_layers_.find(layer_id);
+    if (iter == dynamic_layers_.end()) {
+      static DynamicLayers empty;  // avoid invalid reference
+      return empty;
+    }
+
+    return iter->second;
+  }
+
+  inline const std::map<LayerId, DynamicLayers>& dynamicLayers() const {
+    return dynamic_layers_;
+  }
 };
 
 }  // namespace kimera

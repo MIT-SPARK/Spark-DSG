@@ -98,12 +98,10 @@ PlaceNodeAttributes::PlaceNodeAttributes(double distance, unsigned int num_basis
       num_basis_points(num_basis_points) {}
 
 std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
-  PlaceNodeAttributes::fill_ostream(out);
+  SemanticNodeAttributes::fill_ostream(out);
   out << " - distance: " << distance;
   out << " - num_basis_points: " << num_basis_points;
-  std::chrono::duration<double> last_updated_s = last_update_time;
-  out << " - last_updated: " << last_updated_s.count() << " [s]"
-      << " (" << last_update_time.count() << " [ns])";
+  out << " - is_active: " << is_active;
   return out;
 }
 
@@ -114,7 +112,7 @@ json PlaceNodeAttributes::toJson() const {
   WRITE_FIELD_TO_JSON(to_return, num_basis_points);
   WRITE_FIELD_TO_JSON(to_return, voxblox_mesh_connections);
   WRITE_FIELD_TO_JSON(to_return, pcl_mesh_connections);
-  to_return["last_update_time"] = last_update_time.count();
+  WRITE_FIELD_TO_JSON(to_return, is_active);
   return to_return;
 }
 
@@ -124,10 +122,38 @@ void PlaceNodeAttributes::fillFromJson(const json& record) {
   READ_FIELD_FROM_JSON(record, num_basis_points);
   READ_FIELD_FROM_JSON_SAFE(record, voxblox_mesh_connections);
   READ_FIELD_FROM_JSON_SAFE(record, pcl_mesh_connections);
-  if (record.contains("last_update_time")) {
-    last_update_time = std::chrono::nanoseconds(
-        record.at("last_update_time").get<std::chrono::nanoseconds::rep>());
-  }
+  READ_FIELD_FROM_JSON_SAFE(record, is_active);
+}
+
+std::ostream& operator<<(std::ostream& out, const Eigen::Quaterniond& q) {
+  return out << q.w() << " + " << q.x() << "i + " << q.y() << "j + " << q.z() << "k";
+}
+
+AgentNodeAttributes::AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
+                                         const Eigen::Vector3d& world_P_body,
+                                         NodeId external_key)
+    : NodeAttributes(world_P_body),
+      world_R_body(world_R_body),
+      external_key(external_key) {}
+
+std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
+  NodeAttributes::fill_ostream(out);
+  out << " - orientation: " << world_R_body;
+  return out;
+}
+
+json AgentNodeAttributes::toJson() const {
+  json to_return = NodeAttributes::toJson();
+  REGISTER_JSON_ATTR_TYPE(AgentNodeAttributes, to_return);
+  WRITE_FIELD_TO_JSON(to_return, world_R_body);
+  WRITE_FIELD_TO_JSON(to_return, external_key);
+  return to_return;
+}
+
+void AgentNodeAttributes::fillFromJson(const json& record) {
+  NodeAttributes::fillFromJson(record);
+  READ_FIELD_FROM_JSON(record, world_R_body);
+  READ_FIELD_FROM_JSON(record, external_key);
 }
 
 }  // namespace kimera

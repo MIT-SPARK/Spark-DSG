@@ -172,7 +172,7 @@ class SceneGraph {
    * @param node_id node to get
    * @returns a potentially valid node constant reference
    */
-  std::optional<NodeRef> getNode(NodeId node_id) const;
+  virtual std::optional<NodeRef> getNode(NodeId node_id) const;
 
   /**
    * @brief Get a particular edge in the graph

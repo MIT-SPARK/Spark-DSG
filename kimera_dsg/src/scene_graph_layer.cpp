@@ -94,7 +94,6 @@ bool SceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
   return edges_info_.count(source) != 0 && edges_info_.at(source).count(target) != 0;
 }
 
-// TODO(nathan) look at gtsam casting
 std::optional<NodeRef> SceneGraphLayer::getNode(NodeId node_id) const {
   if (!hasNode(node_id)) {
     return std::nullopt;

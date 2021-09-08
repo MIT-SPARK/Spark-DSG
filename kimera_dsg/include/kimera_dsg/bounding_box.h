@@ -72,7 +72,8 @@ struct BoundingBox {
    */
   template <typename CloudT>
   static BoundingBox extract(const boost::shared_ptr<const CloudT>& cloud,
-                             Type type = Type::AABB) {
+                             Type type = Type::AABB,
+                             const pcl::IndicesPtr& active_indices = nullptr) {
     if (!cloud) {
       throw std::runtime_error("invalid point cloud pointer");
     }
@@ -92,6 +93,9 @@ struct BoundingBox {
     using PointT = typename CloudT::PointType;
     pcl::MomentOfInertiaEstimation<PointT> estimator;
     estimator.setInputCloud(cloud);
+    if (active_indices) {
+      estimator.setIndices(active_indices);
+    }
     estimator.compute();
 
     PointT pcl_min;
@@ -129,11 +133,12 @@ struct BoundingBox {
    */
   template <typename CloudT>
   static BoundingBox extract(const boost::shared_ptr<CloudT>& cloud,
-                             Type type = Type::AABB) {
+                             Type type = Type::AABB,
+                             const pcl::IndicesPtr& indices = nullptr) {
     if (!cloud) {
       throw std::runtime_error("invalid point cloud pointer");
     }
-    return extract(boost::const_pointer_cast<const CloudT>(cloud), type);
+    return extract(boost::const_pointer_cast<const CloudT>(cloud), type, indices);
   }
 
  protected:

@@ -300,7 +300,7 @@ TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
   SceneGraph::JsonExportConfig config;
 
   SceneGraph::LayerIds layers{1, 2, 3};
-  DynamicSceneGraph expected(layers);
+  DynamicSceneGraph expected(layers, 0);
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -313,7 +313,7 @@ TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
   DynamicSceneGraph result;
   result.fillFromJson(config, attr_factory, info_factory, output);
 
-  EXPECT_EQ(expected.numNodes(), result.numNodes());
+  EXPECT_EQ(expected.numNodes(), result.numNodes()) << output;
   EXPECT_EQ(expected.numEdges(), result.numEdges());
   EXPECT_EQ(expected.numLayers(), result.numLayers());
 

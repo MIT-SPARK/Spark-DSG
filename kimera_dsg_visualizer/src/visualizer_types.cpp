@@ -4,12 +4,14 @@
 
 namespace kimera {
 
-#define READ_PARAM(nh, c, name)                                            \
-  if (!nh.param(#name, c.name, c.name)) {                                  \
+#define READ_PARAM_OPTIONAL(nh, c, name, required)                         \
+  if (!nh.param(#name, c.name, c.name) && required) {                      \
     ROS_INFO_STREAM("failed to find param " #name " under namespace "      \
                     << nh.getNamespace() << ". defaulting to " << c.name); \
   }                                                                        \
   static_assert(true, "")
+
+#define READ_PARAM(nh, c, name) READ_PARAM_OPTIONAL(nh, c, name, true)
 
 VisualizerConfig getVisualizerConfig(const std::string& visualizer_namespace) {
   ros::NodeHandle nh(visualizer_namespace);
@@ -24,7 +26,7 @@ VisualizerConfig getVisualizerConfig(const std::string& visualizer_namespace) {
   return config;
 }
 
-LayerConfig getLayerConfig(const std::string& layer_namespace) {
+LayerConfig getLayerConfig(const std::string& layer_namespace, bool dynamic_required) {
   ros::NodeHandle nh(layer_namespace);
   LayerConfig config;
   READ_PARAM(nh, config, visualize);
@@ -46,6 +48,17 @@ LayerConfig getLayerConfig(const std::string& layer_namespace) {
   READ_PARAM(nh, config, intralayer_edge_alpha);
   READ_PARAM(nh, config, intralayer_edge_use_color);
   READ_PARAM(nh, config, intralayer_edge_insertion_skip);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_num_colors, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_saturation, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_luminance, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_edge_sl_ratio, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_marker_scale, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_marker_alpha, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_use_sphere_marker, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_edge_scale, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_edge_alpha, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_label_height, dynamic_required);
+  READ_PARAM_OPTIONAL(nh, config, dynamic_label_scale, dynamic_required);
   return config;
 }
 

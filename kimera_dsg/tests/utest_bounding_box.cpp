@@ -20,7 +20,8 @@ TEST(BoundingBoxTests, InvalidConstructor) {
   }
 }
 
-inline float getRotationError(const Eigen::Quaternionf& rotation, const BoundingBox& box) {
+inline float getRotationError(const Eigen::Quaternionf& rotation,
+                              const BoundingBox& box) {
   return rotation.angularDistance(Eigen::Quaternionf(box.world_R_center));
 }
 
@@ -67,6 +68,36 @@ TEST(BoundingBoxTests, PCLConstructorAABB) {
   // get bounding box from pointcloud
   BoundingBox box = BoundingBox::extract(cloud);
   EXPECT_EQ(BoundingBox::Type::AABB, box.type);
+
+  EXPECT_EQ(-1.0f, box.min(0));
+  EXPECT_EQ(1.0f, box.max(0));
+  EXPECT_EQ(-0.5f, box.min(1));
+  EXPECT_EQ(1.5f, box.max(1));
+  EXPECT_EQ(0.0f, box.min(2));  // "lower z" is superseded by x and y points
+  EXPECT_EQ(4.0f, box.max(2));
+}
+
+TEST(BoundingBoxTests, PCLConstructorAABBSpecifiedIndices) {
+  pcl::PointCloud<PointXYZ>::Ptr cloud(new pcl::PointCloud<PointXYZ>());
+  // lower and upper x
+  cloud->push_back(PointXYZ(1.0f, 0.0f, 0.0f));
+  cloud->push_back(PointXYZ(-1.0f, 0.0f, 0.0f));
+  // lower and upper y
+  cloud->push_back(PointXYZ(0.0f, 1.5f, 0.0f));
+  cloud->push_back(PointXYZ(0.0f, -0.5f, 0.0f));
+  // lower and upper z
+  cloud->push_back(PointXYZ(0.0f, 0.0f, 1.0f));
+  cloud->push_back(PointXYZ(0.0f, 0.0f, 4.0f));
+
+  // add some points to influence the result
+  cloud->push_back(PointXYZ(-5.0f, -5.0f, -5.0f));
+  cloud->push_back(PointXYZ(-5.0f, -5.0f, -5.0f));
+  cloud->push_back(PointXYZ(-5.0f, -5.0f, -5.0f));
+
+  pcl::IndicesPtr indices(new std::vector<int>{0, 1, 2, 3, 4, 5});
+
+  // get bounding box from pointcloud
+  BoundingBox box = BoundingBox::extract(cloud, BoundingBox::Type::AABB, indices);
 
   EXPECT_EQ(-1.0f, box.min(0));
   EXPECT_EQ(1.0f, box.max(0));
@@ -236,10 +267,11 @@ TEST(BoundingBoxTests, BasicOBBVolumeChecksCorrect) {
 
 TEST(BoundingBoxTests, RotatedOBBVolumeChecksCorrect) {
   // positive pi / 6 rotation around z
-  BoundingBox box(Eigen::Vector3f(-1.0, -1.0, -1.0),
-                  Eigen::Vector3f(1.0, 2.0, 3.0),
-                  Eigen::Vector3f(5.0, 5.0, 5.0),
-                  Eigen::Quaternionf(std::cos(M_PI / 12.0), 0.0, 0.0, std::sin(M_PI / 12.0)));
+  BoundingBox box(
+      Eigen::Vector3f(-1.0, -1.0, -1.0),
+      Eigen::Vector3f(1.0, 2.0, 3.0),
+      Eigen::Vector3f(5.0, 5.0, 5.0),
+      Eigen::Quaternionf(std::cos(M_PI / 12.0), 0.0, 0.0, std::sin(M_PI / 12.0)));
   EXPECT_NEAR(24.0f, box.volume(), 1.0e-8f);
 
   {  // previously inside, but now outside
@@ -255,7 +287,6 @@ TEST(BoundingBoxTests, RotatedOBBVolumeChecksCorrect) {
     EXPECT_TRUE(box.isInside(test_point1));
     EXPECT_TRUE(box.isInside(test_point2));
   }
-
 
   {  // actually inside (with rotation)
     Eigen::Vector3f test_point1(4.6, 6.9, 6.0);

@@ -22,6 +22,28 @@ inline double lerp(double min, double max, double ratio) {
   return (max - min) * ratio + min;
 }
 
+inline NodeColor getRgbFromHls(double hue, double luminance, double saturation) {
+  // make sure we clip the inputs to the expected range
+  hue = std::clamp(hue, 0.0, 1.0);
+  luminance = std::clamp(luminance, 0.0, 1.0);
+  saturation = std::clamp(saturation, 0.0, 1.0);
+
+  cv::Mat hls_value(1, 1, CV_32FC3);
+  // hue is in degrees, not [0, 1]
+  hls_value.at<float>(0) = hue * 360.0;
+  hls_value.at<float>(1) = luminance;
+  hls_value.at<float>(2) = saturation;
+
+  cv::Mat bgr;
+  cv::cvtColor(hls_value, bgr, cv::COLOR_HLS2BGR);
+
+  NodeColor color;
+  color(0, 0) = static_cast<uint8_t>(255 * bgr.at<float>(2));
+  color(1, 0) = static_cast<uint8_t>(255 * bgr.at<float>(1));
+  color(2, 0) = static_cast<uint8_t>(255 * bgr.at<float>(0));
+  return color;
+}
+
 inline NodeColor interpolateColorMap(const ColormapConfig& config, double ratio) {
   // override ratio input to be in [0, 1]
   ratio = std::clamp(ratio, 0.0, 1.0);

@@ -38,8 +38,6 @@ struct SceneGraphEdgeInfo {
 
 /**
  * @brief Edge representation
- * @note not designed to be constructable by the user (internal book-keeping
- * done by layer and graph)
  */
 struct SceneGraphEdge {
   //! attributes of the edge

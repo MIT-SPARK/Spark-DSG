@@ -2,10 +2,10 @@
 #include "kimera_dsg/bounding_box.h"
 #include "kimera_dsg/scene_graph_node.h"
 
+#include <chrono>
 #include <list>
 #include <ostream>
 #include <string>
-#include <chrono>
 
 namespace kimera {
 
@@ -37,6 +37,10 @@ struct SemanticNodeAttributes : public NodeAttributes {
 
   virtual ~SemanticNodeAttributes() = default;
 
+  virtual nlohmann::json toJson() const override;
+
+  virtual void fillFromJson(const nlohmann::json& record) override;
+
   //! Name of the node
   std::string name = "";
   //! Color of the node (if it exists)
@@ -45,10 +49,6 @@ struct SemanticNodeAttributes : public NodeAttributes {
   BoundingBox bounding_box;
   //! semantic label of object
   SemanticLabel semantic_label;
-
-  virtual nlohmann::json toJson() const override;
-
-  virtual void fillFromJson(const nlohmann::json& record) override;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
@@ -80,14 +80,14 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~ObjectNodeAttributes() = default;
 
+  virtual nlohmann::json toJson() const override;
+
+  virtual void fillFromJson(const nlohmann::json& record) override;
+
   //! Whether or not the object is known (and registered)
   bool registered;
   //! rotation of object w.r.t. world (only valid when registerd)
   Eigen::Quaterniond world_R_object;
-
-  virtual nlohmann::json toJson() const override;
-
-  virtual void fillFromJson(const nlohmann::json& record) override;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
@@ -159,20 +159,43 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~PlaceNodeAttributes() = default;
 
+  virtual nlohmann::json toJson() const override;
+
+  virtual void fillFromJson(const nlohmann::json& record) override;
+
   //! distance to nearest obstacle
   double distance;
   //! number of equidistant obstacles
   unsigned int num_basis_points;
   //! voxblox mesh vertices that are closest to this place
-  std::list<NearestVertexInfo> voxblox_mesh_connections;
+  std::vector<NearestVertexInfo> voxblox_mesh_connections;
   //! pcl mesh vertices that are closest to this place
-  std::list<size_t> pcl_mesh_connections;
-  //! last time the place was updated
-  std::chrono::nanoseconds last_update_time;
+  std::vector<size_t> pcl_mesh_connections;
+  //! whether or not the node is in the active window
+  bool is_active = false;
+
+ protected:
+  virtual std::ostream& fill_ostream(std::ostream& out) const;
+};
+
+struct AgentNodeAttributes : public NodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using Ptr = std::unique_ptr<AgentNodeAttributes>;
+
+  AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
+                      const Eigen::Vector3d& world_P_body,
+                      NodeId external_key);
+
+  virtual ~AgentNodeAttributes() = default;
 
   virtual nlohmann::json toJson() const override;
 
   virtual void fillFromJson(const nlohmann::json& record) override;
+
+  Eigen::Quaterniond world_R_body;
+
+  NodeId external_key;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;

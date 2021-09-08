@@ -374,26 +374,114 @@ Marker makeLayerEdgeMarkers(const LayerConfig& config,
 
   auto edge_iter = layer.edges().begin();
   while (edge_iter != layer.edges().end()) {
-    try {
-      geometry_msgs::Point source;
-      tf2::convert(layer.getPosition(edge_iter->second.source), source);
-      source.z += getZOffset(config, visualizer_config);
-      marker.points.push_back(source);
+    geometry_msgs::Point source;
+    tf2::convert(layer.getPosition(edge_iter->second.source), source);
+    source.z += getZOffset(config, visualizer_config);
+    marker.points.push_back(source);
 
-      geometry_msgs::Point target;
-      tf2::convert(layer.getPosition(edge_iter->second.target), target);
-      target.z += getZOffset(config, visualizer_config);
-      marker.points.push_back(target);
-    } catch (const std::out_of_range&) {
-      const auto& edge = edge_iter->second;
-      LOG(ERROR) << "Invalid edge: " << NodeSymbol(edge.source).getLabel() << " -> "
-                 << NodeSymbol(edge.target).getLabel()
-                 << " source: " << (layer.hasNode(edge.source) ? "yes" : "no")
-                 << " target: " << (layer.hasNode(edge.target) ? "yes" : "no");
-    }
+    geometry_msgs::Point target;
+    tf2::convert(layer.getPosition(edge_iter->second.target), target);
+    target.z += getZOffset(config, visualizer_config);
+    marker.points.push_back(target);
 
     std::advance(edge_iter, config.intralayer_edge_insertion_skip + 1);
   }
+
+  return marker;
+}
+
+Marker makeDynamicCentroids(const LayerConfig& config,
+                            const DynamicSceneGraphLayer& layer,
+                            const VisualizerConfig& visualizer_config,
+                            const NodeColor& color) {
+  Marker marker;
+  marker.type =
+      config.dynamic_use_sphere_marker ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.ns = "dynamic_layer" + std::to_string(layer.id) + "_centroids";
+  marker.id = static_cast<int>(layer.prefix);
+
+  if (!config.visualize) {
+    marker.action = Marker::DELETE;
+    return marker;
+  }
+
+  marker.scale.x = config.dynamic_marker_scale;
+  marker.scale.y = config.dynamic_marker_scale;
+  marker.scale.z = config.dynamic_marker_scale;
+
+  marker.color = makeColorMsg(color, config.dynamic_marker_alpha);
+
+  fillPoseWithIdentity(marker.pose);
+
+  marker.points.reserve(layer.numNodes());
+  for (const auto& node : layer.nodes()) {
+    geometry_msgs::Point node_centroid;
+    tf2::convert(node->attributes().position, node_centroid);
+    node_centroid.z += getZOffset(config, visualizer_config);
+    marker.points.push_back(node_centroid);
+  }
+
+  return marker;
+}
+
+Marker makeDynamicEdges(const LayerConfig& config,
+                        const DynamicSceneGraphLayer& layer,
+                        const VisualizerConfig& visualizer_config,
+                        const NodeColor& color) {
+  Marker marker;
+  marker.type = Marker::LINE_LIST;
+  marker.ns = "dynamic_layer" + std::to_string(layer.id) + "_edges";
+  marker.id = static_cast<int>(layer.prefix);
+
+  if (!config.visualize) {
+    marker.action = Marker::DELETE;
+    return marker;
+  }
+
+  marker.action = Marker::ADD;
+  marker.scale.x = config.dynamic_edge_scale;
+  marker.color = makeColorMsg(color, config.dynamic_edge_alpha);
+  fillPoseWithIdentity(marker.pose);
+
+  for (const auto& id_edge_pair : layer.edges()) {
+    geometry_msgs::Point source;
+    tf2::convert(layer.getPosition(id_edge_pair.second.source), source);
+    source.z += getZOffset(config, visualizer_config);
+    marker.points.push_back(source);
+
+    geometry_msgs::Point target;
+    tf2::convert(layer.getPosition(id_edge_pair.second.target), target);
+    target.z += getZOffset(config, visualizer_config);
+    marker.points.push_back(target);
+  }
+
+  return marker;
+}
+
+Marker makeDynamicLabel(const LayerConfig& config,
+                        const DynamicSceneGraphLayer& layer,
+                        const VisualizerConfig& visualizer_config) {
+  Marker marker;
+  marker.type = Marker::TEXT_VIEW_FACING;
+  marker.ns = "dynamic_layer" + std::to_string(layer.id) + "_labels";
+  marker.id = static_cast<int>(layer.prefix);
+  if (!config.visualize) {
+    marker.action = Marker::DELETE;
+    return marker;
+  }
+
+  marker.action = Marker::ADD;
+  marker.lifetime = ros::Duration(0);
+  marker.text = std::to_string(layer.id) + "(" + layer.prefix + ")";
+  marker.scale.z = config.dynamic_label_scale;
+  marker.color = makeColorMsg(NodeColor::Zero());
+
+  Eigen::Vector3d latest_position = layer.getPositionByIndex(layer.numNodes() - 1);
+  fillPoseWithIdentity(marker.pose);
+  tf2::convert(latest_position, marker.pose.position);
+  marker.pose.position.z +=
+      getZOffset(config, visualizer_config) + config.dynamic_label_height;
 
   return marker;
 }

@@ -1,8 +1,8 @@
 #pragma once
+#include <kimera_dsg/node_attributes.h>
+#include <kimera_dsg_visualizer/ColormapConfig.h>
 #include <kimera_dsg_visualizer/LayerVisualizerConfig.h>
 #include <kimera_dsg_visualizer/VisualizerConfig.h>
-#include <kimera_dsg_visualizer/ColormapConfig.h>
-#include <kimera_dsg/node_attributes.h>
 
 namespace kimera {
 
@@ -22,8 +22,9 @@ inline double getZOffset(const LayerConfig& config,
 
 VisualizerConfig getVisualizerConfig(const std::string& visualizer_namespace);
 
-LayerConfig getLayerConfig(const std::string& layer_namespace);
+LayerConfig getLayerConfig(const std::string& layer_namespace,
+                           bool dynamic_required = false);
 
 ColormapConfig getColormapConfig(const std::string& colormap_namespace);
 
-} // namespace kimera
+}  // namespace kimera

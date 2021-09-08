@@ -42,7 +42,7 @@ TEST(DynamicSceneGraphTests, DefaultConstructorInvariants) {
 
 TEST(DynamicSceneGraphTests, CustomLayerInvariants) {
   SceneGraph::LayerIds layer_ids{1, 2, 3, 4, 5};
-  DynamicSceneGraph graph(layer_ids);
+  DynamicSceneGraph graph(layer_ids, 0);
   EXPECT_EQ(0u, graph.numNodes());
   EXPECT_EQ(0u, graph.numEdges());
   EXPECT_EQ(layer_ids.size() + 1u, graph.numLayers());
@@ -58,7 +58,7 @@ TEST(DynamicSceneGraphTests, DuplicateMeshIdFails) {
   }
 }
 
-TEST(DynamicSceneGraphTest, NumNodesAndEdges) {
+TEST(DynamicSceneGraphTests, NumNodesAndEdges) {
   DynamicSceneGraph graph;
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
@@ -77,7 +77,7 @@ TEST(DynamicSceneGraphTest, NumNodesAndEdges) {
   EXPECT_EQ(2u, graph.numEdges());
 }
 
-TEST(DynamicSceneGraphTest, MeshEdgeInvariantsCorrect) {
+TEST(DynamicSceneGraphTests, MeshEdgeInvariantsCorrect) {
   DynamicSceneGraph graph;
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
@@ -115,7 +115,7 @@ TEST(DynamicSceneGraphTest, MeshEdgeInvariantsCorrect) {
   EXPECT_EQ(2u, graph.numEdges());
 }
 
-TEST(DynamicSceneGraphTest, InvalidMeshEdgeInvariantsCorrect) {
+TEST(DynamicSceneGraphTests, InvalidMeshEdgeInvariantsCorrect) {
   DynamicSceneGraph graph;
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
@@ -145,7 +145,7 @@ TEST(DynamicSceneGraphTest, InvalidMeshEdgeInvariantsCorrect) {
   EXPECT_EQ(3u, graph.numEdges());
 }
 
-TEST(DynamicSceneGraphTest, UpdateMeshEdgesCorrect) {
+TEST(DynamicSceneGraphTests, UpdateMeshEdgesCorrect) {
   DynamicSceneGraph graph;
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
@@ -186,7 +186,7 @@ TEST(DynamicSceneGraphTest, UpdateMeshEdgesCorrect) {
   EXPECT_EQ(0u, graph.numEdges());
 }
 
-TEST(DynamicSceneGraphTest, RemoveNodesCorrect) {
+TEST(DynamicSceneGraphTests, RemoveNodesCorrect) {
   DynamicSceneGraph graph;
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
@@ -202,6 +202,92 @@ TEST(DynamicSceneGraphTest, RemoveNodesCorrect) {
 
   graph.removeNode(0);
   EXPECT_EQ(5u, graph.numEdges());
+}
+
+TEST(DynamicSceneGraphTests, InsertDynamicLayerCorrect) {
+  DynamicSceneGraph graph;
+  EXPECT_EQ(5u, graph.numLayers());
+
+  graph.createDynamicLayer(1, 'a');
+  EXPECT_EQ(5u, graph.numLayers());
+  EXPECT_EQ(1u, graph.numDynamicLayers());
+  EXPECT_EQ(1u, graph.numDynamicLayersOfType(1));
+  EXPECT_EQ(0u, graph.numDynamicLayersOfType(2));
+  EXPECT_TRUE(graph.hasDynamicLayer(1, 'a'));
+  EXPECT_FALSE(graph.hasDynamicLayer(2, 'a'));
+  EXPECT_FALSE(graph.hasDynamicLayer(1, 'b'));
+
+  graph.createDynamicLayer(1, 'b');
+  EXPECT_EQ(5u, graph.numLayers());
+  EXPECT_EQ(2u, graph.numDynamicLayers());
+  EXPECT_EQ(2u, graph.numDynamicLayersOfType(1));
+  EXPECT_EQ(0u, graph.numDynamicLayersOfType(2));
+  EXPECT_TRUE(graph.hasDynamicLayer(1, 'a'));
+  EXPECT_FALSE(graph.hasDynamicLayer(2, 'a'));
+  EXPECT_TRUE(graph.hasDynamicLayer(1, 'b'));
+
+  // TODO(nathan) we may rule this out: conflicting node symbols
+  graph.createDynamicLayer(2, 'a');
+  EXPECT_EQ(5u, graph.numLayers());
+  EXPECT_EQ(3u, graph.numDynamicLayers());
+  EXPECT_EQ(2u, graph.numDynamicLayersOfType(1));
+  EXPECT_EQ(1u, graph.numDynamicLayersOfType(2));
+  EXPECT_TRUE(graph.hasDynamicLayer(1, 'a'));
+  EXPECT_TRUE(graph.hasDynamicLayer(2, 'a'));
+  EXPECT_TRUE(graph.hasDynamicLayer(1, 'b'));
+
+  // TODO(nathan) we may rule this out: conflicting node symbols
+  graph.createDynamicLayer(7, 'a');
+  EXPECT_EQ(6u, graph.numLayers());
+  EXPECT_EQ(4u, graph.numDynamicLayers());
+  EXPECT_EQ(2u, graph.numDynamicLayersOfType(1));
+  EXPECT_EQ(1u, graph.numDynamicLayersOfType(2));
+  EXPECT_EQ(1u, graph.numDynamicLayersOfType(7));
+  EXPECT_TRUE(graph.hasDynamicLayer(1, 'a'));
+  EXPECT_TRUE(graph.hasDynamicLayer(2, 'a'));
+  EXPECT_TRUE(graph.hasDynamicLayer(1, 'b'));
+  EXPECT_TRUE(graph.hasDynamicLayer(7, 'a'));
+}
+
+TEST(DynamicSceneGraphTests, EmplaceDynamicNodeCorrect) {
+  DynamicSceneGraph graph;
+  EXPECT_EQ(5u, graph.numLayers());
+
+  EXPECT_TRUE(graph.emplaceDynamicNode(
+      2, 'a', std::chrono::seconds(1), std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.hasNode(NodeSymbol('a', 0)));
+  EXPECT_TRUE(graph.getNode(NodeSymbol('a', 0)));
+  EXPECT_TRUE(graph.getDynamicNode(NodeSymbol('a', 0)));
+  EXPECT_EQ(1u, graph.numNodes());
+  EXPECT_EQ(1u, graph.numDynamicNodes());
+
+  // repeat dynamic nodes don't work
+  EXPECT_FALSE(graph.emplaceDynamicNode(
+      2, 'a', std::chrono::seconds(1), std::make_unique<NodeAttributes>()));
+  EXPECT_EQ(1u, graph.numNodes());
+  EXPECT_EQ(1u, graph.numDynamicNodes());
+
+  // static nodes still work
+  EXPECT_TRUE(
+      graph.emplaceNode(2, NodeSymbol('o', 0), std::make_unique<NodeAttributes>()));
+  EXPECT_EQ(2u, graph.numNodes());
+  EXPECT_EQ(1u, graph.numDynamicNodes());
+  EXPECT_TRUE(graph.hasNode(NodeSymbol('o', 0)));
+  EXPECT_TRUE(graph.getNode(NodeSymbol('o', 0)));
+  EXPECT_FALSE(graph.getDynamicNode(NodeSymbol('o', 0)));
+
+  // repeat static nodes (of dynamic nodes) don't work
+  EXPECT_FALSE(
+      graph.emplaceNode(2, NodeSymbol('a', 0), std::make_unique<NodeAttributes>()));
+  EXPECT_EQ(2u, graph.numNodes());
+  EXPECT_EQ(1u, graph.numDynamicNodes());
+
+  // repeat dynamic nodes (of static nodes) don't work
+  EXPECT_FALSE(graph.emplaceDynamicNode(
+      2, 'o', std::chrono::seconds(2), std::make_unique<NodeAttributes>()));
+  EXPECT_EQ(2u, graph.numNodes());
+  EXPECT_EQ(1u, graph.numDynamicNodes());
+  EXPECT_FALSE(graph.hasDynamicLayer(2, 'o'));
 }
 
 }  // namespace kimera

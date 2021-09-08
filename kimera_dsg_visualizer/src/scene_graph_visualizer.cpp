@@ -65,7 +65,8 @@ void SceneGraphVisualizer::setupDynamicReconfigure(
 
   for (const auto& layer : layer_ids) {
     const std::string layer_ns = visualizer_layer_ns_ + std::to_string(layer);
-    layer_configs_[layer] = getLayerConfig(layer_ns);
+    layer_configs_[layer] = getLayerConfig(
+        layer_ns, layer == static_cast<LayerId>(KimeraDsgLayers::AGENTS));
     // required for "safely" updating the rqt server
     layer_config_server_mutexes_[layer] = std::make_unique<boost::recursive_mutex>();
     layer_config_servers_[layer] = std::make_unique<LayerRqtServer>(

@@ -64,6 +64,7 @@ add_library(
   src/attribute_serialization.cpp
   src/bounding_box.cpp
   src/dynamic_scene_graph.cpp
+  src/dynamic_scene_graph_layer.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
   src/scene_graph_node.cpp
@@ -87,6 +88,7 @@ if(CATKIN_ENABLE_TESTING)
     tests/utest_main.cpp
     tests/utest_bounding_box.cpp
     tests/utest_dynamic_scene_graph.cpp
+    tests/utest_dynamic_scene_graph_layer.cpp
     tests/utest_graph_utilities_layer.cpp
     tests/utest_node_symbol.cpp
     tests/utest_scene_graph_node.cpp

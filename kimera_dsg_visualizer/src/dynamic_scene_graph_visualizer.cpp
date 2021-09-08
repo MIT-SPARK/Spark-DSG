@@ -1,6 +1,7 @@
 #include "kimera_dsg_visualizer/dynamic_scene_graph_visualizer.h"
 #include "kimera_dsg_visualizer/feature_config.h"
 #include "kimera_dsg_visualizer/visualizer_utils.h"
+#include "kimera_dsg_visualizer/colormap_utils.h"
 
 #if ENABLE_PGMO_FEATURES()
 #include <kimera_pgmo/utils/CommonFunctions.h>
@@ -10,6 +11,9 @@
 #include <mesh_msgs/TriangleMeshStamped.h>
 
 namespace kimera {
+
+using visualization_msgs::Marker;
+using visualization_msgs::MarkerArray;
 
 namespace {
 
@@ -31,6 +35,8 @@ DynamicSceneGraphVisualizer::DynamicSceneGraphVisualizer(
   semantic_mesh_pub_ =
       nh_.advertise<mesh_msgs::TriangleMeshStamped>("semantic_mesh", 1, true);
   rgb_mesh_pub_ = nh_.advertise<mesh_msgs::TriangleMeshStamped>("rgb_mesh", 1, true);
+
+  dynamic_layers_viz_pub_ = nh_.advertise<MarkerArray>("dynamic_layers_viz", 1, true);
 }
 
 #if ENABLE_PGMO_FEATURES()
@@ -113,9 +119,64 @@ void DynamicSceneGraphVisualizer::visualizeWalls(const pcl::PolygonMesh&) const 
 }
 #endif
 
+MarkerArray DynamicSceneGraphVisualizer::makeDynamicLayerMarkers() const {
+  MarkerArray markers;
+  for (const auto& id_layer_map_pair : scene_graph_->dynamicLayers()) {
+    if (!layer_configs_.count(id_layer_map_pair.first)) {
+      ROS_WARN_STREAM_ONCE("No config available for dynamic layer "
+                           << id_layer_map_pair.first << ". Not visualizing!");
+      continue;
+    }
+
+    const LayerConfig& layer_config = layer_configs_.at(id_layer_map_pair.first);
+    for (const auto& prefix_layer_pair : id_layer_map_pair.second) {
+      const DynamicSceneGraphLayer& layer = *prefix_layer_pair.second;
+      // distance is measured from first relatively readable character prefix
+      double hue =
+          static_cast<double>((layer.prefix - '0') % layer_config.dynamic_num_colors) /
+          static_cast<double>(layer_config.dynamic_num_colors);
+      NodeColor centroid_color = dsg_utils::getRgbFromHls(
+          hue, layer_config.dynamic_luminance, layer_config.dynamic_saturation);
+      NodeColor edge_color = dsg_utils::getRgbFromHls(
+          hue,
+          layer_config.dynamic_luminance * layer_config.dynamic_edge_sl_ratio,
+          layer_config.dynamic_saturation * layer_config.dynamic_edge_sl_ratio);
+
+      Marker centroids = makeDynamicCentroids(
+          layer_config, *prefix_layer_pair.second, visualizer_config_, centroid_color);
+      if (!centroids.points.empty()) {
+        markers.markers.push_back(centroids);
+      }
+
+      Marker edges = makeDynamicEdges(
+          layer_config, *prefix_layer_pair.second, visualizer_config_, edge_color);
+      if (!edges.points.empty()) {
+        markers.markers.push_back(edges);
+      }
+
+      if (prefix_layer_pair.second->numNodes() > 0) {
+        markers.markers.push_back(makeDynamicLabel(
+            layer_config, *prefix_layer_pair.second, visualizer_config_));
+      }
+    }
+  }
+
+  return markers;
+}
+
 bool DynamicSceneGraphVisualizer::redraw() {
   if (!SceneGraphVisualizer::redraw()) {
     return false;
+  }
+
+  ros::Time curr_time = ros::Time::now();
+  MarkerArray markers = makeDynamicLayerMarkers();
+  for (auto& marker : markers.markers) {
+    fillHeader(marker, curr_time);
+  }
+
+  if (!markers.markers.empty()) {
+    dynamic_layers_viz_pub_.publish(markers);
   }
 
   for (const auto& plugin : plugins_) {

@@ -61,4 +61,19 @@ visualization_msgs::Marker makeLayerEdgeMarkers(
     const VisualizerConfig& visualizer_config,
     const NodeColor& color);
 
+visualization_msgs::Marker makeDynamicCentroids(
+    const LayerConfig& config,
+    const DynamicSceneGraphLayer& layer,
+    const VisualizerConfig& visualizer_config,
+    const NodeColor& color);
+
+visualization_msgs::Marker makeDynamicEdges(const LayerConfig& config,
+                                            const DynamicSceneGraphLayer& layer,
+                                            const VisualizerConfig& visualizer_config,
+                                            const NodeColor& color);
+
+visualization_msgs::Marker makeDynamicLabel(const LayerConfig& config,
+                                            const DynamicSceneGraphLayer& layer,
+                                            const VisualizerConfig& visualizer_config);
+
 }  // namespace kimera
