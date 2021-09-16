@@ -1,6 +1,6 @@
 #pragma once
-#include "kimera_dsg/scene_graph_types.h"
 #include "kimera_dsg/node_symbol.h"
+#include "kimera_dsg/scene_graph_types.h"
 
 #include <glog/logging.h>
 
@@ -285,6 +285,78 @@ Components getConnectedComponents(const Graph& graph,
   }
 
   return getMergedComponents(unmerged_components);
+}
+
+template <typename Graph, typename NodeSet>
+void breadthFirstSearch(
+    const Graph& graph,
+    std::deque<NodeId>& frontier,
+    NodeSet& seen,
+    const typename graph_traits<Graph>::node_valid_func& node_valid,
+    const typename graph_traits<Graph>::edge_valid_func& edge_valid,
+    const typename graph_traits<Graph>::visitor& callback_function) {
+  while (!frontier.empty()) {
+    NodeId curr_id = frontier.front();
+    frontier.pop_front();
+
+    callback_function(graph, curr_id);
+
+    auto neighbors = graph_traits<Graph>::neighbors(graph, curr_id);
+    for (const auto& neighbor : neighbors) {
+      if (seen.count(neighbor)) {
+        continue;
+      }
+
+      const auto& neighbor_node = graph_traits<Graph>::get_node(graph, neighbor);
+      if (!node_valid(neighbor_node)) {
+        seen.insert(neighbor); // save some computation
+        continue;
+      }
+
+      const auto& edge = graph_traits<Graph>::get_edge(graph, curr_id, neighbor);
+      if (!edge_valid(edge)) {
+        continue;
+      }
+
+      frontier.push_back(neighbor);
+      seen.insert(neighbor);
+    }
+  }
+}
+
+template <typename Graph, typename NodeSet = std::unordered_set<NodeId>>
+std::vector<std::vector<NodeId>> getConnectedComponents(
+    const Graph& graph,
+    const typename graph_traits<Graph>::node_valid_func& node_valid,
+    const typename graph_traits<Graph>::edge_valid_func& edge_valid) {
+  std::vector<std::vector<NodeId>> components;
+
+  NodeSet visited;
+  for (const auto& node_container : graph_traits<Graph>::nodes(graph)) {
+    const auto& node = graph_traits<Graph>::unwrap_node(node_container);
+    const NodeId node_id = graph_traits<Graph>::unwrap_node_id(node_container);
+    if (!node_valid(node)) {
+      continue;
+    }
+
+    if (visited.count(node_id)) {
+      continue;
+    }
+
+    std::vector<NodeId> component;
+    std::deque<NodeId> frontier{node_id};
+    visited.insert(node_id);
+    breadthFirstSearch(
+        graph,
+        frontier,
+        visited,
+        node_valid,
+        edge_valid,
+        [&](const Graph&, NodeId visited) { component.push_back(visited); });
+    components.push_back(component);
+  }
+
+  return components;
 }
 
 }  // namespace graph_utilities

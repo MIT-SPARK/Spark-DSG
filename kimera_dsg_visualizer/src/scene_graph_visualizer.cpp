@@ -19,6 +19,7 @@ SceneGraphVisualizer::SceneGraphVisualizer(const ros::NodeHandle& nh,
   nh_.param("world_frame", world_frame_, world_frame_);
   nh_.param("visualizer_ns", visualizer_ns_, visualizer_ns_);
   nh_.param("visualizer_layer_ns", visualizer_layer_ns_, visualizer_layer_ns_);
+  nh_.param("layer_label_ns", layer_label_ns_, layer_label_ns_);
 
   semantic_instance_centroid_pub_ =
       nh_.advertise<MarkerArray>("semantic_instance_centroid", 1, true);
@@ -197,8 +198,10 @@ void SceneGraphVisualizer::handleMeshEdges(const SceneGraphLayer& layer,
 void SceneGraphVisualizer::handleLabels(const SceneGraphLayer& layer,
                                         const LayerConfig& config,
                                         const ros::Time& current_time,
+                                        std::set<NodeId>& curr_labels,
+                                        std::set<NodeId>& deleted_labels,
                                         MarkerArray& markers) const {
-  const std::string ns = "layer_" + std::to_string(layer.id) + "_text";
+  const std::string ns = layer_label_ns_;
 
   for (const auto& id_node_pair : layer.nodes()) {
     const Node& node = *id_node_pair.second;
@@ -207,10 +210,12 @@ void SceneGraphVisualizer::handleLabels(const SceneGraphLayer& layer,
       Marker marker = makeTextMarker(config, node, visualizer_config_, ns);
       fillHeader(marker, current_time);
       markers.markers.push_back(marker);
+      curr_labels.insert(node.id);
     } else {
       Marker delete_marker = makeDeleteMarker(node.id, ns);
       fillHeader(delete_marker, current_time);
       markers.markers.push_back(delete_marker);
+      deleted_labels.insert(node.id);
     }
   }
 }
@@ -243,7 +248,7 @@ void SceneGraphVisualizer::handleBoundingBoxes(const SceneGraphLayer& layer,
   }
 }
 
-void SceneGraphVisualizer::displayLayers(const SceneGraph& scene_graph) const {
+void SceneGraphVisualizer::displayLayers(const SceneGraph& scene_graph) {
   MarkerArray layer_centroids;
   MarkerArray text_markers;
   MarkerArray line_assoc_markers;
@@ -251,6 +256,8 @@ void SceneGraphVisualizer::displayLayers(const SceneGraph& scene_graph) const {
 
   // TODO(nathan) book-keeping for mutating scene graph
   ros::Time current_time = ros::Time::now();
+  std::set<NodeId> curr_labels;
+  std::set<NodeId> deleted_labels;
   for (const auto& id_layer_pair : scene_graph.layers()) {
     if (!layer_configs_.count(id_layer_pair.first)) {
       ROS_WARN_STREAM("failed to find config for layer " << id_layer_pair.first);
@@ -261,10 +268,23 @@ void SceneGraphVisualizer::displayLayers(const SceneGraph& scene_graph) const {
     const SceneGraphLayer& layer = *(id_layer_pair.second);
 
     handleCentroids(layer, config, current_time, layer_centroids);
-    handleLabels(layer, config, current_time, text_markers);
+    handleLabels(
+        layer, config, current_time, curr_labels, deleted_labels, text_markers);
     handleBoundingBoxes(layer, config, current_time, text_markers);
     handleMeshEdges(layer, config, current_time, line_assoc_markers);
   }
+
+  for (const auto& prev_node : previous_label_ids_) {
+    if (deleted_labels.count(prev_node) || curr_labels.count(prev_node)) {
+      continue;
+    }
+
+    Marker delete_marker = makeDeleteMarker(prev_node, layer_label_ns_);
+    fillHeader(delete_marker, current_time);
+    text_markers.markers.push_back(delete_marker);
+  }
+
+  previous_label_ids_ = curr_labels;
 
   if (!layer_centroids.markers.empty()) {
     semantic_instance_centroid_pub_.publish(layer_centroids);

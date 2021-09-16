@@ -185,4 +185,80 @@ INSTANTIATE_TEST_CASE_P(GetDepthLimitedConnectedComponent,
                         DepthLimitedCCFixture,
                         testing::ValuesIn(dl_test_cases));
 
+struct FilteredCCTestConfig {
+  ResultSet expected;
+  NodeSet disallowed_nodes;
+  NodeSet disallowed_edge_nodes;
+  GraphConfig graph;
+};
+
+struct FilteredCCFixture : public testing::TestWithParam<FilteredCCTestConfig> {
+  FilteredCCFixture() : layer(1) {}
+
+  virtual ~FilteredCCFixture() = default;
+
+  void SetUp() override {
+    FilteredCCTestConfig config = GetParam();
+    for (size_t i = 0; i < config.graph.num_nodes; ++i) {
+      layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+    }
+
+    for (const auto& edge : config.graph.edges) {
+      layer.insertEdge(edge.first, edge.second);
+    }
+  }
+
+  IsolatedSceneGraphLayer layer;
+};
+
+TEST_P(FilteredCCFixture, ResultCorrect) {
+  FilteredCCTestConfig info = GetParam();
+
+  Components result = getConnectedComponents<SceneGraphLayer>(
+      layer,
+      [&](const SceneGraphNode& node) { return !info.disallowed_nodes.count(node.id); },
+      [&](const SceneGraphEdge& edge) {
+        return !info.disallowed_edge_nodes.count(edge.source) &&
+               !info.disallowed_edge_nodes.count(edge.target);
+      });
+
+  EXPECT_EQ(info.expected.size(), result.size());
+  for (const auto& expected : info.expected) {
+    EXPECT_TRUE(matchesExpectedSet(expected, result))
+        << displayNodeSymbolContainer(expected);
+  }
+}
+
+const FilteredCCTestConfig filtered_cc_test_cases[] = {
+    {ResultSet{{0, 1, 2}, {3, 4, 5}}, {}, {}, dl_graphs[0]},
+    {ResultSet{{0, 1}, {3}, {4, 5}}, {2}, {3}, dl_graphs[0]},
+    {ResultSet{{0}, {1}, {2}, {3}, {4}, {5}}, {}, {0, 1, 2, 3, 4, 5}, dl_graphs[0]},
+};
+
+INSTANTIATE_TEST_CASE_P(GetConnectedComponentWithFilters,
+                        FilteredCCFixture,
+                        testing::ValuesIn(filtered_cc_test_cases));
+
+TEST(ConnectedComponentTests, NormalEmptyCorrect) {
+  IsolatedSceneGraphLayer layer(1);
+
+  NodeSet query;
+  Components result = getConnectedComponents<SceneGraphLayer>(layer, query, false);
+  EXPECT_TRUE(result.empty());
+
+  query.insert(0);
+  query.insert(1);
+  result = getConnectedComponents<SceneGraphLayer>(layer, query, false);
+  EXPECT_TRUE(result.empty());
+}
+
+TEST(ConnectedComponentTests, FilteredEmptyCorrect) {
+  IsolatedSceneGraphLayer layer(1);
+
+  NodeSet query;
+  Components result = getConnectedComponents<SceneGraphLayer>(
+      layer, [](const auto&) { return true; }, [](const auto&) { return true; });
+  EXPECT_TRUE(result.empty());
+}
+
 }  // namespace kimera

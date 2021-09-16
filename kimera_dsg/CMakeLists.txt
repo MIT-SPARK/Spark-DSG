@@ -61,6 +61,7 @@ catkin_package(
 
 add_library(
   ${PROJECT_NAME}
+  src/adjacency_matrix.cpp
   src/attribute_serialization.cpp
   src/bounding_box.cpp
   src/dynamic_scene_graph.cpp
@@ -86,6 +87,7 @@ if(CATKIN_ENABLE_TESTING)
   catkin_add_gtest(
     utest_${PROJECT_NAME}
     tests/utest_main.cpp
+    tests/utest_adjacency_matrix.cpp
     tests/utest_bounding_box.cpp
     tests/utest_dynamic_scene_graph.cpp
     tests/utest_dynamic_scene_graph_layer.cpp

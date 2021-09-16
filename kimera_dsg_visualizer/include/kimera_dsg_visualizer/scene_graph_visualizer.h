@@ -30,9 +30,7 @@ class SceneGraphVisualizer {
 
   virtual bool redraw();
 
-  inline void setGraphUpdated() {
-    need_redraw_ = true;
-  }
+  inline void setGraphUpdated() { need_redraw_ = true; }
 
   void setGraph(const DynamicSceneGraph::Ptr& scene_graph);
 
@@ -40,7 +38,6 @@ class SceneGraphVisualizer {
 
  protected:
   void displayLoop(const ros::TimerEvent&);
-
 
   void configUpdateCb(VisualizerConfig& config, uint32_t level);
 
@@ -51,7 +48,7 @@ class SceneGraphVisualizer {
   void fillHeader(visualization_msgs::Marker& marker,
                   const ros::Time& current_time) const;
 
-  void displayLayers(const SceneGraph& scene_graph) const;
+  void displayLayers(const SceneGraph& scene_graph);
 
   void displayEdges(const SceneGraph& scene_graph) const;
 
@@ -68,6 +65,8 @@ class SceneGraphVisualizer {
   void handleLabels(const SceneGraphLayer& layer,
                     const LayerConfig& config,
                     const ros::Time& current_time,
+                    std::set<NodeId>& curr_labels,
+                    std::set<NodeId>& deleted_labels,
                     visualization_msgs::MarkerArray& markers) const;
 
   void handleBoundingBoxes(const SceneGraphLayer& layer,
@@ -89,6 +88,9 @@ class SceneGraphVisualizer {
   std::string visualizer_layer_ns_;
 
   ros::Timer visualizer_loop_timer_;
+
+  std::string layer_label_ns_ = "layer_nodes_text";
+  std::set<NodeId> previous_label_ids_;
 
   std::unique_ptr<RqtServer> config_server_;
   RqtMutexPtr config_server_mutex_;

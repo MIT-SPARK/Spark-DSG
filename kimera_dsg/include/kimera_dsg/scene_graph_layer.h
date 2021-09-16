@@ -26,10 +26,14 @@ struct SceneGraphEdgeInfo {
 
   static inline constexpr char TYPE_KEY[] = "type";
 
+  SceneGraphEdgeInfo() : weighted(false), weight(1.0) {}
+
+  explicit SceneGraphEdgeInfo(double weight) : weighted(true), weight(weight) {}
+
   //! whether or not the edge weight is valid
-  bool weighted = false;
+  bool weighted;
   //! the weight of the edge
-  double weight = 1.0;
+  double weight;
 
   virtual nlohmann::json toJson() const;
 
@@ -275,6 +279,8 @@ namespace graph_utilities {
 template <>
 struct graph_traits<SceneGraphLayer> {
   using visitor = const std::function<void(const SceneGraphLayer&, NodeId)>&;
+  using node_valid_func = const std::function<bool(const SceneGraphNode&)>&;
+  using edge_valid_func = const std::function<bool(const SceneGraphEdge&)>&;
 
   static inline std::set<NodeId> neighbors(const SceneGraphLayer& graph, NodeId node) {
     return graph.getNode(node)->get().siblings();
@@ -282,6 +288,31 @@ struct graph_traits<SceneGraphLayer> {
 
   static inline bool contains(const SceneGraphLayer& graph, NodeId node) {
     return graph.hasNode(node);
+  }
+
+  static inline const SceneGraphLayer::Nodes& nodes(const SceneGraphLayer& graph) {
+    return graph.nodes();
+  }
+
+  static inline const SceneGraphNode& unwrap_node(
+      const SceneGraphLayer::Nodes::value_type& container) {
+    return *container.second;
+  }
+
+  static inline NodeId unwrap_node_id(
+      const SceneGraphLayer::Nodes::value_type& container) {
+    return container.first;
+  }
+
+  static inline const SceneGraphNode& get_node(const SceneGraphLayer& graph,
+                                               NodeId node) {
+    return graph.getNode(node).value();
+  }
+
+  static inline const SceneGraphEdge& get_edge(const SceneGraphLayer& graph,
+                                               NodeId source,
+                                               NodeId target) {
+    return graph.getEdge(source, target).value();
   }
 };
 
