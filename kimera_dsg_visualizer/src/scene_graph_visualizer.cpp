@@ -201,9 +201,8 @@ void SceneGraphVisualizer::handleLabels(const SceneGraphLayer& layer,
                                         std::set<NodeId>& curr_labels,
                                         std::set<NodeId>& deleted_labels,
                                         MarkerArray& markers) const {
-  const std::string ns = layer_label_ns_;
-
   for (const auto& id_node_pair : layer.nodes()) {
+    const std::string ns = layer_label_ns_ + NodeSymbol(id_node_pair.first).category();
     const Node& node = *id_node_pair.second;
 
     if (config.visualize && config.use_label) {
@@ -279,7 +278,8 @@ void SceneGraphVisualizer::displayLayers(const SceneGraph& scene_graph) {
       continue;
     }
 
-    Marker delete_marker = makeDeleteMarker(prev_node, layer_label_ns_);
+    const std::string ns = layer_label_ns_ + NodeSymbol(prev_node).category();
+    Marker delete_marker = makeDeleteMarker(prev_node, ns);
     fillHeader(delete_marker, current_time);
     text_markers.markers.push_back(delete_marker);
   }
