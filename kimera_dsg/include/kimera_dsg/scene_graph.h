@@ -107,23 +107,6 @@ class SceneGraph {
    */
   virtual bool hasLayer(LayerId layer_id) const;
 
-  // TODO(nathan) this is clunky because of inheritance
-  /**
-   * @brief Check if a given layer exists
-   *
-   * Convenience function to handle automatically casting an enum
-   * to LayerId
-   *
-   * @param layer_id Layer to check for
-   * @returns Returns true if the given layer exists
-   */
-  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-  bool hasLayer(E e) const {
-    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
-                  "type passed must be compatible with layer id");
-    return hasLayer(static_cast<LayerId>(e));
-  }
-
   /**
    * @brief check if a given node exists
    * @param node_id node to check for
@@ -149,18 +132,6 @@ class SceneGraph {
    * @returns a potentially valid constant reference to the requested layer
    */
   std::optional<LayerRef> getLayer(LayerId layer_id) const;
-
-  // TODO(nathan) might not need this
-  /**
-   * @brief Get a layer if the layer exists
-   * @returns a potentially valid constant reference to the requested layer
-   */
-  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-  std::optional<LayerRef> getLayer(E e) const {
-    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
-                  "type passed must be compatible with layer id");
-    return getLayer(static_cast<LayerId>(e));
-  }
 
   /**
    * @brief Get a particular node in the graph

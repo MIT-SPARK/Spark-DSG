@@ -23,7 +23,7 @@ BoundingBox::BoundingBox(const Eigen::Vector3f& min, const Eigen::Vector3f& max)
 
 BoundingBox::BoundingBox(const Eigen::Vector3f& min,
                          const Eigen::Vector3f& max,
-                         const Eigen::Vector3f world_P_center,
+                         const Eigen::Vector3f& world_P_center,
                          const Eigen::Quaternionf& world_R_center)
     : type(Type::OBB),
       min(min),
@@ -31,10 +31,24 @@ BoundingBox::BoundingBox(const Eigen::Vector3f& min,
       world_P_center(world_P_center),
       world_R_center(world_R_center.toRotationMatrix()) {}
 
+BoundingBox::BoundingBox(BoundingBox::Type type,
+                         const Eigen::Vector3f& min,
+                         const Eigen::Vector3f& max,
+                         const Eigen::Vector3f& world_P_center,
+                         const Eigen::Matrix3f& world_R_center)
+    : type(type),
+      min(min),
+      max(max),
+      world_P_center(world_P_center),
+      world_R_center(world_R_center) {}
+
 std::ostream& operator<<(std::ostream& os, const BoundingBox& box) {
   os << "Bounding box: " << std::endl
      << " - Max: " << box.max.transpose() << std::endl
      << " - Min: " << box.min.transpose() << std::endl;
+  if (box.type == BoundingBox::Type::RAABB) {
+    os << " - Orientation: " << Eigen::Quaternionf(box.world_R_center) << std::endl;
+  }
   if (box.type == BoundingBox::Type::OBB) {
     os << " - Position: " << box.world_P_center.transpose() << std::endl
        << " - Orientation: " << Eigen::Quaternionf(box.world_R_center) << std::endl;
@@ -60,6 +74,7 @@ bool BoundingBox::isInside(const Eigen::Vector3f& point) const {
       return min(0) <= point(0) && point(0) <= max(0) && min(1) <= point(1) &&
              point(1) <= max(1) && min(2) <= point(2) && point(2) <= max(2);
     case Type::OBB:
+    case Type::RAABB:  // RAABB is the same as OBB (despite the function name)
       return isInsideOBB(point);
     case Type::INVALID:
     default:
@@ -68,11 +83,11 @@ bool BoundingBox::isInside(const Eigen::Vector3f& point) const {
 }
 
 float BoundingBox::volume() const {
-  // TODO(nathan) check this
   switch (type) {
     case Type::AABB:
     case Type::OBB:
-      return (max - min).prod();
+    case Type::RAABB:
+      return std::abs((max - min).prod());
     default:
     case Type::INVALID:
       return std::numeric_limits<float>::quiet_NaN();

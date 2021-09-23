@@ -1,3 +1,4 @@
+#include "kimera_dsg_visualizer/dsg_mesh_plugin.h"
 #include "kimera_dsg_visualizer/dynamic_scene_graph_visualizer.h"
 
 #include <kimera_dsg/scene_graph.h>
@@ -32,10 +33,15 @@ int main(int argc, char** argv) {
                                          << "has mesh? "
                                          << (scene_graph->hasMesh() ? "yes" : "no"));
 
+  ros::NodeHandle visualizer_nh(visualizer_ns);
   kimera::DynamicSceneGraphVisualizer scene_graph_visualizer(
-      ros::NodeHandle(visualizer_ns), kimera::getDefaultLayerIds());
+      visualizer_nh, kimera::getDefaultLayerIds());
+
+  scene_graph_visualizer.addPlugin(
+      std::make_shared<kimera::DsgMeshPlugin>(visualizer_nh, "dsg_mesh_plugin"));
 
   scene_graph_visualizer.setGraph(scene_graph);
+
   scene_graph_visualizer.start();
   ROS_DEBUG("Visualizer running");
   ros::spin();

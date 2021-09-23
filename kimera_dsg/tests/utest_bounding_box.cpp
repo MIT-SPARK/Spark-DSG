@@ -175,6 +175,59 @@ TEST(BoundingBoxTests, PCLConstructorAABBColor) {
   EXPECT_EQ(4.0f, box.max(2));
 }
 
+TEST(BoundingBoxTests, PCLConstructorRAABBColorNoRotation) {
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+  // force angle to be ~0
+  cloud->push_back(makeRGBPoint(0.0f, 0.0f, 0.0f));
+  cloud->push_back(makeRGBPoint(5.0f, 0.0f, 0.0f));
+
+  // get bounding box from pointcloud
+  BoundingBox box = BoundingBox::extract(cloud, BoundingBox::Type::RAABB);
+  EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
+
+  EXPECT_NEAR(-2.5f, box.min(0), 1.0e-3);
+  EXPECT_NEAR(2.5f, box.max(0), 1.0e-3);
+  EXPECT_NEAR(0.0f, box.min(1), 1.0e-3);
+  EXPECT_NEAR(0.0f, box.max(1), 1.0e-3);
+  EXPECT_NEAR(0.0f, box.min(2), 1.0e-3);
+  EXPECT_NEAR(0.0f, box.max(2), 1.0e-3);
+
+  Eigen::Quaternionf expected_rotation = Eigen::Quaternionf::Identity();
+  EXPECT_NEAR(0.0f, getRotationError(expected_rotation, box), 0.1f);
+}
+
+TEST(BoundingBoxTests, PCLConstructorRAABBColorNonTrivial) {
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+  // force angle to be ~pi/6
+  for (size_t i = 0; i <= 50; ++i) {
+    float magnitude = 5.0 * static_cast<float>(i) / 50.0;
+    float x = magnitude * std::cos(M_PI / 6);
+    float y = magnitude * std::sin(M_PI / 6);
+    for (size_t j = 0; j <= 10; ++j) {
+      float dx = -0.002 * j * std::sin(M_PI / 6);
+      float dy = 0.002 * j * std::cos(M_PI / 6);
+      // float dx = 0.0f;
+      // float dy = 0.0f;
+      cloud->push_back(makeRGBPoint(x + dx, y + dy, 0.04f * j));
+    }
+  }
+
+  // get bounding box from pointcloud
+  BoundingBox box = BoundingBox::extract(cloud, BoundingBox::Type::RAABB);
+  EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
+
+  EXPECT_NEAR(-2.5f, box.min(0), 1.0e-3);
+  EXPECT_NEAR(2.5f, box.max(0), 1.0e-3);
+  EXPECT_NEAR(-0.01f, box.min(1), 1.0e-3);
+  EXPECT_NEAR(0.01f, box.max(1), 1.0e-3);
+  EXPECT_NEAR(-0.2f, box.min(2), 1.0e-3);
+  EXPECT_NEAR(0.2f, box.max(2), 1.0e-3);
+
+  Eigen::Quaternionf expected_rotation(
+      std::cos(M_PI / 12), 0.0f, 0.0f, std::sin(M_PI / 12));
+  EXPECT_NEAR(0.0f, getRotationError(expected_rotation, box), 0.1f) << box;
+}
+
 TEST(BoundingBoxTests, InvalidVolumeChecksCorrect) {
   Eigen::Vector3f test_point1(1.0, 2.0, 3.0);
   Eigen::Vector3d test_point2(1.0, 2.0, 3.0);
@@ -290,6 +343,113 @@ TEST(BoundingBoxTests, RotatedOBBVolumeChecksCorrect) {
 
   {  // actually inside (with rotation)
     Eigen::Vector3f test_point1(4.6, 6.9, 6.0);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_TRUE(box.isInside(test_point1));
+    EXPECT_TRUE(box.isInside(test_point2));
+  }
+}
+
+TEST(BoundingBoxTests, RAABBVolumeChecksCorrectBasic) {
+  BoundingBox box(BoundingBox::Type::RAABB,
+                  Eigen::Vector3f::Zero(),
+                  Eigen::Vector3f(1.0, 2.0, 3.0),
+                  Eigen::Vector3f::Zero(),
+                  Eigen::Matrix3f::Identity());
+  EXPECT_NEAR(6.0f, box.volume(), 1.0e-8f);
+
+  {  // inside
+    Eigen::Vector3f test_point1(0.5, 0.5, 0.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_TRUE(box.isInside(test_point1));
+    EXPECT_TRUE(box.isInside(test_point2));
+  }
+
+  {  // outside low
+    Eigen::Vector3f test_point1(-0.5, -0.5, -0.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_FALSE(box.isInside(test_point1));
+    EXPECT_FALSE(box.isInside(test_point2));
+  }
+
+  {  // outside high
+    Eigen::Vector3f test_point1(3.5, 3.5, 3.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_FALSE(box.isInside(test_point1));
+    EXPECT_FALSE(box.isInside(test_point2));
+  }
+
+  {  // outside mixed
+    Eigen::Vector3f test_point1(-0.5, 3.5, 0.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_FALSE(box.isInside(test_point1));
+    EXPECT_FALSE(box.isInside(test_point2));
+  }
+}
+
+TEST(BoundingBoxTests, RAABBVolumeChecksNonZeroOrigin) {
+  BoundingBox box(BoundingBox::Type::RAABB,
+                  Eigen::Vector3f(-0.5, 0.0, 0.0),
+                  Eigen::Vector3f(0.5, 2.0, 3.0),
+                  Eigen::Vector3f(-0.5, -2.0, -3.0),
+                  Eigen::Matrix3f::Identity());
+  EXPECT_NEAR(6.0f, box.volume(), 1.0e-8f);
+
+  {  // inside
+    Eigen::Vector3f test_point1(-0.5, -1.5, -2.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_TRUE(box.isInside(test_point1));
+    EXPECT_TRUE(box.isInside(test_point2));
+  }
+
+  {  // outside low
+    Eigen::Vector3f test_point1(-1.5, -2.5, -3.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_FALSE(box.isInside(test_point1));
+    EXPECT_FALSE(box.isInside(test_point2));
+  }
+
+  {  // outside high
+    Eigen::Vector3f test_point1(2.5, 1.5, 0.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_FALSE(box.isInside(test_point1));
+    EXPECT_FALSE(box.isInside(test_point2));
+  }
+
+  {  // outside mixed
+    Eigen::Vector3f test_point1(-1.5, 1.5, -2.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_FALSE(box.isInside(test_point1));
+    EXPECT_FALSE(box.isInside(test_point2));
+  }
+}
+
+TEST(BoundingBoxTests, RAABBVolumeChecksCorrectWithRotation) {
+  // positive pi / 12 rotation around z
+  BoundingBox box(
+      BoundingBox::Type::RAABB,
+      Eigen::Vector3f(0.0, 0.0, 0.0),
+      Eigen::Vector3f(1.0, 2.0, 3.0),
+      Eigen::Vector3f::Zero(),
+      Eigen::Quaternionf(std::cos(M_PI / 12.0), 0.0, 0.0, std::sin(M_PI / 12.0))
+          .toRotationMatrix());
+  EXPECT_NEAR(6.0f, box.volume(), 1.0e-8f);
+
+  {  // inside (at center)
+    Eigen::Vector3f test_point1(0.5, 1.0, 1.5);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_TRUE(box.isInside(test_point1));
+    EXPECT_TRUE(box.isInside(test_point2));
+  }
+
+  {  // outside (with rotation) that would have been in non-rotated
+    Eigen::Vector3f test_point1(0.9, 1.9, 0.1);
+    Eigen::Vector3d test_point2 = test_point1.cast<double>();
+    EXPECT_FALSE(box.isInside(test_point1));
+    EXPECT_FALSE(box.isInside(test_point2));
+  }
+
+  {  // actually inside (with rotation)
+    Eigen::Vector3f test_point1(-0.1, 1.95, 0.1);
     Eigen::Vector3d test_point2 = test_point1.cast<double>();
     EXPECT_TRUE(box.isInside(test_point1));
     EXPECT_TRUE(box.isInside(test_point2));

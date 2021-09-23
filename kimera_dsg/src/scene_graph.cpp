@@ -457,10 +457,10 @@ void SceneGraph::load(const std::string& filepath, bool force_bson) {
 }
 
 SceneGraph::LayerIds getDefaultLayerIds() {
-  SceneGraph::LayerIds default_ids{to_underlying(KimeraDsgLayers::OBJECTS),
-                                   to_underlying(KimeraDsgLayers::PLACES),
-                                   to_underlying(KimeraDsgLayers::ROOMS),
-                                   to_underlying(KimeraDsgLayers::BUILDINGS)};
+  SceneGraph::LayerIds default_ids{KimeraDsgLayers::OBJECTS,
+                                   KimeraDsgLayers::PLACES,
+                                   KimeraDsgLayers::ROOMS,
+                                   KimeraDsgLayers::BUILDINGS};
   return default_ids;
 }
 

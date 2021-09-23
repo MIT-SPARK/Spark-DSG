@@ -6,6 +6,26 @@
 
 namespace kimera {
 
+template <typename PointT>
+PointT getRotatedPoint(const Eigen::Matrix3f& new_R_old,
+                       const Eigen::Vector3f& new_t_old,
+                       const PointT& original) {
+  PointT new_point = original;
+  Eigen::Vector3f pos(new_point.x, new_point.y, new_point.z);
+  Eigen::Vector3f new_pos = new_R_old * pos + new_t_old;
+  new_point.x = new_pos.x();
+  new_point.y = new_pos.y();
+  new_point.z = new_pos.z();
+  return new_point;
+}
+
+// forward declare functions
+struct BoundingBox;
+
+template <typename PointT>
+BoundingBox extractRAABBBox(const pcl::MomentOfInertiaEstimation<PointT>& estimator,
+                            const pcl::IndicesPtr& indices);
+
 /**
  * @brief Bounding box representation
  *
@@ -19,7 +39,8 @@ struct BoundingBox {
   enum class Type : int {
     INVALID = 0,          /**< an invalid bounding box */
     AABB = 1,             /**< an axis-aligned bounding box */
-    OBB = 2               /**< an orientation bounding box */
+    OBB = 2,              /**< an oriented bounding box */
+    RAABB = 3             /**< a (yaw-adjusted) axis-aligned bounding box */
   } type = Type::INVALID; /**< type of the current bounding box */
 
   /**
@@ -38,8 +59,17 @@ struct BoundingBox {
    */
   BoundingBox(const Eigen::Vector3f& min,
               const Eigen::Vector3f& max,
-              const Eigen::Vector3f world_P_center,
+              const Eigen::Vector3f& world_P_center,
               const Eigen::Quaternionf& world_R_center);
+
+  /**
+   * @brief Construct an arbitrary bounding box
+   */
+  BoundingBox(BoundingBox::Type type,
+              const Eigen::Vector3f& min,
+              const Eigen::Vector3f& max,
+              const Eigen::Vector3f& world_P_center,
+              const Eigen::Matrix3f& world_R_center);
 
   virtual ~BoundingBox() = default;
 
@@ -119,6 +149,9 @@ struct BoundingBox {
         box.world_P_center << pcl_position.x, pcl_position.y, pcl_position.z;
         box.world_R_center = Eigen::Quaternionf(pcl_rotation).toRotationMatrix();
         break;
+      case Type::RAABB:
+        box = extractRAABBBox(estimator, active_indices);
+        break;
       default:
         std::stringstream ss;
         ss << "Unknown bounding box type: " << static_cast<int>(type);
@@ -147,5 +180,55 @@ struct BoundingBox {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+
+template <typename PointT>
+BoundingBox extractRAABBBox(const pcl::MomentOfInertiaEstimation<PointT>& estimator,
+                            const pcl::IndicesPtr& indices) {
+  PointT pcl_min;
+  PointT pcl_max;
+  PointT pcl_position;
+  Eigen::Matrix3f pcl_rotation;
+
+  estimator.getOBB(pcl_min, pcl_max, pcl_position, pcl_rotation);
+
+  const auto& cloud = estimator.getInputCloud();
+
+  boost::shared_ptr<pcl::PointCloud<PointT>> rotated_cloud(
+      new pcl::PointCloud<PointT>());
+
+  // from the lavalle motion planning book (http://planning.cs.uiuc.edu/node103.html)
+  // this is likely incorrect sometimes
+  float yaw = std::atan2(pcl_rotation(1, 0), pcl_rotation(0, 0));
+  // note that this is the inverse of a standard z-axis rotation
+  Eigen::Matrix3f new_R_old;
+  new_R_old << std::cos(yaw), std::sin(yaw), 0.0f, -std::sin(yaw), std::cos(yaw), 0.0f,
+      0.0f, 0.0f, 1.0f;
+
+  Eigen::Vector3f old_t_new(pcl_position.x, pcl_position.y, pcl_position.z);
+  Eigen::Vector3f new_t_old = -new_R_old * old_t_new;
+
+  if (indices) {
+    rotated_cloud->reserve(indices->size());
+    for (const auto& idx : *indices) {
+      rotated_cloud->push_back(getRotatedPoint(new_R_old, new_t_old, cloud->at(idx)));
+    }
+  } else {
+    rotated_cloud->reserve(cloud->size());
+    for (size_t i = 0; i < cloud->size(); ++i) {
+      rotated_cloud->push_back(getRotatedPoint(new_R_old, new_t_old, cloud->at(i)));
+    }
+  }
+
+  pcl::MomentOfInertiaEstimation<PointT> new_estimator;
+  new_estimator.setInputCloud(rotated_cloud);
+  new_estimator.compute();
+  new_estimator.getAABB(pcl_min, pcl_max);
+  Eigen::Vector3f min;
+  min << pcl_min.x, pcl_min.y, pcl_min.z;
+  Eigen::Vector3f max;
+  max << pcl_max.x, pcl_max.y, pcl_max.z;
+  return BoundingBox(
+      BoundingBox::Type::RAABB, min, max, old_t_new, new_R_old.transpose());
+}
 
 }  // namespace kimera

@@ -124,13 +124,14 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
       .value("AABB", BoundingBox::Type::AABB)
       .value("OBB", BoundingBox::Type::OBB);
 
-  py::enum_<KimeraDsgLayers>(module, "KimeraDsgLayers")
-      .value("INVALID", KimeraDsgLayers::INVALID)
-      .value("MESH", KimeraDsgLayers::MESH)
-      .value("OBJECTS", KimeraDsgLayers::OBJECTS)
-      .value("PLACES", KimeraDsgLayers::PLACES)
-      .value("ROOMS", KimeraDsgLayers::ROOMS)
-      .value("BUILDINGS", KimeraDsgLayers::BUILDINGS);
+  py::class_<KimeraDsgLayers>(module, "KimeraDsgLayers")
+      .def_readonly_static("MESH", &KimeraDsgLayers::MESH)
+      .def_readonly_static("OBJECTS", &KimeraDsgLayers::OBJECTS)
+      .def_readonly_static("AGENTS", &KimeraDsgLayers::AGENTS)
+      .def_readonly_static("PLACES", &KimeraDsgLayers::PLACES)
+      .def_readonly_static("STRUCTURE", &KimeraDsgLayers::STRUCTURE)
+      .def_readonly_static("ROOMS", &KimeraDsgLayers::ROOMS)
+      .def_readonly_static("BUILDINGS", &KimeraDsgLayers::BUILDINGS);
 
   py::class_<Quaternion<float>>(module, "Quaternionf")
       .def(py::init<>())

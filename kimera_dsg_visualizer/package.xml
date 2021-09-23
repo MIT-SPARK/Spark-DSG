@@ -14,7 +14,6 @@
   <depend>libopencv-dev</depend>
   <depend>dynamic_reconfigure</depend>
   <depend>kimera_dsg</depend>
-  <depend>kimera_pgmo</depend>
   <depend>visualization_msgs</depend>
   <depend>tf2_eigen</depend>
 

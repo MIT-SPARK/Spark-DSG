@@ -61,8 +61,7 @@ class DynamicSceneGraph : public SceneGraph {
    * @brief Construct the scene graph (with a default layer factory)
    * @param mesh_layer_id Mesh layer id (must be unique)
    */
-  explicit DynamicSceneGraph(
-      LayerId mesh_layer_id = to_underlying(KimeraDsgLayers::MESH));
+  explicit DynamicSceneGraph(LayerId mesh_layer_id = KimeraDsgLayers::MESH);
 
   /**
    * @brief Construct the scene graph (with a provided layer factory)
@@ -70,7 +69,7 @@ class DynamicSceneGraph : public SceneGraph {
    * @param mesh_layer_id Mesh layer id (must be unique)
    */
   DynamicSceneGraph(const LayerIds& factory,
-                    LayerId mesh_layer_id = to_underlying(KimeraDsgLayers::MESH));
+                    LayerId mesh_layer_id = KimeraDsgLayers::MESH);
 
   /**
    * @brief Default destructor
@@ -106,34 +105,13 @@ class DynamicSceneGraph : public SceneGraph {
 
   bool createDynamicLayer(LayerId layer, char layer_prefix);
 
-  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-  bool createDynamicLayer(E e, char layer_prefix) {
-    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
-                  "type passed must be compatible with layer id");
-    return createDynamicLayer(static_cast<LayerId>(e), layer_prefix);
-  }
-
   bool hasDynamicLayer(LayerId layer, char layer_prefix) const;
-
-  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-  bool hasDynamicLayer(E e, char layer_prefix) const {
-    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
-                  "type passed must be compatible with layer id");
-    return hasDynamicLayer(static_cast<LayerId>(e), layer_prefix);
-  }
 
   size_t numDynamicLayersOfType(LayerId layer) const;
 
   size_t numDynamicLayers() const;
 
   std::optional<DynamicLayerRef> getDynamicLayer(LayerId layer_id, char prefix) const;
-
-  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-  std::optional<DynamicLayerRef> getDynamicLayer(E e, char layer_prefix) const {
-    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
-                  "type passed must be compatible with layer id");
-    return getDynamicLayer(static_cast<LayerId>(e), layer_prefix);
-  }
 
   bool emplaceDynamicNode(LayerId layer_id,
                           char prefix,
@@ -184,22 +162,6 @@ class DynamicSceneGraph : public SceneGraph {
    */
   inline bool hasMesh() const {
     return mesh_vertices_ != nullptr && mesh_faces_ != nullptr;
-  }
-
-  /**
-   * @brief Check if a given layer exists
-   *
-   * Convenience function to handle automatically casting an enum
-   * to LayerId
-   *
-   * @param layer_id Layer to check for
-   * @returns Returns true if the given layer exists
-   */
-  template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-  bool hasLayer(E e) const {
-    static_assert(std::is_same<typename std::underlying_type<E>::type, LayerId>::value,
-                  "type passed must be compatible with layer id");
-    return hasLayer(static_cast<LayerId>(e));
   }
 
   /**

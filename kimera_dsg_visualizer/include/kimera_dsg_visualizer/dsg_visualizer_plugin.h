@@ -11,7 +11,7 @@ class DsgVisualizerPlugin {
 
   virtual ~DsgVisualizerPlugin() = default;
 
-  virtual void draw(const DynamicSceneGraph& graph) = 0;
+  virtual void draw(const std_msgs::Header& header, const DynamicSceneGraph& graph) = 0;
 
  protected:
   ros::NodeHandle nh_;

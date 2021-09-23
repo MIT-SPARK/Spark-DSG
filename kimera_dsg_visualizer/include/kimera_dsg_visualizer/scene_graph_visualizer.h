@@ -5,7 +5,6 @@
 
 #include <dynamic_reconfigure/server.h>
 #include <kimera_dsg/dynamic_scene_graph.h>
-#include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <string>
@@ -13,13 +12,60 @@
 
 namespace kimera {
 
+using visualization_msgs::Marker;
+using visualization_msgs::MarkerArray;
+
+template <typename Config>
+class ConfigManager {
+ public:
+  using Ptr = std::shared_ptr<ConfigManager<Config>>;
+  using Server = dynamic_reconfigure::Server<Config>;
+
+  ConfigManager(const ros::NodeHandle& nh,
+                const std::string& ns,
+                std::function<void(const ros::NodeHandle& nh, Config&)> init_func)
+      : nh_(nh, ns), changed_(true), mutex_(new boost::recursive_mutex()) {
+    init_func(nh_, config_);
+    server_ = std::make_unique<Server>(*mutex_, nh_);
+
+    {  // start critical region
+      boost::recursive_mutex::scoped_lock lock(*mutex_);
+      server_->updateConfig(config_);
+    }  // end critical region
+
+    server_->setCallback(
+        boost::bind(&ConfigManager<Config>::updateCallback, this, _1, _2));
+  }
+
+  ConfigManager(const ros::NodeHandle& nh, const std::string& ns)
+      : ConfigManager(nh, ns, [](const ros::NodeHandle&, Config&) {}) {}
+
+  bool hasChange() { return changed_; }
+
+  void clearChangeFlag() { changed_ = false; }
+
+  const Config& get() const { return config_; };
+
+ private:
+  void updateCallback(Config& config, uint32_t) {
+    config_ = config;
+    changed_ = true;
+  }
+
+  ros::NodeHandle nh_;
+
+  bool changed_;
+  Config config_;
+
+  std::unique_ptr<boost::recursive_mutex> mutex_;
+  std::unique_ptr<Server> server_;
+};
+
 class SceneGraphVisualizer {
  public:
-  using RqtMutexPtr = std::unique_ptr<boost::recursive_mutex>;
-  using LayerRqtServer = dynamic_reconfigure::Server<LayerConfig>;
-  using LayerRqtCb = LayerRqtServer::CallbackType;
-  using RqtServer = dynamic_reconfigure::Server<VisualizerConfig>;
-  using ColormapRqtServer = dynamic_reconfigure::Server<ColormapConfig>;
+  using VisualizerConfigManager = ConfigManager<VisualizerConfig>;
+  using LayerConfigManager = ConfigManager<LayerConfig>;
+  using ColormapConfigManager = ConfigManager<ColormapConfig>;
 
   SceneGraphVisualizer(const ros::NodeHandle& nh,
                        const SceneGraph::LayerIds& layer_ids);
@@ -28,54 +74,59 @@ class SceneGraphVisualizer {
 
   void start();
 
-  virtual bool redraw();
+  bool redraw();
 
   inline void setGraphUpdated() { need_redraw_ = true; }
 
   void setGraph(const DynamicSceneGraph::Ptr& scene_graph);
 
-  void clear();
-
  protected:
-  void displayLoop(const ros::TimerEvent&);
+  virtual bool hasConfigChanged() const;
 
-  void configUpdateCb(VisualizerConfig& config, uint32_t level);
+  virtual void clearConfigChangeFlags();
 
-  void colormapUpdateCb(ColormapConfig& config, uint32_t level);
+  virtual void redrawImpl(const std_msgs::Header& header, MarkerArray& msg);
 
-  void layerConfigUpdateCb(LayerId layer_id, LayerConfig& config, uint32_t level);
+  inline std::string getLayerNodeNamespace(LayerId layer) const {
+    return node_ns_prefix_ + std::to_string(layer);
+  }
 
-  void fillHeader(visualization_msgs::Marker& marker,
-                  const ros::Time& current_time) const;
+  inline std::string getLayerEdgeNamespace(LayerId layer) const {
+    return edge_ns_prefix_ + std::to_string(layer);
+  }
 
-  void displayLayers(const SceneGraph& scene_graph);
+  inline std::string getLayerLabelNamespace(LayerId layer) const {
+    return label_ns_prefix_ + std::to_string(layer);
+  }
 
-  void displayEdges(const SceneGraph& scene_graph) const;
+  inline std::string getLayerBboxNamespace(LayerId layer) const {
+    return bbox_ns_prefix_ + std::to_string(layer);
+  }
 
-  void handleCentroids(const SceneGraphLayer& layer,
-                       const LayerConfig& config,
-                       const ros::Time& current_time,
-                       visualization_msgs::MarkerArray& markers) const;
+  void deleteMultiMarker(const std_msgs::Header& header,
+                         const std::string& ns,
+                         MarkerArray& msg);
 
-  void handleMeshEdges(const SceneGraphLayer& layer,
-                       const LayerConfig& config,
-                       const ros::Time& current_time,
-                       visualization_msgs::MarkerArray& markers) const;
-
-  void handleLabels(const SceneGraphLayer& layer,
-                    const LayerConfig& config,
-                    const ros::Time& current_time,
-                    std::set<NodeId>& curr_labels,
-                    std::set<NodeId>& deleted_labels,
-                    visualization_msgs::MarkerArray& markers) const;
-
-  void handleBoundingBoxes(const SceneGraphLayer& layer,
-                           const LayerConfig& config,
-                           const ros::Time& current_time,
-                           visualization_msgs::MarkerArray& markers) const;
+  void addMultiMarkerIfValid(const Marker& marker, MarkerArray& msg);
 
  private:
-  void setupDynamicReconfigure(const SceneGraph::LayerIds& layer_ids);
+  void setupConfigs(const SceneGraph::LayerIds& layer_ids);
+
+  void displayLoop(const ros::WallTimerEvent&);
+
+  void deleteLayer(const std_msgs::Header& header,
+                   const SceneGraphLayer& layer,
+                   MarkerArray& msg);
+
+  void drawLayer(const std_msgs::Header& header,
+                 const SceneGraphLayer& layer,
+                 const LayerConfig& config,
+                 MarkerArray& msg);
+
+  void drawLayerMeshEdges(const std_msgs::Header& header,
+                          LayerId layer_id,
+                          const std::string& ns,
+                          MarkerArray& msg);
 
  protected:
   DynamicSceneGraph::Ptr scene_graph_;
@@ -87,28 +138,27 @@ class SceneGraphVisualizer {
   std::string visualizer_ns_;
   std::string visualizer_layer_ns_;
 
-  ros::Timer visualizer_loop_timer_;
+  ros::WallTimer visualizer_loop_timer_;
 
-  std::string layer_label_ns_ = "layer_nodes_text";
-  std::set<NodeId> previous_label_ids_;
+  const std::string node_ns_prefix_ = "layer_nodes_";
+  const std::string edge_ns_prefix_ = "layer_edges_";
+  const std::string label_ns_prefix_ = "layer_labels_";
+  const std::string bbox_ns_prefix_ = "layer_bounding_boxes_";
+  const std::string mesh_edge_ns_ = "mesh_object_connections";
+  const std::string interlayer_edge_ns_prefix_ = "interlayer_edges_";
+  const LayerId mesh_edge_source_layer_ = KimeraDsgLayers::OBJECTS;
 
-  std::unique_ptr<RqtServer> config_server_;
-  RqtMutexPtr config_server_mutex_;
-  std::unique_ptr<ColormapRqtServer> colormap_server_;
-  RqtMutexPtr colormap_server_mutex_;
-  std::map<LayerId, RqtMutexPtr> layer_config_server_mutexes_;
-  std::map<LayerId, std::unique_ptr<LayerRqtServer>> layer_config_servers_;
-  std::map<LayerId, LayerRqtCb> layer_config_cb_;
+  std::set<std::string> published_multimarkers_;
+  std::map<LayerId, std::set<NodeId>> prev_labels_;
+  std::map<LayerId, std::set<NodeId>> curr_labels_;
+  std::map<LayerId, std::set<NodeId>> prev_bboxes_;
+  std::map<LayerId, std::set<NodeId>> curr_bboxes_;
 
-  std::map<LayerId, LayerConfig> layer_configs_;
-  VisualizerConfig visualizer_config_;
-  ColormapConfig places_colormap_;
+  std::map<LayerId, LayerConfigManager::Ptr> layer_configs_;
+  VisualizerConfigManager::Ptr visualizer_config_;
+  ColormapConfigManager::Ptr places_colormap_;
 
-  ros::Publisher semantic_instance_centroid_pub_;
-  ros::Publisher bounding_box_pub_;
-  ros::Publisher edges_centroid_pcl_pub_;
-  ros::Publisher edges_node_node_pub_;
-  ros::Publisher text_markers_pub_;
+  ros::Publisher dsg_pub_;
 };
 
 }  // namespace kimera

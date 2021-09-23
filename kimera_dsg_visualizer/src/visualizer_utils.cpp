@@ -44,15 +44,28 @@ inline void fillPoseWithIdentity(geometry_msgs::Pose& pose) {
 
 }  // namespace
 
-Marker makeBoundingBoxMarker(const LayerConfig& config,
+Marker makeDeleteMarker(const std_msgs::Header& header,
+                        size_t id,
+                        const std::string& ns) {
+  Marker marker;
+  marker.header = header;
+  marker.action = Marker::DELETE;
+  marker.id = id;
+  marker.ns = ns;
+  return marker;
+}
+
+Marker makeBoundingBoxMarker(const std_msgs::Header& header,
+                             const LayerConfig& config,
                              const Node& node,
                              const VisualizerConfig& visualizer_config,
-                             const std::string& marker_namespace) {
+                             const std::string& ns) {
   Marker marker;
+  marker.header = header;
   marker.type = Marker::CUBE;
   marker.action = Marker::ADD;
   marker.id = node.id;
-  marker.ns = marker_namespace;
+  marker.ns = ns;
   marker.color = makeColorMsg(node.attributes<SemanticNodeAttributes>().color,
                               config.bounding_box_alpha);
 
@@ -71,6 +84,7 @@ Marker makeBoundingBoxMarker(const LayerConfig& config,
       marker.pose.position.z += getZOffset(config, visualizer_config);
       break;
     case BoundingBox::Type::AABB:
+    case BoundingBox::Type::RAABB:
       marker.pose.position =
           tf2::toMsg(bounding_box.world_P_center.cast<double>().eval());
       tf2::convert(world_q_center.cast<double>(), marker.pose.orientation);
@@ -82,15 +96,18 @@ Marker makeBoundingBoxMarker(const LayerConfig& config,
   }
 
   tf2::toMsg((bounding_box.max - bounding_box.min).cast<double>().eval(), marker.scale);
+
   return marker;
 }
 
-Marker makeTextMarker(const LayerConfig& config,
+Marker makeTextMarker(const std_msgs::Header& header,
+                      const LayerConfig& config,
                       const Node& node,
                       const VisualizerConfig& visualizer_config,
-                      const std::string& marker_namespace) {
+                      const std::string& ns) {
   Marker marker;
-  marker.ns = marker_namespace;
+  marker.header = header;
+  marker.ns = ns;
   marker.id = node.id;
   marker.type = Marker::TEXT_VIEW_FACING;
   marker.action = Marker::ADD;
@@ -106,53 +123,50 @@ Marker makeTextMarker(const LayerConfig& config,
   return marker;
 }
 
-Marker makeCentroidMarkers(const LayerConfig& config,
+Marker makeCentroidMarkers(const std_msgs::Header& header,
+                           const LayerConfig& config,
                            const SceneGraphLayer& layer,
                            const VisualizerConfig& visualizer_config,
-                           std::optional<NodeColor> layer_color,
-                           const std::string& marker_namespace) {
-  return makeCentroidMarkers(config,
+                           const std::string& ns) {
+  return makeCentroidMarkers(header,
+                             config,
                              layer,
                              visualizer_config,
-                             marker_namespace,
-                             [&](const SceneGraphNode& node) {
-                               if (layer_color) {
-                                 return *layer_color;
-                               }
+                             ns,
+                             [&](const SceneGraphNode& node) -> NodeColor {
                                try {
                                  return node.attributes<SemanticNodeAttributes>().color;
                                } catch (const std::bad_cast&) {
-                                 return NodeColor(1.0, 0.0, 0.0);
+                                 return NodeColor::Zero();
                                }
                              });
 }
 
-Marker makeCentroidMarkers(const LayerConfig& config,
+Marker makeCentroidMarkers(const std_msgs::Header& header,
+                           const LayerConfig& config,
                            const SceneGraphLayer& layer,
                            const VisualizerConfig& visualizer_config,
-                           const ColormapConfig& colors,
-                           const std::string& marker_namespace) {
+                           const std::string& ns,
+                           const ColormapConfig& colors) {
   return makeCentroidMarkers(
-      config,
-      layer,
-      visualizer_config,
-      marker_namespace,
-      [&](const SceneGraphNode& node) {
+      header, config, layer, visualizer_config, ns, [&](const SceneGraphNode& node) {
         return getDistanceColor(
             visualizer_config, colors, node.attributes<PlaceNodeAttributes>().distance);
       });
 }
 
-Marker makeCentroidMarkers(const LayerConfig& config,
+Marker makeCentroidMarkers(const std_msgs::Header& header,
+                           const LayerConfig& config,
                            const SceneGraphLayer& layer,
                            const VisualizerConfig& visualizer_config,
-                           const std::string& marker_namespace,
+                           const std::string& ns,
                            const ColorFunction& color_func) {
   Marker marker;
+  marker.header = header;
   marker.type = config.use_sphere_marker ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
   marker.action = visualization_msgs::Marker::ADD;
-  marker.id = layer.id;
-  marker.ns = marker_namespace;
+  marker.id = 0;
+  marker.ns = ns;
 
   marker.scale.x = config.marker_scale;
   marker.scale.y = config.marker_scale;
@@ -177,16 +191,17 @@ Marker makeCentroidMarkers(const LayerConfig& config,
 
 namespace {
 
-inline Marker makeNewEdgeList(const LayerConfig& config, LayerId layer_id) {
+inline Marker makeNewEdgeList(const std_msgs::Header& header,
+                              const LayerConfig& config,
+                              const std::string& ns_prefix,
+                              LayerId source,
+                              LayerId target) {
   Marker marker;
+  marker.header = header;
   marker.type = Marker::LINE_LIST;
-  if (config.visualize) {
-    marker.action = Marker::ADD;
-  } else {
-    marker.action = Marker::DELETE;
-  }
-  marker.id = layer_id;
-  marker.ns = "graph_edges";
+  marker.action = Marker::ADD;
+  marker.id = 0;
+  marker.ns = ns_prefix + std::to_string(source) + "_" + std::to_string(target);
   marker.scale.x = config.interlayer_edge_scale;
   fillPoseWithIdentity(marker.pose);
   return marker;
@@ -194,9 +209,12 @@ inline Marker makeNewEdgeList(const LayerConfig& config, LayerId layer_id) {
 
 }  // namespace
 
-MarkerArray makeGraphEdgeMarkers(const SceneGraph& graph,
+// TODO(nathan) consider making this shorter
+MarkerArray makeGraphEdgeMarkers(const std_msgs::Header& header,
+                                 const SceneGraph& graph,
                                  const std::map<LayerId, LayerConfig>& configs,
-                                 const VisualizerConfig& visualizer_config) {
+                                 const VisualizerConfig& visualizer_config,
+                                 const std::string& ns_prefix) {
   MarkerArray layer_edges;
   std::map<LayerId, Marker> layer_markers;
   std::map<LayerId, size_t> num_since_last_insertion;
@@ -205,16 +223,8 @@ MarkerArray makeGraphEdgeMarkers(const SceneGraph& graph,
     const Node& source = *(graph.getNode(edge.second.source));
     const Node& target = *(graph.getNode(edge.second.target));
 
-    // parent is always source
-    // TODO(nathan) make the above statement an invariant
-    if (layer_markers.count(source.layer) == 0) {
-      layer_markers[source.layer] =
-          makeNewEdgeList(configs.at(source.layer), source.layer);
-      if (!configs.at(target.layer).visualize) {
-        // TODO(nathan) this assumes only adjacent layer edges
-        layer_markers[source.layer].action = Marker::DELETE;
-      }
-      num_since_last_insertion[source.layer] = 0;
+    if (!configs.count(source.layer) || !configs.count(target.layer)) {
+      continue;
     }
 
     if (!configs.at(source.layer).visualize) {
@@ -227,6 +237,16 @@ MarkerArray makeGraphEdgeMarkers(const SceneGraph& graph,
 
     size_t num_between_insertions =
         configs.at(source.layer).interlayer_edge_insertion_skip;
+
+    // parent is always source
+    // TODO(nathan) make the above statement an invariant
+    if (layer_markers.count(source.layer) == 0) {
+      layer_markers[source.layer] = makeNewEdgeList(
+          header, configs.at(source.layer), ns_prefix, source.layer, target.layer);
+      // make sure we always draw at least one edge
+      num_since_last_insertion[source.layer] = num_between_insertions;
+    }
+
     if (num_since_last_insertion[source.layer] >= num_between_insertions) {
       num_since_last_insertion[source.layer] = 0;
     } else {
@@ -265,25 +285,23 @@ MarkerArray makeGraphEdgeMarkers(const SceneGraph& graph,
   }
 
   for (const auto& id_marker_pair : layer_markers) {
-    if (id_marker_pair.second.points.empty()) {
-      continue;
-    }
-
     layer_edges.markers.push_back(id_marker_pair.second);
   }
   return layer_edges;
 }
 
-Marker makeMeshEdgesMarker(const LayerConfig& config,
+Marker makeMeshEdgesMarker(const std_msgs::Header& header,
+                           const LayerConfig& config,
                            const VisualizerConfig& visualizer_config,
                            const DynamicSceneGraph& graph,
                            const SceneGraphLayer& layer,
-                           const std::string& marker_namespace) {
+                           const std::string& ns) {
   Marker marker;
+  marker.header = header;
   marker.type = Marker::LINE_LIST;
   marker.action = Marker::ADD;
-  marker.id = layer.id;
-  marker.ns = marker_namespace;
+  marker.id = 0;
+  marker.ns = ns;
 
   marker.scale.x = config.interlayer_edge_scale;
   fillPoseWithIdentity(marker.pose);
@@ -353,19 +371,17 @@ Marker makeMeshEdgesMarker(const LayerConfig& config,
   return marker;
 }
 
-Marker makeLayerEdgeMarkers(const LayerConfig& config,
+Marker makeLayerEdgeMarkers(const std_msgs::Header& header,
+                            const LayerConfig& config,
                             const SceneGraphLayer& layer,
                             const VisualizerConfig& visualizer_config,
-                            const NodeColor& color) {
+                            const NodeColor& color,
+                            const std::string& ns) {
   Marker marker;
+  marker.header = header;
   marker.type = Marker::LINE_LIST;
   marker.id = 0;
-  marker.ns = "layer_" + std::to_string(layer.id) + "_edges";
-
-  if (!config.visualize) {
-    marker.action = Marker::DELETE;
-    return marker;
-  }
+  marker.ns = ns;
 
   marker.action = Marker::ADD;
   marker.scale.x = config.intralayer_edge_scale;
@@ -390,27 +406,25 @@ Marker makeLayerEdgeMarkers(const LayerConfig& config,
   return marker;
 }
 
-Marker makeDynamicCentroids(const LayerConfig& config,
-                            const DynamicSceneGraphLayer& layer,
-                            const VisualizerConfig& visualizer_config,
-                            const NodeColor& color) {
+Marker makeDynamicCentroidMarkers(const std_msgs::Header& header,
+                                  const DynamicLayerConfig& config,
+                                  const DynamicSceneGraphLayer& layer,
+                                  const LayerConfig& layer_config,
+                                  const VisualizerConfig& visualizer_config,
+                                  const NodeColor& color,
+                                  const std::string& ns) {
   Marker marker;
-  marker.type =
-      config.dynamic_use_sphere_marker ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
+  marker.header = header;
+  marker.type = config.node_use_sphere ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
   marker.action = visualization_msgs::Marker::ADD;
-  marker.ns = "dynamic_layer" + std::to_string(layer.id) + "_centroids";
-  marker.id = static_cast<int>(layer.prefix);
+  marker.ns = ns;
+  marker.id = 0;
 
-  if (!config.visualize) {
-    marker.action = Marker::DELETE;
-    return marker;
-  }
+  marker.scale.x = config.node_scale;
+  marker.scale.y = config.node_scale;
+  marker.scale.z = config.node_scale;
 
-  marker.scale.x = config.dynamic_marker_scale;
-  marker.scale.y = config.dynamic_marker_scale;
-  marker.scale.z = config.dynamic_marker_scale;
-
-  marker.color = makeColorMsg(color, config.dynamic_marker_alpha);
+  marker.color = makeColorMsg(color, config.node_alpha);
 
   fillPoseWithIdentity(marker.pose);
 
@@ -418,70 +432,68 @@ Marker makeDynamicCentroids(const LayerConfig& config,
   for (const auto& node : layer.nodes()) {
     geometry_msgs::Point node_centroid;
     tf2::convert(node->attributes().position, node_centroid);
-    node_centroid.z += getZOffset(config, visualizer_config);
+    node_centroid.z += getZOffset(layer_config, visualizer_config);
     marker.points.push_back(node_centroid);
   }
 
   return marker;
 }
 
-Marker makeDynamicEdges(const LayerConfig& config,
-                        const DynamicSceneGraphLayer& layer,
-                        const VisualizerConfig& visualizer_config,
-                        const NodeColor& color) {
+Marker makeDynamicEdgeMarkers(const std_msgs::Header& header,
+                              const DynamicLayerConfig& config,
+                              const DynamicSceneGraphLayer& layer,
+                              const LayerConfig& layer_config,
+                              const VisualizerConfig& visualizer_config,
+                              const NodeColor& color,
+                              const std::string& ns) {
   Marker marker;
+  marker.header = header;
   marker.type = Marker::LINE_LIST;
-  marker.ns = "dynamic_layer" + std::to_string(layer.id) + "_edges";
-  marker.id = static_cast<int>(layer.prefix);
-
-  if (!config.visualize) {
-    marker.action = Marker::DELETE;
-    return marker;
-  }
+  marker.ns = ns;
+  marker.id = 0;
 
   marker.action = Marker::ADD;
-  marker.scale.x = config.dynamic_edge_scale;
-  marker.color = makeColorMsg(color, config.dynamic_edge_alpha);
+  marker.scale.x = config.edge_scale;
+  marker.color = makeColorMsg(color, config.edge_alpha);
   fillPoseWithIdentity(marker.pose);
 
   for (const auto& id_edge_pair : layer.edges()) {
     geometry_msgs::Point source;
     tf2::convert(layer.getPosition(id_edge_pair.second.source), source);
-    source.z += getZOffset(config, visualizer_config);
+    source.z += getZOffset(layer_config, visualizer_config);
     marker.points.push_back(source);
 
     geometry_msgs::Point target;
     tf2::convert(layer.getPosition(id_edge_pair.second.target), target);
-    target.z += getZOffset(config, visualizer_config);
+    target.z += getZOffset(layer_config, visualizer_config);
     marker.points.push_back(target);
   }
 
   return marker;
 }
 
-Marker makeDynamicLabel(const LayerConfig& config,
-                        const DynamicSceneGraphLayer& layer,
-                        const VisualizerConfig& visualizer_config) {
+Marker makeDynamicLabelMarker(const std_msgs::Header& header,
+                              const DynamicLayerConfig& config,
+                              const DynamicSceneGraphLayer& layer,
+                              const LayerConfig& layer_config,
+                              const VisualizerConfig& visualizer_config,
+                              const std::string& ns) {
   Marker marker;
+  marker.header = header;
   marker.type = Marker::TEXT_VIEW_FACING;
-  marker.ns = "dynamic_layer" + std::to_string(layer.id) + "_labels";
-  marker.id = static_cast<int>(layer.prefix);
-  if (!config.visualize) {
-    marker.action = Marker::DELETE;
-    return marker;
-  }
-
+  marker.ns = ns;
+  marker.id = 0;
   marker.action = Marker::ADD;
   marker.lifetime = ros::Duration(0);
-  marker.text = std::to_string(layer.id) + "(" + layer.prefix + ")";
-  marker.scale.z = config.dynamic_label_scale;
+  marker.text = std::to_string(layer.id) + ":" + layer.prefix;
+  marker.scale.z = config.label_scale;
   marker.color = makeColorMsg(NodeColor::Zero());
 
   Eigen::Vector3d latest_position = layer.getPositionByIndex(layer.numNodes() - 1);
   fillPoseWithIdentity(marker.pose);
   tf2::convert(latest_position, marker.pose.position);
   marker.pose.position.z +=
-      getZOffset(config, visualizer_config) + config.dynamic_label_height;
+      getZOffset(layer_config, visualizer_config) + config.label_height;
 
   return marker;
 }

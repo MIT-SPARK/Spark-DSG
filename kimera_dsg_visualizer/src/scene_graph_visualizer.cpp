@@ -9,6 +9,27 @@ using visualization_msgs::Marker;
 using visualization_msgs::MarkerArray;
 using Node = SceneGraph::Node;
 
+namespace {
+
+void clearPrevMarkers(const std_msgs::Header& header,
+                      const std::set<NodeId>& curr_nodes,
+                      const std::string& ns,
+                      std::set<NodeId>& prev_nodes,
+                      MarkerArray& msg) {
+  for (const auto& node : prev_nodes) {
+    if (curr_nodes.count(node)) {
+      continue;
+    }
+
+    Marker marker = makeDeleteMarker(header, node, ns);
+    msg.markers.push_back(marker);
+  }
+
+  prev_nodes = curr_nodes;
+}
+
+}  // namespace
+
 SceneGraphVisualizer::SceneGraphVisualizer(const ros::NodeHandle& nh,
                                            const SceneGraph::LayerIds& layer_ids)
     : nh_(nh),
@@ -19,86 +40,53 @@ SceneGraphVisualizer::SceneGraphVisualizer(const ros::NodeHandle& nh,
   nh_.param("world_frame", world_frame_, world_frame_);
   nh_.param("visualizer_ns", visualizer_ns_, visualizer_ns_);
   nh_.param("visualizer_layer_ns", visualizer_layer_ns_, visualizer_layer_ns_);
-  nh_.param("layer_label_ns", layer_label_ns_, layer_label_ns_);
 
-  semantic_instance_centroid_pub_ =
-      nh_.advertise<MarkerArray>("semantic_instance_centroid", 1, true);
-  bounding_box_pub_ = nh_.advertise<MarkerArray>("bounding_boxes", 1, true);
-  text_markers_pub_ = nh_.advertise<MarkerArray>("instance_ids", 1, true);
-  edges_centroid_pcl_pub_ = nh_.advertise<MarkerArray>("edges_centroid_pcl", 1, true);
-  edges_node_node_pub_ = nh_.advertise<MarkerArray>("edges_node_node", 1, true);
+  dsg_pub_ = nh_.advertise<MarkerArray>("dsg_markers", 1, true);
 
-  setupDynamicReconfigure(layer_ids);
+  setupConfigs(layer_ids);
+
+  for (const auto& id : layer_ids) {
+    prev_labels_[id] = {};
+    curr_labels_[id] = {};
+    prev_bboxes_[id] = {};
+    curr_bboxes_[id] = {};
+  }
 }
 
 void SceneGraphVisualizer::start() {
   double visualizer_loop_period = 1.0e-1;
   nh_.param("visualizer_loop_period", visualizer_loop_period, visualizer_loop_period);
-  visualizer_loop_timer_ = nh_.createTimer(
-      ros::Duration(visualizer_loop_period), &SceneGraphVisualizer::displayLoop, this);
+  visualizer_loop_timer_ =
+      nh_.createWallTimer(ros::WallDuration(visualizer_loop_period),
+                          &SceneGraphVisualizer::displayLoop,
+                          this);
 }
 
-void SceneGraphVisualizer::setupDynamicReconfigure(
-    const SceneGraph::LayerIds& layer_ids) {
-  visualizer_config_ = getVisualizerConfig(visualizer_ns_);
-  config_server_mutex_ = std::make_unique<boost::recursive_mutex>();
-  config_server_ = std::make_unique<RqtServer>(*config_server_mutex_,
-                                               ros::NodeHandle(visualizer_ns_));
-  {  // critical region for dynamic reconfigure (probably unneeded)
-    boost::recursive_mutex::scoped_lock lock(*config_server_mutex_);
-    config_server_->updateConfig(visualizer_config_);
+bool SceneGraphVisualizer::redraw() {
+  if (!scene_graph_) {
+    return false;
   }
-  config_server_->setCallback(
-      boost::bind(&SceneGraphVisualizer::configUpdateCb, this, _1, _2));
 
-  const std::string colormap_ns = visualizer_ns_ + "/places_colormap";
-  places_colormap_ = getColormapConfig(colormap_ns);
+  need_redraw_ |= hasConfigChanged();
 
-  colormap_server_mutex_ = std::make_unique<boost::recursive_mutex>();
-  colormap_server_ = std::make_unique<ColormapRqtServer>(*colormap_server_mutex_,
-                                                         ros::NodeHandle(colormap_ns));
-  {  // critical region for dynamic reconfigure (probably unneeded)
-    boost::recursive_mutex::scoped_lock lock(*colormap_server_mutex_);
-    colormap_server_->updateConfig(places_colormap_);
+  if (!need_redraw_) {
+    return false;
   }
-  colormap_server_->setCallback(
-      boost::bind(&SceneGraphVisualizer::colormapUpdateCb, this, _1, _2));
+  need_redraw_ = false;
 
-  for (const auto& layer : layer_ids) {
-    const std::string layer_ns = visualizer_layer_ns_ + std::to_string(layer);
-    layer_configs_[layer] = getLayerConfig(
-        layer_ns, layer == static_cast<LayerId>(KimeraDsgLayers::AGENTS));
-    // required for "safely" updating the rqt server
-    layer_config_server_mutexes_[layer] = std::make_unique<boost::recursive_mutex>();
-    layer_config_servers_[layer] = std::make_unique<LayerRqtServer>(
-        *layer_config_server_mutexes_.at(layer), ros::NodeHandle(layer_ns));
+  std_msgs::Header header;
+  header.stamp = ros::Time::now();
+  header.frame_id = world_frame_;
 
-    {  // critical region for dynamic reconfigure (probably unneeded)
-      boost::recursive_mutex::scoped_lock lock(*layer_config_server_mutexes_.at(layer));
-      layer_config_servers_.at(layer)->updateConfig(layer_configs_.at(layer));
-    }
+  MarkerArray msg;
+  redrawImpl(header, msg);
 
-    layer_config_cb_[layer] =
-        boost::bind(&SceneGraphVisualizer::layerConfigUpdateCb, this, layer, _1, _2);
-    layer_config_servers_.at(layer)->setCallback(layer_config_cb_[layer]);
+  if (!msg.markers.empty()) {
+    dsg_pub_.publish(msg);
   }
-}
 
-void SceneGraphVisualizer::configUpdateCb(VisualizerConfig& config, uint32_t) {
-  visualizer_config_ = config;
-  need_redraw_ = true;
-}
-
-void SceneGraphVisualizer::colormapUpdateCb(ColormapConfig& config, uint32_t) {
-  places_colormap_ = config;
-  need_redraw_ = true;
-}
-
-void SceneGraphVisualizer::layerConfigUpdateCb(LayerId layer_id,
-                                               LayerConfig& config,
-                                               uint32_t) {
-  layer_configs_[layer_id] = config;
-  need_redraw_ = true;
+  clearConfigChangeFlags();
+  return true;
 }
 
 void SceneGraphVisualizer::setGraph(const DynamicSceneGraph::Ptr& scene_graph) {
@@ -106,275 +94,226 @@ void SceneGraphVisualizer::setGraph(const DynamicSceneGraph::Ptr& scene_graph) {
     ROS_ERROR("Request to visualize invalid scene graph! Ignoring");
     return;
   }
-  // TODO(nathan) a mutex here might not be a bad idea
+
   scene_graph_ = scene_graph;
   need_redraw_ = true;
 }
 
-void SceneGraphVisualizer::displayLoop(const ros::TimerEvent&) { redraw(); }
+bool SceneGraphVisualizer::hasConfigChanged() const {
+  bool has_changed = false;
 
-bool SceneGraphVisualizer::redraw() {
-  if (!scene_graph_) {
-    return false;
+  has_changed |= visualizer_config_->hasChange();
+  has_changed |= places_colormap_->hasChange();
+  for (const auto& id_manager_pair : layer_configs_) {
+    has_changed |= id_manager_pair.second->hasChange();
   }
 
-  if (!need_redraw_) {
-    return false;
+  return has_changed;
+}
+
+void SceneGraphVisualizer::clearConfigChangeFlags() {
+  visualizer_config_->clearChangeFlag();
+  places_colormap_->clearChangeFlag();
+  for (auto& id_manager_pair : layer_configs_) {
+    id_manager_pair.second->clearChangeFlag();
   }
-
-  need_redraw_ = false;
-  displayLayers(*scene_graph_);
-  displayEdges(*scene_graph_);
-  return true;
 }
 
-void SceneGraphVisualizer::fillHeader(Marker& marker,
-                                      const ros::Time& current_time) const {
-  marker.header.stamp = current_time;
-  marker.header.frame_id = world_frame_;
-}
+void SceneGraphVisualizer::redrawImpl(const std_msgs::Header& header,
+                                      MarkerArray& msg) {
+  for (const auto& id_layer_pair : scene_graph_->layers()) {
+    LayerConfig config = layer_configs_.at(id_layer_pair.first)->get();
+    const SceneGraphLayer& layer = *(id_layer_pair.second);
 
-Marker makeDeleteMarker(LayerId layer_id, const std::string& marker_ns) {
-  Marker marker;
-  marker.action = Marker::DELETE;
-  marker.id = layer_id;
-  marker.ns = marker_ns;
-  return marker;
-}
-
-void SceneGraphVisualizer::handleCentroids(const SceneGraphLayer& layer,
-                                           const LayerConfig& config,
-                                           const ros::Time& current_time,
-                                           MarkerArray& markers) const {
-  const std::string ns = "layer_centroids";
-  if (config.visualize) {
-    Marker marker;
-    if (layer.id == to_underlying(KimeraDsgLayers::PLACES) &&
-        visualizer_config_.color_places_by_distance) {
-      marker =
-          makeCentroidMarkers(config, layer, visualizer_config_, places_colormap_, ns);
+    if (!config.visualize) {
+      deleteLayer(header, layer, msg);
     } else {
-      marker = makeCentroidMarkers(config, layer, visualizer_config_, std::nullopt, ns);
+      drawLayer(header, layer, config, msg);
     }
+  }
 
-    if (marker.points.empty()) {
-      return;
+  drawLayerMeshEdges(header, mesh_edge_source_layer_, mesh_edge_ns_, msg);
+
+  std::map<LayerId, LayerConfig> all_configs;
+  for (const auto& id_manager_pair : layer_configs_) {
+    all_configs[id_manager_pair.first] = id_manager_pair.second->get();
+  }
+
+  std::set<std::string> seen_edge_labels;
+  MarkerArray interlayer_edge_markers =
+      makeGraphEdgeMarkers(header,
+                           *scene_graph_,
+                           all_configs,
+                           visualizer_config_->get(),
+                           interlayer_edge_ns_prefix_);
+  for (const auto& marker : interlayer_edge_markers.markers) {
+    addMultiMarkerIfValid(marker, msg);
+    seen_edge_labels.insert(marker.ns);
+  }
+
+  for (const auto& source_pair : all_configs) {
+    for (const auto& target_pair : all_configs) {
+      if (source_pair.first == target_pair.first) {
+        continue;
+      }
+
+      const std::string curr_ns = interlayer_edge_ns_prefix_ +
+                                  std::to_string(source_pair.first) + "_" +
+                                  std::to_string(target_pair.first);
+      if (seen_edge_labels.count(curr_ns)) {
+        continue;
+      }
+
+      deleteMultiMarker(header, curr_ns, msg);
     }
-
-    fillHeader(marker, current_time);
-    markers.markers.push_back(marker);
-  } else {
-    Marker delete_marker = makeDeleteMarker(layer.id, ns);
-    fillHeader(delete_marker, current_time);
-    markers.markers.push_back(delete_marker);
   }
 }
 
-void SceneGraphVisualizer::handleMeshEdges(const SceneGraphLayer& layer,
-                                           const LayerConfig& config,
-                                           const ros::Time& current_time,
-                                           MarkerArray& markers) const {
-  if (layer.id != to_underlying(KimeraDsgLayers::OBJECTS)) {
+void SceneGraphVisualizer::deleteMultiMarker(const std_msgs::Header& header,
+                                             const std::string& ns,
+                                             MarkerArray& msg) {
+  if (!published_multimarkers_.count(ns)) {
     return;
   }
 
-  const std::string ns = "mesh_layer_edges";
-  if (config.visualize) {
-    Marker marker =
-        makeMeshEdgesMarker(config, visualizer_config_, *scene_graph_, layer, ns);
-    if (marker.points.empty()) {
-      return;
-    }
+  Marker delete_marker = makeDeleteMarker(header, 0, ns);
+  msg.markers.push_back(delete_marker);
 
-    fillHeader(marker, current_time);
-    markers.markers.push_back(marker);
+  published_multimarkers_.erase(ns);
+}
+
+void SceneGraphVisualizer::addMultiMarkerIfValid(const Marker& marker,
+                                                 MarkerArray& msg) {
+  if (!marker.points.empty()) {
+    msg.markers.push_back(marker);
+    published_multimarkers_.insert(marker.ns);
+    return;
+  }
+
+  deleteMultiMarker(marker.header, marker.ns, msg);
+}
+
+void SceneGraphVisualizer::setupConfigs(const SceneGraph::LayerIds& layer_ids) {
+  ros::NodeHandle nh("");
+  visualizer_config_.reset(new VisualizerConfigManager(
+      nh, visualizer_ns_, [](const ros::NodeHandle& nh, auto& config) {
+        config = getVisualizerConfig(nh);
+      }));
+
+  const std::string colormap_ns = visualizer_ns_ + "/places_colormap";
+  places_colormap_.reset(new ColormapConfigManager(
+      nh, colormap_ns, [](const ros::NodeHandle& nh, auto& config) {
+        config = getColormapConfig(nh);
+      }));
+
+  for (const auto& layer : layer_ids) {
+    const std::string layer_ns = visualizer_layer_ns_ + std::to_string(layer);
+    layer_configs_[layer] = LayerConfigManager::Ptr(new LayerConfigManager(
+        nh, layer_ns, [&](const ros::NodeHandle& nh, auto& config) {
+          config = getLayerConfig(nh);
+        }));
+  }
+}
+
+void SceneGraphVisualizer::displayLoop(const ros::WallTimerEvent&) { redraw(); }
+
+void SceneGraphVisualizer::deleteLayer(const std_msgs::Header& header,
+                                       const SceneGraphLayer& layer,
+                                       MarkerArray& msg) {
+  deleteMultiMarker(header, getLayerNodeNamespace(layer.id), msg);
+  deleteMultiMarker(header, getLayerEdgeNamespace(layer.id), msg);
+
+  const std::string label_ns = getLayerLabelNamespace(layer.id);
+  for (const auto& node : prev_labels_.at(layer.id)) {
+    Marker marker = makeDeleteMarker(header, node, label_ns);
+    msg.markers.push_back(marker);
+  }
+  prev_labels_.at(layer.id).clear();
+
+  const std::string bbox_ns = getLayerBboxNamespace(layer.id);
+  for (const auto& node : prev_bboxes_.at(layer.id)) {
+    Marker marker = makeDeleteMarker(header, node, bbox_ns);
+    msg.markers.push_back(marker);
+  }
+  prev_bboxes_.at(layer.id).clear();
+}
+
+void SceneGraphVisualizer::drawLayer(const std_msgs::Header& header,
+                                     const SceneGraphLayer& layer,
+                                     const LayerConfig& config,
+                                     MarkerArray& msg) {
+  const auto& viz_config = visualizer_config_->get();
+  const std::string node_ns = getLayerNodeNamespace(layer.id);
+
+  const bool color_by_distance = layer.id == KimeraDsgLayers::PLACES &&
+                                 visualizer_config_->get().color_places_by_distance;
+
+  Marker nodes;
+  if (color_by_distance) {
+    nodes = makeCentroidMarkers(
+        header, config, layer, viz_config, node_ns, places_colormap_->get());
   } else {
-    Marker delete_marker = makeDeleteMarker(layer.id, ns);
-    fillHeader(delete_marker, current_time);
-    markers.markers.push_back(delete_marker);
+    nodes = makeCentroidMarkers(header, config, layer, viz_config, node_ns);
   }
-}
+  addMultiMarkerIfValid(nodes, msg);
 
-void SceneGraphVisualizer::handleLabels(const SceneGraphLayer& layer,
-                                        const LayerConfig& config,
-                                        const ros::Time& current_time,
-                                        std::set<NodeId>& curr_labels,
-                                        std::set<NodeId>& deleted_labels,
-                                        MarkerArray& markers) const {
+  const std::string edge_ns = getLayerEdgeNamespace(layer.id);
+  Marker edges = makeLayerEdgeMarkers(
+      header, config, layer, viz_config, NodeColor::Zero(), edge_ns);
+  addMultiMarkerIfValid(edges, msg);
+
+  const std::string label_ns = getLayerLabelNamespace(layer.id);
+  const std::string bbox_ns = getLayerBboxNamespace(layer.id);
+
+  curr_labels_.at(layer.id).clear();
+  curr_bboxes_.at(layer.id).clear();
   for (const auto& id_node_pair : layer.nodes()) {
-    const std::string ns = layer_label_ns_ + NodeSymbol(id_node_pair.first).category();
     const Node& node = *id_node_pair.second;
 
-    if (config.visualize && config.use_label) {
-      Marker marker = makeTextMarker(config, node, visualizer_config_, ns);
-      fillHeader(marker, current_time);
-      markers.markers.push_back(marker);
-      curr_labels.insert(node.id);
-    } else {
-      Marker delete_marker = makeDeleteMarker(node.id, ns);
-      fillHeader(delete_marker, current_time);
-      markers.markers.push_back(delete_marker);
-      deleted_labels.insert(node.id);
+    if (config.use_label) {
+      Marker label = makeTextMarker(header, config, node, viz_config, label_ns);
+      msg.markers.push_back(label);
+      curr_labels_.at(layer.id).insert(node.id);
     }
-  }
-}
 
-void SceneGraphVisualizer::handleBoundingBoxes(const SceneGraphLayer& layer,
-                                               const LayerConfig& config,
-                                               const ros::Time& current_time,
-                                               MarkerArray& markers) const {
-  const std::string ns = "layer_" + std::to_string(layer.id) + "_bounding_boxes";
-
-  for (const auto& id_node_pair : layer.nodes()) {
-    const Node& node = *id_node_pair.second;
-
-    if (config.visualize && config.use_bounding_box) {
+    if (config.use_bounding_box) {
       try {
         node.attributes<ObjectNodeAttributes>();
       } catch (const std::bad_cast&) {
-        ROS_ERROR("Bounding boxes enabled for non-object layer");
-        return;
+        continue;
       }
 
-      Marker marker = makeBoundingBoxMarker(config, node, visualizer_config_, ns);
-      fillHeader(marker, current_time);
-      markers.markers.push_back(marker);
-    } else {
-      Marker delete_marker = makeDeleteMarker(node.id, ns);
-      fillHeader(delete_marker, current_time);
-      markers.markers.push_back(delete_marker);
+      Marker bbox = makeBoundingBoxMarker(header, config, node, viz_config, bbox_ns);
+      msg.markers.push_back(bbox);
+      curr_bboxes_.at(layer.id).insert(node.id);
     }
   }
+
+  clearPrevMarkers(
+      header, curr_labels_.at(layer.id), label_ns, prev_labels_.at(layer.id), msg);
+  clearPrevMarkers(
+      header, curr_bboxes_.at(layer.id), bbox_ns, prev_bboxes_.at(layer.id), msg);
 }
 
-void SceneGraphVisualizer::displayLayers(const SceneGraph& scene_graph) {
-  MarkerArray layer_centroids;
-  MarkerArray text_markers;
-  MarkerArray line_assoc_markers;
-  MarkerArray bounding_boxes;
-
-  // TODO(nathan) book-keeping for mutating scene graph
-  ros::Time current_time = ros::Time::now();
-  std::set<NodeId> curr_labels;
-  std::set<NodeId> deleted_labels;
-  for (const auto& id_layer_pair : scene_graph.layers()) {
-    if (!layer_configs_.count(id_layer_pair.first)) {
-      ROS_WARN_STREAM("failed to find config for layer " << id_layer_pair.first);
-      continue;
-    }
-
-    LayerConfig config = layer_configs_.at(id_layer_pair.first);
-    const SceneGraphLayer& layer = *(id_layer_pair.second);
-
-    handleCentroids(layer, config, current_time, layer_centroids);
-    handleLabels(
-        layer, config, current_time, curr_labels, deleted_labels, text_markers);
-    handleBoundingBoxes(layer, config, current_time, text_markers);
-    handleMeshEdges(layer, config, current_time, line_assoc_markers);
+void SceneGraphVisualizer::drawLayerMeshEdges(const std_msgs::Header& header,
+                                              LayerId layer_id,
+                                              const std::string& ns,
+                                              MarkerArray& msg) {
+  if (!layer_configs_.count(layer_id)) {
+    return;
   }
 
-  for (const auto& prev_node : previous_label_ids_) {
-    if (deleted_labels.count(prev_node) || curr_labels.count(prev_node)) {
-      continue;
-    }
+  LayerConfig config = layer_configs_.at(layer_id)->get();
 
-    const std::string ns = layer_label_ns_ + NodeSymbol(prev_node).category();
-    Marker delete_marker = makeDeleteMarker(prev_node, ns);
-    fillHeader(delete_marker, current_time);
-    text_markers.markers.push_back(delete_marker);
+  const auto layer = scene_graph_->getLayer(layer_id);
+  if (!layer || !config.visualize) {
+    deleteMultiMarker(header, ns, msg);
+    return;
   }
 
-  previous_label_ids_ = curr_labels;
-
-  if (!layer_centroids.markers.empty()) {
-    semantic_instance_centroid_pub_.publish(layer_centroids);
-  }
-  if (!bounding_boxes.markers.empty()) {
-    bounding_box_pub_.publish(bounding_boxes);
-  }
-  if (!text_markers.markers.empty()) {
-    text_markers_pub_.publish(text_markers);
-  }
-  if (!line_assoc_markers.markers.empty()) {
-    edges_centroid_pcl_pub_.publish(line_assoc_markers);
-  }
-}
-
-MarkerArray getDeleteAllMarker() {
-  Marker delete_marker;
-  delete_marker.action = Marker::DELETEALL;
-
-  MarkerArray markers;
-  markers.markers.push_back(delete_marker);
-  return markers;
-}
-
-void SceneGraphVisualizer::clear() {
-  // TODO(nathan) this causes an exception publishing
-  scene_graph_.reset();
-  ros::Time curr_time = ros::Time::now();
-
-  {  // scope limiting marker
-    MarkerArray marker = getDeleteAllMarker();
-    fillHeader(marker.markers.front(), curr_time);
-    semantic_instance_centroid_pub_.publish(marker);
-  }
-  {  // scope limiting marker
-    MarkerArray marker = getDeleteAllMarker();
-    fillHeader(marker.markers.front(), curr_time);
-    bounding_box_pub_.publish(marker);
-  }
-  {  // scope limiting marker
-    MarkerArray marker = getDeleteAllMarker();
-    fillHeader(marker.markers.front(), curr_time);
-    edges_centroid_pcl_pub_.publish(marker);
-  }
-  {  // scope limiting marker
-    MarkerArray marker = getDeleteAllMarker();
-    fillHeader(marker.markers.front(), curr_time);
-    edges_node_node_pub_.publish(marker);
-  }
-  {  // scope limiting marker
-    MarkerArray marker = getDeleteAllMarker();
-    fillHeader(marker.markers.front(), curr_time);
-    text_markers_pub_.publish(marker);
-  }
-
-  ros::spinOnce();
-}
-
-void SceneGraphVisualizer::displayEdges(const SceneGraph& scene_graph) const {
-  ros::Time current_time = ros::Time::now();
-
-  MarkerArray edge_markers =
-      makeGraphEdgeMarkers(scene_graph, layer_configs_, visualizer_config_);
-  for (auto& marker : edge_markers.markers) {
-    fillHeader(marker, current_time);
-  }
-
-  for (const auto& id_layer_pair : scene_graph.layers()) {
-    if (id_layer_pair.second->numEdges() == 0) {
-      continue;  // skip empty layer to avoid rviz errors
-    }
-
-    if (!layer_configs_.count(id_layer_pair.first)) {
-      ROS_WARN_STREAM("Failed to find config for layer " << id_layer_pair.first);
-      continue;
-    }
-
-    LayerConfig config = layer_configs_.at(id_layer_pair.first);
-    Marker layer_edge_marker = makeLayerEdgeMarkers(
-        config, *(id_layer_pair.second), visualizer_config_, NodeColor::Zero());
-    if (layer_edge_marker.points.empty()) {
-      continue;
-    }
-
-    fillHeader(layer_edge_marker, current_time);
-
-    edge_markers.markers.push_back(layer_edge_marker);
-  }
-
-  edges_node_node_pub_.publish(edge_markers);
+  Marker mesh_edges = makeMeshEdgesMarker(
+      header, config, visualizer_config_->get(), *scene_graph_, *layer, ns);
+  addMultiMarkerIfValid(mesh_edges, msg);
 }
 
 }  // namespace kimera

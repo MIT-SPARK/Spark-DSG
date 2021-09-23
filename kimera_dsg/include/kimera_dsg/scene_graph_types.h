@@ -14,26 +14,17 @@ using Timestamp = uint64_t;  //!< Timestamp type
 /**
  * @brief Layer enum hierarchy corresponding to original DSG paper(s)
  * @note The numbering is important, as it determines the
- * layer hierarchy: a higher number corresponds to parents.
+ * layer hierarchy: a higher layer id corresponds to nodes being labeled as parents for
+ * interlayer edges
  */
-enum class KimeraDsgLayers : LayerId {
-  INVALID = 0,
-  MESH = 1,       //< Mesh layer
-  OBJECTS = 2,    //< Object node layer (static) as well as agents
-  AGENTS = 2,     //< Agents layer (dynamic)
-  PLACES = 3,     //< Places node layer (as well as structure)
-  STRUCTURE = 3,  //< Struct node layer (as well as places)
-  ROOMS = 4,      //< Room node layer
-  BUILDINGS = 5   //< Building node layer
+struct KimeraDsgLayers {
+  const static LayerId MESH = 1;       //< Mesh layer
+  const static LayerId OBJECTS = 2;    //< Object node layer (static) as well as agents
+  const static LayerId AGENTS = 2;     //< Agents layer (dynamic)
+  const static LayerId PLACES = 3;     //< Places node layer (as well as structure)
+  const static LayerId STRUCTURE = 3;  //< Struct node layer (as well as places)
+  const static LayerId ROOMS = 4;      //< Room node layer
+  const static LayerId BUILDINGS = 5;  //< Building node layer
 };
-
-// TODO(nathan) this is awkward to use, reconsider maybe
-/**
- * @brief Coerce enum value to something that might be formatted correctly
- */
-template <typename E>
-constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept {
-  return static_cast<typename std::underlying_type<E>::type>(e);
-}
 
 }  // namespace kimera
