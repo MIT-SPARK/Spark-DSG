@@ -1,6 +1,5 @@
 #include "kimera_dsg_visualizer/dynamic_scene_graph_visualizer.h"
 #include "kimera_dsg_visualizer/colormap_utils.h"
-#include "kimera_dsg_visualizer/feature_config.h"
 #include "kimera_dsg_visualizer/visualizer_utils.h"
 
 namespace kimera {
