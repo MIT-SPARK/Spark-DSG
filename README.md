@@ -26,7 +26,7 @@ cd catkin_ws
 catkin init
 
 cd src
-git clone git@github.mit.edu:SPARK/Kimera-DSG.git kimera_dsg
+git clone git@github.mit.edu:SPARK/Kimera-DSG.git kimera_dsg --recursive
 cd ..
 
 rosdep install --from-paths src --ignore-src -r -y
