@@ -7,6 +7,11 @@
 
 namespace kimera {
 
+struct DynamicLayerKey {
+  LayerId type;
+  char prefix;
+};
+
 class DynamicSceneGraphNode : public SceneGraphNode {
  public:
   friend class DynamicSceneGraphLayer;
@@ -85,6 +90,9 @@ class DynamicSceneGraphLayer {
   const LayerId id;
 
   const char prefix;
+
+  bool mergeLayer(const DynamicSceneGraphLayer& graph_layer,
+                  std::map<NodeId, DynamicLayerKey>* layer_lookup = nullptr);
 
  protected:
   bool emplaceNode(std::chrono::nanoseconds timestamp,

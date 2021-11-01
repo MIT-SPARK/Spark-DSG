@@ -241,6 +241,39 @@ bool SceneGraph::removeNode(NodeId node_id) {
   return true;
 }
 
+bool SceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
+  if (!hasNode(node_from) || !hasNode(node_to)) {
+    return false;
+  }
+
+  if (node_from == node_to) {
+    return false;
+  }
+
+  LayerId layer = node_layer_lookup_.at(node_from);
+
+  if (layer != node_layer_lookup_.at(node_to)) {
+    return false;  // Cannot merge nodes of different layers
+  }
+
+  Node* node = layers_[layer]->nodes_.at(node_from).get();
+  // Remove parent
+  // TODO(nathan) consider asserts
+  if (node->hasParent()) {
+    rewireInterLayerEdge_(node_from, node->parent_, node_to, node->parent_);
+  }
+
+  // Reconnect children
+  std::set<NodeId> targets_to_rewire = node->children_;
+  for (const auto& target : targets_to_rewire) {
+    rewireInterLayerEdge_(node_from, target, node_to, target);
+  }
+
+  layers_[layer]->mergeNodes(node_from, node_to);
+  node_layer_lookup_.erase(node_from);
+  return true;
+}
+
 void SceneGraph::removeInterLayerEdge_(NodeId source, NodeId target) {
   inter_layer_edges_.erase(inter_layer_edges_info_.at(source).at(target));
   inter_layer_edges_info_.at(source).erase(target);
@@ -257,6 +290,64 @@ void SceneGraph::removeInterLayerEdge_(NodeId source, NodeId target) {
   Node* child = getChildNode_(source, target);
   parent->children_.erase(child->id);
   child->clearParent_();
+}
+
+void SceneGraph::rewireInterLayerEdge_(NodeId source,
+                                       NodeId target,
+                                       NodeId new_source,
+                                       NodeId new_target) {
+  if (source == new_source && target == new_target) {
+    return;
+  }
+
+  if (hasEdge(new_source, new_target)) {
+    removeInterLayerEdge_(source, target);
+    return;
+  }
+
+    // Clean up old parent and child
+  Node* parent = getParentNode_(source, target);
+  Node* child = getChildNode_(source, target);
+  parent->children_.erase(child->id);
+  child->clearParent_();
+
+  // Connect new parent and child
+  Node* new_parent = getParentNode_(new_source, new_target);
+  Node* new_child = getChildNode_(new_source, new_target);
+  if (!new_child->hasParent()) {
+    new_child->setParent_(new_parent->id);
+    new_parent->children_.insert(new_child->id);
+  } else {
+    // cannot have two parents
+    removeInterLayerEdge_(source, target);
+    return;
+  }
+
+  const size_t edge_idx = inter_layer_edges_info_[source][target];
+  const Edge& orig_edge = inter_layer_edges_.at(edge_idx);
+  // Remove old
+  inter_layer_edges_.erase(edge_idx);
+  // Add new rewired edge
+  inter_layer_edges_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(edge_idx),
+      std::forward_as_tuple(
+          new_source, new_target, std::make_unique<EdgeInfo>(*orig_edge.info)));
+
+  inter_layer_edges_info_[new_source][new_target] = edge_idx;
+  inter_layer_edges_info_[new_target][new_source] = edge_idx;
+
+  // Remove old edge from info
+  inter_layer_edges_info_.at(source).erase(target);
+  if (inter_layer_edges_info_.at(source).empty()) {
+    inter_layer_edges_info_.erase(source);
+  }
+
+  inter_layer_edges_info_.at(target).erase(source);
+  if (inter_layer_edges_info_.at(target).empty()) {
+    inter_layer_edges_info_.erase(target);
+  }
+
 }
 
 bool SceneGraph::removeEdge(NodeId source, NodeId target) {
@@ -321,6 +412,7 @@ bool SceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
       // we need to let the scene graph know about new nodes
       node_layer_lookup_[id_node_pair.first] = internal_layer.id;
       internal_layer.nodes_[id_node_pair.first] = std::move(id_node_pair.second);
+      internal_layer.nodes_status_[id_node_pair.first] = NodeStatus::VISIBLE;
     }
   }
 
@@ -345,6 +437,29 @@ bool SceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
 
   // we just invalidated all the info for the new edges, so reset the edges
   edges.reset();
+  return true;
+}
+
+bool SceneGraph::mergeGraph(const SceneGraph& other) {
+  std::vector<NodeId> removed_nodes;
+  for (const auto& id_layer : other.layers()) {
+    if (hasLayer(id_layer.first)) {
+      layers_[id_layer.first]->mergeLayer(*id_layer.second,
+                                          &node_layer_lookup_);
+    }
+    id_layer.second->getRemovedNodes(&removed_nodes);
+  }
+
+  for (const auto& id_edge : other.inter_layer_edges()) {
+    insertEdge(id_edge.second.source,
+               id_edge.second.target,
+               std::make_unique<SceneGraphEdgeInfo>(*id_edge.second.info));
+  }
+
+  for (const auto& removed_id : removed_nodes) {
+    removeNode(removed_id);
+  }
+
   return true;
 }
 

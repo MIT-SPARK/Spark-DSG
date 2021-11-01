@@ -223,6 +223,71 @@ TEST(SceneGraphTests, RemoveNodeSound) {
   EXPECT_EQ(2u, graph.numEdges());
 }
 
+// Test that merging two nodes meets the invariants that we expect
+TEST(SceneGraphTests, MergeNodesCorrect) {
+  SceneGraph::LayerIds layer_ids{1, 2, 3};
+  SceneGraph graph(layer_ids);
+
+  // we can't merge two nodes that don't exist
+  EXPECT_FALSE(graph.mergeNodes(0, 1));
+
+  EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(3, 1, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, 2, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(3, 3, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(1, 4, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(1, 5, std::make_unique<NodeAttributes>()));
+  graph.insertEdge(0, 1);
+  graph.insertEdge(1, 2);
+  graph.insertEdge(1, 3);
+  graph.insertEdge(0, 2);
+  graph.insertEdge(2, 5);
+
+  // we can't merge a node with itself
+  EXPECT_FALSE(graph.mergeNodes(0, 0));
+
+  // we can't merge nodes on different layers
+  EXPECT_FALSE(graph.mergeNodes(0, 1));
+
+  const Node& node0 = graph.getNode(0).value();
+  const Node& node2 = graph.getNode(2).value();
+  const Node& node4 = graph.getNode(4).value();
+  const Node& node5 = graph.getNode(5).value();
+
+  EXPECT_TRUE(graph.hasNode(5));
+  EXPECT_FALSE(node4.hasParent());
+
+  NodeId node5_parent = *(node5.getParent());
+  EXPECT_EQ(2u, node5_parent);
+
+  // merge node 5 into node 4
+  EXPECT_TRUE(graph.mergeNodes(5, 4));
+
+  EXPECT_FALSE(graph.hasNode(5));
+  EXPECT_TRUE(node4.hasParent());
+
+  NodeId node4_parent = *(node4.getParent());
+  EXPECT_EQ(2u, node4_parent);
+
+  std::set<NodeId> node2_children = node2.children();
+  EXPECT_EQ(1u, node2_children.size());
+  EXPECT_EQ(4u, *node2_children.begin());
+
+  // merge node 2 into node 0
+  EXPECT_TRUE(graph.mergeNodes(2, 0));
+
+  EXPECT_EQ(3u, graph.numEdges());
+  EXPECT_EQ(4u, graph.numNodes());
+
+  node4_parent = *(node4.getParent());
+  std::set<NodeId> node0_children = node0.children();
+
+  EXPECT_TRUE(graph.hasEdge(0, 4));
+  EXPECT_EQ(0u, node4_parent);
+  EXPECT_EQ(4u, *node0_children.begin());
+  EXPECT_FALSE(graph.hasNode(2));
+}
+
 // Test that removeNode -> !hasNode
 TEST(SceneGraphTests, RemoveNodeHasNodeCorrent) {
   SceneGraph::LayerIds layer_ids{1, 2};
@@ -389,4 +454,42 @@ TEST(SceneGraphTests, updateFromLayerWithSiblings) {
   EXPECT_TRUE(graph.hasNode(1));
   EXPECT_FALSE(graph.hasNode(2));
   EXPECT_FALSE(graph.hasEdge(1, 2));
+}
+
+TEST(SceneGraphTests, MereGraphCorrect) {
+  SceneGraph::LayerIds layer_ids{1, 2};
+  SceneGraph graph_1(layer_ids);
+  SceneGraph graph_2(layer_ids);
+
+  Eigen::Vector3d pos_1;
+  pos_1 << 1.0, 1.0, 1.0;
+  EXPECT_TRUE(graph_1.emplaceNode(1, 0, std::make_unique<NodeAttributes>(pos_1)));
+  EXPECT_TRUE(graph_1.emplaceNode(2, 1, std::make_unique<NodeAttributes>(pos_1)));
+  EXPECT_TRUE(graph_1.emplaceNode(1, 2, std::make_unique<NodeAttributes>(pos_1)));
+  graph_1.insertEdge(0, 1);
+  graph_1.insertEdge(1, 2);
+  graph_1.insertEdge(0, 2);
+
+  Eigen::Vector3d pos_2;
+  pos_2 << 2.0, 2.0, 2.0;
+  EXPECT_TRUE(graph_2.emplaceNode(1, 0, std::make_unique<NodeAttributes>(pos_2)));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 1, std::make_unique<NodeAttributes>(pos_2)));
+  EXPECT_TRUE(graph_2.emplaceNode(1, 2, std::make_unique<NodeAttributes>(pos_2)));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 3, std::make_unique<NodeAttributes>(pos_2)));
+  EXPECT_TRUE(graph_2.emplaceNode(1, 4, std::make_unique<NodeAttributes>(pos_2)));
+  graph_2.insertEdge(0, 1);
+  graph_2.insertEdge(1, 2);
+  graph_2.insertEdge(1, 3);
+  graph_2.insertEdge(0, 2);
+  graph_2.insertEdge(3, 4);
+
+  EXPECT_TRUE(graph_1.mergeGraph(graph_2));
+
+  EXPECT_EQ(5u, graph_1.numNodes());
+  EXPECT_EQ(5u, graph_1.numEdges());
+
+  Eigen::Vector3d result = graph_1.getPosition(4);
+  EXPECT_EQ(pos_1(0), result(0));
+  EXPECT_EQ(pos_1(1), result(1));
+  EXPECT_EQ(pos_1(2), result(2));
 }

@@ -290,4 +290,40 @@ TEST(DynamicSceneGraphTests, EmplaceDynamicNodeCorrect) {
   EXPECT_FALSE(graph.hasDynamicLayer(2, 'o'));
 }
 
+TEST(DynamicSceneGraphTests, MergeGraphCorrect) {
+  DynamicSceneGraph graph_1;
+  EXPECT_TRUE(graph_1.emplaceDynamicNode(
+      0, 'a', std::chrono::seconds(0), std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_1.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
+
+  DynamicSceneGraph graph_2;
+  EXPECT_TRUE(graph_2.emplaceDynamicNode(
+      0, 'a', std::chrono::seconds(0), std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 2, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(3, 3, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(3, 4, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.insertEdge(2, 4));
+
+  TestMesh mesh = makeMesh(5);
+  graph_1.setMesh(mesh.vertices, mesh.faces);
+  graph_2.setMesh(mesh.vertices, mesh.faces);
+
+  for (size_t i = 0; i < 5; ++i) {
+    graph_2.insertMeshEdge(1, i);
+    graph_2.insertMeshEdge(2, i);
+  }
+
+  EXPECT_EQ(7u, graph_1.numNodes());
+  EXPECT_EQ(10u, graph_2.numNodes());
+  EXPECT_EQ(0u, graph_1.numEdges());
+  EXPECT_EQ(11u, graph_2.numEdges());
+
+  graph_1.mergeGraph(graph_2);
+  EXPECT_EQ(10u, graph_1.numNodes());
+  EXPECT_EQ(10u, graph_2.numNodes());
+  EXPECT_EQ(11u, graph_1.numEdges());
+  EXPECT_EQ(11u, graph_2.numEdges());
+}
+
 }  // namespace kimera

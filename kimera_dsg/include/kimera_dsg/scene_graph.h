@@ -166,6 +166,14 @@ class SceneGraph {
   virtual bool removeNode(NodeId node_id);
 
   /**
+   * @brief merge two nodes
+   * @param node_from node to remove
+   * @param node_to node to merge to
+   * @returns true if operation succeeded
+   */
+  virtual bool mergeNodes(NodeId node_from, NodeId node_to);
+
+  /**
    * @brief remove an edge if it exists
    * @param source source of edge to remove
    * @param target target of edge to remove
@@ -208,6 +216,13 @@ class SceneGraph {
   bool updateFromLayer(SceneGraphLayer& other_layer, std::unique_ptr<Edges>&& edges = nullptr);
 
   /**
+   * @brief Update graph from another graph
+   * @note Will add the nodes and edges not previously added in current graph
+   * @param other other graph to update from
+   */
+  bool mergeGraph(const SceneGraph& other);
+
+  /**
    * @brief Get the position of a node in the layer with bounds checking
    */
   Eigen::Vector3d getPosition(NodeId node) const;
@@ -243,6 +258,11 @@ class SceneGraph {
   void initialize_();
 
   void removeInterLayerEdge_(NodeId source, NodeId target);
+
+  void rewireInterLayerEdge_(NodeId source,
+                             NodeId target,
+                             NodeId new_source,
+                             NodeId new_target);
 
   Node* getParentNode_(NodeId source, NodeId target) const;
 

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/dynamic_scene_graph_layer.h>
 
+using kimera::DynamicLayerKey;
 using kimera::DynamicSceneGraphLayer;
 using kimera::NodeAttributes;
 using kimera::NodeId;
@@ -234,5 +235,44 @@ TEST(DynamicSceneGraphLayerTests, getPositionCorrect) {
     FAIL();
   } catch (const std::out_of_range&) {
     SUCCEED();
+  }
+}
+
+// Test that rewiring an edge does what it should
+TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
+  TestableDynamicLayer layer_1(1, 0);
+  TestableDynamicLayer layer_2(1, 0);
+
+  for (size_t i = 0; i < 3; ++i) {
+    Eigen::Vector3d node_pos;
+    node_pos << static_cast<double>(i), 0.0, 0.0;
+    EXPECT_TRUE(layer_1.emplaceNode(
+        std::chrono::seconds(i), std::make_unique<NodeAttributes>(node_pos)));
+  }
+
+  for (size_t i = 0; i < 5; ++i) {
+    Eigen::Vector3d node_pos;
+    node_pos << static_cast<double>(i + 10), 0.0, 0.0;
+    EXPECT_TRUE(layer_2.emplaceNode(
+        std::chrono::seconds(i), std::make_unique<NodeAttributes>(node_pos)));
+  }
+
+  std::map<NodeId, DynamicLayerKey> node_to_layer;
+  layer_1.mergeLayer(layer_2, &node_to_layer);
+
+  EXPECT_EQ(2u, node_to_layer.size());
+  EXPECT_EQ(5u, layer_1.numNodes());
+  EXPECT_EQ(4u, layer_1.numEdges());
+
+  for (size_t i = 0; i < 5; i++) {
+    Eigen::Vector3d result = layer_1.getPosition(i);
+    EXPECT_EQ(static_cast<double>(i), result(0));
+    EXPECT_EQ(0.0, result(1));
+    EXPECT_EQ(0.0, result(2));
+    if (i > 2) {
+      DynamicLayerKey expected_dlk;
+      EXPECT_EQ(1u, node_to_layer.at(i).type);
+      EXPECT_EQ(0u, node_to_layer.at(i).prefix);
+    }
   }
 }

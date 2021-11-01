@@ -41,6 +41,10 @@ struct SemanticNodeAttributes : public NodeAttributes {
 
   virtual void fillFromJson(const nlohmann::json& record) override;
 
+  virtual NodeAttributes::Ptr clone() const override {
+    return std::make_unique<SemanticNodeAttributes>(*this);
+  }
+
   //! Name of the node
   std::string name = "";
   //! Color of the node (if it exists)
@@ -84,6 +88,10 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
 
   virtual void fillFromJson(const nlohmann::json& record) override;
 
+  virtual NodeAttributes::Ptr clone() const override {
+    return std::make_unique<ObjectNodeAttributes>(*this);
+  }
+
   //! Whether or not the object is known (and registered)
   bool registered;
   //! rotation of object w.r.t. world (only valid when registerd)
@@ -120,6 +128,10 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   virtual nlohmann::json toJson() const override;
 
   virtual void fillFromJson(const nlohmann::json& record) override;
+
+  virtual NodeAttributes::Ptr clone() const override {
+    return std::make_unique<RoomNodeAttributes>(*this);
+  }
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
@@ -163,6 +175,10 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
 
   virtual void fillFromJson(const nlohmann::json& record) override;
 
+  virtual NodeAttributes::Ptr clone() const override {
+    return std::make_unique<PlaceNodeAttributes>(*this);
+  }
+
   //! distance to nearest obstacle
   double distance;
   //! number of equidistant obstacles
@@ -192,6 +208,10 @@ struct AgentNodeAttributes : public NodeAttributes {
   virtual nlohmann::json toJson() const override;
 
   virtual void fillFromJson(const nlohmann::json& record) override;
+
+  virtual NodeAttributes::Ptr clone() const override {
+    return std::make_unique<AgentNodeAttributes>(*this);
+  }
 
   Eigen::Quaterniond world_R_body;
 

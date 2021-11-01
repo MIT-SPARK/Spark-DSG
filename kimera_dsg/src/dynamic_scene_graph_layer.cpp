@@ -9,6 +9,45 @@ using NodeRef = DynamicSceneGraphLayer::NodeRef;
 DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, char node_prefix)
     : id(layer), prefix(node_prefix), next_node_(node_prefix, 0), last_edge_idx_(0) {}
 
+bool DynamicSceneGraphLayer::mergeLayer(
+    const DynamicSceneGraphLayer& other,
+    std::map<NodeId, DynamicLayerKey>* layer_lookup) {
+  DynamicLayerKey layer_key;
+  layer_key.type = id;
+  layer_key.prefix = prefix;
+  Eigen::Vector3d last_update_delta = Eigen::Vector3d::Zero();
+
+  for (size_t i = 0; i < other.nodes_.size(); i++) {
+    if (i < next_node_) {
+      // update the last_update_delta
+      last_update_delta = nodes_[i]->attributes_->position -
+                          other.nodes_[i]->attributes_->position;
+      // Update node attributed (except for position)
+      Eigen::Vector3d node_position = nodes_[i]->attributes_->position;
+      nodes_[i]->attributes_ = other.nodes_[i]->attributes_->clone();
+      nodes_[i]->attributes_->position = node_position;
+    } else {
+      emplaceNode(other.nodes_[i]->timestamp,
+                  other.nodes_[i]->attributes_->clone(),
+                  false);
+      nodes_[next_node_ - 1]->attributes_->position += last_update_delta;
+      if (nullptr != layer_lookup) {
+        layer_lookup->insert({next_node_ - 1, layer_key});
+      }
+    }
+  }
+
+  for (const auto& id_edge_pair : other.edges_) {
+    if (id_edge_pair.first > last_edge_idx_) {
+      const Edge& edge = id_edge_pair.second;
+      insertEdge(edge.source,
+                 edge.target,
+                 std::make_unique<SceneGraphEdgeInfo>(*edge.info));
+    }
+  }
+  return true;
+}
+
 bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds timestamp,
                                          NodeAttributes::Ptr&& attrs,
                                          bool add_edge) {

@@ -76,6 +76,8 @@ class SceneGraphLayer {
   using Node = SceneGraphNode;
   //! node container for the layer
   using Nodes = std::map<NodeId, Node::Ptr>;
+  //! type tracking the status of nodes
+  using NodeCheckup = std::map<NodeId, NodeStatus>;
   //! node reference for the layer
   using NodeRef = std::reference_wrapper<const Node>;
   //! edge type for the layer
@@ -120,6 +122,13 @@ class SceneGraphLayer {
   bool hasNode(NodeId node_id) const;
 
   /**
+   * @brief Check the status of a node
+   * @param node_id node to check for
+   * @returns status of type NodeStatus
+   */
+  NodeStatus checkNode(NodeId node_id) const;
+
+  /**
    * @brief Check whether the layer has the specificied edge
    * @param source first node to check for
    * @param target second node to check for
@@ -161,6 +170,28 @@ class SceneGraphLayer {
   bool removeEdge(NodeId source, NodeId target);
 
   /**
+   * @brief remove an edge if it exists
+   * @param source source of edge to rewire
+   * @param target target of edge to rewire
+   * @param new_source source of edge after rewiring
+   * @param new_target target of edge after rewiring
+   * @returns true if operation successful
+   */
+  bool rewireEdge(NodeId source,
+                  NodeId target,
+                  NodeId new_source,
+                  NodeId new_target);
+
+  /**
+   * @brief merge a graph layer with another
+   * @param other other graph layer
+   * @param layer_lookup update node layer lookup if called in scene graph class
+   * @returns true if operation successful
+   */
+  bool mergeLayer(const SceneGraphLayer& other,
+                  std::map<NodeId, LayerId>* layer_lookup = nullptr);
+
+  /**
    * @brief Number of nodes in the layer
    */
   inline size_t numNodes() const { return nodes_.size(); }
@@ -174,6 +205,11 @@ class SceneGraphLayer {
    * @brief Get the position of a node in the layer with bounds checking
    */
   Eigen::Vector3d getPosition(NodeId node) const;
+
+    /**
+   * @brief Get node id of deleted nodes
+   */
+  void getRemovedNodes(std::vector<NodeId>* removed_nodes) const;
 
   //! ID of the layer
   const LayerId id;
@@ -231,10 +267,20 @@ class SceneGraphLayer {
    */
   bool removeNode(NodeId node_id);
 
+  /**
+   * @brief merge a node into the other if both nodes exist
+   * @param node_from node to merge into the other and remove
+   * @param node_to target node (will still exist after merge)
+   * @returns true if operation successful
+   */
+  bool mergeNodes(NodeId node_from, NodeId node_to);
+
   //! internal edge index counter
   size_t last_edge_idx_;
   //! internal node container
   Nodes nodes_;
+  //! internal node status tracking
+  NodeCheckup nodes_status_;
   //! internal edge container
   Edges edges_;
   //! internal mapping between node id and edge index
@@ -272,6 +318,8 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
   using SceneGraphLayer::emplaceNode;
 
   using SceneGraphLayer::removeNode;
+
+  using SceneGraphLayer::mergeNodes;
 };
 
 namespace graph_utilities {

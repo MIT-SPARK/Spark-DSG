@@ -309,6 +309,31 @@ size_t DynamicSceneGraph::numEdges() const {
   return SceneGraph::numEdges() + mesh_edges_.size();
 }
 
+bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
+                                   bool allow_invalid_mesh) {
+  for (const auto& id_layers : other.dynamicLayers()) {
+    for (const auto& prefix_layer : id_layers.second) {
+      if (hasDynamicLayer(id_layers.first, prefix_layer.first)) {
+        dynamic_layers_[id_layers.first][prefix_layer.first]->mergeLayer(
+            *prefix_layer.second, &dynamic_node_lookup_);
+      }
+    }
+  }
+
+  if (!SceneGraph::mergeGraph(other)) {
+    return false;
+  }
+
+  for (const auto& id_mesh_edge : other.mesh_edges_) {
+    insertMeshEdge(id_mesh_edge.second.source_node,
+                   id_mesh_edge.second.mesh_vertex,
+                   allow_invalid_mesh);
+  }
+
+  // TODO(Yun) check the other mesh info (faces, vertices etc. )
+  return true;
+}
+
 std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(size_t idx) const {
   if (!mesh_vertices_) {
     return std::nullopt;

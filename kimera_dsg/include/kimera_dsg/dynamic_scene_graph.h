@@ -8,11 +8,6 @@
 
 namespace kimera {
 
-struct DynamicLayerKey {
-  LayerId type;
-  char prefix;
-};
-
 /**
  * @brief Structure capturing node-edge relationship
  */
@@ -198,6 +193,14 @@ class DynamicSceneGraph : public SceneGraph {
   size_t numDynamicNodes() const;
 
   virtual size_t numEdges() const override;
+
+  /**
+   * @brief Update graph from another graph
+   * @note Will add the nodes and edges not previously added in current graph
+   * @param other other graph to update from
+   */
+  bool mergeGraph(const DynamicSceneGraph& other,
+                  bool allow_invalid_mesh = false);
 
   inline LayerId getMeshLayerId() const { return mesh_layer_id_; }
 

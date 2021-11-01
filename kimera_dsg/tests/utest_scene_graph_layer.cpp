@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/scene_graph_layer.h>
 
+using kimera::LayerId;
 using kimera::NodeAttributes;
 using kimera::NodeId;
+using kimera::NodeStatus;
 using kimera::NodeSymbol;
 using kimera::SceneGraphLayer;
 using Node = kimera::SceneGraphLayer::Node;
@@ -18,6 +20,7 @@ class TestableSceneGraphLayer : public SceneGraphLayer {
   TestableSceneGraphLayer(kimera::LayerId id) : SceneGraphLayer(id) {}
   using SceneGraphLayer::emplaceNode;
   using SceneGraphLayer::insertNode;
+  using SceneGraphLayer::mergeNodes;
   using SceneGraphLayer::removeNode;
 };
 
@@ -33,10 +36,12 @@ TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
   TestableSceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numNodes());
   EXPECT_FALSE(layer.hasNode(0));
+  EXPECT_EQ(NodeStatus::NONEXISTENT, layer.checkNode(0));
 
   EXPECT_TRUE(layer.emplaceNode(0, std::make_unique<NodeAttributes>()));
   EXPECT_EQ(1u, layer.numNodes());
   EXPECT_TRUE(layer.hasNode(0));
+  EXPECT_EQ(NodeStatus::VISIBLE, layer.checkNode(0));
 
   std::optional<NodeRef> node_opt = layer.getNode(0);
   ASSERT_TRUE(node_opt);
@@ -53,12 +58,14 @@ TEST(SceneGraphLayerTests, InsertNodeInvariants) {
   TestableSceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numNodes());
   EXPECT_FALSE(layer.hasNode(0));
+  EXPECT_EQ(NodeStatus::NONEXISTENT, layer.checkNode(0));
 
   Node::Ptr valid_node =
       std::make_unique<Node>(0, 1, std::make_unique<NodeAttributes>());
   EXPECT_TRUE(layer.insertNode(std::move(valid_node)));
   EXPECT_EQ(1u, layer.numNodes());
   EXPECT_TRUE(layer.hasNode(0));
+  EXPECT_EQ(NodeStatus::VISIBLE, layer.checkNode(0));
 
   // we already have this node, so we should fail
   Node::Ptr repeat_node =
@@ -217,6 +224,43 @@ TEST(SceneGraphLayerTests, RemoveNodeSound) {
   layer.removeNode(0);
   EXPECT_EQ(num_nodes - 1, layer.numNodes());
   EXPECT_EQ(0u, layer.numEdges());
+  EXPECT_EQ(NodeStatus::DELETED, layer.checkNode(0));
+}
+
+// Test that merging two nodes meets the invariants that we expect
+//   - we don't do anything if either nodes doesn't exist
+//   - we rewire all edges to the merged nodes if we do
+TEST(SceneGraphLayerTests, MergeNodesCorrect) {
+  TestableSceneGraphLayer layer(1);
+
+  // we can't remove a node that doesn't exist
+  EXPECT_FALSE(layer.mergeNodes(0, 1));
+
+  size_t num_nodes = 5;
+  for (size_t i = 0; i < num_nodes; ++i) {
+    EXPECT_TRUE(layer.emplaceNode(i, std::make_unique<NodeAttributes>()));
+  }
+  EXPECT_FALSE(layer.mergeNodes(0, 5));
+  layer.removeNode(4);
+  EXPECT_FALSE(layer.mergeNodes(4, 0));
+
+  for (size_t i = 1; i < 4; ++i) {
+    EXPECT_TRUE(layer.insertEdge(0, i));
+  }
+
+  const Node& node0 = *layer.getNode(0);
+  const Node& node1 = *layer.getNode(1);
+
+  EXPECT_EQ(4u, layer.numNodes());
+  EXPECT_EQ(3u, layer.numEdges());
+  EXPECT_EQ(3u, node0.siblings().size());
+  EXPECT_EQ(1u, node1.siblings().size());
+  layer.mergeNodes(0, 1);
+  EXPECT_EQ(3u, layer.numNodes());
+  EXPECT_EQ(2u, layer.numEdges());
+  EXPECT_EQ(2u, node1.siblings().size());
+  EXPECT_EQ(NodeStatus::MERGED, layer.checkNode(0));
+  EXPECT_EQ(NodeStatus::DELETED, layer.checkNode(4));
 }
 
 // Test that removing a edge does what it should
@@ -235,6 +279,82 @@ TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
 
   for (const auto& node_id_pair : layer.nodes()) {
     EXPECT_FALSE(node_id_pair.second->hasSiblings());
+  }
+}
+
+// Test that rewiring an edge does what it should
+TEST(SceneGraphLayerTests, RewireEdgeCorrect) {
+  TestableSceneGraphLayer layer(1);
+
+  size_t num_nodes = 5;
+  for (size_t i = 0; i < num_nodes; ++i) {
+    EXPECT_TRUE(layer.emplaceNode(i, std::make_unique<NodeAttributes>()));
+  }
+  for (size_t i = 1; i < num_nodes; ++i) {
+    EXPECT_TRUE(layer.insertEdge(i - 1, i));
+  }
+
+  EXPECT_EQ(4u, layer.numEdges());
+  // we can't rewire an edge that doesn't exist
+  EXPECT_FALSE(layer.rewireEdge(4, 5, 0, 1));
+  // we can't rewire an edge to itself
+  EXPECT_FALSE(layer.rewireEdge(0, 1, 0, 1));
+  // if the new edge to be rewired is the same, simply remove
+  layer.rewireEdge(2, 3, 2, 2);
+  EXPECT_EQ(3u, layer.numEdges());
+  // if the new edge to be rewired already exists, simply remove
+  layer.rewireEdge(1, 2, 1, 0);
+  EXPECT_EQ(2u, layer.numEdges());
+  // try rewiring edge
+  layer.rewireEdge(3, 4, 3, 0);
+  EXPECT_EQ(2u, layer.numEdges());
+
+  EXPECT_TRUE(layer.hasEdge(0, 3));
+  EXPECT_TRUE(layer.hasEdge(0, 1));
+  EXPECT_FALSE(layer.hasEdge(3, 4));
+}
+
+// Test that rewiring an edge does what it should
+TEST(SceneGraphLayerTests, MergeLayerCorrect) {
+  TestableSceneGraphLayer layer_1(1);
+  TestableSceneGraphLayer layer_2(1);
+
+  for (size_t i = 0; i < 3; ++i) {
+    Eigen::Vector3d node_pos;
+    node_pos << static_cast<double>(i), 0.0, 0.0;
+    EXPECT_TRUE(
+        layer_1.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
+  }
+  for (size_t i = 1; i < 3; ++i) {
+    EXPECT_TRUE(layer_1.insertEdge(i - 1, i));
+  }
+
+  for (size_t i = 0; i < 5; ++i) {
+    Eigen::Vector3d node_pos;
+    node_pos << static_cast<double>(i + 10), 0.0, 0.0;
+    EXPECT_TRUE(
+        layer_2.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
+  }
+  for (size_t i = 1; i < 5; ++i) {
+    EXPECT_TRUE(layer_2.insertEdge(i - 1, i));
+  }
+
+  std::map<NodeId, LayerId> node_to_layer;
+  layer_1.mergeLayer(layer_2, &node_to_layer);
+
+  EXPECT_EQ(2u, node_to_layer.size());
+  EXPECT_EQ(5u, layer_1.numNodes());
+  EXPECT_EQ(4u, layer_1.numEdges());
+
+  for (size_t i = 0; i < 5; i++) {
+    Eigen::Vector3d result = layer_1.getPosition(i);
+    EXPECT_EQ(static_cast<double>(i), result(0));
+    EXPECT_EQ(0.0, result(1));
+    EXPECT_EQ(0.0, result(2));
+    EXPECT_EQ(NodeStatus::VISIBLE, layer_1.checkNode(i));
+    if (i > 2) {
+      EXPECT_EQ(1u, node_to_layer.at(i));
+    }
   }
 }
 

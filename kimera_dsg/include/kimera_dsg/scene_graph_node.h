@@ -19,6 +19,13 @@
 namespace kimera {
 
 /**
+ * @brief Base node status.
+ *
+ * Mostly for keeping history and status of nodes in a graph
+ */
+enum class NodeStatus { VISIBLE, MERGED, DELETED, NONEXISTENT };
+
+/**
  * @brief Base node attributes.
  *
  * All nodes have a pointer to node attributes (that contain most of the useful
@@ -55,6 +62,10 @@ struct NodeAttributes {
   virtual nlohmann::json toJson() const;
 
   virtual void fillFromJson(const nlohmann::json& record);
+
+  virtual NodeAttributes::Ptr clone() const {
+    return std::make_unique<NodeAttributes>(*this);
+  }
 
  protected:
   //! actually output information to the std::ostream
