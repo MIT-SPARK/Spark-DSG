@@ -270,9 +270,8 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
     EXPECT_EQ(0.0, result(1));
     EXPECT_EQ(0.0, result(2));
     if (i > 2) {
-      DynamicLayerKey expected_dlk;
       EXPECT_EQ(1u, node_to_layer.at(i).type);
-      EXPECT_EQ(0u, node_to_layer.at(i).prefix);
+      EXPECT_EQ(0, node_to_layer.at(i).prefix);
     }
   }
 }
