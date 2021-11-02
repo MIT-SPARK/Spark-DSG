@@ -250,7 +250,6 @@ TEST(SceneGraphSerializationTests, SerializeNodeAttributes) {
     expected.num_basis_points = 15;
 
     json output = expected.toJson();
-    std::cout << output << std::endl;
 
     NodeAttributes::Ptr result = factory.create(output);
     ASSERT_TRUE(result != nullptr);
