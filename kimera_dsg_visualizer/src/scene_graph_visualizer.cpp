@@ -252,6 +252,24 @@ void SceneGraphVisualizer::drawLayer(const std_msgs::Header& header,
   if (color_by_distance) {
     nodes = makeCentroidMarkers(
         header, config, layer, viz_config, node_ns, places_colormap_->get());
+  } else if (layer.id == KimeraDsgLayers::PLACES) {
+    nodes = makeCentroidMarkers(header,
+                                config,
+                                layer,
+                                viz_config,
+                                node_ns,
+                                [&](const SceneGraphNode& node) -> NodeColor {
+                                  auto parent = node.getParent();
+                                  if (!parent) {
+                                    return NodeColor::Zero();
+                                  }
+
+                                  return scene_graph_->getNode(*parent)
+                                      .value()
+                                      .get()
+                                      .attributes<SemanticNodeAttributes>()
+                                      .color;
+                                });
   } else {
     nodes = makeCentroidMarkers(header, config, layer, viz_config, node_ns);
   }
