@@ -209,6 +209,90 @@ inline Marker makeNewEdgeList(const std_msgs::Header& header,
 
 }  // namespace
 
+bool shouldVisualize(const DynamicSceneGraph& graph,
+                     const SceneGraphNode& node,
+                     const std::map<LayerId, LayerConfig>& configs,
+                     const std::map<LayerId, DynamicLayerConfig>& dynamic_configs) {
+  if (graph.isDynamic(node.id)) {
+    return dynamic_configs.count(node.layer) &&
+           dynamic_configs.at(node.layer).visualize;
+  }
+
+  return configs.count(node.layer) && configs.at(node.layer).visualize;
+}
+
+LayerId getConfigLayer(const DynamicSceneGraph& graph,
+                       const SceneGraphNode& source,
+                       const SceneGraphNode& target) {
+  if (graph.isDynamic(source.id)) {
+    return source.layer;
+  } else {
+    return target.layer;
+  }
+}
+
+MarkerArray makeDynamicGraphEdgeMarkers(
+    const std_msgs::Header& header,
+    const DynamicSceneGraph& graph,
+    const std::map<LayerId, LayerConfig>& configs,
+    const std::map<LayerId, DynamicLayerConfig>& dynamic_configs,
+    const VisualizerConfig& visualizer_config,
+    const std::string& ns_prefix) {
+  MarkerArray layer_edges;
+  std::map<LayerId, Marker> layer_markers;
+  std::map<LayerId, size_t> num_since_last_insertion;
+
+  for (const auto& edge : graph.dynamic_interlayer_edges()) {
+    const Node& source = graph.getNode(edge.second.source).value();
+    const Node& target = graph.getNode(edge.second.target).value();
+
+    if (!shouldVisualize(graph, source, configs, dynamic_configs)) {
+      continue;
+    }
+
+    if (!shouldVisualize(graph, target, configs, dynamic_configs)) {
+      continue;
+    }
+
+    DynamicLayerConfig config =
+        dynamic_configs.at(getConfigLayer(graph, source, target));
+
+    size_t num_between_insertions = config.interlayer_edge_insertion_skip;
+
+    if (layer_markers.count(source.layer) == 0) {
+      layer_markers[source.layer] = makeNewEdgeList(
+          header, configs.at(source.layer), ns_prefix, source.layer, target.layer);
+      layer_markers[source.layer].color =
+          makeColorMsg(NodeColor::Zero(), config.edge_alpha);
+      // make sure we always draw at least one edge
+      num_since_last_insertion[source.layer] = num_between_insertions;
+    }
+
+    if (num_since_last_insertion[source.layer] >= num_between_insertions) {
+      num_since_last_insertion[source.layer] = 0;
+    } else {
+      num_since_last_insertion[source.layer]++;
+      continue;
+    }
+
+    Marker& marker = layer_markers.at(source.layer);
+    geometry_msgs::Point source_point;
+    tf2::convert(source.attributes().position, source_point);
+    source_point.z += getZOffset(configs.at(source.layer), visualizer_config);
+    marker.points.push_back(source_point);
+
+    geometry_msgs::Point target_point;
+    tf2::convert(target.attributes().position, target_point);
+    target_point.z += getZOffset(configs.at(target.layer), visualizer_config);
+    marker.points.push_back(target_point);
+  }
+
+  for (const auto& id_marker_pair : layer_markers) {
+    layer_edges.markers.push_back(id_marker_pair.second);
+  }
+  return layer_edges;
+}
+
 // TODO(nathan) consider making this shorter
 MarkerArray makeGraphEdgeMarkers(const std_msgs::Header& header,
                                  const SceneGraph& graph,

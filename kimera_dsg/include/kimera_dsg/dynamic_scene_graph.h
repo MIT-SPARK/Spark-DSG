@@ -86,7 +86,7 @@ class DynamicSceneGraph : public SceneGraph {
     return SceneGraph::emplaceNode(layer_id, node_id, std::move(attrs));
   }
 
-  inline bool insertNode(Node::Ptr&& node) {
+  inline bool insertNode(Node::Ptr&& node) override {
     if (!node) {
       return false;
     }
@@ -97,6 +97,16 @@ class DynamicSceneGraph : public SceneGraph {
 
     return SceneGraph::insertNode(std::move(node));
   }
+
+  virtual bool insertEdge(NodeId source,
+                          NodeId target,
+                          EdgeInfo::Ptr&& edge_info = nullptr) override;
+
+  bool insertDynamicEdge(NodeId source,
+                         NodeId target,
+                         EdgeInfo::Ptr&& edge_info = nullptr);
+
+  virtual bool hasEdge(NodeId source, NodeId target) const override;
 
   bool createDynamicLayer(LayerId layer, char layer_prefix);
 
@@ -167,6 +177,14 @@ class DynamicSceneGraph : public SceneGraph {
   virtual bool removeNode(NodeId node) override;
 
   /**
+   * @brief Remove an edge from the graph
+   * @param source Source of edge to remove
+   * @param target Target of edge to remove
+   * @returns Returns true if the removal was successful
+   */
+  virtual bool removeEdge(NodeId source, NodeId target) override;
+
+  /**
    * @brief Add an edge from another node to the mesh
    * @param source Source node id in the scene graph
    * @param mesh_vertex Target mesh vertex index
@@ -185,6 +203,10 @@ class DynamicSceneGraph : public SceneGraph {
    * @returns Returns true if edge was removed
    */
   bool removeMeshEdge(NodeId source, size_t mesh_vertex);
+
+  inline bool isDynamic(NodeId source) const {
+    return dynamic_node_lookup_.count(source);
+  }
 
   virtual size_t numLayers() const override;
 
@@ -207,6 +229,8 @@ class DynamicSceneGraph : public SceneGraph {
   std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id) const;
 
   std::vector<size_t> getMeshConnectionIndices(NodeId node) const;
+
+  virtual Eigen::Vector3d getPosition(NodeId node) const override;
 
   virtual nlohmann::json toJson(const JsonExportConfig& config) const override;
 
@@ -234,6 +258,19 @@ class DynamicSceneGraph : public SceneGraph {
   std::map<LayerId, DynamicLayers> dynamic_layers_;
   std::map<NodeId, DynamicLayerKey> dynamic_node_lookup_;
 
+  Edges dynamic_interlayer_edges_;
+  EdgeLookup dynamic_interlayer_edges_info_;
+  size_t next_dynamic_edge_idx_;
+
+ private:
+  bool isDynamicEdge(NodeId source, NodeId target) const;
+
+  bool inSameDynamicLayer(NodeId source, NodeId target) const;
+
+  bool hasDynamicEdge(NodeId source, NodeId target) const;
+
+  SceneGraphNode* getNodePtr(NodeId node) const;
+
  public:
   inline const DynamicLayers& dynamicLayersOfType(LayerId layer_id) const {
     auto iter = dynamic_layers_.find(layer_id);
@@ -248,6 +285,16 @@ class DynamicSceneGraph : public SceneGraph {
   inline const std::map<LayerId, DynamicLayers>& dynamicLayers() const {
     return dynamic_layers_;
   }
+
+  /**
+   * @brief constant iterator around the dynamic interlayer edges
+   *
+   * @note dynamic interlayer edges are edges between nodes in different layers where at
+   * least one of the nodes is dynamic
+   */
+  inline const Edges& dynamic_interlayer_edges() const {
+    return dynamic_interlayer_edges_;
+  };
 };
 
 }  // namespace kimera

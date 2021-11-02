@@ -91,6 +91,7 @@ class SceneGraphLayer {
   //! type for a mapping between node id and edge index
   using EdgeLookup = std::map<NodeId, std::map<NodeId, size_t>>;
   friend class SceneGraph;
+  friend class DynamicSceneGraph;
 
   /**
    * @brief Makes an empty layer with the specified layer id

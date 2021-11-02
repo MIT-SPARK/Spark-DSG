@@ -73,6 +73,7 @@ DynamicLayerConfig getDynamicLayerConfig(const ros::NodeHandle& nh) {
   READ_PARAM(nh, config, edge_alpha);
   READ_PARAM(nh, config, label_height);
   READ_PARAM(nh, config, label_scale);
+  READ_PARAM(nh, config, interlayer_edge_insertion_skip);
   return config;
 }
 

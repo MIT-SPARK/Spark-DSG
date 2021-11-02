@@ -326,4 +326,147 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrect) {
   EXPECT_EQ(11u, graph_2.numEdges());
 }
 
+TEST(DynamicSceneGraphTests, ClearWithDynamicLayersCorrect) {
+  DynamicSceneGraph graph;
+  EXPECT_EQ(5u, graph.numLayers());
+
+  EXPECT_TRUE(graph.emplaceDynamicNode(
+      2, 'a', std::chrono::seconds(1), std::make_unique<NodeAttributes>()));
+  EXPECT_EQ(1u, graph.numNodes());
+  EXPECT_EQ(1u, graph.numDynamicNodes());
+
+  graph.clear();
+  EXPECT_EQ(0u, graph.numNodes());
+  EXPECT_FALSE(graph.hasNode(NodeSymbol('a', 0)));
+}
+
+TEST(DynamicSceneGraphTests, HasDynamicEdgeCorrect) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph graph;
+  graph.emplaceDynamicNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  graph.emplaceDynamicNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
+  graph.emplaceDynamicNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
+  graph.emplaceDynamicNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
+  EXPECT_FALSE(graph.hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
+}
+
+TEST(DynamicSceneGraphTests, InsertDynamicEdgeCorrect) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph graph;
+  graph.emplaceDynamicNode(2, 'a', 10ns, std::make_unique<NodeAttributes>(), false);
+  graph.emplaceDynamicNode(2, 'a', 20ns, std::make_unique<NodeAttributes>(), false);
+  graph.emplaceDynamicNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
+  graph.emplaceDynamicNode(2, 'a', 40ns, std::make_unique<NodeAttributes>(), false);
+
+  EXPECT_EQ(0u, graph.numEdges());
+
+  EXPECT_TRUE(graph.insertEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
+  EXPECT_TRUE(graph.insertEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
+  EXPECT_TRUE(graph.insertEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
+
+  EXPECT_EQ(3u, graph.numEdges());
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
+}
+
+TEST(DynamicSceneGraphTests, getPositionCorrect) {
+  using namespace std::chrono_literals;
+
+  Eigen::Vector3d expected1(1.0, 2.0, 3.0);
+  Eigen::Vector3d expected2(2.0, 3.0, 4.0);
+
+  DynamicSceneGraph graph;
+  graph.emplaceDynamicNode(2, 'a', 10ns, std::make_unique<NodeAttributes>(expected1));
+  graph.emplaceNode(3, NodeSymbol('x', 0), std::make_unique<NodeAttributes>(expected2));
+
+  // valid dynamic node matches expected
+  Eigen::Vector3d result1 = graph.getPosition(NodeSymbol('a', 0));
+  EXPECT_EQ(expected1, result1);
+
+  // valid static nodes still also work
+  Eigen::Vector3d result2 = graph.getPosition(NodeSymbol('x', 0));
+  EXPECT_EQ(expected2, result2);
+
+  // invalid static nodes still cause an exception
+  try {
+    graph.getPosition(NodeSymbol('x', 5));
+    FAIL();
+  } catch (const std::out_of_range&) {
+    SUCCEED();
+  }
+
+  // invalid dynamic nodes cause an exception
+  try {
+    graph.getPosition(NodeSymbol('a', 3));
+    FAIL();
+  } catch (const std::out_of_range&) {
+    SUCCEED();
+  }
+}
+
+void testParentRelationship(const SceneGraph& graph, NodeId parent, NodeId child) {
+  const SceneGraphNode& parent_node = *graph.getNode(parent);
+  const SceneGraphNode& child_node = *graph.getNode(child);
+
+  EXPECT_TRUE(parent_node.children().count(child_node.id))
+      << NodeSymbol(child).getLabel() << " is not child of "
+      << NodeSymbol(parent).getLabel();
+
+  // note that this depends on the parent id not being 0
+  EXPECT_EQ(parent_node.id, child_node.getParent().value_or(0))
+      << NodeSymbol(parent).getLabel() << " is not parent of "
+      << NodeSymbol(child).getLabel();
+}
+
+void testSiblingRelationship(const SceneGraph& graph, NodeId source, NodeId target) {
+  const SceneGraphNode& source_node = *graph.getNode(source);
+  const SceneGraphNode& target_node = *graph.getNode(target);
+
+  EXPECT_TRUE(source_node.siblings().count(target_node.id))
+      << NodeSymbol(target).getLabel() << " is not a sibling of "
+      << NodeSymbol(source).getLabel();
+
+  EXPECT_TRUE(target_node.siblings().count(source_node.id))
+      << NodeSymbol(source).getLabel() << " is not a sibling of "
+      << NodeSymbol(target).getLabel();
+}
+
+TEST(DynamicSceneGraphTests, InsertMixedEdgeCorrect) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph graph;
+  graph.emplaceDynamicNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(3, NodeSymbol('x', 0), std::make_unique<NodeAttributes>());
+
+  EXPECT_EQ(0u, graph.numEdges());
+
+  EXPECT_TRUE(graph.insertEdge(NodeSymbol('a', 0), NodeSymbol('x', 0)));
+
+  EXPECT_EQ(1u, graph.numEdges());
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('a', 0), NodeSymbol('x', 0)));
+  testParentRelationship(graph, NodeSymbol('x', 0), NodeSymbol('a', 0));
+
+  graph.emplaceDynamicNode(4, 'b', 10ns, std::make_unique<NodeAttributes>());
+
+  EXPECT_TRUE(graph.insertEdge(NodeSymbol('b', 0), NodeSymbol('x', 0)));
+  EXPECT_EQ(2u, graph.numEdges());
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('b', 0), NodeSymbol('x', 0)));
+  testParentRelationship(graph, NodeSymbol('b', 0), NodeSymbol('x', 0));
+
+  graph.emplaceDynamicNode(2, 'a', 20ns, std::make_unique<NodeAttributes>(), false);
+  EXPECT_TRUE(graph.insertEdge(NodeSymbol('b', 0), NodeSymbol('a', 1)));
+  EXPECT_EQ(3u, graph.numEdges());
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('b', 0), NodeSymbol('a', 1)));
+  testParentRelationship(graph, NodeSymbol('b', 0), NodeSymbol('a', 1));
+
+  graph.emplaceDynamicNode(2, 'c', 10ns, std::make_unique<NodeAttributes>());
+  EXPECT_TRUE(graph.insertEdge(NodeSymbol('c', 0), NodeSymbol('a', 0)));
+  EXPECT_EQ(4u, graph.numEdges());
+  EXPECT_TRUE(graph.hasEdge(NodeSymbol('c', 0), NodeSymbol('a', 0)));
+  testSiblingRelationship(graph, NodeSymbol('c', 0), NodeSymbol('a', 0));
+}
+
 }  // namespace kimera

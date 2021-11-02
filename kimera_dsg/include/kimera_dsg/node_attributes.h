@@ -198,6 +198,7 @@ struct AgentNodeAttributes : public NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::unique_ptr<AgentNodeAttributes>;
+  using BowIdVector = Eigen::Matrix<uint32_t, Eigen::Dynamic, 1>;
 
   AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
                       const Eigen::Vector3d& world_P_body,
@@ -216,6 +217,9 @@ struct AgentNodeAttributes : public NodeAttributes {
   Eigen::Quaterniond world_R_body;
 
   NodeId external_key;
+
+  BowIdVector dbow_ids;
+  Eigen::VectorXf dbow_values;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;

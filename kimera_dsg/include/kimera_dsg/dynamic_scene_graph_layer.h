@@ -83,6 +83,10 @@ class DynamicSceneGraphLayer {
                          size_t target_index,
                          EdgeInfo::Ptr&& edge_info = nullptr);
 
+  bool removeEdge(NodeId source, NodeId target);
+
+  bool removeEdgeByIndex(size_t source_index, size_t target_index);
+
   Eigen::Vector3d getPosition(NodeId node) const;
 
   Eigen::Vector3d getPositionByIndex(size_t node_index) const;

@@ -93,6 +93,10 @@ class LayerView {
 
   EdgeIter edges() const { return EdgeIter(layer_ref_.edges()); }
 
+  size_t numNodes() const { return layer_ref_.numNodes(); }
+
+  size_t numEdges() const { return layer_ref_.numEdges(); }
+
   const LayerId id;
 
  private:
@@ -216,6 +220,7 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
 
   py::class_<NodeSymbol>(module, "NodeSymbol")
       .def(py::init([](char key, size_t index) { return NodeSymbol(key, index); }))
+      .def(py::init([](size_t value) { return NodeSymbol(value); }))
       .def_property("category_id", &NodeSymbol::categoryId, nullptr)
       .def_property("category", &NodeSymbol::category, nullptr)
       .def_property(
@@ -291,6 +296,8 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
 
   py::class_<LayerView>(module, "LayerView")
       .def_readonly("id", &LayerView::id)
+      .def("num_nodes", &LayerView::numNodes)
+      .def("num_edges", &LayerView::numEdges)
       .def_property("nodes",
                     [](const LayerView &view) {
                       return py::make_iterator(view.nodes(), IterSentinel());

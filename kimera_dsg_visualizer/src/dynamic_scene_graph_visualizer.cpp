@@ -137,6 +137,30 @@ void DynamicSceneGraphVisualizer::redrawImpl(const std_msgs::Header& header,
 
   MarkerArray dynamic_markers;
   drawDynamicLayers(header, dynamic_markers);
+
+  std::map<LayerId, LayerConfig> all_configs;
+  for (const auto& id_manager_pair : layer_configs_) {
+    all_configs[id_manager_pair.first] = id_manager_pair.second->get();
+  }
+
+  std::map<LayerId, DynamicLayerConfig> all_dynamic_configs;
+  for (const auto& id_manager_pair : dynamic_configs_) {
+    all_dynamic_configs[id_manager_pair.first] = id_manager_pair.second->get();
+  }
+
+  MarkerArray interlayer_edge_markers =
+      makeDynamicGraphEdgeMarkers(header,
+                                  *scene_graph_,
+                                  all_configs,
+                                  all_dynamic_configs,
+                                  visualizer_config_->get(),
+                                  "dynamic_interlayer_edges_");
+  for (const auto& marker : interlayer_edge_markers.markers) {
+    addMultiMarkerIfValid(marker, msg);
+  }
+
+  // TODO(nathan) handle deleting empty previous markers
+
   if (!dynamic_markers.markers.empty()) {
     dynamic_layers_viz_pub_.publish(dynamic_markers);
   }

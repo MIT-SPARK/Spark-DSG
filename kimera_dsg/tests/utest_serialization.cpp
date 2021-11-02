@@ -89,6 +89,26 @@ TEST(SceneGraphSerializationTests, SerializeEigenVector) {
     auto result = output.get<SemanticNodeAttributes::ColorVector>();
     EXPECT_EQ(expected, result);
   }
+
+  {  // dynamic float vector
+    Eigen::VectorXf expected(5, 1);
+    expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::VectorXf>();
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // dynamic int vector
+    Eigen::VectorXi expected(5, 1);
+    expected << 1, 2, 3, 4, 5;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::VectorXi>();
+    EXPECT_EQ(expected, result);
+  }
 }
 
 TEST(SceneGraphSerializationTests, SerializeEigenQuaternion) {
@@ -333,6 +353,51 @@ TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
   EXPECT_TRUE(result.hasEdge(0, 1));
   EXPECT_TRUE(result.hasEdge(1, 2));
   EXPECT_EQ(expected.hasLayer(0), result.hasLayer(0));
+}
+
+TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
+  using namespace std::chrono_literals;
+  NodeAttributeFactory attr_factory = NodeAttributeFactory::Default();
+  EdgeInfoFactory info_factory = EdgeInfoFactory::Default();
+  SceneGraph::JsonExportConfig config;
+
+  DynamicSceneGraph expected;
+  expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
+
+  expected.emplaceDynamicNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  expected.emplaceDynamicNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
+  expected.emplaceDynamicNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
+  expected.emplaceDynamicNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+
+  json output = expected.toJson(config);
+
+  DynamicSceneGraph result;
+  result.fillFromJson(config, attr_factory, info_factory, output);
+
+  EXPECT_EQ(expected.numNodes(), result.numNodes()) << output;
+  EXPECT_EQ(expected.numEdges(), result.numEdges());
+  EXPECT_EQ(expected.numLayers(), result.numLayers());
+
+  std::set<LayerId> original_layers;
+  for (const auto& id_layer_pair : expected.layers()) {
+    original_layers.insert(id_layer_pair.first);
+  }
+
+  for (const auto& id_layer_pair : result.layers()) {
+    EXPECT_TRUE(original_layers.count(id_layer_pair.first))
+        << "layer " << id_layer_pair.first << " missing in serialized graph";
+  }
+
+  EXPECT_TRUE(result.hasNode(0));
+  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 0)));
+  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 1)));
+  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 2)));
+  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 3)));
+  EXPECT_TRUE(result.hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
+  EXPECT_FALSE(result.hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
+  EXPECT_TRUE(result.hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
+
+  EXPECT_TRUE(result.hasDynamicLayer(2, 'a'));
 }
 
 }  // namespace kimera

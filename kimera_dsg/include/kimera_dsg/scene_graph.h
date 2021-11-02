@@ -82,7 +82,7 @@ class SceneGraph {
    * @param node to add
    * @returns true if the node was added successfully
    */
-  bool insertNode(Node::Ptr&& node);
+  virtual bool insertNode(Node::Ptr&& node);
 
   /**
    * @brief Add an edge to the graph
@@ -98,7 +98,9 @@ class SceneGraph {
    *        default edge attributes if not supplied)
    * @returns true if the edge was successfully added
    */
-  bool insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_info = nullptr);
+  virtual bool insertEdge(NodeId source,
+                          NodeId target,
+                          EdgeInfo::Ptr&& edge_info = nullptr);
 
   /**
    * @brief check if a given layer exists
@@ -179,7 +181,7 @@ class SceneGraph {
    * @param target target of edge to remove
    * @returns true if the edge existed prior to removal
    */
-  bool removeEdge(NodeId source, NodeId target);
+  virtual bool removeEdge(NodeId source, NodeId target);
 
   /**
    * @brief Get the number of layers in the graph
@@ -213,7 +215,8 @@ class SceneGraph {
    * @param edges Optional edges to add to graph
    * @return Whether the update was successful or not
    */
-  bool updateFromLayer(SceneGraphLayer& other_layer, std::unique_ptr<Edges>&& edges = nullptr);
+  bool updateFromLayer(SceneGraphLayer& other_layer,
+                       std::unique_ptr<Edges>&& edges = nullptr);
 
   /**
    * @brief Update graph from another graph
@@ -225,7 +228,7 @@ class SceneGraph {
   /**
    * @brief Get the position of a node in the layer with bounds checking
    */
-  Eigen::Vector3d getPosition(NodeId node) const;
+  virtual Eigen::Vector3d getPosition(NodeId node) const;
 
   virtual nlohmann::json toJson(const JsonExportConfig& config) const;
 
@@ -254,10 +257,14 @@ class SceneGraph {
   //! map between node id and layer id
   NodeLayerLookup node_layer_lookup_;
 
- private:
+ protected:
+  bool insertIntralayerEdgeInfo(NodeId source,
+                                NodeId target,
+                                EdgeInfo::Ptr&& edge_info);
+
   void initialize_();
 
-  void removeInterLayerEdge_(NodeId source, NodeId target);
+  void removeInterLayerEdge(NodeId source, NodeId target);
 
   void rewireInterLayerEdge_(NodeId source,
                              NodeId target,

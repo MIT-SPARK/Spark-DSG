@@ -89,6 +89,7 @@ class SceneGraphNode {
   //! desired pointer type of the node (unique)
   using Ptr = std::unique_ptr<SceneGraphNode>;
   friend class DynamicSceneGraphLayer;
+  friend class DynamicSceneGraph;
   friend class SceneGraphLayer;
   friend class SceneGraph;
 

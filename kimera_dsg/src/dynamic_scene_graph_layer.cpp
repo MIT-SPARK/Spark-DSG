@@ -171,6 +171,42 @@ bool DynamicSceneGraphLayer::insertEdgeByIndex(size_t source_idx,
   return insertEdge(source, target, std::move(edge_info));
 }
 
+bool DynamicSceneGraphLayer::removeEdge(NodeId source, NodeId target) {
+  if (NodeSymbol(source).category() != prefix ||
+      NodeSymbol(target).category() != prefix) {
+    return false;
+  }
+
+  return removeEdgeByIndex(NodeSymbol(source).categoryId(),
+                           NodeSymbol(target).categoryId());
+}
+
+bool DynamicSceneGraphLayer::removeEdgeByIndex(size_t source_index,
+                                               size_t target_index) {
+  if (!hasEdgeByIndex(source_index, target_index)) {
+    return false;
+  }
+
+  NodeSymbol source(prefix, source_index);
+  NodeSymbol target(prefix, target_index);
+
+  edges_.erase(edges_info_.at(source).at(target));
+
+  edges_info_.at(source).erase(target);
+  if (edges_info_.at(source).empty()) {
+    edges_info_.erase(source);
+  }
+
+  edges_info_.at(target).erase(source);
+  if (edges_info_.at(target).empty()) {
+    edges_info_.erase(target);
+  }
+
+  nodes_[source_index]->siblings_.erase(target);
+  nodes_[target_index]->siblings_.erase(source);
+  return true;
+}
+
 Eigen::Vector3d DynamicSceneGraphLayer::getPosition(NodeId node) const {
   if (!hasNode(node)) {
     throw std::out_of_range("node " + NodeSymbol(node).getLabel() +

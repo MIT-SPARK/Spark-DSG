@@ -228,12 +228,12 @@ bool SceneGraph::removeNode(NodeId node_id) {
   Node* node = layers_[layer]->nodes_.at(node_id).get();
   // TODO(nathan) consider asserts
   if (node->hasParent()) {
-    removeInterLayerEdge_(node_id, node->parent_);
+    removeInterLayerEdge(node_id, node->parent_);
   }
 
   std::set<NodeId> targets_to_erase = node->children_;
   for (const auto& target : targets_to_erase) {
-    removeInterLayerEdge_(node_id, target);
+    removeInterLayerEdge(node_id, target);
   }
 
   layers_[layer]->removeNode(node_id);
@@ -274,7 +274,7 @@ bool SceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
   return true;
 }
 
-void SceneGraph::removeInterLayerEdge_(NodeId source, NodeId target) {
+void SceneGraph::removeInterLayerEdge(NodeId source, NodeId target) {
   inter_layer_edges_.erase(inter_layer_edges_info_.at(source).at(target));
   inter_layer_edges_info_.at(source).erase(target);
   if (inter_layer_edges_info_.at(source).empty()) {
@@ -301,7 +301,7 @@ void SceneGraph::rewireInterLayerEdge_(NodeId source,
   }
 
   if (hasEdge(new_source, new_target)) {
-    removeInterLayerEdge_(source, target);
+    removeInterLayerEdge(source, target);
     return;
   }
 
@@ -319,7 +319,7 @@ void SceneGraph::rewireInterLayerEdge_(NodeId source,
     new_parent->children_.insert(new_child->id);
   } else {
     // cannot have two parents
-    removeInterLayerEdge_(source, target);
+    removeInterLayerEdge(source, target);
     return;
   }
 
@@ -361,7 +361,7 @@ bool SceneGraph::removeEdge(NodeId source, NodeId target) {
     return layers_.at(source_layer)->removeEdge(source, target);
   }
 
-  removeInterLayerEdge_(source, target);
+  removeInterLayerEdge(source, target);
   return true;
 }
 
@@ -388,7 +388,7 @@ size_t SceneGraph::numEdges() const {
 Eigen::Vector3d SceneGraph::getPosition(NodeId node) const {
   if (!hasNode(node)) {
     throw std::out_of_range("node " + NodeSymbol(node).getLabel() +
-                            " is not in the layer");
+                            " is not in the graph");
   }
 
   LayerId layer = node_layer_lookup_.at(node);
@@ -505,9 +505,12 @@ void SceneGraph::fillFromJson(const JsonExportConfig& config,
                               const json& record) {
   // we have to clear after setting the layer ids to get the right layers initialized
   layer_ids_ = record.at("layer_ids").get<LayerIds>();
-  clear();
+  SceneGraph::clear();  // dynamic layers are filled before we do this
 
   for (const auto& node : record.at("nodes")) {
+    if (node.contains("timestamp")) {
+      continue;  // we found a dynamic node
+    }
     auto id = node.at(config.name_key).get<NodeId>();
     auto layer = node.at("layer").get<LayerId>();
     NodeAttributes::Ptr attrs = node_attr_factory.create(node.at("attributes"));

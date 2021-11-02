@@ -147,6 +147,8 @@ json AgentNodeAttributes::toJson() const {
   REGISTER_JSON_ATTR_TYPE(AgentNodeAttributes, to_return);
   WRITE_FIELD_TO_JSON(to_return, world_R_body);
   WRITE_FIELD_TO_JSON(to_return, external_key);
+  WRITE_FIELD_TO_JSON(to_return, dbow_ids);
+  WRITE_FIELD_TO_JSON(to_return, dbow_values);
   return to_return;
 }
 
@@ -154,6 +156,8 @@ void AgentNodeAttributes::fillFromJson(const json& record) {
   NodeAttributes::fillFromJson(record);
   READ_FIELD_FROM_JSON(record, world_R_body);
   READ_FIELD_FROM_JSON(record, external_key);
+  READ_FIELD_FROM_JSON(record, dbow_ids);
+  READ_FIELD_FROM_JSON(record, dbow_values);
 }
 
 }  // namespace kimera

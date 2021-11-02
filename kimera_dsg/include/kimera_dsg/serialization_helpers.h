@@ -21,6 +21,22 @@ struct adl_serializer<Eigen::Matrix<Scalar, 3, 1>> {
 };
 
 template <typename Scalar>
+struct adl_serializer<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>> {
+  static void to_json(json& j, const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& vector) {
+    for (int r = 0; r < vector.rows(); ++r) {
+      j.push_back(vector(r, 0));
+    }
+  }
+
+  static void from_json(const json& j, Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& vector) {
+    vector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>(j.size(), 1);
+    for (size_t r = 0; r < j.size(); ++r) {
+      vector(r, 0) = j.at(r).get<Scalar>();
+    }
+  }
+};
+
+template <typename Scalar>
 struct adl_serializer<Eigen::Quaternion<Scalar>> {
   static void to_json(json& j, const Eigen::Quaternion<Scalar>& q) {
     j = json{{"w", q.w()}, {"x", q.x()}, {"y", q.y()}, {"z", q.z()}};
