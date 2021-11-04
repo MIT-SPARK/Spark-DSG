@@ -132,10 +132,18 @@ void SceneGraphVisualizer::resetImpl(const std_msgs::Header& header, MarkerArray
     clearPrevMarkers(header, {}, bbox_ns, prev_bboxes_.at(layer_id), msg);
   }
 
-  prev_labels_.clear();
-  prev_bboxes_.clear();
-  curr_labels_.clear();
-  curr_bboxes_.clear();
+  for (auto& label_set : prev_labels_) {
+    label_set.second.clear();
+  }
+  for (auto& label_set : curr_labels_) {
+    label_set.second.clear();
+  }
+  for (auto& bbox_set : prev_bboxes_) {
+    bbox_set.second.clear();
+  }
+  for (auto& bbox_set : curr_bboxes_) {
+    bbox_set.second.clear();
+  }
 }
 
 bool SceneGraphVisualizer::hasConfigChanged() const {
