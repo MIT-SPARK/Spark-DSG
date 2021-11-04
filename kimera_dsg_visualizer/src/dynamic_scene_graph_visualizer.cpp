@@ -131,6 +131,30 @@ void DynamicSceneGraphVisualizer::drawDynamicLayers(const std_msgs::Header& head
   }
 }
 
+void DynamicSceneGraphVisualizer::resetImpl(const std_msgs::Header& header,
+                                            MarkerArray& msg) {
+  SceneGraphVisualizer::resetImpl(header, msg);
+
+  // vanilla scene graph also makes delete markers for dynamic layers, so we duplicate
+  // them here (rviz checks for topic / namespace coherence)
+  MarkerArray dynamic_msg = msg;
+  auto to_delete = published_dynamic_labels_;
+  for (const auto& ns : to_delete) {
+    Marker marker = makeDeleteMarker(header, 0, ns);
+    dynamic_msg.markers.push_back(marker);
+  }
+
+  if (!dynamic_msg.markers.empty()) {
+    dynamic_layers_viz_pub_.publish(dynamic_msg);
+  }
+
+  published_dynamic_labels_.clear();
+
+  for (const auto& plugin : plugins_) {
+    plugin->reset(header, *scene_graph_);
+  }
+}
+
 void DynamicSceneGraphVisualizer::redrawImpl(const std_msgs::Header& header,
                                              MarkerArray& msg) {
   SceneGraphVisualizer::redrawImpl(header, msg);
@@ -148,18 +172,38 @@ void DynamicSceneGraphVisualizer::redrawImpl(const std_msgs::Header& header,
     all_dynamic_configs[id_manager_pair.first] = id_manager_pair.second->get();
   }
 
+  const std::string dynamic_interlayer_edge_prefix = "dynamic_interlayer_edges_";
   MarkerArray interlayer_edge_markers =
       makeDynamicGraphEdgeMarkers(header,
                                   *scene_graph_,
                                   all_configs,
                                   all_dynamic_configs,
                                   visualizer_config_->get(),
-                                  "dynamic_interlayer_edges_");
+                                  dynamic_interlayer_edge_prefix);
+
+  std::set<std::string> seen_edge_labels;
   for (const auto& marker : interlayer_edge_markers.markers) {
     addMultiMarkerIfValid(marker, msg);
+    seen_edge_labels.insert(marker.ns);
   }
 
-  // TODO(nathan) handle deleting empty previous markers
+  for (const auto& source_pair : all_configs) {
+    for (const auto& target_pair : all_dynamic_configs) {
+      std::string source_to_target_ns = dynamic_interlayer_edge_prefix +
+                                        std::to_string(source_pair.first) + "_" +
+                                        std::to_string(target_pair.first);
+      if (!seen_edge_labels.count(source_to_target_ns)) {
+        deleteMultiMarker(header, source_to_target_ns, msg);
+      }
+
+      std::string target_to_source_ns = dynamic_interlayer_edge_prefix +
+                                        std::to_string(target_pair.first) + "_" +
+                                        std::to_string(source_pair.first);
+      if (!seen_edge_labels.count(target_to_source_ns)) {
+        deleteMultiMarker(header, target_to_source_ns, msg);
+      }
+    }
+  }
 
   if (!dynamic_markers.markers.empty()) {
     dynamic_layers_viz_pub_.publish(dynamic_markers);
@@ -168,6 +212,23 @@ void DynamicSceneGraphVisualizer::redrawImpl(const std_msgs::Header& header,
   // TODO(nathan) move to scene graph probably
   for (const auto& plugin : plugins_) {
     plugin->draw(header, *scene_graph_);
+  }
+}
+
+bool DynamicSceneGraphVisualizer::hasConfigChanged() const {
+  bool has_changed = SceneGraphVisualizer::hasConfigChanged();
+
+  for (const auto& id_manager_pair : dynamic_configs_) {
+    has_changed |= id_manager_pair.second->hasChange();
+  }
+
+  return has_changed;
+}
+
+void DynamicSceneGraphVisualizer::clearConfigChangeFlags() {
+  SceneGraphVisualizer::clearConfigChangeFlags();
+  for (auto& id_manager_pair : dynamic_configs_) {
+    id_manager_pair.second->clearChangeFlag();
   }
 }
 

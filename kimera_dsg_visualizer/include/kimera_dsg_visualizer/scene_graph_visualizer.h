@@ -80,7 +80,11 @@ class SceneGraphVisualizer {
 
   void setGraph(const DynamicSceneGraph::Ptr& scene_graph);
 
+  void reset();
+
  protected:
+  virtual void resetImpl(const std_msgs::Header& header, MarkerArray& msg);
+
   virtual bool hasConfigChanged() const;
 
   virtual void clearConfigChangeFlags();

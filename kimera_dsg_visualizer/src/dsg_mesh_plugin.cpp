@@ -8,7 +8,7 @@ namespace kimera {
 using visualization_msgs::Marker;
 
 DsgMeshPlugin::DsgMeshPlugin(const ros::NodeHandle& nh, const std::string& name)
-    : DsgVisualizerPlugin(nh, name), name_(name) {
+    : DsgVisualizerPlugin(nh, name), name_(name), published_mesh_(false) {
   ros::NodeHandle temp(nh);
   mesh_pub_ = temp.advertise<Marker>("mesh", 1, true);
 }
@@ -64,6 +64,17 @@ void DsgMeshPlugin::draw(const std_msgs::Header& header,
       msg.colors.push_back(colorFromPcl(point));
     }
   }
+
+  mesh_pub_.publish(msg);
+  published_mesh_ = true;
+}
+
+void DsgMeshPlugin::reset(const std_msgs::Header& header, const DynamicSceneGraph&) {
+  Marker msg;
+  msg.header = header;
+  msg.ns = name_;
+  msg.id = 0;
+  msg.action = Marker::DELETE;
 
   mesh_pub_.publish(msg);
 }

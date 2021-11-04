@@ -62,6 +62,23 @@ void SceneGraphVisualizer::start() {
                           this);
 }
 
+void SceneGraphVisualizer::reset() {
+  if (scene_graph_) {
+    std_msgs::Header header;
+    header.stamp = ros::Time::now();
+    header.frame_id = world_frame_;
+
+    MarkerArray msg;
+    resetImpl(header, msg);
+
+    if (!msg.markers.empty()) {
+      dsg_pub_.publish(msg);
+    }
+  }
+
+  scene_graph_.reset();
+}
+
 bool SceneGraphVisualizer::redraw() {
   if (!scene_graph_) {
     return false;
@@ -95,8 +112,30 @@ void SceneGraphVisualizer::setGraph(const DynamicSceneGraph::Ptr& scene_graph) {
     return;
   }
 
+  reset();
+
   scene_graph_ = scene_graph;
   need_redraw_ = true;
+}
+
+void SceneGraphVisualizer::resetImpl(const std_msgs::Header& header, MarkerArray& msg) {
+  auto to_delete = published_multimarkers_;
+  for (const auto& ns : to_delete) {
+    deleteMultiMarker(header, ns, msg);
+  }
+
+  for (const auto& id_layer_pair : scene_graph_->layers()) {
+    const LayerId layer_id = id_layer_pair.first;
+    const std::string label_ns = getLayerLabelNamespace(layer_id);
+    const std::string bbox_ns = getLayerBboxNamespace(layer_id);
+    clearPrevMarkers(header, {}, label_ns, prev_labels_.at(layer_id), msg);
+    clearPrevMarkers(header, {}, bbox_ns, prev_bboxes_.at(layer_id), msg);
+  }
+
+  prev_labels_.clear();
+  prev_bboxes_.clear();
+  curr_labels_.clear();
+  curr_bboxes_.clear();
 }
 
 bool SceneGraphVisualizer::hasConfigChanged() const {
@@ -139,13 +178,14 @@ void SceneGraphVisualizer::redrawImpl(const std_msgs::Header& header,
     all_configs[id_manager_pair.first] = id_manager_pair.second->get();
   }
 
-  std::set<std::string> seen_edge_labels;
   MarkerArray interlayer_edge_markers =
       makeGraphEdgeMarkers(header,
                            *scene_graph_,
                            all_configs,
                            visualizer_config_->get(),
                            interlayer_edge_ns_prefix_);
+
+  std::set<std::string> seen_edge_labels;
   for (const auto& marker : interlayer_edge_markers.markers) {
     addMultiMarkerIfValid(marker, msg);
     seen_edge_labels.insert(marker.ns);

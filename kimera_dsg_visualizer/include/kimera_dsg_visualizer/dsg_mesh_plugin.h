@@ -11,10 +11,12 @@ class DsgMeshPlugin : public DsgVisualizerPlugin {
 
   void draw(const std_msgs::Header& header, const DynamicSceneGraph& graph) override;
 
+  void reset(const std_msgs::Header& header, const DynamicSceneGraph& graph) override;
+
  private:
   std::string name_;
   ros::Publisher mesh_pub_;
-  // TODO(nathan) last redraw time
+  bool published_mesh_;
 };
 
 }  // namespace kimera

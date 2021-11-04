@@ -20,6 +20,8 @@ class DynamicSceneGraphVisualizer : public SceneGraphVisualizer {
   }
 
  protected:
+  virtual void resetImpl(const std_msgs::Header& header, MarkerArray& msg) override;
+
   virtual void redrawImpl(const std_msgs::Header& header, MarkerArray& msg);
 
   inline std::string getDynamicNodeNamespace(char layer_prefix) const {
@@ -33,6 +35,10 @@ class DynamicSceneGraphVisualizer : public SceneGraphVisualizer {
   inline std::string getDynamicLabelNamespace(char layer_prefix) const {
     return dynamic_label_ns_prefix_ + layer_prefix;
   }
+
+  virtual bool hasConfigChanged() const override;
+
+  virtual void clearConfigChangeFlags() override;
 
  private:
   const DynamicLayerConfig& getConfig(LayerId layer);
