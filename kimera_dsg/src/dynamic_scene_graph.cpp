@@ -486,10 +486,13 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    bool allow_invalid_mesh) {
   for (const auto& id_layers : other.dynamicLayers()) {
     for (const auto& prefix_layer : id_layers.second) {
-      if (hasDynamicLayer(id_layers.first, prefix_layer.first)) {
-        dynamic_layers_[id_layers.first][prefix_layer.first]->mergeLayer(
-            *prefix_layer.second, &dynamic_node_lookup_);
+      if (!hasDynamicLayer(id_layers.first, prefix_layer.first)) {
+        createDynamicLayer(id_layers.first, prefix_layer.first);
       }
+
+      CHECK(hasDynamicLayer(id_layers.first, prefix_layer.first));
+      dynamic_layers_[id_layers.first][prefix_layer.first]->mergeLayer(
+          *prefix_layer.second, &dynamic_node_lookup_);
     }
   }
 
@@ -501,6 +504,12 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
     insertMeshEdge(id_mesh_edge.second.source_node,
                    id_mesh_edge.second.mesh_vertex,
                    allow_invalid_mesh);
+  }
+
+  for (const auto& id_edge : other.dynamic_interlayer_edges()) {
+    insertEdge(id_edge.second.source,
+               id_edge.second.target,
+               std::make_unique<SceneGraphEdgeInfo>(*id_edge.second.info));
   }
 
   // TODO(Yun) check the other mesh info (faces, vertices etc. )
