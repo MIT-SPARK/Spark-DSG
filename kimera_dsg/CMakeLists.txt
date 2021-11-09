@@ -72,6 +72,7 @@ add_library(
   src/scene_graph_layer.cpp
   src/scene_graph.cpp
   src/serialization_helpers.cpp
+  src/scene_graph_logger.cpp
 )
 target_include_directories(
   ${PROJECT_NAME} PUBLIC include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}

@@ -39,6 +39,7 @@ class SceneGraph {
   using Edges = Layer::Edges;
   //! alias to the container storing node-to-node connections
   using EdgeLookup = Layer::EdgeLookup;
+  friend class SceneGraphLogger;
 
   struct JsonExportConfig {
     std::string edge_key = "edges";
