@@ -9,6 +9,7 @@ NodeAttributeFactory NodeAttributeFactory::Default() {
   REGISTER_ATTR_FACTORY(factory, ObjectNodeAttributes);
   REGISTER_ATTR_FACTORY(factory, RoomNodeAttributes);
   REGISTER_ATTR_FACTORY(factory, PlaceNodeAttributes);
+  REGISTER_ATTR_FACTORY(factory, AgentNodeAttributes);
   return factory;
 }
 

@@ -129,6 +129,8 @@ std::ostream& operator<<(std::ostream& out, const Eigen::Quaterniond& q) {
   return out << q.w() << " + " << q.x() << "i + " << q.y() << "j + " << q.z() << "k";
 }
 
+AgentNodeAttributes::AgentNodeAttributes() : NodeAttributes() {}
+
 AgentNodeAttributes::AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
                                          const Eigen::Vector3d& world_P_body,
                                          NodeId external_key)

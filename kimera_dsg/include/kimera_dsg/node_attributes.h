@@ -200,6 +200,8 @@ struct AgentNodeAttributes : public NodeAttributes {
   using Ptr = std::unique_ptr<AgentNodeAttributes>;
   using BowIdVector = Eigen::Matrix<uint32_t, Eigen::Dynamic, 1>;
 
+  AgentNodeAttributes();
+
   AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
                       const Eigen::Vector3d& world_P_body,
                       NodeId external_key);
