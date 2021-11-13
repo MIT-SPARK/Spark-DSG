@@ -16,7 +16,10 @@ struct adl_serializer<Eigen::Matrix<Scalar, 3, 1>> {
   }
 
   static void from_json(const json& j, Eigen::Matrix<Scalar, 3, 1>& vector) {
-    vector << j.at(0).get<Scalar>(), j.at(1).get<Scalar>(), j.at(2).get<Scalar>();
+    for (size_t i = 0; i < 3; ++i) {
+      vector(i) = j.at(i).is_null() ? std::numeric_limits<Scalar>::quiet_NaN()
+                                    : j.at(i).get<Scalar>();
+    }
   }
 };
 
@@ -28,7 +31,8 @@ struct adl_serializer<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>> {
     }
   }
 
-  static void from_json(const json& j, Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& vector) {
+  static void from_json(const json& j,
+                        Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& vector) {
     vector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>(j.size(), 1);
     for (size_t r = 0; r < j.size(); ++r) {
       vector(r, 0) = j.at(r).get<Scalar>();

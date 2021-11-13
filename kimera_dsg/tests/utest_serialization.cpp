@@ -354,6 +354,57 @@ TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
   EXPECT_EQ(expected.hasLayer(0), result.hasLayer(0));
 }
 
+TEST(SceneGraphSerializationTests, SerializeDsgWithNaNs) {
+  NodeAttributeFactory attr_factory = NodeAttributeFactory::Default();
+  EdgeInfoFactory info_factory = EdgeInfoFactory::Default();
+  SceneGraph::JsonExportConfig config;
+
+  SceneGraph::LayerIds layers{1, 2, 3};
+  DynamicSceneGraph expected(layers, 0);
+  expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
+  expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
+  expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
+  Eigen::Vector3d bad_pos = Eigen::Vector3d::Zero();
+  bad_pos(0) = std::numeric_limits<double>::quiet_NaN();
+  bad_pos(1) = std::numeric_limits<double>::quiet_NaN();
+  bad_pos(2) = std::numeric_limits<double>::quiet_NaN();
+  expected.emplaceNode(3, 3, std::make_unique<NodeAttributes>(bad_pos));
+
+  expected.insertEdge(0, 1);
+  expected.insertEdge(1, 2);
+  expected.insertEdge(2, 3);
+
+  json output = expected.toJson(config);
+  std::string output_str = output.dump();
+  json input = json::parse(output_str);
+
+  DynamicSceneGraph result;
+  result.fillFromJson(config, attr_factory, info_factory, input);
+
+  EXPECT_EQ(expected.numNodes(), result.numNodes()) << input;
+  EXPECT_EQ(expected.numEdges(), result.numEdges());
+  EXPECT_EQ(expected.numLayers(), result.numLayers());
+
+  std::set<LayerId> original_layers;
+  for (const auto& id_layer_pair : expected.layers()) {
+    original_layers.insert(id_layer_pair.first);
+  }
+
+  for (const auto& id_layer_pair : result.layers()) {
+    EXPECT_TRUE(original_layers.count(id_layer_pair.first))
+        << "layer " << id_layer_pair.first << " missing in serialized graph";
+  }
+
+  EXPECT_TRUE(result.hasNode(0));
+  EXPECT_TRUE(result.hasNode(1));
+  EXPECT_TRUE(result.hasNode(2));
+  EXPECT_TRUE(result.hasNode(3));
+  EXPECT_TRUE(result.hasEdge(0, 1));
+  EXPECT_TRUE(result.hasEdge(1, 2));
+  EXPECT_TRUE(result.hasEdge(2, 3));
+  EXPECT_EQ(expected.hasLayer(0), result.hasLayer(0));
+}
+
 TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
   using namespace std::chrono_literals;
   NodeAttributeFactory attr_factory = NodeAttributeFactory::Default();
@@ -397,6 +448,44 @@ TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
   EXPECT_TRUE(result.hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
 
   EXPECT_TRUE(result.hasDynamicLayer(2, 'a'));
+}
+
+TEST(SceneGraphSerializationTests, DeserializeAttributesWithNaN) {
+  NodeAttributeFactory factory = NodeAttributeFactory::Default();
+
+  std::string raw_json =
+      R"delim({
+        "bounding_box": {
+            "max": [-16.550033569335938, 21.749967575073242, 1.7499535083770752],
+            "min": [-17.350046157836914, 21.249958038330078, 1.0030425786972046],
+            "type": "AABB",
+            "world_P_center": [-16.95003890991211, 21.499961853027344, 1.3764979839324951],
+            "world_R_center": {"w": 1.0, "x": 0.0, "y": 0.0, "z": 0.0}
+        },
+        "color": [39, 144, 65],
+        "name": "O(0)",
+        "position": [null, null, null],
+        "registered": false,
+        "semantic_label": 7,
+        "type": "ObjectNodeAttributes",
+        "world_R_object": {"w": 1.0, "x": 0.0, "y": 0.0, "z": 0.0}
+      })delim";
+
+  json attr_json = json::parse(raw_json);
+  auto attrs = factory.create(attr_json);
+  ASSERT_TRUE(attrs != nullptr);
+  EXPECT_TRUE(attrs->position.hasNaN());
+
+  std::string raw_json2 =
+      R"delim({
+        "position": [null, null, null],
+        "type": "ObjectNodeAttributes"
+      })delim";
+  json attr_json2 = json::parse(raw_json2);
+
+  NodeAttributes new_attrs;
+  new_attrs.fillFromJson(attr_json2);
+  EXPECT_TRUE(new_attrs.position.hasNaN());
 }
 
 }  // namespace kimera
