@@ -295,6 +295,16 @@ class DynamicSceneGraph : public SceneGraph {
   inline const Edges& dynamic_interlayer_edges() const {
     return dynamic_interlayer_edges_;
   };
+
+  /**
+   * @brief mesh getter
+   */
+  inline pcl::PolygonMesh getMesh() const {
+    pcl::PolygonMesh mesh;
+    pcl::toPCLPointCloud2(*mesh_vertices_, mesh.cloud);
+    mesh.polygons = *mesh_faces_;
+    return mesh;
+  };
 };
 
 }  // namespace kimera
