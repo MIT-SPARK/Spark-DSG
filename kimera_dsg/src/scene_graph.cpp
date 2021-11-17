@@ -448,14 +448,14 @@ bool SceneGraph::mergeGraph(const SceneGraph& other) {
     id_layer.second->getRemovedNodes(&removed_nodes);
   }
 
+  for (const auto& removed_id : removed_nodes) {
+    removeNode(removed_id);
+  }
+
   for (const auto& id_edge : other.inter_layer_edges()) {
     insertEdge(id_edge.second.source,
                id_edge.second.target,
                std::make_unique<SceneGraphEdgeInfo>(*id_edge.second.info));
-  }
-
-  for (const auto& removed_id : removed_nodes) {
-    removeNode(removed_id);
   }
 
   return true;
