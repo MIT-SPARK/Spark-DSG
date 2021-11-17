@@ -215,7 +215,8 @@ bool shouldVisualize(const DynamicSceneGraph& graph,
                      const std::map<LayerId, DynamicLayerConfig>& dynamic_configs) {
   if (graph.isDynamic(node.id)) {
     return dynamic_configs.count(node.layer) &&
-           dynamic_configs.at(node.layer).visualize;
+           dynamic_configs.at(node.layer).visualize &&
+           dynamic_configs.at(node.layer).visualize_interlayer_edges;
   }
 
   return configs.count(node.layer) && configs.at(node.layer).visualize;
