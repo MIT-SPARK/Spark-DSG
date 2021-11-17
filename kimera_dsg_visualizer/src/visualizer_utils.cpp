@@ -72,9 +72,9 @@ Marker makeBoundingBoxMarker(const std_msgs::Header& header,
   BoundingBox bounding_box = node.attributes<ObjectNodeAttributes>().bounding_box;
 
   Eigen::Quaternionf world_q_center =
-      bounding_box.type == BoundingBox::Type::OBB
-          ? Eigen::Quaternionf(bounding_box.world_R_center)
-          : Eigen::Quaternionf::Identity();
+      bounding_box.type == BoundingBox::Type::AABB
+          ? Eigen::Quaternionf::Identity()
+          : Eigen::Quaternionf(bounding_box.world_R_center);
 
   switch (bounding_box.type) {
     case BoundingBox::Type::OBB:
