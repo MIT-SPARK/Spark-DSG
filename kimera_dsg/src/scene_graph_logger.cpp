@@ -38,7 +38,7 @@ void SceneGraphLogger::logGraph(const SceneGraph::Ptr& graph) {
   // merged node, number of deleted nodes
   for (const auto& id_layer : graph->layers_) {
     if (layer_names_.count(id_layer.first) > 0) {
-      if (id_layer.second->numNodes() == 0) {
+      if (id_layer.second->numNodes() == 0 && !write_header_) {
         continue;
       }
       size_t num_active_nodes = 0;
