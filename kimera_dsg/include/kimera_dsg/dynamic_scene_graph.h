@@ -108,6 +108,8 @@ class DynamicSceneGraph : public SceneGraph {
 
   virtual bool hasEdge(NodeId source, NodeId target) const override;
 
+  bool mergeNodes(NodeId node_from, NodeId node_to);
+
   bool createDynamicLayer(LayerId layer, char layer_prefix);
 
   bool hasDynamicLayer(LayerId layer, char layer_prefix) const;

@@ -358,6 +358,45 @@ bool DynamicSceneGraph::hasEdge(NodeId source, NodeId target) const {
   return SceneGraph::hasEdge(source, target);
 }
 
+bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
+  if (!hasNode(node_from) || !hasNode(node_to)) {
+    return false;
+  }
+
+  if (node_from == node_to) {
+    return false;
+  }
+
+  LayerId layer = node_layer_lookup_.at(node_from);
+
+  if (layer != node_layer_lookup_.at(node_to)) {
+    return false;  // Cannot merge nodes of different layers
+  }
+
+  Node* node = layers_[layer]->nodes_.at(node_from).get();
+
+  // remove children that are dynamic nodes
+  std::vector<NodeId> dynamic_children;
+  auto iter = node->children_.begin();
+  while (iter != node->children_.end()) {
+    if (dynamic_node_lookup_.count(*iter)) {
+      dynamic_children.push_back(*iter);
+    }
+    ++iter;
+  }
+
+  for (const auto& child_id : dynamic_children) {
+    removeEdge(node_from, child_id);
+    insertEdge(node_to, child_id);
+  }
+
+  if (!SceneGraph::mergeNodes(node_from, node_to)) {
+    return false;
+  }
+
+  return true;
+}
+
 bool DynamicSceneGraph::removeNode(NodeId node) {
   if (mesh_edges_node_lookup_.count(node)) {
     std::list<size_t> mesh_edge_targets_to_remove;
