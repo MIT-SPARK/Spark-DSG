@@ -58,13 +58,17 @@ struct adl_serializer<Eigen::Quaternion<Scalar>> {
 
 namespace pcl {
 
-void to_json(nlohmann::json& j, const pcl::PointCloud<pcl::PointXYZRGBA> vertices);
+void to_json(nlohmann::json& j, const pcl::PointCloud<pcl::PointXYZRGBA>& vertices);
 
 void to_json(nlohmann::json& j, const std::vector<pcl::Vertices>& faces);
+
+void to_json(nlohmann::json& j, const pcl::PointXYZRGBA& point);
 
 void from_json(const nlohmann::json& j, pcl::PointCloud<pcl::PointXYZRGBA>& vertices);
 
 void from_json(const nlohmann::json& j, std::vector<pcl::Vertices>& faces);
+
+void from_json(const nlohmann::json& j, pcl::PointXYZRGBA& point);
 
 }  // namespace pcl
 

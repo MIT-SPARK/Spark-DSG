@@ -7,12 +7,28 @@ using nlohmann::json;
 
 namespace pcl {
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(pcl::PointXYZRGBA, x, y, z, r, g, b, a);
+void to_json(json& j, const pcl::PointXYZRGBA& point) {
+  j = json{{"x", point.x},
+           {"y", point.y},
+           {"z", point.z},
+           {"r", point.r},
+           {"g", point.g},
+           {"b", point.b}};
 }
 
-namespace pcl {
+void from_json(const json& j, pcl::PointXYZRGBA& point) {
+  point.x = j.at("x").is_null() ? std::numeric_limits<decltype(point.x)>::quiet_NaN()
+                                : j.at("x").get<decltype(point.x)>();
+  point.y = j.at("y").is_null() ? std::numeric_limits<decltype(point.y)>::quiet_NaN()
+                                : j.at("y").get<decltype(point.y)>();
+  point.z = j.at("z").is_null() ? std::numeric_limits<decltype(point.z)>::quiet_NaN()
+                                : j.at("z").get<decltype(point.z)>();
+  point.r = j.at("r").get<decltype(point.r)>();
+  point.g = j.at("g").get<decltype(point.g)>();
+  point.b = j.at("b").get<decltype(point.b)>();
+}
 
-void to_json(json& j, const pcl::PointCloud<pcl::PointXYZRGBA> vertices) {
+void to_json(json& j, const pcl::PointCloud<pcl::PointXYZRGBA>& vertices) {
   j = json::array();
   for (const auto& vertex : vertices) {
     json vertex_json = vertex;
