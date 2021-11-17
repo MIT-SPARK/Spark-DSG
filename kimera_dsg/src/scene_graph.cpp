@@ -305,7 +305,7 @@ void SceneGraph::rewireInterLayerEdge_(NodeId source,
     return;
   }
 
-    // Clean up old parent and child
+  // Clean up old parent and child
   Node* parent = getParentNode_(source, target);
   Node* child = getChildNode_(source, target);
   parent->children_.erase(child->id);
@@ -347,7 +347,6 @@ void SceneGraph::rewireInterLayerEdge_(NodeId source,
   if (inter_layer_edges_info_.at(target).empty()) {
     inter_layer_edges_info_.erase(target);
   }
-
 }
 
 bool SceneGraph::removeEdge(NodeId source, NodeId target) {
@@ -444,8 +443,7 @@ bool SceneGraph::mergeGraph(const SceneGraph& other) {
   std::vector<NodeId> removed_nodes;
   for (const auto& id_layer : other.layers()) {
     if (hasLayer(id_layer.first)) {
-      layers_[id_layer.first]->mergeLayer(*id_layer.second,
-                                          &node_layer_lookup_);
+      layers_[id_layer.first]->mergeLayer(*id_layer.second, &node_layer_lookup_);
     }
     id_layer.second->getRemovedNodes(&removed_nodes);
   }
@@ -463,7 +461,7 @@ bool SceneGraph::mergeGraph(const SceneGraph& other) {
   return true;
 }
 
-json SceneGraph::toJson(const JsonExportConfig& config) const {
+json SceneGraph::toJson(const JsonExportConfig& config, bool) const {
   json to_return;
   to_return["directed"] = false;
   to_return["multigraph"] = false;
@@ -536,8 +534,10 @@ inline bool extensionIsBson(const std::string& filepath) {
 
 }  // namespace
 
-void SceneGraph::save(const std::string& filepath, bool force_bson) const {
-  nlohmann::json graph_json = toJson(JsonExportConfig());
+void SceneGraph::save(const std::string& filepath,
+                      bool include_mesh,
+                      bool force_bson) const {
+  nlohmann::json graph_json = toJson(JsonExportConfig(), include_mesh);
   if (force_bson || extensionIsBson(filepath)) {
     graph_json["compact"] = true;
     graph_json["schema"] = 0;

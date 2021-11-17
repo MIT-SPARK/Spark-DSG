@@ -554,7 +554,7 @@ Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node) const {
   return SceneGraph::getPosition(node);
 }
 
-json DynamicSceneGraph::toJson(const JsonExportConfig& config) const {
+json DynamicSceneGraph::toJson(const JsonExportConfig& config, bool include_mesh) const {
   json to_return = SceneGraph::toJson(config);
 
   for (const auto& id_layer_group_pair : dynamic_layers_) {
@@ -581,7 +581,7 @@ json DynamicSceneGraph::toJson(const JsonExportConfig& config) const {
   }
 
   to_return["mesh_layer_id"] = mesh_layer_id_;
-  if (!mesh_vertices_ || !mesh_faces_) {
+  if (!mesh_vertices_ || !mesh_faces_ || !include_mesh) {
     return to_return;
   }
 
@@ -622,7 +622,7 @@ void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
     node_contents[id] = node;
   }
 
-  LOG(INFO) << "storing dynamic nodes";
+  VLOG(1) << "storing dynamic nodes";
   for (const auto& id_content_pair : node_contents) {
     const json& content = id_content_pair.second;
     auto layer = content.at("layer").get<LayerId>();
@@ -640,8 +640,8 @@ void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
     insertEdge(source, target, std::move(info));
   }
 
-  LOG(INFO) << "filling mesh";
   if (record.contains("mesh")) {
+    VLOG(1) << "filling mesh";
     MeshVertices::Ptr new_vertices(new MeshVertices());
     *new_vertices =
         record.at("mesh").at("vertices").get<pcl::PointCloud<pcl::PointXYZRGBA>>();

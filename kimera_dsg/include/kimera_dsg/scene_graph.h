@@ -231,16 +231,17 @@ class SceneGraph {
    */
   virtual Eigen::Vector3d getPosition(NodeId node) const;
 
-  virtual nlohmann::json toJson(const JsonExportConfig& config) const;
+  virtual nlohmann::json toJson(const JsonExportConfig& config,
+                                bool include_mesh = true) const;
 
   virtual void fillFromJson(const JsonExportConfig& config,
                             const NodeAttributeFactory& node_attr_factory,
                             const EdgeInfoFactory& edge_info_factory,
                             const nlohmann::json& record);
 
-  // TODO(nathan) add full argument list versions of load and save
-
-  void save(const std::string& filepath, bool force_bson = false) const;
+  void save(const std::string& filepath,
+            bool include_mesh = true,
+            bool force_bson = false) const;
 
   void load(const std::string& filepath, bool force_bson = false);
 

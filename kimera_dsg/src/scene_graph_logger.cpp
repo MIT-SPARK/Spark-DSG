@@ -69,6 +69,9 @@ void SceneGraphLogger::logGraph(const SceneGraph::Ptr& graph) {
           case NodeStatus::MERGED:
             num_merged_nodes++;
             break;
+          case NodeStatus::NONEXISTENT:
+          default:
+            break;
         }
       }
       size_t num_edges = id_layer.second->numEdges();

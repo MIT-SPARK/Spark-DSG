@@ -221,8 +221,7 @@ class DynamicSceneGraph : public SceneGraph {
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
    */
-  bool mergeGraph(const DynamicSceneGraph& other,
-                  bool allow_invalid_mesh = false);
+  bool mergeGraph(const DynamicSceneGraph& other, bool allow_invalid_mesh = false);
 
   inline LayerId getMeshLayerId() const { return mesh_layer_id_; }
 
@@ -232,7 +231,8 @@ class DynamicSceneGraph : public SceneGraph {
 
   virtual Eigen::Vector3d getPosition(NodeId node) const override;
 
-  virtual nlohmann::json toJson(const JsonExportConfig& config) const override;
+  virtual nlohmann::json toJson(const JsonExportConfig& config,
+                                bool include_mesh = true) const override;
 
   virtual void fillFromJson(const JsonExportConfig& config,
                             const NodeAttributeFactory& node_attr_factory,

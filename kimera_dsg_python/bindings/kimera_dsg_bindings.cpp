@@ -364,7 +364,7 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
       .def("empty", &SceneGraph::empty)
       .def("num_edges", &SceneGraph::numEdges)
       .def("get_position", &SceneGraph::getPosition)
-      .def("save", &SceneGraph::save, "filepath"_a, "force_bson"_a = false)
+      .def("save", &SceneGraph::save, "filepath"_a, "include_mesh"_a = true, "force_bson"_a = false)
       .def("load", &SceneGraph::load, "filepath"_a, "force_bson"_a = false)
       .def_property("layers",
                     [](const SceneGraph &graph) {
