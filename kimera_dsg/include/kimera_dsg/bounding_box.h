@@ -116,10 +116,6 @@ struct BoundingBox {
       throw std::runtime_error("Can't make a bounding box of type INVALID!");
     }
 
-    VLOG(5) << "Eigen alignment: min -> " << EIGEN_MIN_ALIGN_BYTES << " max (ideal) -> "
-            << EIGEN_IDEAL_MAX_ALIGN_BYTES << " max -> " << EIGEN_MAX_ALIGN_BYTES
-            << std::endl;
-
     using PointT = typename CloudT::PointType;
     pcl::MomentOfInertiaEstimation<PointT> estimator;
     estimator.setInputCloud(cloud);

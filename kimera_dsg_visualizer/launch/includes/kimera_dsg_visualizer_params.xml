@@ -10,6 +10,7 @@
     <rosparam file="$(arg viz_config_dir)/places_layer.yaml" ns="config/layer3"/>
     <rosparam file="$(arg viz_config_dir)/rooms_layer.yaml" ns="config/layer4"/>
     <rosparam file="$(arg viz_config_dir)/buildings_layer.yaml" ns="config/layer5"/>
+    <rosparam file="$(arg viz_config_dir)/agent_layer.yaml" ns="config/dynamic_layer/2"/>
   </group>
 
 </launch>
