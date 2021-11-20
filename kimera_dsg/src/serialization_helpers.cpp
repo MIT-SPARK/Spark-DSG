@@ -70,7 +70,13 @@ void to_json(json& j, const BoundingBox& b) {
 }
 
 void from_json(const json& j, BoundingBox& b) {
-  b.type = j.at("type").get<BoundingBox::Type>();
+  if (j.at("type").is_null()) {
+    LOG_FIRST_N(ERROR, 1) << "Found invalid type enum; assuming RAABB for compatibility";
+    b.type = BoundingBox::Type::RAABB;
+  } else {
+    b.type = j.at("type").get<BoundingBox::Type>();
+  }
+
   if (b.type == BoundingBox::Type::INVALID) {
     return;
   }

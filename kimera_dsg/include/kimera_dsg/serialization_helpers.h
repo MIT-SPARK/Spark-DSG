@@ -78,6 +78,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(BoundingBox::Type,
                              {
                                  {BoundingBox::Type::INVALID, nullptr},
                                  {BoundingBox::Type::AABB, "AABB"},
+                                 {BoundingBox::Type::RAABB, "RAABB"},
                                  {BoundingBox::Type::OBB, "OBB"},
                              });
 
