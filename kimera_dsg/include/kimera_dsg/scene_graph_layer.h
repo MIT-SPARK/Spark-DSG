@@ -151,6 +151,13 @@ class SceneGraphLayer {
   std::optional<NodeRef> getNode(NodeId node_id) const;
 
   /**
+   * @brief remove a node if it exists
+   * @param node_id node to remove
+   * @returns true if the node existed prior to removal
+   */
+  bool removeNode(NodeId node_id);
+
+  /**
    * @brief Get a particular edge in the layer
    *
    * This can be used to update the edge "info", though
@@ -261,13 +268,6 @@ class SceneGraphLayer {
    * @returns true if the node was added successfully
    */
   bool insertNode(Node::Ptr&& node);
-
-  /**
-   * @brief remove a node if it exists
-   * @param node_id node to remove
-   * @returns true if the node existed prior to removal
-   */
-  bool removeNode(NodeId node_id);
 
   /**
    * @brief merge a node into the other if both nodes exist
