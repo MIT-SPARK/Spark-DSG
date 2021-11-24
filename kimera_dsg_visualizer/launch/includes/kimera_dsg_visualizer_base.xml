@@ -1,7 +1,7 @@
 <launch>
 
   <arg name="viz_config_dir" default="$(find kimera_dsg_visualizer)/config"/>
-  <arg name="visualizer_ns" value="kimera_dsg_visualizer"/>
+  <arg name="visualizer_ns" default="kimera_dsg_visualizer"/>
   <arg name="include_rviz" default="true"/>
   <arg name="publish_view_transforms" default="true"/>
   <arg name="world_frame" default="world"/>
