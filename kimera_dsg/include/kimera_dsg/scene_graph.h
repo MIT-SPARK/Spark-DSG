@@ -245,6 +245,10 @@ class SceneGraph {
 
   void load(const std::string& filepath, bool force_bson = false);
 
+  std::string serialize(bool include_mesh = false) const;
+
+  void deserialize(const std::string& contents);
+
  protected:
   //! last edge inserted
   size_t last_edge_idx_;

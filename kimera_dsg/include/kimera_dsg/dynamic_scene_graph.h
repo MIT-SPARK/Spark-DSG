@@ -241,6 +241,10 @@ class DynamicSceneGraph : public SceneGraph {
                             const EdgeInfoFactory& edge_info_factory,
                             const nlohmann::json& record) override;
 
+  inline MeshEdges getMeshEdges() const { return mesh_edges_; }
+
+  void invalidateMeshVertex(size_t index);
+
  protected:
   // TODO(nathan) consider making const public
   LayerId mesh_layer_id_;

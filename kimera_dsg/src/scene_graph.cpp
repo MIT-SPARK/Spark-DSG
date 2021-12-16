@@ -551,6 +551,18 @@ void SceneGraph::save(const std::string& filepath,
   }
 }
 
+std::string SceneGraph::serialize(bool include_mesh) const {
+  return toJson(JsonExportConfig(), include_mesh).dump();
+}
+
+void SceneGraph::deserialize(const std::string& contents) {
+  nlohmann::json record = json::parse(contents);
+  fillFromJson(JsonExportConfig(),
+               NodeAttributeFactory::Default(),
+               EdgeInfoFactory::Default(),
+               record);
+}
+
 void SceneGraph::load(const std::string& filepath, bool force_bson) {
   nlohmann::json graph_json;
   if (force_bson || extensionIsBson(filepath)) {

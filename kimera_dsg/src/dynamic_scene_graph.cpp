@@ -106,7 +106,7 @@ bool DynamicSceneGraph::emplaceDynamicNode(LayerId layer,
   }
 
   if (!has_layer) {
-    LOG(WARNING) << "creating missing dynamic layer " << layer << prefix;
+    VLOG(1) << "creating missing dynamic layer " << layer << prefix;
     createDynamicLayer(layer, prefix);
   }
 
@@ -593,7 +593,23 @@ Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node) const {
   return SceneGraph::getPosition(node);
 }
 
-json DynamicSceneGraph::toJson(const JsonExportConfig& config, bool include_mesh) const {
+void DynamicSceneGraph::invalidateMeshVertex(size_t index) {
+  if (!mesh_edges_vertex_lookup_.count(index)) {
+    return;
+  }
+
+  std::list<NodeId> nodes;
+  for (const auto& node_edge_pair : mesh_edges_vertex_lookup_[index]) {
+    nodes.push_back(node_edge_pair.first);
+  }
+
+  for (const auto& node : nodes) {
+    removeMeshEdge(node, index);
+  }
+}
+
+json DynamicSceneGraph::toJson(const JsonExportConfig& config,
+                               bool include_mesh) const {
   json to_return = SceneGraph::toJson(config);
 
   for (const auto& id_layer_group_pair : dynamic_layers_) {

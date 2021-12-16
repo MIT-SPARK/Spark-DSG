@@ -4,11 +4,11 @@
 
 namespace kimera {
 
-#define READ_PARAM_OPTIONAL(nh, c, name, required)                         \
-  if (!nh.param(#name, c.name, c.name) && required) {                      \
-    ROS_INFO_STREAM("failed to find param " #name " under namespace "      \
-                    << nh.getNamespace() << ". defaulting to " << c.name); \
-  }                                                                        \
+#define READ_PARAM_OPTIONAL(nh, c, name, required)                  \
+  if (!nh.param(#name, c.name, c.name) && required) {               \
+    LOG(INFO) << "failed to find param " #name " under namespace "  \
+              << nh.getNamespace() << ". defaulting to " << c.name; \
+  }                                                                 \
   static_assert(true, "")
 
 #define READ_PARAM(nh, c, name) READ_PARAM_OPTIONAL(nh, c, name, true)
@@ -62,6 +62,8 @@ ColormapConfig getColormapConfig(const ros::NodeHandle& nh) {
 
 DynamicLayerConfig getDynamicLayerConfig(const ros::NodeHandle& nh) {
   DynamicLayerConfig config;
+  READ_PARAM(nh, config, z_offset_scale);
+  READ_PARAM(nh, config, visualize);
   READ_PARAM(nh, config, num_colors);
   READ_PARAM(nh, config, saturation);
   READ_PARAM(nh, config, luminance);
