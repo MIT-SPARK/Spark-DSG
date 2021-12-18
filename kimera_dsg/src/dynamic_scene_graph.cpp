@@ -522,7 +522,8 @@ size_t DynamicSceneGraph::numEdges() const {
 }
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
-                                   bool allow_invalid_mesh) {
+                                   bool allow_invalid_mesh,
+                                   bool clear_mesh_edges) {
   for (const auto& id_layers : other.dynamicLayers()) {
     for (const auto& prefix_layer : id_layers.second) {
       if (!hasDynamicLayer(id_layers.first, prefix_layer.first)) {
@@ -537,6 +538,10 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 
   if (!SceneGraph::mergeGraph(other)) {
     return false;
+  }
+
+  if (clear_mesh_edges) {
+    clearMeshEdges();
   }
 
   for (const auto& id_mesh_edge : other.mesh_edges_) {

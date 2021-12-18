@@ -223,7 +223,9 @@ class DynamicSceneGraph : public SceneGraph {
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
    */
-  bool mergeGraph(const DynamicSceneGraph& other, bool allow_invalid_mesh = false);
+  bool mergeGraph(const DynamicSceneGraph& other,
+                  bool allow_invalid_mesh = false,
+                  bool clear_mesh_edges = true);
 
   inline LayerId getMeshLayerId() const { return mesh_layer_id_; }
 
