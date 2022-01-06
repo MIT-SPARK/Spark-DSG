@@ -6,6 +6,9 @@
 
 #include <gtest/gtest.h>
 
+#include <stdlib.h>
+#include <unistd.h>
+
 namespace kimera {
 
 template <typename Scalar>
@@ -157,9 +160,9 @@ TEST(SceneGraphSerializationTests, SerializeBoundingBox) {
     Eigen::Vector3f expected_min;
     expected_min << 1.0f, 2.0f, 3.0f;
     Eigen::Vector3f expected_max;
-    expected_min << 4.0f, 5.0f, 6.0f;
+    expected_max << 4.0f, 5.0f, 6.0f;
     Eigen::Vector3f expected_pos;
-    expected_min << 7.0f, 8.0f, 9.0f;
+    expected_pos << 7.0f, 8.0f, 9.0f;
     Eigen::Quaternionf expected_rot(0.0, 0.0, 1.0, 0.0);
 
     BoundingBox expected(expected_min, expected_max, expected_pos, expected_rot);
@@ -486,6 +489,93 @@ TEST(SceneGraphSerializationTests, DeserializeAttributesWithNaN) {
   NodeAttributes new_attrs;
   new_attrs.fillFromJson(attr_json2);
   EXPECT_TRUE(new_attrs.position.hasNaN());
+}
+
+struct TempFile {
+  TempFile() {
+    char default_path[] = "/tmp/dsgtest.XXXXXX";
+    auto fd = mkstemp(default_path);
+    if (fd == -1) {
+      valid = false;
+      perror("mkstemp failed: ");
+      return;
+    } else {
+      valid = true;
+    }
+
+    close(fd);
+
+    path = std::string(default_path, sizeof(default_path));
+  }
+
+  ~TempFile() {
+    if (!valid) {
+      return;
+    }
+
+    if (remove(path.c_str()) != 0) {
+      perror("remove failed: ");
+    }
+  }
+
+  bool valid;
+  std::string path;
+};
+
+TEST(SceneGraphSerializationTests, SaveAndLoadGraph) {
+  TempFile tmp_file;
+
+  DynamicSceneGraph graph;
+  graph.emplaceNode(KimeraDsgLayers::PLACES,
+                    NodeSymbol('p', 0),
+                    std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
+
+  DynamicSceneGraph::MeshVertices fake_vertices;
+  pcl::PolygonMesh fake_mesh;
+  pcl::toPCLPointCloud2(fake_vertices, fake_mesh.cloud);
+  graph.setMeshDirectly(fake_mesh);
+
+  graph.save(tmp_file.path);
+
+  DynamicSceneGraph other;
+  other.load(tmp_file.path);
+
+  EXPECT_EQ(graph.numNodes(), other.numNodes());
+  EXPECT_EQ(graph.numLayers(), other.numLayers());
+  EXPECT_EQ(graph.hasMesh(), other.hasMesh());
+}
+
+using nlohmann::json;
+
+TEST(SceneGraphSerializationTests, SaveAndLoadGraphExtras) {
+  TempFile tmp_file;
+
+  DynamicSceneGraph graph;
+  graph.emplaceNode(KimeraDsgLayers::PLACES,
+                    NodeSymbol('p', 0),
+                    std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
+
+  DynamicSceneGraph::MeshVertices fake_vertices;
+  pcl::PolygonMesh fake_mesh;
+  pcl::toPCLPointCloud2(fake_vertices, fake_mesh.cloud);
+  graph.setMeshDirectly(fake_mesh);
+
+  auto extra = R"({
+    "key1": {"hello" : "world"},
+    "key2": [1, 2, 3],
+    "key3": 5
+  })"_json;
+
+  graph.save(tmp_file.path, true, false, &extra);
+
+  DynamicSceneGraph other;
+  json read_extra;
+  other.load(tmp_file.path, false, &read_extra);
+
+  EXPECT_EQ(graph.numNodes(), other.numNodes());
+  EXPECT_EQ(graph.numLayers(), other.numLayers());
+  EXPECT_EQ(graph.hasMesh(), other.hasMesh());
+  EXPECT_EQ(extra, read_extra);
 }
 
 }  // namespace kimera

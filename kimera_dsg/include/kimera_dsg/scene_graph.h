@@ -241,9 +241,12 @@ class SceneGraph {
 
   void save(const std::string& filepath,
             bool include_mesh = true,
-            bool force_bson = false) const;
+            bool force_bson = false,
+            nlohmann::json* extra_json = nullptr) const;
 
-  void load(const std::string& filepath, bool force_bson = false);
+  void load(const std::string& filepath,
+            bool force_bson = false,
+            nlohmann::json* extra_json = nullptr);
 
   std::string serialize(bool include_mesh = false) const;
 

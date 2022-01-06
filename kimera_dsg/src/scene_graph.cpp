@@ -536,8 +536,13 @@ inline bool extensionIsBson(const std::string& filepath) {
 
 void SceneGraph::save(const std::string& filepath,
                       bool include_mesh,
-                      bool force_bson) const {
+                      bool force_bson,
+                      nlohmann::json* extra_json) const {
   nlohmann::json graph_json = toJson(JsonExportConfig(), include_mesh);
+  if (extra_json) {
+    graph_json["extras"] = *extra_json;
+  }
+
   if (force_bson || extensionIsBson(filepath)) {
     graph_json["compact"] = true;
     graph_json["schema"] = 0;
@@ -563,7 +568,9 @@ void SceneGraph::deserialize(const std::string& contents) {
                record);
 }
 
-void SceneGraph::load(const std::string& filepath, bool force_bson) {
+void SceneGraph::load(const std::string& filepath,
+                      bool force_bson,
+                      nlohmann::json* extra_json) {
   nlohmann::json graph_json;
   if (force_bson || extensionIsBson(filepath)) {
     std::ifstream infile(filepath, std::ios::in | std::ios::binary);
@@ -584,6 +591,10 @@ void SceneGraph::load(const std::string& filepath, bool force_bson) {
                NodeAttributeFactory::Default(),
                EdgeInfoFactory::Default(),
                graph_json);
+
+  if (extra_json && graph_json.contains("extras")) {
+    *extra_json = graph_json["extras"];
+  }
 }
 
 SceneGraph::LayerIds getDefaultLayerIds() {
