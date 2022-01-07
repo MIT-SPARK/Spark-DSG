@@ -72,7 +72,7 @@ class SceneGraphVisualizer {
 
   virtual ~SceneGraphVisualizer() = default;
 
-  void start();
+  void start(bool periodic_redraw = false);
 
   bool redraw();
 
@@ -138,6 +138,7 @@ class SceneGraphVisualizer {
   ros::NodeHandle nh_;
 
   bool need_redraw_;
+  bool periodic_redraw_;
   std::string world_frame_;
   std::string visualizer_ns_;
   std::string visualizer_layer_ns_;

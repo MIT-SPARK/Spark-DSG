@@ -34,6 +34,7 @@ SceneGraphVisualizer::SceneGraphVisualizer(const ros::NodeHandle& nh,
                                            const SceneGraph::LayerIds& layer_ids)
     : nh_(nh),
       need_redraw_(false),
+      periodic_redraw_(false),
       world_frame_("world"),
       visualizer_ns_(nh.resolveName("config")),
       visualizer_layer_ns_(nh.resolveName("config/layer")) {
@@ -53,7 +54,8 @@ SceneGraphVisualizer::SceneGraphVisualizer(const ros::NodeHandle& nh,
   }
 }
 
-void SceneGraphVisualizer::start() {
+void SceneGraphVisualizer::start(bool periodic_redraw) {
+  periodic_redraw_ = periodic_redraw;
   double visualizer_loop_period = 1.0e-1;
   nh_.param("visualizer_loop_period", visualizer_loop_period, visualizer_loop_period);
   visualizer_loop_timer_ =
@@ -263,7 +265,12 @@ void SceneGraphVisualizer::setupConfigs(const SceneGraph::LayerIds& layer_ids) {
   }
 }
 
-void SceneGraphVisualizer::displayLoop(const ros::WallTimerEvent&) { redraw(); }
+void SceneGraphVisualizer::displayLoop(const ros::WallTimerEvent&) {
+  if (periodic_redraw_) {
+    need_redraw_ = true;
+  }
+  redraw();
+}
 
 void SceneGraphVisualizer::deleteLayer(const std_msgs::Header& header,
                                        const SceneGraphLayer& layer,

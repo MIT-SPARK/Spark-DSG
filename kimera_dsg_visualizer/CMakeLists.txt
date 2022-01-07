@@ -42,4 +42,8 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 add_executable(${PROJECT_NAME}_node src/kimera_dsg_visualizer_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})
 
+add_executable(rotate_tf_node src/rotate_tf_node.cpp)
+target_link_libraries(rotate_tf_node ${catkin_LIBRARIES})
+target_include_directories(rotate_tf_node PUBLIC ${catkin_INCLUDE_DIRS})
+
 # TODO(nathan) handle install
