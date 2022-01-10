@@ -682,7 +682,7 @@ void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
     node_contents[id] = node;
   }
 
-  VLOG(1) << "storing dynamic nodes";
+  VLOG(1) << "loading dynamic nodes";
   for (const auto& id_content_pair : node_contents) {
     const json& content = id_content_pair.second;
     auto layer = content.at("layer").get<LayerId>();
@@ -701,7 +701,7 @@ void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
   }
 
   if (record.contains("mesh")) {
-    VLOG(1) << "filling mesh";
+    VLOG(1) << "loading mesh";
     MeshVertices::Ptr new_vertices(new MeshVertices());
     *new_vertices =
         record.at("mesh").at("vertices").get<pcl::PointCloud<pcl::PointXYZRGBA>>();
@@ -713,12 +713,17 @@ void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
 
     // clear all previous edges
     setMesh(new_vertices, new_faces, true);
+  }
 
+  if (record.contains("mesh_edges")) {
+    size_t num_inserted = 0;
     for (const auto& edge : record.at("mesh_edges")) {
       auto source = edge.at(config.source_key).get<NodeId>();
       auto target = edge.at(config.target_key).get<size_t>();
-      insertMeshEdge(source, target);
+      num_inserted += insertMeshEdge(source, target, true) ? 1 : 0;
     }
+
+    LOG(WARNING) << "Loaded " << num_inserted << " mesh edges";
   }
 }
 
