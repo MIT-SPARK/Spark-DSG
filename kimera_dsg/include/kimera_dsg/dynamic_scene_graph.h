@@ -225,7 +225,9 @@ class DynamicSceneGraph : public SceneGraph {
    */
   bool mergeGraph(const DynamicSceneGraph& other,
                   bool allow_invalid_mesh = false,
-                  bool clear_mesh_edges = true);
+                  bool clear_mesh_edges = true,
+                  std::map<LayerId, bool>* attribute_update_map = nullptr,
+                  bool update_dynamic_attributes = true);
 
   inline LayerId getMeshLayerId() const { return mesh_layer_id_; }
 

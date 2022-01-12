@@ -96,7 +96,8 @@ class DynamicSceneGraphLayer {
   const char prefix;
 
   bool mergeLayer(const DynamicSceneGraphLayer& graph_layer,
-                  std::map<NodeId, DynamicLayerKey>* layer_lookup = nullptr);
+                  std::map<NodeId, DynamicLayerKey>* layer_lookup = nullptr,
+                  bool update_attributes = true);
 
  protected:
   bool emplaceNode(std::chrono::nanoseconds timestamp,

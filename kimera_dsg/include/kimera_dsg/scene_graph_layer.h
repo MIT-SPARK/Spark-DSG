@@ -198,7 +198,8 @@ class SceneGraphLayer {
    * @returns true if operation successful
    */
   bool mergeLayer(const SceneGraphLayer& other,
-                  std::map<NodeId, LayerId>* layer_lookup = nullptr);
+                  std::map<NodeId, LayerId>* layer_lookup = nullptr,
+                  bool update_attributes = true);
 
   /**
    * @brief Number of nodes in the layer

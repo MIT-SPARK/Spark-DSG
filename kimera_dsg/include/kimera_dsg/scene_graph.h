@@ -224,7 +224,8 @@ class SceneGraph {
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
    */
-  bool mergeGraph(const SceneGraph& other);
+  bool mergeGraph(const SceneGraph& other,
+                  std::map<LayerId, bool>* attribute_update_map = nullptr);
 
   /**
    * @brief Get the position of a node in the layer with bounds checking

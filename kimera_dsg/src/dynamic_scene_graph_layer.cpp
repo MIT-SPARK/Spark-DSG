@@ -11,7 +11,8 @@ DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, char node_prefix)
 
 bool DynamicSceneGraphLayer::mergeLayer(
     const DynamicSceneGraphLayer& other,
-    std::map<NodeId, DynamicLayerKey>* layer_lookup) {
+    std::map<NodeId, DynamicLayerKey>* layer_lookup,
+    bool update_attributes) {
   DynamicLayerKey layer_key;
   layer_key.type = id;
   layer_key.prefix = prefix;
@@ -22,9 +23,11 @@ bool DynamicSceneGraphLayer::mergeLayer(
       // update the last_update_delta
       last_update_delta =
           nodes_[i]->attributes_->position - other.nodes_[i]->attributes_->position;
-      // Update node attributed (except for position)
+      // Update node attributes (except for position)
       Eigen::Vector3d node_position = nodes_[i]->attributes_->position;
-      nodes_[i]->attributes_ = other.nodes_[i]->attributes_->clone();
+      if (update_attributes) {
+        nodes_[i]->attributes_ = other.nodes_[i]->attributes_->clone();
+      }
       nodes_[i]->attributes_->position = node_position;
     } else {
       emplaceNode(

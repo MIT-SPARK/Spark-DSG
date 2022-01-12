@@ -523,7 +523,9 @@ size_t DynamicSceneGraph::numEdges() const {
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    bool allow_invalid_mesh,
-                                   bool clear_mesh_edges) {
+                                   bool clear_mesh_edges,
+                                   std::map<LayerId, bool>* update_map,
+                                   bool update_dynamic_attrs) {
   for (const auto& id_layers : other.dynamicLayers()) {
     for (const auto& prefix_layer : id_layers.second) {
       if (!hasDynamicLayer(id_layers.first, prefix_layer.first)) {
@@ -532,11 +534,11 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 
       CHECK(hasDynamicLayer(id_layers.first, prefix_layer.first));
       dynamic_layers_[id_layers.first][prefix_layer.first]->mergeLayer(
-          *prefix_layer.second, &dynamic_node_lookup_);
+          *prefix_layer.second, &dynamic_node_lookup_, update_dynamic_attrs);
     }
   }
 
-  if (!SceneGraph::mergeGraph(other)) {
+  if (!SceneGraph::mergeGraph(other, update_map)) {
     return false;
   }
 

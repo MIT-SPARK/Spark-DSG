@@ -439,11 +439,16 @@ bool SceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
   return true;
 }
 
-bool SceneGraph::mergeGraph(const SceneGraph& other) {
+bool SceneGraph::mergeGraph(const SceneGraph& other,
+                            std::map<LayerId, bool>* update_map) {
   std::vector<NodeId> removed_nodes;
   for (const auto& id_layer : other.layers()) {
     if (hasLayer(id_layer.first)) {
-      layers_[id_layer.first]->mergeLayer(*id_layer.second, &node_layer_lookup_);
+      const bool should_update = (update_map && update_map->count(id_layer.first))
+                                     ? update_map->at(id_layer.first)
+                                     : true;
+      layers_[id_layer.first]->mergeLayer(
+          *id_layer.second, &node_layer_lookup_, should_update);
     }
     id_layer.second->getRemovedNodes(&removed_nodes);
   }
