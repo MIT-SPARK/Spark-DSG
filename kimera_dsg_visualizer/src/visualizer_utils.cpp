@@ -462,6 +462,21 @@ Marker makeLayerEdgeMarkers(const std_msgs::Header& header,
                             const VisualizerConfig& visualizer_config,
                             const NodeColor& color,
                             const std::string& ns) {
+  return makeLayerEdgeMarkers(
+      header,
+      config,
+      layer,
+      visualizer_config,
+      ns,
+      [&](const SceneGraphNode&, const SceneGraphNode&, bool) { return color; });
+}
+
+Marker makeLayerEdgeMarkers(const std_msgs::Header& header,
+                            const LayerConfig& config,
+                            const SceneGraphLayer& layer,
+                            const VisualizerConfig& visualizer_config,
+                            const std::string& ns,
+                            const EdgeColorFunction& color_func) {
   Marker marker;
   marker.header = header;
   marker.type = Marker::LINE_LIST;
@@ -470,20 +485,27 @@ Marker makeLayerEdgeMarkers(const std_msgs::Header& header,
 
   marker.action = Marker::ADD;
   marker.scale.x = config.intralayer_edge_scale;
-  marker.color = makeColorMsg(color, config.intralayer_edge_alpha);
   fillPoseWithIdentity(marker.pose);
 
   auto edge_iter = layer.edges().begin();
   while (edge_iter != layer.edges().end()) {
+    const SceneGraphNode& source_node = layer.getNode(edge_iter->second.source).value();
+    const SceneGraphNode& target_node = layer.getNode(edge_iter->second.target).value();
+
     geometry_msgs::Point source;
-    tf2::convert(layer.getPosition(edge_iter->second.source), source);
+    tf2::convert(source_node.attributes().position, source);
     source.z += getZOffset(config, visualizer_config);
     marker.points.push_back(source);
 
     geometry_msgs::Point target;
-    tf2::convert(layer.getPosition(edge_iter->second.target), target);
+    tf2::convert(target_node.attributes().position, target);
     target.z += getZOffset(config, visualizer_config);
     marker.points.push_back(target);
+
+    marker.colors.push_back(makeColorMsg(color_func(source_node, target_node, true),
+                                         config.intralayer_edge_alpha));
+    marker.colors.push_back(makeColorMsg(color_func(source_node, target_node, false),
+                                         config.intralayer_edge_alpha));
 
     std::advance(edge_iter, config.intralayer_edge_insertion_skip + 1);
   }
@@ -498,6 +520,22 @@ Marker makeDynamicCentroidMarkers(const std_msgs::Header& header,
                                   const VisualizerConfig& visualizer_config,
                                   const NodeColor& color,
                                   const std::string& ns) {
+  return makeDynamicCentroidMarkers(header,
+                                    config,
+                                    layer,
+                                    layer_config.z_offset_scale,
+                                    visualizer_config,
+                                    ns,
+                                    [&](const auto&) -> NodeColor { return color; });
+}
+
+Marker makeDynamicCentroidMarkers(const std_msgs::Header& header,
+                                  const DynamicLayerConfig& config,
+                                  const DynamicSceneGraphLayer& layer,
+                                  double layer_offset_scale,
+                                  const VisualizerConfig& visualizer_config,
+                                  const std::string& ns,
+                                  const ColorFunction& color_func) {
   Marker marker;
   marker.header = header;
   marker.type = config.node_use_sphere ? Marker::SPHERE_LIST : Marker::CUBE_LIST;
@@ -509,16 +547,15 @@ Marker makeDynamicCentroidMarkers(const std_msgs::Header& header,
   marker.scale.y = config.node_scale;
   marker.scale.z = config.node_scale;
 
-  marker.color = makeColorMsg(color, config.node_alpha);
-
   fillPoseWithIdentity(marker.pose);
 
   marker.points.reserve(layer.numNodes());
   for (const auto& node : layer.nodes()) {
     geometry_msgs::Point node_centroid;
     tf2::convert(node->attributes().position, node_centroid);
-    node_centroid.z += getZOffset(layer_config, visualizer_config);
+    node_centroid.z += getZOffset(layer_offset_scale, visualizer_config);
     marker.points.push_back(node_centroid);
+    marker.colors.push_back(makeColorMsg(color_func(*node), config.node_alpha));
   }
 
   return marker;

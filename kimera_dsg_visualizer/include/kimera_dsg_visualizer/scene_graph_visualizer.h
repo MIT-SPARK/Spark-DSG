@@ -61,6 +61,12 @@ class ConfigManager {
   std::unique_ptr<Server> server_;
 };
 
+void clearPrevMarkers(const std_msgs::Header& header,
+                      const std::set<NodeId>& curr_nodes,
+                      const std::string& ns,
+                      std::set<NodeId>& prev_nodes,
+                      MarkerArray& msg);
+
 class SceneGraphVisualizer {
  public:
   using VisualizerConfigManager = ConfigManager<VisualizerConfig>;
@@ -113,7 +119,6 @@ class SceneGraphVisualizer {
 
   void addMultiMarkerIfValid(const Marker& marker, MarkerArray& msg);
 
- private:
   void setupConfigs(const SceneGraph::LayerIds& layer_ids);
 
   void displayLoop(const ros::WallTimerEvent&);
@@ -122,15 +127,15 @@ class SceneGraphVisualizer {
                    const SceneGraphLayer& layer,
                    MarkerArray& msg);
 
-  void drawLayer(const std_msgs::Header& header,
-                 const SceneGraphLayer& layer,
-                 const LayerConfig& config,
-                 MarkerArray& msg);
+  virtual void drawLayer(const std_msgs::Header& header,
+                         const SceneGraphLayer& layer,
+                         const LayerConfig& config,
+                         MarkerArray& msg);
 
-  void drawLayerMeshEdges(const std_msgs::Header& header,
-                          LayerId layer_id,
-                          const std::string& ns,
-                          MarkerArray& msg);
+  virtual void drawLayerMeshEdges(const std_msgs::Header& header,
+                                  LayerId layer_id,
+                                  const std::string& ns,
+                                  MarkerArray& msg);
 
  protected:
   DynamicSceneGraph::Ptr scene_graph_;

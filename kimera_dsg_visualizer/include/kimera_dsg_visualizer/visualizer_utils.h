@@ -9,6 +9,8 @@
 namespace kimera {
 
 using ColorFunction = std::function<NodeColor(const SceneGraphNode&)>;
+using EdgeColorFunction =
+    std::function<NodeColor(const SceneGraphNode&, const SceneGraphNode&, bool)>;
 
 visualization_msgs::Marker makeDeleteMarker(const std_msgs::Header& header,
                                             size_t id,
@@ -73,6 +75,14 @@ visualization_msgs::Marker makeLayerEdgeMarkers(
     const NodeColor& color,
     const std::string& ns);
 
+visualization_msgs::Marker makeLayerEdgeMarkers(
+    const std_msgs::Header& header,
+    const LayerConfig& config,
+    const SceneGraphLayer& layer,
+    const VisualizerConfig& visualizer_config,
+    const std::string& ns,
+    const EdgeColorFunction& color_func);
+
 visualization_msgs::Marker makeDynamicCentroidMarkers(
     const std_msgs::Header& header,
     const DynamicLayerConfig& config,
@@ -81,6 +91,15 @@ visualization_msgs::Marker makeDynamicCentroidMarkers(
     const VisualizerConfig& visualizer_config,
     const NodeColor& color,
     const std::string& ns);
+
+visualization_msgs::Marker makeDynamicCentroidMarkers(
+    const std_msgs::Header& header,
+    const DynamicLayerConfig& config,
+    const DynamicSceneGraphLayer& layer,
+    double layer_offset_scale,
+    const VisualizerConfig& visualizer_config,
+    const std::string& ns,
+    const ColorFunction& color_func);
 
 visualization_msgs::MarkerArray makeDynamicGraphEdgeMarkers(
     const std_msgs::Header& header,

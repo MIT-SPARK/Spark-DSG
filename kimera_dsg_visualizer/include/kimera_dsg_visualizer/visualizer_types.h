@@ -22,6 +22,15 @@ inline double getZOffset(const LayerConfig& config,
   return config.z_offset_scale * visualizer_config.layer_z_step;
 }
 
+inline double getZOffset(double z_offset_scale,
+                         const VisualizerConfig& visualizer_config) {
+  if (visualizer_config.collapse_layers) {
+    return 0.0;
+  }
+
+  return z_offset_scale * visualizer_config.layer_z_step;
+}
+
 VisualizerConfig getVisualizerConfig(const ros::NodeHandle& nh);
 
 inline VisualizerConfig getVisualizerConfig(const std::string& visualizer_namespace) {

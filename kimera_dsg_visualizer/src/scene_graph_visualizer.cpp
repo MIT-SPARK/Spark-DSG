@@ -9,8 +9,6 @@ using visualization_msgs::Marker;
 using visualization_msgs::MarkerArray;
 using Node = SceneGraph::Node;
 
-namespace {
-
 void clearPrevMarkers(const std_msgs::Header& header,
                       const std::set<NodeId>& curr_nodes,
                       const std::string& ns,
@@ -27,8 +25,6 @@ void clearPrevMarkers(const std_msgs::Header& header,
 
   prev_nodes = curr_nodes;
 }
-
-}  // namespace
 
 SceneGraphVisualizer::SceneGraphVisualizer(const ros::NodeHandle& nh,
                                            const SceneGraph::LayerIds& layer_ids)
@@ -171,6 +167,10 @@ void SceneGraphVisualizer::clearConfigChangeFlags() {
 void SceneGraphVisualizer::redrawImpl(const std_msgs::Header& header,
                                       MarkerArray& msg) {
   for (const auto& id_layer_pair : scene_graph_->layers()) {
+    if (!layer_configs_.count(id_layer_pair.first)) {
+      continue;
+    }
+
     LayerConfig config = layer_configs_.at(id_layer_pair.first)->get();
     const SceneGraphLayer& layer = *(id_layer_pair.second);
 
