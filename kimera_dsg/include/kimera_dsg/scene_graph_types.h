@@ -25,6 +25,10 @@ struct KimeraDsgLayers {
   inline const static LayerId STRUCTURE = 3;  //< Struct node layer (as well as places)
   inline const static LayerId ROOMS = 4;      //< Room node layer
   inline const static LayerId BUILDINGS = 5;  //< Building node layer
+  inline const static LayerId UNKNOWN = 0;
+
+  static std::string LayerIdToString(LayerId id);
+  static LayerId StringToLayerId(const std::string& id_str);
 };
 
 }  // namespace kimera

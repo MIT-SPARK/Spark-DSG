@@ -29,6 +29,10 @@ struct SemanticNodeAttributes : public NodeAttributes {
    * @brief alias between color type and Eigen vector of uint8_t
    */
   using ColorVector = Eigen::Matrix<uint8_t, 3, 1>;
+  /**
+   * @brief alias for semantic label
+   */
+  using Label = SemanticLabel;
 
   /**
    * @brief Make a default set of attributes
