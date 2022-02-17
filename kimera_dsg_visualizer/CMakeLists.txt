@@ -8,18 +8,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # for HSL conversion
 find_package(OpenCV REQUIRED)
+find_package(kimera_dsg REQUIRED)
 find_package(
-  catkin REQUIRED COMPONENTS roscpp dynamic_reconfigure kimera_dsg tf2_eigen
-                             visualization_msgs
+  catkin REQUIRED COMPONENTS roscpp dynamic_reconfigure tf2_ros tf2_eigen visualization_msgs
 )
 
 generate_dynamic_reconfigure_options(
-  cfg/ColormapConfig.cfg cfg/DynamicLayerVisualizerConfig.cfg
-  cfg/LayerVisualizerConfig.cfg cfg/VisualizerConfig.cfg
+  cfg/Colormap.cfg
+  cfg/DynamicLayerVisualizer.cfg
+  cfg/LayerVisualizer.cfg
+  cfg/Visualizer.cfg
 )
 
 catkin_package(
-  CATKIN_DEPENDS roscpp dynamic_reconfigure kimera_dsg tf2_eigen visualization_msgs
+  CATKIN_DEPENDS roscpp dynamic_reconfigure tf2_eigen tf2_ros visualization_msgs
   DEPENDS OpenCV
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
@@ -36,8 +38,8 @@ target_include_directories(
   PUBLIC include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS}
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 )
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} kimera_dsg::kimera_dsg)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 
 add_executable(${PROJECT_NAME}_node src/kimera_dsg_visualizer_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME})

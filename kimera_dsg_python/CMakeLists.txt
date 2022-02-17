@@ -7,22 +7,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(catkin REQUIRED COMPONENTS kimera_dsg)
+find_package(catkin REQUIRED)
+find_package(kimera_dsg REQUIRED)
 
 add_subdirectory(third_party/pybind11)
 
 catkin_python_setup()
 
 catkin_package(
-  CATKIN_DEPENDS kimera_dsg
+  CATKIN_DEPENDS
   DEPENDS
   INCLUDE_DIRS
   LIBRARIES ${PROJECT_NAME}_bindings
 )
 
 pybind11_add_module(${PROJECT_NAME}_bindings bindings/kimera_dsg_bindings.cpp)
-target_include_directories(${PROJECT_NAME}_bindings PUBLIC ${catkin_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_bindings PUBLIC ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_bindings PUBLIC kimera_dsg::kimera_dsg)
 # TODO(nathan) this is brittle (depends on libkimera_dsg.so being in the devel
 # workspace)
 set_target_properties(

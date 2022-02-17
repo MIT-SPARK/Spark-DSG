@@ -1,66 +1,39 @@
-cmake_minimum_required(VERSION 3.1)
-project(kimera_dsg)
+cmake_minimum_required(VERSION 3.10)
+project(kimera_dsg VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# TODO(nathan) remove when json actually fixes fallthrough warning
-add_compile_options(-Wall -Wextra -Wno-implicit-fallthrough)
+add_compile_options(-Wall -Wextra)
 
 # TODO(nathan) only required for pcl
 find_package(Boost REQUIRED)
-if(NOT TARGET Boost::boost)
-  add_library(Boost::boost INTERFACE IMPORTED)
-  set_target_properties(
-    Boost::boost PROPERTIES INTERFACE_LINK_LIBRARIES "${Boost_LIBRARIES}"
-                            INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}"
-  )
-endif()
 
-find_package(catkin REQUIRED COMPONENTS pcl_ros)
+# TODO(nathan) consider removing pcl
+set(PCL_FIND_QUIETLY TRUE)
+find_package(PCL REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-# TODO(nathan) clean this up / handle glog_catkin
+# TODO(nathan) clean this up
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED IMPORTED_TARGET libglog)
-# TODO(nathan) export this into catkin
 
-# TODO(nathan) move this to separate cmake file
-# TODO(nathan) custom targets instead of execute_process
+# TODO(nathan) fetch content when possible on 20.04
 configure_file(cmake/json.CMakeLists.txt.in json-download/CMakeLists.txt)
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/json-download"
-)
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" --build .
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/json-download"
-)
+execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/json-download"
+                OUTPUT_QUIET)
+execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/json-download"
+                OUTPUT_QUIET)
 
-# TODO(nathan) export of json is pretty ugly. We hijack the cmake install target to
-# place headers in the include path of the dsg package
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" ${CMAKE_BINARY_DIR}/json-src
-          -DJSON_BuildTests=OFF -DCMAKE_INSTALL_PREFIX=${CATKIN_DEVEL_PREFIX}
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/json-build"
-)
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" --build . --target install
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/json-build"
-)
-
-find_package(nlohmann_json)
-
-catkin_package(
-  CATKIN_DEPENDS pcl_ros
-  DEPENDS Boost
-  INCLUDE_DIRS include ${EIGEN3_INCLUDE_DIRS} ${CATKIN_DEVEL_PREFIX}/include
-  LIBRARIES ${PROJECT_NAME}
-)
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install ON CACHE INTERNAL "")
+add_subdirectory(${CMAKE_BINARY_DIR}/json-src ${CMAKE_BINARY_DIR}/json-build)
 
 add_library(
-  ${PROJECT_NAME}
+  ${PROJECT_NAME} SHARED
   src/adjacency_matrix.cpp
   src/attribute_serialization.cpp
   src/bounding_box.cpp
@@ -75,18 +48,39 @@ add_library(
   src/serialization_helpers.cpp
   src/scene_graph_logger.cpp
 )
-target_include_directories(
-  ${PROJECT_NAME} PUBLIC include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    ${PCL_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
 )
 target_link_libraries(
-  ${PROJECT_NAME} ${catkin_LIBRARIES} Boost::boost PkgConfig::glog
+  ${PROJECT_NAME} PUBLIC
+  ${PCL_LIBRARIES}
+  ${Boost_LIBRARIES}
+  Eigen3::Eigen
+  PkgConfig::glog
   nlohmann_json::nlohmann_json
 )
 
-if(CATKIN_ENABLE_TESTING)
-  # TODO(nathan) clean this up maybe
+option(DSG_BUILD_TESTS "Build tests" ON)
+option(DSG_INSTALL_TESTS "Install tests to catkin location" ON)
+if(DSG_BUILD_TESTS)
+  # from teaser-plusplus
+  configure_file(cmake/GoogleTest.CMakeLists.txt.in googletest-download/CMakeLists.txt)
+  execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+                  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download"
+                  OUTPUT_QUIET)
+  execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+                  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download"
+                  OUTPUT_QUIET)
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src"
+                   "${CMAKE_BINARY_DIR}/googletest-build"
+                   EXCLUDE_FROM_ALL)
+
   pkg_check_modules(gflags REQUIRED IMPORTED_TARGET gflags)
-  catkin_add_gtest(
+  add_executable(
     utest_${PROJECT_NAME}
     tests/utest_main.cpp
     tests/utest_adjacency_matrix.cpp
@@ -102,8 +96,42 @@ if(CATKIN_ENABLE_TESTING)
     tests/utest_serialization.cpp
   )
   target_link_libraries(
-    utest_${PROJECT_NAME} ${PROJECT_NAME} ${catkin_LIBRARIES} PkgConfig::gflags
+      utest_${PROJECT_NAME} ${PROJECT_NAME} PkgConfig::gflags gtest ${PCL_LIBRARIES}
   )
+
+  if (${DSG_INSTALL_TESTS})
+      # note that ros uses libdir to handle finding executables by package, but this isn't an ideal
+      # install location normally
+      install(TARGETS utest_${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
+  endif()
 endif()
 
-# TODO(nathan) handle install
+add_library(kimera_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+install(TARGETS ${PROJECT_NAME}
+    EXPORT kimera_dsg-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT kimera_dsg-targets
+        FILE kimera_dsgTargets.cmake
+        NAMESPACE kimera_dsg::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/kimera_dsgConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+)
+
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+)

@@ -9,13 +9,13 @@
 
   <license>BSD</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <test_depend>rosunit</test_depend>
-  <depend>pcl_ros</depend>
+  <buildtool_depend>cmake</buildtool_depend>
+  <depend>libpcl-dev</depend>
   <depend>libgoogle-glog-dev</depend>
-  <depend>eigen</depend>
+  <depend>libeigen3-dev</depend>
 
   <export>
+      <build_type>cmake</build_type>
   </export>
 
 </package>
