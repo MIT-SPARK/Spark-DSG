@@ -1,7 +1,6 @@
 #pragma once
 #include "kimera_dsg/scene_graph_types.h"
-
-#include <nlohmann/json.hpp>
+#include "kimera_dsg/node_attributes.h"
 
 #include <Eigen/Dense>
 
@@ -11,11 +10,6 @@
 #include <sstream>
 #include <string>
 
-#define REGISTER_JSON_ATTR_TYPE(classname, json_store)                \
-  static_assert(std::is_base_of<NodeAttributes, classname>::value,    \
-                "invalid registered derived type of NodeAttributes"); \
-  json_store[classname::TYPE_KEY] = #classname
-
 namespace kimera {
 
 /**
@@ -24,53 +18,6 @@ namespace kimera {
  * Mostly for keeping history and status of nodes in a graph
  */
 enum class NodeStatus { VISIBLE, MERGED, DELETED, NONEXISTENT };
-
-/**
- * @brief Base node attributes.
- *
- * All nodes have a pointer to node attributes (that contain most of the useful
- * information about the node). As every node has to be spatially consistent
- * with the quantity it represents, every node must have a position.
- */
-struct NodeAttributes {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  //! desired node pointer type
-  using Ptr = std::unique_ptr<NodeAttributes>;
-
-  static inline constexpr char TYPE_KEY[] = "type";
-
-  //! Make a default set of attributes
-  NodeAttributes();
-
-  //! Set the node position
-  explicit NodeAttributes(const Eigen::Vector3d& position);
-
-  virtual ~NodeAttributes() = default;
-
-  //! Position of the node
-  Eigen::Vector3d position;
-
-  /**
-   * @brief output attribute information
-   * @param out output stream
-   * @param attrs attributes to print
-   * @returns original output stream
-   */
-  friend std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs);
-
-  virtual nlohmann::json toJson() const;
-
-  virtual void fillFromJson(const nlohmann::json& record);
-
-  virtual NodeAttributes::Ptr clone() const {
-    return std::make_unique<NodeAttributes>(*this);
-  }
-
- protected:
-  //! actually output information to the std::ostream
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
-};
 
 /**
  * @brief Node in the scene graph
@@ -86,6 +33,7 @@ class SceneGraphNode {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! attribute type of the node
   using Attributes = NodeAttributes;
+  using AttributesPtr = std::unique_ptr<Attributes>;
   //! desired pointer type of the node (unique)
   using Ptr = std::unique_ptr<SceneGraphNode>;
   friend class DynamicSceneGraphLayer;
@@ -103,13 +51,17 @@ class SceneGraphNode {
    * @param layer the layer that the node will belong to
    * @param attrs attributes for the node
    */
-  SceneGraphNode(NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs);
+  SceneGraphNode(NodeId id, LayerId layer, AttributesPtr&& attrs);
 
-  // TODO(nathan) the iterator wrappers don't work very well with copying
   SceneGraphNode(const SceneGraphNode& other) = delete;
+
   SceneGraphNode& operator=(const SceneGraphNode& other) = delete;
 
-  virtual ~SceneGraphNode() = default;
+  SceneGraphNode(SceneGraphNode&& other) = default;
+
+  SceneGraphNode& operator=(SceneGraphNode&& other) = default;
+
+  virtual ~SceneGraphNode();
 
   /**
    * @brief get whether a node has a parent
@@ -156,9 +108,7 @@ class SceneGraphNode {
     return dynamic_cast<Derived&>(*attributes_);
   }
 
-  NodeAttributes* getAttributesPtr() const {
-    return attributes_.get();
-  }
+  NodeAttributes* getAttributesPtr() const { return attributes_.get(); }
 
   //! ID of the node
   const NodeId id;
@@ -197,7 +147,7 @@ class SceneGraphNode {
   inline void clearParent_() { has_parent_ = false; }
 
   //! pointer to attributes
-  Attributes::Ptr attributes_;
+  AttributesPtr attributes_;
 
   //! whether or not the node has a parent
   bool has_parent_;

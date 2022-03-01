@@ -1,17 +1,11 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/scene_graph_layer.h>
 
-using kimera::LayerId;
-using kimera::NodeAttributes;
-using kimera::NodeId;
-using kimera::NodeStatus;
-using kimera::NodeSymbol;
-using kimera::SceneGraphLayer;
+using namespace kimera;
 using Node = kimera::SceneGraphLayer::Node;
 using NodeRef = kimera::SceneGraphLayer::NodeRef;
 using Edge = kimera::SceneGraphLayer::Edge;
 using Edges = kimera::SceneGraphLayer::Edges;
-using EdgeInfo = kimera::SceneGraphLayer::EdgeInfo;
 using EdgeRef = kimera::SceneGraphLayer::EdgeRef;
 using NodeSet = std::unordered_set<NodeId>;
 
@@ -123,7 +117,7 @@ TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
   EXPECT_TRUE(layer.emplaceNode(1, std::make_unique<NodeAttributes>()));
 
   // actually add the edge
-  EdgeInfo::Ptr info = std::make_unique<EdgeInfo>();
+  auto info = std::make_unique<EdgeAttributes>();
   info->weighted = true;
   info->weight = 0.5;
   EXPECT_TRUE(layer.insertEdge(0, 1, std::move(info)));
@@ -322,8 +316,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
   for (size_t i = 0; i < 3; ++i) {
     Eigen::Vector3d node_pos;
     node_pos << static_cast<double>(i), 0.0, 0.0;
-    EXPECT_TRUE(
-        layer_1.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
+    EXPECT_TRUE(layer_1.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
   }
   for (size_t i = 1; i < 3; ++i) {
     EXPECT_TRUE(layer_1.insertEdge(i - 1, i));
@@ -332,8 +325,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
   for (size_t i = 0; i < 5; ++i) {
     Eigen::Vector3d node_pos;
     node_pos << static_cast<double>(i + 10), 0.0, 0.0;
-    EXPECT_TRUE(
-        layer_2.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
+    EXPECT_TRUE(layer_2.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
   }
   for (size_t i = 1; i < 5; ++i) {
     EXPECT_TRUE(layer_2.insertEdge(i - 1, i));
@@ -468,10 +460,9 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     layer.insertEdge(i - 1, i);
   }
 
-
   TestableSceneGraphLayer deserialized_layer(1);
 
-  { // no nodes -> empty result on deserialization
+  {  // no nodes -> empty result on deserialization
     std::unordered_set<NodeId> nodes;
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
@@ -481,7 +472,7 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     EXPECT_EQ(0u, deserialized_layer.numEdges());
   }
 
-  { // first node -> 1 edge
+  {  // first node -> 1 edge
     std::unordered_set<NodeId> nodes{0};
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
@@ -494,7 +485,7 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     EXPECT_EQ(1u, edges->at(0).target);
   }
 
-  { // second node -> 2 edges
+  {  // second node -> 2 edges
     std::unordered_set<NodeId> nodes{1};
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
@@ -504,7 +495,7 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     EXPECT_EQ(0u, deserialized_layer.numEdges());
   }
 
-  { // all nodes -> 12 edges
+  {  // all nodes -> 12 edges
     std::unordered_set<NodeId> nodes{0, 1, 2, 3, 4, 5, 6};
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);

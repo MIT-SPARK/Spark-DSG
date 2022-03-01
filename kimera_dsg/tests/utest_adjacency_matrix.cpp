@@ -22,11 +22,11 @@ struct AdjacencyMatrixFixture
     }
 
     // small upper left clique
-    layer.insertEdge(0, 1, std::make_unique<SceneGraphEdgeInfo>(0.1));
-    layer.insertEdge(0, 2, std::make_unique<SceneGraphEdgeInfo>(0.2));
-    layer.insertEdge(1, 2, std::make_unique<SceneGraphEdgeInfo>(0.3));
+    layer.insertEdge(0, 1, std::make_unique<EdgeAttributes>(0.1));
+    layer.insertEdge(0, 2, std::make_unique<EdgeAttributes>(0.2));
+    layer.insertEdge(1, 2, std::make_unique<EdgeAttributes>(0.3));
     // other edges
-    layer.insertEdge(1, 3, std::make_unique<SceneGraphEdgeInfo>(0.4));
+    layer.insertEdge(1, 3, std::make_unique<EdgeAttributes>(0.4));
   }
 
   IsolatedSceneGraphLayer layer;

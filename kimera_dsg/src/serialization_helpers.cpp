@@ -1,5 +1,7 @@
 #include "kimera_dsg/serialization_helpers.h"
 
+#include <glog/logging.h>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 

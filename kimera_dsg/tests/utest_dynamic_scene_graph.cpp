@@ -8,7 +8,6 @@ namespace kimera {
 using NodeRef = kimera::SceneGraph::NodeRef;
 using Node = kimera::SceneGraph::Node;
 using Edge = kimera::SceneGraph::Edge;
-using EdgeInfo = kimera::SceneGraph::EdgeInfo;
 using EdgeRef = kimera::SceneGraph::EdgeRef;
 
 struct TestMesh {

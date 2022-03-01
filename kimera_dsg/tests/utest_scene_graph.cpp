@@ -1,17 +1,11 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/scene_graph.h>
 
-using kimera::IsolatedSceneGraphLayer;
-using kimera::NodeAttributes;
-using kimera::NodeId;
-using kimera::NodeSymbol;
-using kimera::SceneGraph;
-using kimera::SceneGraphLayer;
+using namespace kimera;
 using NodeRef = kimera::SceneGraph::NodeRef;
 using Node = kimera::SceneGraph::Node;
 using Edge = kimera::SceneGraph::Edge;
 using Edges = kimera::SceneGraph::Edges;
-using EdgeInfo = kimera::SceneGraph::EdgeInfo;
 using EdgeRef = kimera::SceneGraph::EdgeRef;
 
 TEST(SceneGraphTests, DefaultConstructorInvariants) {
@@ -167,7 +161,7 @@ TEST(SceneGraphTests, EdgeAttributesCorrect) {
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
 
   // actually add the edge
-  EdgeInfo::Ptr info = std::make_unique<EdgeInfo>();
+  auto info = std::make_unique<EdgeAttributes>();
   info->weighted = true;
   info->weight = 0.5;
   EXPECT_TRUE(graph.insertEdge(0, 1, std::move(info)));
@@ -309,7 +303,6 @@ TEST(SceneGraphTests, RemoveNodeHasNodeCorrent) {
   EXPECT_EQ(layer.hasNode(0), graph.hasNode(0));
 }
 
-
 // Test that removing a edge does what it should
 TEST(SceneGraphTests, RemoveEdgeCorrect) {
   SceneGraph::LayerIds layer_ids{1, 2};
@@ -416,10 +409,10 @@ TEST(SceneGraphTests, updateFromLayerCorrect) {
   std::unique_ptr<Edges> edges(new Edges);
   edges->emplace(std::piecewise_construct,
                  std::forward_as_tuple(0),
-                 std::forward_as_tuple(5, 2, std::make_unique<EdgeInfo>()));
+                 std::forward_as_tuple(5, 2, std::make_unique<EdgeAttributes>()));
   edges->emplace(std::piecewise_construct,
                  std::forward_as_tuple(1),
-                 std::forward_as_tuple(1, 2, std::make_unique<EdgeInfo>()));
+                 std::forward_as_tuple(1, 2, std::make_unique<EdgeAttributes>()));
 
   EXPECT_TRUE(graph.updateFromLayer(separate_layer, std::move(edges)));
   EXPECT_EQ(4u, graph.numNodes());

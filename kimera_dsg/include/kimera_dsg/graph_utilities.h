@@ -2,8 +2,6 @@
 #include "kimera_dsg/node_symbol.h"
 #include "kimera_dsg/scene_graph_types.h"
 
-#include <glog/logging.h>
-
 #include <deque>
 #include <functional>
 #include <list>

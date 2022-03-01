@@ -1,62 +1,34 @@
 #pragma once
 #include "kimera_dsg/graph_utilities.h"
-#include "kimera_dsg/node_symbol.h"
+#include "kimera_dsg/edge_attributes.h"
 #include "kimera_dsg/scene_graph_node.h"
+#include "kimera_dsg/node_symbol.h"
 
 #include <map>
 #include <optional>
 #include <unordered_set>
 #include <vector>
 
-#define REGISTER_EDGE_INFO_TYPE(classname, json_store)                    \
-  static_assert(std::is_base_of<SceneGraphEdgeInfo, classname>::value,    \
-                "invalid registered derived type of SceneGraphEdgeInfo"); \
-  json_store[classname::TYPE_KEY] = #classname
-
 namespace kimera {
-
-/**
- * @brief Collection of information for an edge
- * @note most of the fields are unused but will hopefully make using
- *       the DSG classes more flexible later
- */
-struct SceneGraphEdgeInfo {
-  //! desired pointer type for the edge attributes
-  using Ptr = std::unique_ptr<SceneGraphEdgeInfo>;
-
-  static inline constexpr char TYPE_KEY[] = "type";
-
-  SceneGraphEdgeInfo() : weighted(false), weight(1.0) {}
-
-  explicit SceneGraphEdgeInfo(double weight) : weighted(true), weight(weight) {}
-
-  //! whether or not the edge weight is valid
-  bool weighted;
-  //! the weight of the edge
-  double weight;
-
-  virtual nlohmann::json toJson() const;
-
-  virtual void fillFromJson(const nlohmann::json& record);
-};
 
 /**
  * @brief Edge representation
  */
 struct SceneGraphEdge {
   //! attributes of the edge
-  using Info = SceneGraphEdgeInfo;
+  using AttrPtr = std::unique_ptr<EdgeAttributes>;
 
   //! construct and edge from some info
-  SceneGraphEdge(NodeId source, NodeId target, Info::Ptr&& info)
-      : source(source), target(target), info(std::move(info)) {}
+  SceneGraphEdge(NodeId source, NodeId target, AttrPtr&& info);
+
+  ~SceneGraphEdge();
 
   //! start of edge (by convention the parent)
   const NodeId source;
   //! end of edge (by convention the child)
   const NodeId target;
   //! attributes about the edge
-  Info::Ptr info;
+  AttrPtr info;
 };
 
 /**
@@ -85,7 +57,7 @@ class SceneGraphLayer {
   //! edge container type for the layer
   using Edges = std::map<size_t, Edge>;
   //! edge attributes type for the layer
-  using EdgeInfo = SceneGraphEdge::Info;
+  using EdgeAttributesPtr = SceneGraphEdge::AttrPtr;
   //! edge reference type for the layer
   using EdgeRef = std::reference_wrapper<const Edge>;
   //! type for a mapping between node id and edge index
@@ -110,11 +82,12 @@ class SceneGraphLayer {
    *
    * @param source start node
    * @param target end node
-   * @param edge_info optional edge attributes (will use
-   *        default edge attributes if not supplied)
+   * @param edge_info optional edge attributes
    * @returns true if the edge was successfully added
    */
-  bool insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_info = nullptr);
+  bool insertEdge(NodeId source,
+                  NodeId target,
+                  EdgeAttributesPtr&& edge_attributes = nullptr);
 
   /**
    * @brief Check whether the layer has the specified node
@@ -186,10 +159,7 @@ class SceneGraphLayer {
    * @param new_target target of edge after rewiring
    * @returns true if operation successful
    */
-  bool rewireEdge(NodeId source,
-                  NodeId target,
-                  NodeId new_source,
-                  NodeId new_target);
+  bool rewireEdge(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
 
   /**
    * @brief merge a graph layer with another
@@ -216,7 +186,7 @@ class SceneGraphLayer {
    */
   Eigen::Vector3d getPosition(NodeId node) const;
 
-    /**
+  /**
    * @brief Get node id of deleted nodes
    */
   void getRemovedNodes(std::vector<NodeId>* removed_nodes) const;

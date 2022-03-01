@@ -1,5 +1,4 @@
 #pragma once
-#include "kimera_dsg/attribute_serialization.h"
 #include "kimera_dsg/scene_graph_layer.h"
 
 #include <map>
@@ -32,7 +31,7 @@ class SceneGraph {
   //! alias to the layer edge type
   using Edge = Layer::Edge;
   //! alias to the layer edge info type
-  using EdgeInfo = Layer::EdgeInfo;
+  using EdgeAttributesPtr = Layer::EdgeAttributesPtr;
   //! alias to the layer edge reference type
   using EdgeRef = Layer::EdgeRef;
   //! alias to the layer edge container type
@@ -101,7 +100,7 @@ class SceneGraph {
    */
   virtual bool insertEdge(NodeId source,
                           NodeId target,
-                          EdgeInfo::Ptr&& edge_info = nullptr);
+                          EdgeAttributesPtr&& edge_info = nullptr);
 
   /**
    * @brief check if a given layer exists
@@ -232,26 +231,13 @@ class SceneGraph {
    */
   virtual Eigen::Vector3d getPosition(NodeId node) const;
 
-  virtual nlohmann::json toJson(const JsonExportConfig& config,
-                                bool include_mesh = true) const;
+  void save(const std::string& filepath, bool include_mesh = true) const;
 
-  virtual void fillFromJson(const JsonExportConfig& config,
-                            const NodeAttributeFactory& node_attr_factory,
-                            const EdgeInfoFactory& edge_info_factory,
-                            const nlohmann::json& record);
+  void load(const std::string& filepath);
 
-  void save(const std::string& filepath,
-            bool include_mesh = true,
-            bool force_bson = false,
-            nlohmann::json* extra_json = nullptr) const;
+  virtual std::string serialize(bool include_mesh = false) const;
 
-  void load(const std::string& filepath,
-            bool force_bson = false,
-            nlohmann::json* extra_json = nullptr);
-
-  std::string serialize(bool include_mesh = false) const;
-
-  void deserialize(const std::string& contents);
+  virtual void deserialize(const std::string& contents);
 
  protected:
   //! last edge inserted
@@ -270,7 +256,7 @@ class SceneGraph {
  protected:
   bool insertIntralayerEdgeInfo(NodeId source,
                                 NodeId target,
-                                EdgeInfo::Ptr&& edge_info);
+                                EdgeAttributesPtr&& edge_info);
 
   void initialize_();
 

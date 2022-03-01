@@ -248,19 +248,18 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
         return ss.str();
       });
 
-  py::class_<SceneGraphEdgeInfo>(module, "SceneGraphEdgeInfo")
+  py::class_<EdgeAttributes>(module, "EdgeAttributes")
       .def(py::init<>())
-      .def_readwrite("weighted", &SceneGraphEdgeInfo::weighted)
-      .def_readwrite("weight", &SceneGraphEdgeInfo::weight);
+      .def_readwrite("weighted", &EdgeAttributes::weighted)
+      .def_readwrite("weight", &EdgeAttributes::weight);
 
   py::class_<SceneGraphEdge>(module, "SceneGraphEdge")
       .def_readonly("source", &SceneGraphEdge::source)
       .def_readonly("target", &SceneGraphEdge::target)
-      .def_property("info",
-                    [](const SceneGraphEdge& edge) { return *(edge.info); },
-                    [](SceneGraphEdge& edge, const SceneGraphEdgeInfo& info) {
-                      *edge.info = info;
-                    })
+      .def_property(
+          "info",
+          [](const SceneGraphEdge& edge) { return *(edge.info); },
+          [](SceneGraphEdge& edge, const EdgeAttributes& info) { *edge.info = info; })
       .def("__repr__", [](const SceneGraphEdge& edge) {
         std::stringstream ss;
         ss << "Edge<source=" << NodeSymbol(edge.source).getLabel()
@@ -279,8 +278,8 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
            [](SceneGraphLayer& layer,
               NodeId source,
               NodeId target,
-              const SceneGraphEdgeInfo& info) {
-             SceneGraphEdgeInfo::Ptr edge_info(new SceneGraphEdgeInfo());
+              const EdgeAttributes& info) {
+             EdgeAttributes::Ptr edge_info(new EdgeAttributes());
              *edge_info = info;
              layer.insertEdge(source, target, std::move(edge_info));
            })
@@ -338,8 +337,8 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
            [](SceneGraph& graph,
               NodeId source,
               NodeId target,
-              const SceneGraphEdgeInfo& info) {
-             SceneGraphEdgeInfo::Ptr edge_info(new SceneGraphEdgeInfo());
+              const EdgeAttributes& info) {
+             EdgeAttributes::Ptr edge_info(new EdgeAttributes());
              *edge_info = info;
              graph.insertEdge(source, target, std::move(edge_info));
            })
@@ -365,22 +364,14 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
       .def("num_edges", &SceneGraph::numEdges)
       .def("get_position", &SceneGraph::getPosition)
       .def("save",
-           [](const SceneGraph& graph,
-              const std::string& filepath,
-              bool include_mesh,
-              bool force_bson) {
-             // TODO(nathan) add automatic json parsing from string for extras
-             graph.save(filepath, include_mesh, force_bson);
+           [](const SceneGraph& graph, const std::string& filepath, bool include_mesh) {
+             graph.save(filepath, include_mesh);
            },
            "filepath"_a,
-           "include_mesh"_a = true,
-           "force_bson"_a = false)
+           "include_mesh"_a = true)
       .def("load",
-           [](SceneGraph& graph, const std::string& filepath, bool force_bson) {
-             graph.load(filepath, force_bson);
-           },
-           "filepath"_a,
-           "force_bson"_a = false)
+           [](SceneGraph& graph, const std::string& filepath) { graph.load(filepath); },
+           "filepath"_a)
       .def_property("layers",
                     [](const SceneGraph& graph) {
                       return py::make_iterator(LayerIter(graph.layers()),

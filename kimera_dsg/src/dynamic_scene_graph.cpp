@@ -1,5 +1,5 @@
 #include "kimera_dsg/dynamic_scene_graph.h"
-#include "kimera_dsg/serialization_helpers.h"
+#include "kimera_dsg/edge_attributes.h"
 
 #include <glog/logging.h>
 #include <pcl/conversions.h>
@@ -12,6 +12,7 @@ using ColorPointCloud = pcl::PointCloud<pcl::PointXYZRGB>;
 using DynamicLayerRef = DynamicSceneGraph::DynamicLayerRef;
 using NodeRef = SceneGraph::NodeRef;
 using DynamicNodeRef = DynamicSceneGraph::DynamicNodeRef;
+using EdgeAttributesPtr = SceneGraph::EdgeAttributesPtr;
 
 DynamicSceneGraph::DynamicSceneGraph(LayerId mesh_layer_id)
     : DynamicSceneGraph(getDefaultLayerIds(), mesh_layer_id) {}
@@ -134,7 +135,7 @@ SceneGraphNode* DynamicSceneGraph::getNodePtr(NodeId node) const {
 
 bool DynamicSceneGraph::insertDynamicEdge(NodeId source,
                                           NodeId target,
-                                          EdgeInfo::Ptr&& edge_info) {
+                                          EdgeAttributesPtr&& edge_info) {
   if (hasEdge(source, target)) {
     return false;
   }
@@ -173,7 +174,7 @@ bool DynamicSceneGraph::insertDynamicEdge(NodeId source,
       std::forward_as_tuple(next_dynamic_edge_idx_),
       std::forward_as_tuple(source,
                             target,
-                            (edge_info == nullptr) ? std::make_unique<EdgeInfo>()
+                            (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
                                                    : std::move(edge_info)));
   dynamic_interlayer_edges_info_[source][target] = next_dynamic_edge_idx_;
   dynamic_interlayer_edges_info_[target][source] = next_dynamic_edge_idx_;
@@ -182,7 +183,7 @@ bool DynamicSceneGraph::insertDynamicEdge(NodeId source,
 
 bool DynamicSceneGraph::insertEdge(NodeId source,
                                    NodeId target,
-                                   EdgeInfo::Ptr&& edge_info) {
+                                   EdgeAttributesPtr&& edge_info) {
   if (isDynamicEdge(source, target)) {
     return insertDynamicEdge(source, target, std::move(edge_info));
   }
@@ -555,7 +556,7 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
   for (const auto& id_edge : other.dynamic_interlayer_edges()) {
     insertEdge(id_edge.second.source,
                id_edge.second.target,
-               std::make_unique<SceneGraphEdgeInfo>(*id_edge.second.info));
+               std::make_unique<EdgeAttributes>(*id_edge.second.info));
   }
 
   // TODO(Yun) check the other mesh info (faces, vertices etc. )
@@ -612,120 +613,6 @@ void DynamicSceneGraph::invalidateMeshVertex(size_t index) {
 
   for (const auto& node : nodes) {
     removeMeshEdge(node, index);
-  }
-}
-
-json DynamicSceneGraph::toJson(const JsonExportConfig& config,
-                               bool include_mesh) const {
-  json to_return = SceneGraph::toJson(config);
-
-  for (const auto& id_layer_group_pair : dynamic_layers_) {
-    for (const auto& prefix_layer_pair : id_layer_group_pair.second) {
-      const DynamicSceneGraphLayer& layer = *prefix_layer_pair.second;
-
-      for (const auto& node : layer.nodes_) {
-        json node_json = json{{config.name_key, node->id},
-                              {"layer", node->layer},
-                              {"prefix", layer.prefix}};
-        node_json["timestamp"] = node->timestamp.count();
-        node_json["attributes"] = node->attributes().toJson();
-        to_return["nodes"].push_back(node_json);
-      }
-
-      for (const auto& id_edge_pair : layer.edges_) {
-        const Edge& edge = id_edge_pair.second;
-        json edge_json =
-            json{{config.source_key, edge.source}, {config.target_key, edge.target}};
-        edge_json["info"] = edge.info->toJson();
-        to_return[config.edge_key].push_back(edge_json);
-      }
-    }
-  }
-
-  to_return["mesh_layer_id"] = mesh_layer_id_;
-  if (!mesh_vertices_ || !mesh_faces_ || !include_mesh) {
-    return to_return;
-  }
-
-  to_return["mesh"]["vertices"] = *mesh_vertices_;
-  to_return["mesh"]["faces"] = *mesh_faces_;
-
-  to_return["mesh_edges"] = json::array();
-  for (const auto& id_edge_pair : mesh_edges_) {
-    to_return.at("mesh_edges")
-        .push_back(json{{config.source_key, id_edge_pair.second.source_node},
-                        {config.target_key, id_edge_pair.second.mesh_vertex}});
-  }
-
-  return to_return;
-}
-
-void DynamicSceneGraph::fillFromJson(const JsonExportConfig& config,
-                                     const NodeAttributeFactory& node_attr_factory,
-                                     const EdgeInfoFactory& edge_info_factory,
-                                     const json& record) {
-  // TODO(nathan) we probably don't need to split this clear with
-  // SceneGraph::fillFromJson
-  clear();  // reset everything
-  // has to be first to make hasLayer work
-  mesh_layer_id_ = record.at("mesh_layer_id").get<LayerId>();
-
-  SceneGraph::fillFromJson(config, node_attr_factory, edge_info_factory, record);
-
-  // TODO(nathan) this doesn't handle removed nodes correctly
-  // map to sort nodes (to make sure we get the same ids back out)
-  std::map<NodeId, json> node_contents;
-  for (const auto& node : record.at("nodes")) {
-    if (!node.contains("timestamp")) {
-      continue;
-    }
-
-    auto id = node.at(config.name_key).get<NodeId>();
-    node_contents[id] = node;
-  }
-
-  VLOG(1) << "loading dynamic nodes";
-  for (const auto& id_content_pair : node_contents) {
-    const json& content = id_content_pair.second;
-    auto layer = content.at("layer").get<LayerId>();
-    auto prefix = content.at("prefix").get<char>();
-    auto timestamp = decltype(DynamicSceneGraphNode::timestamp)(
-        content.at("timestamp").get<uint64_t>());
-    NodeAttributes::Ptr attrs = node_attr_factory.create(content.at("attributes"));
-    emplaceDynamicNode(layer, prefix, timestamp, std::move(attrs), false);
-  }
-
-  for (const auto& edge : record.at(config.edge_key)) {
-    auto source = edge.at(config.source_key).get<NodeId>();
-    auto target = edge.at(config.target_key).get<NodeId>();
-    EdgeInfo::Ptr info = edge_info_factory.create(edge.at("info"));
-    insertEdge(source, target, std::move(info));
-  }
-
-  if (record.contains("mesh")) {
-    VLOG(1) << "loading mesh";
-    MeshVertices::Ptr new_vertices(new MeshVertices());
-    *new_vertices =
-        record.at("mesh").at("vertices").get<pcl::PointCloud<pcl::PointXYZRGBA>>();
-
-    auto serialized_vertices =
-        record.at("mesh").at("faces").get<std::vector<pcl::Vertices>>();
-    std::shared_ptr<MeshFaces> new_faces(
-        new MeshFaces(serialized_vertices.begin(), serialized_vertices.end()));
-
-    // clear all previous edges
-    setMesh(new_vertices, new_faces, true);
-  }
-
-  if (record.contains("mesh_edges")) {
-    size_t num_inserted = 0;
-    for (const auto& edge : record.at("mesh_edges")) {
-      auto source = edge.at(config.source_key).get<NodeId>();
-      auto target = edge.at(config.target_key).get<size_t>();
-      num_inserted += insertMeshEdge(source, target, true) ? 1 : 0;
-    }
-
-    LOG(WARNING) << "Loaded " << num_inserted << " mesh edges";
   }
 }
 

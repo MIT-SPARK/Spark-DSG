@@ -1,16 +1,11 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/dynamic_scene_graph_layer.h>
 
-using kimera::DynamicLayerKey;
-using kimera::DynamicSceneGraphLayer;
-using kimera::NodeAttributes;
-using kimera::NodeId;
-using kimera::NodeSymbol;
+using namespace kimera;
 using Node = kimera::DynamicSceneGraphLayer::Node;
 using NodeRef = kimera::DynamicSceneGraphLayer::NodeRef;
 using Edge = kimera::DynamicSceneGraphLayer::Edge;
 using Edges = kimera::DynamicSceneGraphLayer::Edges;
-using EdgeInfo = kimera::DynamicSceneGraphLayer::EdgeInfo;
 using EdgeRef = kimera::DynamicSceneGraphLayer::EdgeRef;
 
 class TestableDynamicLayer : public DynamicSceneGraphLayer {
@@ -127,7 +122,7 @@ TEST(DynamicSceneGraphLayerTests, EdgeAttributesCorrect) {
       std::chrono::seconds(2), std::make_unique<NodeAttributes>(), false));
 
   // actually add the edge
-  EdgeInfo::Ptr info = std::make_unique<EdgeInfo>();
+  auto info = std::make_unique<EdgeAttributes>();
   info->weighted = true;
   info->weight = 0.5;
   EXPECT_TRUE(layer.insertEdgeByIndex(0, 1, std::move(info)));

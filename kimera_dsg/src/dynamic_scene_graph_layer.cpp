@@ -1,18 +1,20 @@
 #include "kimera_dsg/dynamic_scene_graph_layer.h"
+#include "kimera_dsg/edge_attributes.h"
+
+#include <glog/logging.h>
 
 namespace kimera {
 
-using EdgeInfo = DynamicSceneGraphLayer::EdgeInfo;
+using EdgeAttributesPtr = DynamicSceneGraphLayer::EdgeAttributesPtr;
 using EdgeRef = DynamicSceneGraphLayer::EdgeRef;
 using NodeRef = DynamicSceneGraphLayer::NodeRef;
 
 DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, char node_prefix)
     : id(layer), prefix(node_prefix), next_node_(node_prefix, 0), last_edge_idx_(0) {}
 
-bool DynamicSceneGraphLayer::mergeLayer(
-    const DynamicSceneGraphLayer& other,
-    std::map<NodeId, DynamicLayerKey>* layer_lookup,
-    bool update_attributes) {
+bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
+                                        std::map<NodeId, DynamicLayerKey>* layer_lookup,
+                                        bool update_attributes) {
   DynamicLayerKey layer_key;
   layer_key.type = id;
   layer_key.prefix = prefix;
@@ -43,7 +45,7 @@ bool DynamicSceneGraphLayer::mergeLayer(
     if (id_edge_pair.first > last_edge_idx_) {
       const Edge& edge = id_edge_pair.second;
       insertEdge(
-          edge.source, edge.target, std::make_unique<SceneGraphEdgeInfo>(*edge.info));
+          edge.source, edge.target, std::make_unique<EdgeAttributes>(*edge.info));
     }
   }
   return true;
@@ -128,7 +130,7 @@ std::optional<EdgeRef> DynamicSceneGraphLayer::getEdgeByIndex(size_t source_idx,
 
 bool DynamicSceneGraphLayer::insertEdge(NodeId source,
                                         NodeId target,
-                                        EdgeInfo::Ptr&& edge_info) {
+                                        EdgeAttributesPtr&& edge_info) {
   if (source == target) {
     LOG(WARNING) << "Attempted to add a self-edge for "
                  << NodeSymbol(source).getLabel();
@@ -155,7 +157,7 @@ bool DynamicSceneGraphLayer::insertEdge(NodeId source,
       std::forward_as_tuple(last_edge_idx_),
       std::forward_as_tuple(source,
                             target,
-                            (edge_info == nullptr) ? std::make_unique<EdgeInfo>()
+                            (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
                                                    : std::move(edge_info)));
   edges_info_[source][target] = last_edge_idx_;
   edges_info_[target][source] = last_edge_idx_;
@@ -166,7 +168,7 @@ bool DynamicSceneGraphLayer::insertEdge(NodeId source,
 
 bool DynamicSceneGraphLayer::insertEdgeByIndex(size_t source_idx,
                                                size_t target_idx,
-                                               EdgeInfo::Ptr&& edge_info) {
+                                               EdgeAttributesPtr&& edge_info) {
   const NodeSymbol source(next_node_.category(), source_idx);
   const NodeSymbol target(next_node_.category(), target_idx);
   return insertEdge(source, target, std::move(edge_info));

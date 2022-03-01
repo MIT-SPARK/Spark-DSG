@@ -1,6 +1,7 @@
 #pragma once
+#include "kimera_dsg/attribute_serializer_fwd.h"
+#include "kimera_dsg/scene_graph_types.h"
 #include "kimera_dsg/bounding_box.h"
-#include "kimera_dsg/scene_graph_node.h"
 
 #include <chrono>
 #include <list>
@@ -13,7 +14,52 @@ namespace kimera {
 /**
  * @brief Typedef representing the semantic class of an object or other node
  */
-typedef uint8_t SemanticLabel;
+using SemanticLabel = uint8_t;
+
+/**
+ * @brief Base node attributes.
+ *
+ * All nodes have a pointer to node attributes (that contain most of the useful
+ * information about the node). As every node has to be spatially consistent
+ * with the quantity it represents, every node must have a position.
+ */
+struct NodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! desired node pointer type
+  using Ptr = std::unique_ptr<NodeAttributes>;
+
+  //! Make a default set of attributes
+  NodeAttributes();
+
+  //! Set the node position
+  explicit NodeAttributes(const Eigen::Vector3d& position);
+
+  virtual ~NodeAttributes() = default;
+
+  /**
+   * @brief output attribute information
+   * @param out output stream
+   * @param attrs attributes to print
+   * @returns original output stream
+   */
+  friend std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs);
+
+  virtual void serialize(AttributeSerializer& serializer) const;
+
+  virtual void deserialize(const AttributeSerializer& serializer);
+
+  virtual NodeAttributes::Ptr clone() const {
+    return std::make_unique<NodeAttributes>(*this);
+  }
+
+  //! Position of the node
+  Eigen::Vector3d position;
+
+ protected:
+  //! actually output information to the std::ostream
+  virtual std::ostream& fill_ostream(std::ostream& out) const;
+};
 
 /**
  * @brief Base class for any node with additional semantic meaning.
@@ -41,9 +87,9 @@ struct SemanticNodeAttributes : public NodeAttributes {
 
   virtual ~SemanticNodeAttributes() = default;
 
-  virtual nlohmann::json toJson() const override;
+  virtual void serialize(AttributeSerializer& serializer) const override;
 
-  virtual void fillFromJson(const nlohmann::json& record) override;
+  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<SemanticNodeAttributes>(*this);
@@ -88,9 +134,9 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~ObjectNodeAttributes() = default;
 
-  virtual nlohmann::json toJson() const override;
+  virtual void serialize(AttributeSerializer& serializer) const override;
 
-  virtual void fillFromJson(const nlohmann::json& record) override;
+  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<ObjectNodeAttributes>(*this);
@@ -129,9 +175,9 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~RoomNodeAttributes() = default;
 
-  virtual nlohmann::json toJson() const override;
+  virtual void serialize(AttributeSerializer& serializer) const override;
 
-  virtual void fillFromJson(const nlohmann::json& record) override;
+  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<RoomNodeAttributes>(*this);
@@ -175,9 +221,9 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~PlaceNodeAttributes() = default;
 
-  virtual nlohmann::json toJson() const override;
+  virtual void serialize(AttributeSerializer& serializer) const override;
 
-  virtual void fillFromJson(const nlohmann::json& record) override;
+  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<PlaceNodeAttributes>(*this);
@@ -212,9 +258,9 @@ struct AgentNodeAttributes : public NodeAttributes {
 
   virtual ~AgentNodeAttributes() = default;
 
-  virtual nlohmann::json toJson() const override;
+  virtual void serialize(AttributeSerializer& serializer) const override;
 
-  virtual void fillFromJson(const nlohmann::json& record) override;
+  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<AgentNodeAttributes>(*this);

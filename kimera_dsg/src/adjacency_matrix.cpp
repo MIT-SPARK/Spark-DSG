@@ -1,6 +1,5 @@
 #include "kimera_dsg/adjacency_matrix.h"
 
-#include <glog/logging.h>
 #include <Eigen/Dense>
 
 namespace kimera {

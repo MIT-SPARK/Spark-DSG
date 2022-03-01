@@ -1,10 +1,7 @@
 ﻿#include "kimera_dsg/scene_graph.h"
-#include "kimera_dsg/attribute_serialization.h"
-#include "kimera_dsg/serialization_helpers.h"
+#include "kimera_dsg/edge_attributes.h"
 
 #include <glog/logging.h>
-
-#include <fstream>
 
 namespace kimera {
 
@@ -12,7 +9,7 @@ using LayerRef = SceneGraph::LayerRef;
 using EdgeRef = SceneGraph::EdgeRef;
 using NodeRef = SceneGraph::NodeRef;
 using Node = SceneGraph::Node;
-using EdgeInfo = SceneGraph::EdgeInfo;
+using EdgeAttributesPtr = SceneGraph::EdgeAttributesPtr;
 
 SceneGraph::SceneGraph() : SceneGraph(getDefaultLayerIds()) {}
 
@@ -107,7 +104,9 @@ Node* SceneGraph::getChildNode_(NodeId source, NodeId target) const {
              : layers_.at(target_layer)->nodes_.at(target).get();
 }
 
-bool SceneGraph::insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_info) {
+bool SceneGraph::insertEdge(NodeId source,
+                            NodeId target,
+                            EdgeAttributesPtr&& edge_info) {
   if (hasEdge(source, target)) {
     return false;
   }
@@ -150,7 +149,7 @@ bool SceneGraph::insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_i
       std::forward_as_tuple(last_edge_idx_),
       std::forward_as_tuple(source,
                             target,
-                            (edge_info == nullptr) ? std::make_unique<EdgeInfo>()
+                            (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
                                                    : std::move(edge_info)));
   inter_layer_edges_info_[source][target] = last_edge_idx_;
   inter_layer_edges_info_[target][source] = last_edge_idx_;
@@ -332,7 +331,7 @@ void SceneGraph::rewireInterLayerEdge_(NodeId source,
       std::piecewise_construct,
       std::forward_as_tuple(edge_idx),
       std::forward_as_tuple(
-          new_source, new_target, std::make_unique<EdgeInfo>(*orig_edge.info)));
+          new_source, new_target, std::make_unique<EdgeAttributes>(*orig_edge.info)));
 
   inter_layer_edges_info_[new_source][new_target] = edge_idx;
   inter_layer_edges_info_[new_target][new_source] = edge_idx;
@@ -460,146 +459,10 @@ bool SceneGraph::mergeGraph(const SceneGraph& other,
   for (const auto& id_edge : other.inter_layer_edges()) {
     insertEdge(id_edge.second.source,
                id_edge.second.target,
-               std::make_unique<SceneGraphEdgeInfo>(*id_edge.second.info));
+               std::make_unique<EdgeAttributes>(*id_edge.second.info));
   }
 
   return true;
-}
-
-json SceneGraph::toJson(const JsonExportConfig& config, bool) const {
-  json to_return;
-  to_return["directed"] = false;
-  to_return["multigraph"] = false;
-  to_return["nodes"] = json::array();
-  to_return[config.edge_key] = json::array();
-  to_return["layer_ids"] = layer_ids_;
-
-  for (const auto& id_layer_pair : layers_) {
-    for (const auto& id_node_pair : id_layer_pair.second->nodes_) {
-      const Node& node = *(id_node_pair.second);
-      json node_json = json{{config.name_key, node.id}, {"layer", node.layer}};
-      node_json["attributes"] = node.attributes().toJson();
-      to_return["nodes"].push_back(node_json);
-    }
-
-    for (const auto& id_edge_pair : id_layer_pair.second->edges_) {
-      const Edge& edge = id_edge_pair.second;
-      json edge_json =
-          json{{config.source_key, edge.source}, {config.target_key, edge.target}};
-      edge_json["info"] = edge.info->toJson();
-      to_return[config.edge_key].push_back(edge_json);
-    }
-  }
-
-  for (const auto& id_edge_pair : inter_layer_edges_) {
-    const Edge& edge = id_edge_pair.second;
-    json edge_json =
-        json{{config.source_key, edge.source}, {config.target_key, edge.target}};
-    edge_json["info"] = edge.info->toJson();
-    to_return[config.edge_key].push_back(edge_json);
-  }
-
-  return to_return;
-}
-
-void SceneGraph::fillFromJson(const JsonExportConfig& config,
-                              const NodeAttributeFactory& node_attr_factory,
-                              const EdgeInfoFactory& edge_info_factory,
-                              const json& record) {
-  // we have to clear after setting the layer ids to get the right layers initialized
-  layer_ids_ = record.at("layer_ids").get<LayerIds>();
-  SceneGraph::clear();  // dynamic layers are filled before we do this
-
-  for (const auto& node : record.at("nodes")) {
-    if (node.contains("timestamp")) {
-      continue;  // we found a dynamic node
-    }
-    auto id = node.at(config.name_key).get<NodeId>();
-    auto layer = node.at("layer").get<LayerId>();
-    NodeAttributes::Ptr attrs = node_attr_factory.create(node.at("attributes"));
-    emplaceNode(layer, id, std::move(attrs));
-  }
-
-  for (const auto& edge : record.at(config.edge_key)) {
-    auto source = edge.at(config.source_key).get<NodeId>();
-    auto target = edge.at(config.target_key).get<NodeId>();
-    EdgeInfo::Ptr info = edge_info_factory.create(edge.at("info"));
-    insertEdge(source, target, std::move(info));
-  }
-}
-
-namespace {
-
-inline bool extensionIsBson(const std::string& filepath) {
-  if (filepath.size() < 4) {
-    return false;
-  }
-  return filepath.substr(filepath.size() - 4) == "bson";
-}
-
-}  // namespace
-
-void SceneGraph::save(const std::string& filepath,
-                      bool include_mesh,
-                      bool force_bson,
-                      nlohmann::json* extra_json) const {
-  nlohmann::json graph_json = toJson(JsonExportConfig(), include_mesh);
-  if (extra_json) {
-    graph_json["extras"] = *extra_json;
-  }
-
-  if (force_bson || extensionIsBson(filepath)) {
-    graph_json["compact"] = true;
-    graph_json["schema"] = 0;
-    std::vector<uint8_t> data = nlohmann::json::to_bson(graph_json);
-    std::ofstream outfile(filepath, std::ios::out | std::ios::binary);
-    // uint8_t -> char should be a safe cast for this case
-    outfile.write(reinterpret_cast<char*>(data.data()), data.size());
-  } else {
-    std::ofstream outfile(filepath);
-    outfile << graph_json;
-  }
-}
-
-std::string SceneGraph::serialize(bool include_mesh) const {
-  return toJson(JsonExportConfig(), include_mesh).dump();
-}
-
-void SceneGraph::deserialize(const std::string& contents) {
-  nlohmann::json record = json::parse(contents);
-  fillFromJson(JsonExportConfig(),
-               NodeAttributeFactory::Default(),
-               EdgeInfoFactory::Default(),
-               record);
-}
-
-void SceneGraph::load(const std::string& filepath,
-                      bool force_bson,
-                      nlohmann::json* extra_json) {
-  nlohmann::json graph_json;
-  if (force_bson || extensionIsBson(filepath)) {
-    std::ifstream infile(filepath, std::ios::in | std::ios::binary);
-    infile.seekg(0, std::ios::end);
-    std::streampos file_size = infile.tellg();
-    infile.seekg(0, std::ios::beg);
-
-    std::vector<uint8_t> data(file_size);
-    // uint8_t -> char should be a safe cast for this case
-    infile.read(reinterpret_cast<char*>(data.data()), data.size());
-    graph_json = json::from_bson(data);
-  } else {
-    std::ifstream infile(filepath);
-    infile >> graph_json;
-  }
-
-  fillFromJson(JsonExportConfig(),
-               NodeAttributeFactory::Default(),
-               EdgeInfoFactory::Default(),
-               graph_json);
-
-  if (extra_json && graph_json.contains("extras")) {
-    *extra_json = graph_json["extras"];
-  }
 }
 
 SceneGraph::LayerIds getDefaultLayerIds() {

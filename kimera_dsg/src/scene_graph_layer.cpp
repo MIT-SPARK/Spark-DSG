@@ -1,23 +1,17 @@
 ﻿#include "kimera_dsg/scene_graph_layer.h"
-#include "kimera_dsg/attribute_serialization.h"
+#include "kimera_dsg/edge_attributes.h"
 
 #include <glog/logging.h>
 #include <queue>
 
 namespace kimera {
 
-nlohmann::json SceneGraphEdgeInfo::toJson() const {
-  nlohmann::json to_return{{"weighted", weighted}, {"weight", weight}};
-  REGISTER_EDGE_INFO_TYPE(SceneGraphEdgeInfo, to_return);
-  return to_return;
-}
+SceneGraphEdge::SceneGraphEdge(NodeId source, NodeId target, AttrPtr&& info)
+      : source(source), target(target), info(std::move(info)) {}
 
-void SceneGraphEdgeInfo::fillFromJson(const nlohmann::json& record) {
-  weighted = record.at("weighted").get<bool>();
-  weight = record.at("weight").get<double>();
-}
+SceneGraphEdge::~SceneGraphEdge() = default;
 
-using EdgeInfo = SceneGraphLayer::EdgeInfo;
+using EdgeAttributesPtr = SceneGraphLayer::EdgeAttributesPtr;
 using EdgeRef = SceneGraphLayer::EdgeRef;
 using NodeRef = SceneGraphLayer::NodeRef;
 
@@ -53,7 +47,7 @@ bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
 
 bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
-                                 EdgeInfo::Ptr&& edge_info) {
+                                 EdgeAttributesPtr&& edge_info) {
   if (source == target) {
     LOG(WARNING) << "Attempted to add a self-edge";
     return false;
@@ -79,7 +73,7 @@ bool SceneGraphLayer::insertEdge(NodeId source,
       std::forward_as_tuple(last_edge_idx_),
       std::forward_as_tuple(source,
                             target,
-                            (edge_info == nullptr) ? std::make_unique<EdgeInfo>()
+                            (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
                                                    : std::move(edge_info)));
   edges_info_[source][target] = last_edge_idx_;
   edges_info_[target][source] = last_edge_idx_;
@@ -228,7 +222,7 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
       std::piecewise_construct,
       std::forward_as_tuple(edge_idx),
       std::forward_as_tuple(
-          new_source, new_target, std::make_unique<EdgeInfo>(*orig_edge.info)));
+          new_source, new_target, std::make_unique<EdgeAttributes>(*orig_edge.info)));
 
   // Insert edge index for new rewired edge
   edges_info_[new_source][new_target] = edge_idx;
@@ -269,16 +263,15 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other,
       last_update_delta = nodes_[id_node_pair.first]->attributes_->position -
                           id_node_pair.second->attributes_->position;
       // Update node attributed (except for position)
-      Eigen::Vector3d node_position =
-          nodes_[id_node_pair.first]->attributes_->position;
+      Eigen::Vector3d node_position = nodes_[id_node_pair.first]->attributes_->position;
       if (update_attributes) {
         nodes_[id_node_pair.first]->attributes_ =
             id_node_pair.second->attributes_->clone();
       }
       nodes_[id_node_pair.first]->attributes_->position = node_position;
     } else if (node_status == NodeStatus::NONEXISTENT) {
-      nodes_[id_node_pair.first] = Node::Ptr(new Node(
-          id_node_pair.first, id, id_node_pair.second->attributes_->clone()));
+      nodes_[id_node_pair.first] = Node::Ptr(
+          new Node(id_node_pair.first, id, id_node_pair.second->attributes_->clone()));
       nodes_[id_node_pair.first]->attributes_->position += last_update_delta;
       nodes_status_[id_node_pair.first] = NodeStatus::VISIBLE;
       if (nullptr != layer_lookup) {
@@ -290,9 +283,8 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other,
   for (const auto& id_edge_pair : other.edges_) {
     if (id_edge_pair.first > last_edge_idx_) {
       const Edge& edge = id_edge_pair.second;
-      insertEdge(edge.source,
-                 edge.target,
-                 std::make_unique<SceneGraphEdgeInfo>(*edge.info));
+      insertEdge(
+          edge.source, edge.target, std::make_unique<EdgeAttributes>(*edge.info));
     }
   }
   return true;
@@ -307,8 +299,7 @@ Eigen::Vector3d SceneGraphLayer::getPosition(NodeId node) const {
   return nodes_.at(node)->attributes().position;
 }
 
-void SceneGraphLayer::getRemovedNodes(
-    std::vector<NodeId>* removed_nodes) const {
+void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>* removed_nodes) const {
   CHECK(nullptr != removed_nodes);
   for (const auto& id_status : nodes_status_) {
     if (id_status.second == NodeStatus::DELETED) {
@@ -344,74 +335,6 @@ NodeSet SceneGraphLayer::getNeighborhood(const NodeSet& nodes, size_t num_hops) 
         result.insert(visited);
       });
   return result;
-}
-
-using nlohmann::json;
-
-std::string SceneGraphLayer::serializeLayer(const NodeSet& nodes) const {
-  json serialized_layer;
-  serialized_layer["nodes"] = json::array();
-  serialized_layer["edges"] = json::array();
-
-  for (const auto& node_id : nodes) {
-    if (!hasNode(node_id)) {
-      continue;
-    }
-
-    const Node& node = *nodes_.at(node_id);
-    json node_json = json{{"id", node.id}, {"layer", node.layer}};
-    node_json["attributes"] = node.attributes().toJson();
-    serialized_layer["nodes"].push_back(node_json);
-
-    if (node.siblings().empty()) {
-      continue;
-    }
-
-    for (const auto& sibling_edge_pair : edges_info_.at(node_id)) {
-      const Edge& edge = edges_.at(sibling_edge_pair.second);
-      json edge_json = json{{"source", edge.source}, {"target", edge.target}};
-      edge_json["info"] = edge.info->toJson();
-      serialized_layer["edges"].push_back(edge_json);
-    }
-  }
-
-  return serialized_layer.dump();
-}
-
-std::unique_ptr<SceneGraphLayer::Edges> SceneGraphLayer::deserializeLayer(
-    const std::string& info) {
-  reset();
-  auto node_factory = NodeAttributeFactory::Default();
-  auto edge_factory = EdgeInfoFactory::Default();
-
-  auto serialized_layer = json::parse(info);
-
-  for (const auto& node : serialized_layer.at("nodes")) {
-    auto node_id = node.at("id").get<NodeId>();
-    auto layer = node.at("layer").get<LayerId>();
-    if (layer != id) {
-      LOG(ERROR) << "serialized node layer: " << layer
-                 << " does not match layer id: " << id << ". skipping!";
-      continue;
-    }
-
-    NodeAttributes::Ptr attrs = node_factory.create(node.at("attributes"));
-    emplaceNode(node_id, std::move(attrs));
-  }
-
-  size_t temp_edge_idx = 0;
-  std::unique_ptr<Edges> new_edges(new Edges());
-  for (const auto& edge : serialized_layer.at("edges")) {
-    auto source = edge.at("source").get<NodeId>();
-    auto target = edge.at("target").get<NodeId>();
-    EdgeInfo::Ptr info = edge_factory.create(edge.at("info"));
-    new_edges->emplace(std::piecewise_construct,
-                       std::forward_as_tuple(temp_edge_idx),
-                       std::forward_as_tuple(source, target, std::move(info)));
-    temp_edge_idx++;
-  }
-
-  return new_edges;
 }
 
 }  // namespace kimera

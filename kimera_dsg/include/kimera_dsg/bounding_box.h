@@ -1,5 +1,4 @@
 #pragma once
-#include <glog/logging.h>
 #include <pcl/features/moment_of_inertia_estimation.h>
 #include <Eigen/Geometry>
 #include <iostream>

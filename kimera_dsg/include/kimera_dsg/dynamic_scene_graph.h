@@ -100,11 +100,11 @@ class DynamicSceneGraph : public SceneGraph {
 
   virtual bool insertEdge(NodeId source,
                           NodeId target,
-                          EdgeInfo::Ptr&& edge_info = nullptr) override;
+                          EdgeAttributesPtr&& edge_info = nullptr) override;
 
   bool insertDynamicEdge(NodeId source,
                          NodeId target,
-                         EdgeInfo::Ptr&& edge_info = nullptr);
+                         EdgeAttributesPtr&& edge_info = nullptr);
 
   virtual bool hasEdge(NodeId source, NodeId target) const override;
 
@@ -237,13 +237,9 @@ class DynamicSceneGraph : public SceneGraph {
 
   virtual Eigen::Vector3d getPosition(NodeId node) const override;
 
-  virtual nlohmann::json toJson(const JsonExportConfig& config,
-                                bool include_mesh = true) const override;
+  virtual std::string serialize(bool include_mesh = false) const override;
 
-  virtual void fillFromJson(const JsonExportConfig& config,
-                            const NodeAttributeFactory& node_attr_factory,
-                            const EdgeInfoFactory& edge_info_factory,
-                            const nlohmann::json& record) override;
+  virtual void deserialize(const std::string& contents) override;
 
   inline MeshEdges getMeshEdges() const { return mesh_edges_; }
 

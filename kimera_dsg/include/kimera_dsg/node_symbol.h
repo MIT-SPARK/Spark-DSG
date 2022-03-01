@@ -1,7 +1,8 @@
 #pragma once
+#include "kimera_dsg/scene_graph_types.h"
+
 #include <ostream>
 #include <sstream>
-#include "kimera_dsg/scene_graph_types.h"
 
 namespace kimera {
 

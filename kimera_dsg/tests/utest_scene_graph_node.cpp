@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include <kimera_dsg/scene_graph_node.h>
+
+#include <gtest/gtest.h>
 
 using namespace kimera;
 

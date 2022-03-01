@@ -46,7 +46,7 @@ class DynamicSceneGraphLayer {
   //! edge container type for the layer
   using Edges = std::map<size_t, Edge>;
   //! edge attributes type for the layer
-  using EdgeInfo = SceneGraphEdge::Info;
+  using EdgeAttributesPtr = SceneGraphEdge::AttrPtr;
   //! edge reference type for the layer
   using EdgeRef = std::reference_wrapper<const Edge>;
   //! type for a mapping between node id and edge index
@@ -77,11 +77,11 @@ class DynamicSceneGraphLayer {
 
   std::optional<EdgeRef> getEdgeByIndex(size_t source_index, size_t target_index) const;
 
-  bool insertEdge(NodeId source, NodeId target, EdgeInfo::Ptr&& edge_info = nullptr);
+  bool insertEdge(NodeId source, NodeId target, EdgeAttributesPtr&& edge_info = nullptr);
 
   bool insertEdgeByIndex(size_t source_index,
                          size_t target_index,
-                         EdgeInfo::Ptr&& edge_info = nullptr);
+                         EdgeAttributesPtr&& edge_info = nullptr);
 
   bool removeEdge(NodeId source, NodeId target);
 
