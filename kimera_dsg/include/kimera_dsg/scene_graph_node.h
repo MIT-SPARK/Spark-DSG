@@ -1,9 +1,10 @@
 #pragma once
-#include "kimera_dsg/scene_graph_types.h"
 #include "kimera_dsg/node_attributes.h"
+#include "kimera_dsg/scene_graph_types.h"
 
 #include <Eigen/Dense>
 
+#include <chrono>
 #include <memory>
 #include <ostream>
 #include <set>
@@ -39,7 +40,6 @@ class SceneGraphNode {
   friend class DynamicSceneGraphLayer;
   friend class DynamicSceneGraph;
   friend class SceneGraphLayer;
-  friend class SceneGraph;
 
   /**
    * @brief Make a scene graph node (usually not necessary)
@@ -135,7 +135,7 @@ class SceneGraphNode {
    * @note only for internal (scene-graph) use
    * @param parent_id new parent of node
    */
-  inline void setParent_(NodeId parent_id) {
+  inline void setParent(NodeId parent_id) {
     has_parent_ = true;
     parent_ = parent_id;
   }
@@ -144,8 +144,9 @@ class SceneGraphNode {
    * @brief remove a parent from a node
    * @note only for internal (scene-graph) use
    */
-  inline void clearParent_() { has_parent_ = false; }
+  inline void clearParent() { has_parent_ = false; }
 
+ protected:
   //! pointer to attributes
   AttributesPtr attributes_;
 
@@ -167,6 +168,26 @@ class SceneGraphNode {
    * @brief constant iterable over the node's children
    */
   inline const std::set<NodeId>& children() const { return children_; };
+};
+
+class DynamicSceneGraphNode : public SceneGraphNode {
+ public:
+  friend class DynamicSceneGraphLayer;
+  using Ptr = std::unique_ptr<DynamicSceneGraphNode>;
+
+  DynamicSceneGraphNode(NodeId id,
+                        LayerId layer,
+                        NodeAttributes::Ptr&& attrs,
+                        std::chrono::nanoseconds timestamp)
+      : SceneGraphNode(id, layer, std::move(attrs)), timestamp(timestamp) {}
+
+  virtual ~DynamicSceneGraphNode() = default;
+
+  DynamicSceneGraphNode(const DynamicSceneGraphNode& other) = delete;
+
+  DynamicSceneGraphNode& operator=(const DynamicSceneGraphNode& other) = delete;
+
+  const std::chrono::nanoseconds timestamp;
 };
 
 }  // namespace kimera

@@ -50,10 +50,10 @@ add_library(
   src/dynamic_scene_graph.cpp
   src/dynamic_scene_graph_layer.cpp
   src/edge_attributes.cpp
+  src/edge_container.cpp
   src/graph_serialization.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
-  src/scene_graph.cpp
   src/scene_graph_node.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_types.cpp
@@ -108,7 +108,6 @@ if(DSG_BUILD_TESTS)
     tests/utest_graph_serialization.cpp
     tests/utest_graph_utilities_layer.cpp
     tests/utest_node_symbol.cpp
-    tests/utest_scene_graph.cpp
     tests/utest_scene_graph_node.cpp
     tests/utest_scene_graph_layer.cpp
     tests/utest_scene_graph_types.cpp

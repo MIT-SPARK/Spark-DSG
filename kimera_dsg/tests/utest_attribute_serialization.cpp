@@ -1,8 +1,6 @@
 #include <kimera_dsg/attribute_serialization.h>
 #include <kimera_dsg/attribute_serializer.h>
-#include <kimera_dsg/dynamic_scene_graph.h>
 #include <kimera_dsg/node_attributes.h>
-#include <kimera_dsg/scene_graph.h>
 #include <kimera_dsg/serialization_helpers.h>
 
 #include <gtest/gtest.h>

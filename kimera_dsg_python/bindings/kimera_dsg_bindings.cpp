@@ -105,7 +105,7 @@ class LayerView {
 
 class LayerIter {
  public:
-  LayerIter(const SceneGraph::Layers& container)
+  LayerIter(const DynamicSceneGraph::Layers& container)
       : curr_iter_(container.begin()), end_iter_(container.end()) {}
 
   LayerView operator*() const { return LayerView(*(curr_iter_->second)); }
@@ -118,8 +118,8 @@ class LayerIter {
   bool operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
 
  private:
-  typename SceneGraph::Layers::const_iterator curr_iter_;
-  typename SceneGraph::Layers::const_iterator end_iter_;
+  typename DynamicSceneGraph::Layers::const_iterator curr_iter_;
+  typename DynamicSceneGraph::Layers::const_iterator end_iter_;
 };
 
 PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
@@ -312,7 +312,7 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
 
 #define MAKE_SPECIALIZED_NODE_ADD(AttributeClass)                   \
   def("add_node",                                                   \
-      [](SceneGraph& graph,                                         \
+      [](DynamicSceneGraph& graph,                                  \
          LayerId layer_id,                                          \
          NodeId node_id,                                            \
          const AttributeClass& attrs) {                             \
@@ -320,21 +320,21 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
         graph.emplaceNode(layer_id, node_id, std::move(new_attrs)); \
       })
 
-  py::class_<SceneGraph>(module, "SceneGraph")
+  py::class_<DynamicSceneGraph>(module, "DynamicSceneGraph")
       .def(py::init<>())
-      .def(py::init<const SceneGraph::LayerIds&>())
-      .def("clear", &SceneGraph::clear)
+      .def(py::init<const DynamicSceneGraph::LayerIds&>())
+      .def("clear", &DynamicSceneGraph::clear)
       .MAKE_SPECIALIZED_NODE_ADD(NodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(SemanticNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(ObjectNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(RoomNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(PlaceNodeAttributes)
       .def("insert_edge",
-           [](SceneGraph& graph, NodeId source, NodeId target) {
+           [](DynamicSceneGraph& graph, NodeId source, NodeId target) {
              graph.insertEdge(source, target);
            })
       .def("insert_edge",
-           [](SceneGraph& graph,
+           [](DynamicSceneGraph& graph,
               NodeId source,
               NodeId target,
               const EdgeAttributes& info) {
@@ -343,45 +343,48 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
              graph.insertEdge(source, target, std::move(edge_info));
            })
       .def("has_layer",
-           static_cast<bool (SceneGraph::*)(LayerId) const>(&SceneGraph::hasLayer))
-      .def("has_node", &SceneGraph::hasNode)
-      .def("has_edge", &SceneGraph::hasEdge)
+           static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(
+               &DynamicSceneGraph::hasLayer))
+      .def("has_node", &DynamicSceneGraph::hasNode)
+      .def("has_edge", py::overload_cast<NodeId, NodeId>(&DynamicSceneGraph::hasEdge, py::const_))
       .def("get_layer",
-           [](const SceneGraph& graph, LayerId layer_id) {
+           [](const DynamicSceneGraph& graph, LayerId layer_id) {
              if (!graph.hasLayer(layer_id)) {
                throw std::out_of_range("layer doesn't exist");
              }
-             return LayerView(*graph.getLayer(layer_id));
+             return LayerView(graph.getLayer(layer_id));
            },
            py::return_value_policy::reference_internal)
-      .def("get_node", &SceneGraph::getNode)
-      .def("get_edge", &SceneGraph::getEdge)
-      .def("remove_node", &SceneGraph::removeNode)
-      .def("remove_edge", &SceneGraph::removeEdge)
-      .def("num_layers", &SceneGraph::numLayers)
-      .def("num_nodes", &SceneGraph::numNodes)
-      .def("empty", &SceneGraph::empty)
-      .def("num_edges", &SceneGraph::numEdges)
-      .def("get_position", &SceneGraph::getPosition)
+      .def("get_node", &DynamicSceneGraph::getNode)
+      .def("get_edge", &DynamicSceneGraph::getEdge)
+      .def("remove_node", &DynamicSceneGraph::removeNode)
+      .def("remove_edge", &DynamicSceneGraph::removeEdge)
+      .def("num_layers", &DynamicSceneGraph::numLayers)
+      .def("num_nodes", &DynamicSceneGraph::numNodes)
+      .def("empty", &DynamicSceneGraph::empty)
+      .def("num_edges", &DynamicSceneGraph::numEdges)
+      .def("get_position", &DynamicSceneGraph::getPosition)
       .def("save",
-           [](const SceneGraph& graph, const std::string& filepath, bool include_mesh) {
-             graph.save(filepath, include_mesh);
-           },
+           [](const DynamicSceneGraph& graph,
+              const std::string& filepath,
+              bool include_mesh) { graph.save(filepath, include_mesh); },
            "filepath"_a,
            "include_mesh"_a = true)
       .def("load",
-           [](SceneGraph& graph, const std::string& filepath) { graph.load(filepath); },
+           [](DynamicSceneGraph& graph, const std::string& filepath) {
+             graph.load(filepath);
+           },
            "filepath"_a)
       .def_property("layers",
-                    [](const SceneGraph& graph) {
+                    [](const DynamicSceneGraph& graph) {
                       return py::make_iterator(LayerIter(graph.layers()),
                                                IterSentinel());
                     },
                     nullptr,
                     py::return_value_policy::reference_internal)
-      .def_property("inter_layer_edges",
-                    [](const SceneGraph& graph) {
-                      return py::make_iterator(EdgeIter(graph.inter_layer_edges()),
+      .def_property("interlayer_edges",
+                    [](const DynamicSceneGraph& graph) {
+                      return py::make_iterator(EdgeIter(graph.interlayer_edges()),
                                                IterSentinel());
                     },
                     nullptr,

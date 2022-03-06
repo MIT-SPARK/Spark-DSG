@@ -296,7 +296,7 @@ MarkerArray makeDynamicGraphEdgeMarkers(
 
 // TODO(nathan) consider making this shorter
 MarkerArray makeGraphEdgeMarkers(const std_msgs::Header& header,
-                                 const SceneGraph& graph,
+                                 const DynamicSceneGraph& graph,
                                  const std::map<LayerId, LayerConfig>& configs,
                                  const VisualizerConfig& visualizer_config,
                                  const std::string& ns_prefix) {
@@ -304,7 +304,7 @@ MarkerArray makeGraphEdgeMarkers(const std_msgs::Header& header,
   std::map<LayerId, Marker> layer_markers;
   std::map<LayerId, size_t> num_since_last_insertion;
 
-  for (const auto& edge : graph.inter_layer_edges()) {
+  for (const auto& edge : graph.interlayer_edges()) {
     const Node& source = *(graph.getNode(edge.second.source));
     const Node& target = *(graph.getNode(edge.second.target));
 
@@ -607,7 +607,7 @@ Marker makeDynamicLabelMarker(const std_msgs::Header& header,
   marker.id = 0;
   marker.action = Marker::ADD;
   marker.lifetime = ros::Duration(0);
-  marker.text = std::to_string(layer.id) + ":" + layer.prefix;
+  marker.text = std::to_string(layer.id) + ":" + layer.prefix.str();
   marker.scale.z = config.label_scale;
   marker.color = makeColorMsg(NodeColor::Zero());
 

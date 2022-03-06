@@ -1,35 +1,12 @@
 #pragma once
+#include "kimera_dsg/base_layer.h"
 #include "kimera_dsg/graph_utilities.h"
-#include "kimera_dsg/edge_attributes.h"
-#include "kimera_dsg/scene_graph_node.h"
-#include "kimera_dsg/node_symbol.h"
 
 #include <map>
-#include <optional>
 #include <unordered_set>
 #include <vector>
 
 namespace kimera {
-
-/**
- * @brief Edge representation
- */
-struct SceneGraphEdge {
-  //! attributes of the edge
-  using AttrPtr = std::unique_ptr<EdgeAttributes>;
-
-  //! construct and edge from some info
-  SceneGraphEdge(NodeId source, NodeId target, AttrPtr&& info);
-
-  ~SceneGraphEdge();
-
-  //! start of edge (by convention the parent)
-  const NodeId source;
-  //! end of edge (by convention the child)
-  const NodeId target;
-  //! attributes about the edge
-  AttrPtr info;
-};
 
 /**
  * @brief A layer in the scene graph (which is a graph itself)
@@ -40,7 +17,7 @@ struct SceneGraphEdge {
  * but it is probably preferable to use the scene graph as much as
  * possible to also handle parent child relationships.
  */
-class SceneGraphLayer {
+class SceneGraphLayer : public BaseLayer {
  public:
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<SceneGraphLayer>;
@@ -50,19 +27,11 @@ class SceneGraphLayer {
   using Nodes = std::map<NodeId, Node::Ptr>;
   //! type tracking the status of nodes
   using NodeCheckup = std::map<NodeId, NodeStatus>;
-  //! node reference for the layer
-  using NodeRef = std::reference_wrapper<const Node>;
   //! edge type for the layer
   using Edge = SceneGraphEdge;
   //! edge container type for the layer
   using Edges = std::map<size_t, Edge>;
-  //! edge attributes type for the layer
-  using EdgeAttributesPtr = SceneGraphEdge::AttrPtr;
-  //! edge reference type for the layer
-  using EdgeRef = std::reference_wrapper<const Edge>;
-  //! type for a mapping between node id and edge index
-  using EdgeLookup = std::map<NodeId, std::map<NodeId, size_t>>;
-  friend class SceneGraph;
+
   friend class DynamicSceneGraph;
   friend class SceneGraphLogger;
 
@@ -87,7 +56,7 @@ class SceneGraphLayer {
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributesPtr&& edge_attributes = nullptr);
+                  EdgeAttributes::Ptr&& edge_attributes = nullptr) override;
 
   /**
    * @brief Check whether the layer has the specified node
@@ -109,7 +78,7 @@ class SceneGraphLayer {
    * @param target second node to check for
    * @returns true if the requested edge exists in the layer
    */
-  bool hasEdge(NodeId source, NodeId target) const;
+  bool hasEdge(NodeId source, NodeId target) const override;
 
   /**
    * @brief Get a particular node in the layer
@@ -124,13 +93,6 @@ class SceneGraphLayer {
   std::optional<NodeRef> getNode(NodeId node_id) const;
 
   /**
-   * @brief remove a node if it exists
-   * @param node_id node to remove
-   * @returns true if the node existed prior to removal
-   */
-  bool removeNode(NodeId node_id);
-
-  /**
    * @brief Get a particular edge in the layer
    *
    * This can be used to update the edge "info", though
@@ -141,7 +103,7 @@ class SceneGraphLayer {
    * @param target target of edge to get
    * @returns a potentially valid edge constant reference
    */
-  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const;
+  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const override;
 
   /**
    * @brief remove an edge if it exists
@@ -149,7 +111,7 @@ class SceneGraphLayer {
    * @param target target of edge to remove
    * @returns true if the edge existed prior to removal
    */
-  bool removeEdge(NodeId source, NodeId target);
+  bool removeEdge(NodeId source, NodeId target) override;
 
   /**
    * @brief remove an edge if it exists
@@ -168,7 +130,7 @@ class SceneGraphLayer {
    * @returns true if operation successful
    */
   bool mergeLayer(const SceneGraphLayer& other,
-                  std::map<NodeId, LayerId>* layer_lookup = nullptr,
+                  std::map<NodeId, LayerKey>* layer_lookup = nullptr,
                   bool update_attributes = true);
 
   /**
@@ -222,6 +184,13 @@ class SceneGraphLayer {
                                std::map<NodeId, size_t>& costs) const;
 
   /**
+   * @brief remove a node if it exists
+   * @param node_id node to remove
+   * @returns true if the node existed prior to removal
+   */
+  bool removeNode(NodeId node_id) override;
+
+  /**
    * @brief construct and add a node to the layer
    * @param node_id node to create
    * @param attrs node attributes
@@ -248,26 +217,23 @@ class SceneGraphLayer {
    */
   bool mergeNodes(NodeId node_from, NodeId node_to);
 
-  //! internal edge index counter
-  size_t last_edge_idx_;
   //! internal node container
   Nodes nodes_;
   //! internal node status tracking
   NodeCheckup nodes_status_;
   //! internal edge container
-  Edges edges_;
-  //! internal mapping between node id and edge index
-  EdgeLookup edges_info_;
+  EdgeContainer edges_;
 
  public:
   /**
    * @brief constant node container
    */
   inline const Nodes& nodes() const { return nodes_; };
+
   /**
    * @brief constant edge container
    */
-  inline const Edges& edges() const { return edges_; };
+  inline const Edges& edges() const { return edges_.edges; };
 };
 
 /**
@@ -289,6 +255,8 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
   virtual ~IsolatedSceneGraphLayer() = default;
 
   using SceneGraphLayer::emplaceNode;
+
+  using SceneGraphLayer::insertNode;
 
   using SceneGraphLayer::removeNode;
 

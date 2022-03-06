@@ -5,35 +5,34 @@
 
 namespace kimera {
 
-using EdgeAttributesPtr = DynamicSceneGraphLayer::EdgeAttributesPtr;
 using EdgeRef = DynamicSceneGraphLayer::EdgeRef;
 using NodeRef = DynamicSceneGraphLayer::NodeRef;
 
-DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, char node_prefix)
-    : id(layer), prefix(node_prefix), next_node_(node_prefix, 0), last_edge_idx_(0) {}
+DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, LayerPrefix node_prefix)
+    : id(layer), prefix(node_prefix), next_node_(0) {}
 
 bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
-                                        std::map<NodeId, DynamicLayerKey>* layer_lookup,
+                                        std::map<NodeId, LayerKey>* layer_lookup,
                                         bool update_attributes) {
-  DynamicLayerKey layer_key;
-  layer_key.type = id;
-  layer_key.prefix = prefix;
+  LayerKey layer_key{id, prefix};
   Eigen::Vector3d last_update_delta = Eigen::Vector3d::Zero();
 
   for (size_t i = 0; i < other.nodes_.size(); i++) {
-    if (i < NodeSymbol(next_node_).categoryId()) {
+    const auto& other_node = *other.nodes_[i];
+    if (i < next_node_) {
       // update the last_update_delta
-      last_update_delta =
-          nodes_[i]->attributes_->position - other.nodes_[i]->attributes_->position;
-      // Update node attributes (except for position)
-      Eigen::Vector3d node_position = nodes_[i]->attributes_->position;
-      if (update_attributes) {
-        nodes_[i]->attributes_ = other.nodes_[i]->attributes_->clone();
+      const Eigen::Vector3d node_position = nodes_[i]->attributes_->position;
+      last_update_delta = node_position - other_node.attributes_->position;
+
+      if (!update_attributes) {
+        continue;
       }
+
+      // Update node attributes (except for position)
+      nodes_[i]->attributes_ = other_node.attributes_->clone();
       nodes_[i]->attributes_->position = node_position;
     } else {
-      emplaceNode(
-          other.nodes_[i]->timestamp, other.nodes_[i]->attributes_->clone(), false);
+      emplaceNode(other_node.timestamp, other_node.attributes_->clone(), false);
       nodes_.back()->attributes_->position += last_update_delta;
       if (layer_lookup) {
         layer_lookup->insert({next_node_ - 1, layer_key});
@@ -41,26 +40,29 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
     }
   }
 
-  for (const auto& id_edge_pair : other.edges_) {
-    if (id_edge_pair.first > last_edge_idx_) {
-      const Edge& edge = id_edge_pair.second;
-      insertEdge(
-          edge.source, edge.target, std::make_unique<EdgeAttributes>(*edge.info));
+  for (const auto& id_edge_pair : other.edges()) {
+    if (id_edge_pair.first <= edges_.last_idx) {
+      continue;
     }
+
+    const auto& edge = id_edge_pair.second;
+    insertEdge(edge.source, edge.target, edge.info->clone());
   }
+
   return true;
 }
 
-bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds timestamp,
+bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
                                          NodeAttributes::Ptr&& attrs,
                                          bool add_edge) {
-  if (times_.count(timestamp.count())) {
+  if (times_.count(stamp.count())) {
     return false;
   }
 
-  times_.insert(timestamp.count());
-  nodes_.emplace_back(
-      std::make_unique<Node>(next_node_, id, std::move(attrs), timestamp));
+  const NodeId new_id = prefix.makeId(next_node_);
+  times_.insert(stamp.count());
+  nodes_.emplace_back(std::make_unique<Node>(new_id, id, std::move(attrs), stamp));
+  node_status_[nodes_.size() - 1] = NodeStatus::VISIBLE;
 
   if (add_edge && nodes_.size() > 1u) {
     insertEdgeByIndex(nodes_.size() - 2, nodes_.size() - 1);
@@ -71,27 +73,29 @@ bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds timestamp,
 }
 
 bool DynamicSceneGraphLayer::hasNode(NodeId node_id) const {
-  NodeSymbol node_symbol(node_id);
-  if (node_symbol.category() != next_node_.category()) {
+  if (!prefix.matches(node_id)) {
     return false;
   }
 
-  return hasNodeByIndex(node_symbol.categoryId());
+  return hasNodeByIndex(prefix.index(node_id));
 }
 
 bool DynamicSceneGraphLayer::hasNodeByIndex(size_t node_index) const {
-  return node_index < nodes_.size();
+  auto iter = node_status_.find(node_index);
+  if (iter == node_status_.end()) {
+    return false;
+  }
+
+  return iter->second == NodeStatus::VISIBLE;
 }
 
 bool DynamicSceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
-  return edges_info_.count(source) != 0 && edges_info_.at(source).count(target) != 0;
+  return edges_.contains(source, target);
 }
 
 bool DynamicSceneGraphLayer::hasEdgeByIndex(size_t source_idx,
                                             size_t target_idx) const {
-  const NodeSymbol source(next_node_.category(), source_idx);
-  const NodeSymbol target(next_node_.category(), target_idx);
-  return hasEdge(source, target);
+  return hasEdge(prefix.makeId(source_idx), prefix.makeId(target_idx));
 }
 
 std::optional<NodeRef> DynamicSceneGraphLayer::getNodeByIndex(size_t node_index) const {
@@ -107,8 +111,7 @@ std::optional<NodeRef> DynamicSceneGraphLayer::getNode(NodeId node_id) const {
     return std::nullopt;
   }
 
-  // TODO(nathan) this is slightly inefficient, but less code
-  return getNodeByIndex(NodeSymbol(node_id).categoryId());
+  return getNodeByIndex(prefix.index(node_id));
 }
 
 std::optional<EdgeRef> DynamicSceneGraphLayer::getEdge(NodeId source,
@@ -117,20 +120,17 @@ std::optional<EdgeRef> DynamicSceneGraphLayer::getEdge(NodeId source,
     return std::nullopt;
   }
 
-  size_t edge_idx = edges_info_.at(source).at(target);
-  return std::cref(edges_.at(edge_idx));
+  return std::cref(edges_.get(source, target));
 }
 
 std::optional<EdgeRef> DynamicSceneGraphLayer::getEdgeByIndex(size_t source_idx,
                                                               size_t target_idx) const {
-  const NodeSymbol source(next_node_.category(), source_idx);
-  const NodeSymbol target(next_node_.category(), target_idx);
-  return getEdge(source, target);
+  return getEdge(prefix.makeId(source_idx), prefix.makeId(target_idx));
 }
 
 bool DynamicSceneGraphLayer::insertEdge(NodeId source,
                                         NodeId target,
-                                        EdgeAttributesPtr&& edge_info) {
+                                        EdgeAttributes::Ptr&& edge_info) {
   if (source == target) {
     LOG(WARNING) << "Attempted to add a self-edge for "
                  << NodeSymbol(source).getLabel();
@@ -141,88 +141,84 @@ bool DynamicSceneGraphLayer::insertEdge(NodeId source,
     return false;
   }
 
-  if (!hasNode(source)) {
-    // TODO(nathan) maybe consider logging here
+  if (!hasNode(source) || !hasNode(target)) {
     return false;
   }
 
-  if (!hasNode(target)) {
-    // TODO(nathan) maybe consider logging here
-    return false;
-  }
+  nodes_[prefix.index(source)]->siblings_.insert(target);
+  nodes_[prefix.index(target)]->siblings_.insert(source);
 
-  last_edge_idx_++;
-  edges_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(last_edge_idx_),
-      std::forward_as_tuple(source,
-                            target,
-                            (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
-                                                   : std::move(edge_info)));
-  edges_info_[source][target] = last_edge_idx_;
-  edges_info_[target][source] = last_edge_idx_;
-  nodes_[NodeSymbol(source).categoryId()]->siblings_.insert(target);
-  nodes_[NodeSymbol(source).categoryId()]->siblings_.insert(source);
+  edges_.insert(source, target, std::move(edge_info));
   return true;
 }
 
-bool DynamicSceneGraphLayer::insertEdgeByIndex(size_t source_idx,
-                                               size_t target_idx,
-                                               EdgeAttributesPtr&& edge_info) {
-  const NodeSymbol source(next_node_.category(), source_idx);
-  const NodeSymbol target(next_node_.category(), target_idx);
-  return insertEdge(source, target, std::move(edge_info));
+bool DynamicSceneGraphLayer::insertEdgeByIndex(size_t source,
+                                               size_t target,
+                                               EdgeAttributes::Ptr&& edge_info) {
+  return insertEdge(prefix.makeId(source), prefix.makeId(target), std::move(edge_info));
 }
 
 bool DynamicSceneGraphLayer::removeEdge(NodeId source, NodeId target) {
-  if (NodeSymbol(source).category() != prefix ||
-      NodeSymbol(target).category() != prefix) {
+  if (!hasEdge(source, target)) {
     return false;
   }
 
-  return removeEdgeByIndex(NodeSymbol(source).categoryId(),
-                           NodeSymbol(target).categoryId());
+  nodes_[prefix.index(source)]->siblings_.erase(target);
+  nodes_[prefix.index(target)]->siblings_.erase(source);
+
+  edges_.remove(source, target);
+  return true;
 }
 
 bool DynamicSceneGraphLayer::removeEdgeByIndex(size_t source_index,
                                                size_t target_index) {
-  if (!hasEdgeByIndex(source_index, target_index)) {
+  return removeEdge(prefix.makeId(source_index), prefix.makeId(target_index));
+}
+
+bool DynamicSceneGraphLayer::removeNode(NodeId node) {
+  if (!hasNode(node)) {
     return false;
   }
 
-  NodeSymbol source(prefix, source_index);
-  NodeSymbol target(prefix, target_index);
+  const size_t index = prefix.index(node);
+  std::set<NodeId> targets_to_erase = nodes_.at(node)->siblings_;
 
-  edges_.erase(edges_info_.at(source).at(target));
-
-  edges_info_.at(source).erase(target);
-  if (edges_info_.at(source).empty()) {
-    edges_info_.erase(source);
+  // reconnect "odom" edges
+  const auto prev_node = node - 1;
+  const auto next_node = node + 1;
+  const bool has_prev_edge = hasNode(prev_node) && targets_to_erase.count(prev_node);
+  const bool has_next_edge = hasNode(next_node) && targets_to_erase.count(next_node);
+  if (has_prev_edge && has_next_edge) {
+    // TODO(nathan) this might need to be smarter about attributes, i.e. composing the
+    // two edges
+    insertEdge(prev_node, next_node);
   }
 
-  edges_info_.at(target).erase(source);
-  if (edges_info_.at(target).empty()) {
-    edges_info_.erase(target);
+  for (const auto& target : targets_to_erase) {
+    removeEdge(node, target);
   }
 
-  nodes_[source_index]->siblings_.erase(target);
-  nodes_[target_index]->siblings_.erase(source);
+  // TODO(nathan) this is slightly brittle, maybe consider std::map instead
+  node_status_[index] = NodeStatus::DELETED;
+  times_.erase(nodes_.at(index)->timestamp.count());
   return true;
 }
 
 Eigen::Vector3d DynamicSceneGraphLayer::getPosition(NodeId node) const {
   if (!hasNode(node)) {
-    throw std::out_of_range("node " + NodeSymbol(node).getLabel() +
-                            " is not in the layer");
+    std::stringstream ss;
+    ss << "node " << NodeSymbol(node).getLabel() << " is missing";
+    throw std::out_of_range(ss.str());
   }
 
-  return getPositionByIndex(NodeSymbol(node).categoryId());
+  return getPositionByIndex(prefix.index(node));
 }
 
 Eigen::Vector3d DynamicSceneGraphLayer::getPositionByIndex(size_t node_index) const {
   if (!hasNodeByIndex(node_index)) {
-    throw std::out_of_range("node index " + std::to_string(node_index) +
-                            " >= " + std::to_string(nodes_.size()));
+    std::stringstream ss;
+    ss << "node index" << node_index << " >= " << nodes_.size();
+    throw std::out_of_range(ss.str());
   }
 
   return nodes_.at(node_index)->attributes().position;

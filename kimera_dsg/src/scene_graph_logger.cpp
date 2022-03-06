@@ -33,7 +33,7 @@ SceneGraphLogger::SceneGraphLogger() {}
 
 SceneGraphLogger::~SceneGraphLogger() {}
 
-void SceneGraphLogger::logGraph(const SceneGraph::Ptr& graph) {
+void SceneGraphLogger::logGraph(const DynamicSceneGraph::Ptr& graph) {
   // What I want to log: for each layer, the number of active nodes, number of
   // merged node, number of deleted nodes
   for (const auto& id_layer : graph->layers_) {

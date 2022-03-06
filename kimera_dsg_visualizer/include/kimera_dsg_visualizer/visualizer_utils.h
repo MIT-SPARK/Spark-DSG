@@ -54,7 +54,7 @@ visualization_msgs::Marker makeCentroidMarkers(
 
 visualization_msgs::MarkerArray makeGraphEdgeMarkers(
     const std_msgs::Header& header,
-    const SceneGraph& scene_graph,
+    const DynamicSceneGraph& scene_graph,
     const std::map<LayerId, LayerConfig>& configs,
     const VisualizerConfig& visualizer_config,
     const std::string& ns);

@@ -1,59 +1,27 @@
 #pragma once
+#include "kimera_dsg/base_layer.h"
 #include "kimera_dsg/node_symbol.h"
-#include "kimera_dsg/scene_graph_layer.h"
-#include "kimera_dsg/scene_graph_node.h"
-
-#include <chrono>
 
 namespace kimera {
 
-struct DynamicLayerKey {
-  LayerId type;
-  char prefix;
-};
-
-class DynamicSceneGraphNode : public SceneGraphNode {
- public:
-  friend class DynamicSceneGraphLayer;
-  using Ptr = std::unique_ptr<DynamicSceneGraphNode>;
-
-  DynamicSceneGraphNode(NodeId id,
-                        LayerId layer,
-                        NodeAttributes::Ptr&& attrs,
-                        std::chrono::nanoseconds timestamp)
-      : SceneGraphNode(id, layer, std::move(attrs)), timestamp(timestamp) {}
-
-  virtual ~DynamicSceneGraphNode() = default;
-
-  DynamicSceneGraphNode(const DynamicSceneGraphNode& other) = delete;
-  DynamicSceneGraphNode& operator=(const DynamicSceneGraphNode& other) = delete;
-
-  const std::chrono::nanoseconds timestamp;
-};
-
-class DynamicSceneGraphLayer {
+class DynamicSceneGraphLayer : public BaseLayer {
  public:
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<DynamicSceneGraphLayer>;
   //! node type of the layer
   using Node = DynamicSceneGraphNode;
+  //! node reference type of the layer
+  using NodeRef = BaseLayer::DynamicNodeRef;
   //! node container for the layer
   using Nodes = std::vector<Node::Ptr>;
-  //! node reference type for the layer
-  using NodeRef = std::reference_wrapper<const Node>;
   //! edge type for the layer
   using Edge = SceneGraphEdge;
   //! edge container type for the layer
   using Edges = std::map<size_t, Edge>;
-  //! edge attributes type for the layer
-  using EdgeAttributesPtr = SceneGraphEdge::AttrPtr;
-  //! edge reference type for the layer
-  using EdgeRef = std::reference_wrapper<const Edge>;
-  //! type for a mapping between node id and edge index
-  using EdgeLookup = std::map<NodeId, std::map<NodeId, size_t>>;
+
   friend class DynamicSceneGraph;
 
-  DynamicSceneGraphLayer(LayerId layer, char node_prefix);
+  DynamicSceneGraphLayer(LayerId layer, LayerPrefix node_prefix);
 
   virtual ~DynamicSceneGraphLayer() = default;
 
@@ -65,7 +33,7 @@ class DynamicSceneGraphLayer {
 
   bool hasNodeByIndex(size_t node_index) const;
 
-  bool hasEdge(NodeId source, NodeId target) const;
+  bool hasEdge(NodeId source, NodeId target) const override;
 
   bool hasEdgeByIndex(size_t source_index, size_t target_index) const;
 
@@ -73,17 +41,19 @@ class DynamicSceneGraphLayer {
 
   std::optional<NodeRef> getNodeByIndex(size_t node_id) const;
 
-  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const;
+  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const override;
 
   std::optional<EdgeRef> getEdgeByIndex(size_t source_index, size_t target_index) const;
 
-  bool insertEdge(NodeId source, NodeId target, EdgeAttributesPtr&& edge_info = nullptr);
+  bool insertEdge(NodeId source,
+                  NodeId target,
+                  EdgeAttributes::Ptr&& edge_info = nullptr) override;
 
   bool insertEdgeByIndex(size_t source_index,
                          size_t target_index,
-                         EdgeAttributesPtr&& edge_info = nullptr);
+                         EdgeAttributes::Ptr&& edge_info = nullptr);
 
-  bool removeEdge(NodeId source, NodeId target);
+  bool removeEdge(NodeId source, NodeId target) override;
 
   bool removeEdgeByIndex(size_t source_index, size_t target_index);
 
@@ -93,10 +63,10 @@ class DynamicSceneGraphLayer {
 
   const LayerId id;
 
-  const char prefix;
+  const LayerPrefix prefix;
 
   bool mergeLayer(const DynamicSceneGraphLayer& graph_layer,
-                  std::map<NodeId, DynamicLayerKey>* layer_lookup = nullptr,
+                  std::map<NodeId, LayerKey>* layer_lookup = nullptr,
                   bool update_attributes = true);
 
  protected:
@@ -104,18 +74,17 @@ class DynamicSceneGraphLayer {
                    NodeAttributes::Ptr&& attrs,
                    bool add_edge = true);
 
+  bool removeNode(NodeId node) override;
+
  protected:
-  std::unordered_set<std::chrono::nanoseconds::rep> times_;
+  std::set<std::chrono::nanoseconds::rep> times_;
 
   Nodes nodes_;
-  NodeSymbol next_node_;
+  std::map<size_t, NodeStatus> node_status_;
+  size_t next_node_;
 
-  //! internal edge index counter
-  size_t last_edge_idx_;
   //! internal edge container
-  Edges edges_;
-  //! internal mapping between node id and edge index
-  EdgeLookup edges_info_;
+  EdgeContainer edges_;
 
  public:
   /**
@@ -126,7 +95,7 @@ class DynamicSceneGraphLayer {
   /**
    * @brief constant edge container
    */
-  inline const Edges& edges() const { return edges_; };
+  inline const Edges& edges() const { return edges_.edges; };
 };
 
 }  // namespace kimera

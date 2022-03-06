@@ -2,7 +2,6 @@
 #include <kimera_dsg/attribute_serializer.h>
 #include <kimera_dsg/dynamic_scene_graph.h>
 #include <kimera_dsg/node_attributes.h>
-#include <kimera_dsg/scene_graph.h>
 #include <kimera_dsg/serialization_helpers.h>
 
 #include <gtest/gtest.h>
@@ -43,45 +42,8 @@ struct TempFile {
   std::string path;
 };
 
-TEST(SceneGraphSerializationTests, SerializeGraphBasic) {
-  SceneGraph::LayerIds layers{1, 2, 3};
-  SceneGraph expected(layers);
-  expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
-
-  expected.insertEdge(0, 1);
-  expected.insertEdge(1, 2);
-
-  const auto output = expected.serialize();
-
-  SceneGraph result;
-  result.deserialize(output);
-
-  EXPECT_EQ(expected.numNodes(), result.numNodes());
-  EXPECT_EQ(expected.numEdges(), result.numEdges());
-  EXPECT_EQ(expected.numLayers(), result.numLayers());
-
-  std::set<LayerId> original_layers;
-  for (const auto& id_layer_pair : expected.layers()) {
-    original_layers.insert(id_layer_pair.first);
-  }
-
-  for (const auto& id_layer_pair : result.layers()) {
-    EXPECT_TRUE(original_layers.count(id_layer_pair.first))
-        << "layer " << id_layer_pair.first << " missing in serialized graph";
-  }
-
-  EXPECT_TRUE(result.hasNode(0));
-  EXPECT_TRUE(result.hasNode(1));
-  EXPECT_TRUE(result.hasNode(2));
-  EXPECT_TRUE(result.hasEdge(0, 1));
-  EXPECT_TRUE(result.hasEdge(1, 2));
-}
-
 TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
-  SceneGraph::LayerIds layers{1, 2, 3};
-  DynamicSceneGraph expected(layers, 0);
+  DynamicSceneGraph expected({1, 2, 3}, 0);
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -91,34 +53,23 @@ TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
 
   const auto output = expected.serialize();
 
-  DynamicSceneGraph result;
-  result.deserialize(output);
+  auto result = DynamicSceneGraph::deserialize(output);
 
-  EXPECT_EQ(expected.numNodes(), result.numNodes()) << output;
-  EXPECT_EQ(expected.numEdges(), result.numEdges());
-  EXPECT_EQ(expected.numLayers(), result.numLayers());
+  EXPECT_EQ(expected.numNodes(), result->numNodes()) << output;
+  EXPECT_EQ(expected.numEdges(), result->numEdges());
+  EXPECT_EQ(expected.numLayers(), result->numLayers());
+  EXPECT_EQ(expected.layer_ids, result->layer_ids);
 
-  std::set<LayerId> original_layers;
-  for (const auto& id_layer_pair : expected.layers()) {
-    original_layers.insert(id_layer_pair.first);
-  }
-
-  for (const auto& id_layer_pair : result.layers()) {
-    EXPECT_TRUE(original_layers.count(id_layer_pair.first))
-        << "layer " << id_layer_pair.first << " missing in serialized graph";
-  }
-
-  EXPECT_TRUE(result.hasNode(0));
-  EXPECT_TRUE(result.hasNode(1));
-  EXPECT_TRUE(result.hasNode(2));
-  EXPECT_TRUE(result.hasEdge(0, 1));
-  EXPECT_TRUE(result.hasEdge(1, 2));
-  EXPECT_EQ(expected.hasLayer(0), result.hasLayer(0));
+  EXPECT_TRUE(result->hasNode(0));
+  EXPECT_TRUE(result->hasNode(1));
+  EXPECT_TRUE(result->hasNode(2));
+  EXPECT_TRUE(result->hasEdge(0, 1));
+  EXPECT_TRUE(result->hasEdge(1, 2));
+  EXPECT_EQ(expected.hasLayer(0), result->hasLayer(0));
 }
 
 TEST(SceneGraphSerializationTests, SerializeDsgWithNaNs) {
-  SceneGraph::LayerIds layers{1, 2, 3};
-  DynamicSceneGraph expected(layers, 0);
+  DynamicSceneGraph expected({1, 2, 3}, 0);
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -134,32 +85,21 @@ TEST(SceneGraphSerializationTests, SerializeDsgWithNaNs) {
 
   const std::string output_str = expected.serialize();
 
-  // TODO(nathan) make static
-  DynamicSceneGraph result;
-  result.deserialize(output_str);
+  auto result = DynamicSceneGraph::deserialize(output_str);
 
-  EXPECT_EQ(expected.numNodes(), result.numNodes());
-  EXPECT_EQ(expected.numEdges(), result.numEdges());
-  EXPECT_EQ(expected.numLayers(), result.numLayers());
+  EXPECT_EQ(expected.numNodes(), result->numNodes());
+  EXPECT_EQ(expected.numEdges(), result->numEdges());
+  EXPECT_EQ(expected.numLayers(), result->numLayers());
+  EXPECT_EQ(expected.layer_ids, result->layer_ids);
 
-  std::set<LayerId> original_layers;
-  for (const auto& id_layer_pair : expected.layers()) {
-    original_layers.insert(id_layer_pair.first);
-  }
-
-  for (const auto& id_layer_pair : result.layers()) {
-    EXPECT_TRUE(original_layers.count(id_layer_pair.first))
-        << "layer " << id_layer_pair.first << " missing in serialized graph";
-  }
-
-  EXPECT_TRUE(result.hasNode(0));
-  EXPECT_TRUE(result.hasNode(1));
-  EXPECT_TRUE(result.hasNode(2));
-  EXPECT_TRUE(result.hasNode(3));
-  EXPECT_TRUE(result.hasEdge(0, 1));
-  EXPECT_TRUE(result.hasEdge(1, 2));
-  EXPECT_TRUE(result.hasEdge(2, 3));
-  EXPECT_EQ(expected.hasLayer(0), result.hasLayer(0));
+  EXPECT_TRUE(result->hasNode(0));
+  EXPECT_TRUE(result->hasNode(1));
+  EXPECT_TRUE(result->hasNode(2));
+  EXPECT_TRUE(result->hasNode(3));
+  EXPECT_TRUE(result->hasEdge(0, 1));
+  EXPECT_TRUE(result->hasEdge(1, 2));
+  EXPECT_TRUE(result->hasEdge(2, 3));
+  EXPECT_EQ(expected.hasLayer(0), result->hasLayer(0));
 }
 
 TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
@@ -167,40 +107,30 @@ TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
   DynamicSceneGraph expected;
   expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
 
-  expected.emplaceDynamicNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  expected.emplaceDynamicNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  expected.emplaceDynamicNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
-  expected.emplaceDynamicNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
+  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
+  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
 
   const auto output = expected.serialize();
 
-  DynamicSceneGraph result;
-  result.deserialize(output);
+  auto result = DynamicSceneGraph::deserialize(output);
 
-  EXPECT_EQ(expected.numNodes(), result.numNodes()) << output;
-  EXPECT_EQ(expected.numEdges(), result.numEdges());
-  EXPECT_EQ(expected.numLayers(), result.numLayers());
+  EXPECT_EQ(expected.numNodes(), result->numNodes()) << output;
+  EXPECT_EQ(expected.numEdges(), result->numEdges());
+  EXPECT_EQ(expected.numLayers(), result->numLayers());
+  EXPECT_EQ(expected.layer_ids, result->layer_ids);
 
-  std::set<LayerId> original_layers;
-  for (const auto& id_layer_pair : expected.layers()) {
-    original_layers.insert(id_layer_pair.first);
-  }
+  EXPECT_TRUE(result->hasNode(0));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 0)));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 1)));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 2)));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 3)));
+  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
+  EXPECT_FALSE(result->hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
+  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
 
-  for (const auto& id_layer_pair : result.layers()) {
-    EXPECT_TRUE(original_layers.count(id_layer_pair.first))
-        << "layer " << id_layer_pair.first << " missing in serialized graph";
-  }
-
-  EXPECT_TRUE(result.hasNode(0));
-  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 0)));
-  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 1)));
-  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 2)));
-  EXPECT_TRUE(result.hasNode(NodeSymbol('a', 3)));
-  EXPECT_TRUE(result.hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
-  EXPECT_FALSE(result.hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
-  EXPECT_TRUE(result.hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
-
-  EXPECT_TRUE(result.hasDynamicLayer(2, 'a'));
+  EXPECT_TRUE(result->hasLayer(2, 'a'));
 }
 
 TEST(SceneGraphSerializationTests, SaveAndLoadGraph) {
@@ -218,12 +148,11 @@ TEST(SceneGraphSerializationTests, SaveAndLoadGraph) {
 
   graph.save(tmp_file.path);
 
-  DynamicSceneGraph other;
-  other.load(tmp_file.path);
+  auto other = DynamicSceneGraph::load(tmp_file.path);
 
-  EXPECT_EQ(graph.numNodes(), other.numNodes());
-  EXPECT_EQ(graph.numLayers(), other.numLayers());
-  EXPECT_EQ(graph.hasMesh(), other.hasMesh());
+  EXPECT_EQ(graph.numNodes(), other->numNodes());
+  EXPECT_EQ(graph.numLayers(), other->numLayers());
+  EXPECT_EQ(graph.hasMesh(), other->hasMesh());
 }
 
 }  // namespace kimera

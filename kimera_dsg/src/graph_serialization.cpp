@@ -1,6 +1,5 @@
 #include "kimera_dsg/attribute_serialization.h"
 #include "kimera_dsg/dynamic_scene_graph.h"
-#include "kimera_dsg/scene_graph.h"
 #include "kimera_dsg/scene_graph_layer.h"
 #include "kimera_dsg/serialization_helpers.h"
 
@@ -88,8 +87,8 @@ std::string SceneGraphLayer::serializeLayer(const NodeSet& nodes) const {
       continue;
     }
 
-    for (const auto& sibling_edge_pair : edges_info_.at(node_id)) {
-      const Edge& edge = edges_.at(sibling_edge_pair.second);
+    for (const auto& sibling_edge_pair : edges_.edges_info.at(node_id)) {
+      const Edge& edge = edges_.get(sibling_edge_pair.second);
       record["edges"].push_back(edge);
     }
   }
@@ -127,69 +126,9 @@ EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
   return new_edges;
 }
 
-void SceneGraph::save(const std::string& filepath, bool include_mesh) const {
+void DynamicSceneGraph::save(const std::string& filepath, bool include_mesh) const {
   std::ofstream outfile(filepath);
   outfile << this->serialize(include_mesh);
-}
-
-void SceneGraph::load(const std::string& filepath) {
-  std::stringstream ss;
-
-  std::ifstream infile(filepath);
-  ss << infile.rdbuf();
-
-  deserialize(ss.str());
-}
-
-std::string SceneGraph::serialize(bool) const {
-  json record;
-  record["directed"] = false;
-  record["multigraph"] = false;
-  record["nodes"] = json::array();
-  record["edges"] = json::array();
-  record["layer_ids"] = layer_ids_;
-
-  for (const auto& id_layer_pair : layers_) {
-    for (const auto& id_node_pair : id_layer_pair.second->nodes_) {
-      record["nodes"].push_back(*id_node_pair.second);
-    }
-
-    for (const auto& id_edge_pair : id_layer_pair.second->edges_) {
-      record["edges"].push_back(id_edge_pair.second);
-    }
-  }
-
-  for (const auto& id_edge_pair : inter_layer_edges_) {
-    record["edges"].push_back(id_edge_pair.second);
-  }
-
-  return record.dump();
-}
-
-void SceneGraph::deserialize(const std::string& contents) {
-  auto record = json::parse(contents);
-
-  // we have to clear after setting the layer ids to get the right layers initialized
-  layer_ids_ = record.at("layer_ids").get<LayerIds>();
-  SceneGraph::clear();
-
-  for (const auto& node : record.at("nodes")) {
-    if (node.contains("timestamp")) {
-      continue;  // we found a dynamic node
-    }
-
-    read_node_from_json(node,
-                        [this](NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs) {
-                          this->emplaceNode(layer, id, std::move(attrs));
-                        });
-  }
-
-  for (const auto& edge : record.at("edges")) {
-    read_edge_from_json(edge,
-                        [&](NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs) {
-                          insertEdge(source, target, std::move(attrs));
-                        });
-  }
 }
 
 std::string DynamicSceneGraph::serialize(bool include_mesh) const {
@@ -198,20 +137,20 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
   record["multigraph"] = false;
   record["nodes"] = json::array();
   record["edges"] = json::array();
-  record["layer_ids"] = layer_ids_;
-  record["mesh_layer_id"] = mesh_layer_id_;
+  record["layer_ids"] = layer_ids;
+  record["mesh_layer_id"] = mesh_layer_id;
 
   for (const auto& id_layer_pair : layers_) {
     for (const auto& id_node_pair : id_layer_pair.second->nodes_) {
       record["nodes"].push_back(*id_node_pair.second);
     }
 
-    for (const auto& id_edge_pair : id_layer_pair.second->edges_) {
+    for (const auto& id_edge_pair : id_layer_pair.second->edges()) {
       record["edges"].push_back(id_edge_pair.second);
     }
   }
 
-  for (const auto& id_edge_pair : inter_layer_edges_) {
+  for (const auto& id_edge_pair : interlayer_edges()) {
     record["edges"].push_back(id_edge_pair.second);
   }
 
@@ -223,7 +162,7 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
         record["nodes"].push_back(*node);
       }
 
-      for (const auto& id_edge_pair : layer.edges_) {
+      for (const auto& id_edge_pair : layer.edges_.edges) {
         record["edges"].push_back(id_edge_pair.second);
       }
     }
@@ -243,13 +182,21 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
   return record.dump();
 }
 
-void DynamicSceneGraph::deserialize(const std::string& contents) {
-  const auto record = json::parse(contents);
-  mesh_layer_id_ = record.at("mesh_layer_id").get<LayerId>();
-  layer_ids_ = record.at("layer_ids").get<LayerIds>();
+DynamicSceneGraph::Ptr DynamicSceneGraph::load(const std::string& filepath) {
+  std::stringstream ss;
 
-  // we have to clear after setting the layer ids to get the right layers initialized
-  clear();
+  std::ifstream infile(filepath);
+  ss << infile.rdbuf();
+
+  return deserialize(ss.str());
+}
+
+DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& contents) {
+  const auto record = json::parse(contents);
+  const auto mesh_layer_id = record.at("mesh_layer_id").get<LayerId>();
+  const auto layer_ids = record.at("layer_ids").get<LayerIds>();
+
+  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids, mesh_layer_id);
 
   std::map<NodeId, json> dynamic_contents;
   for (const auto& node : record.at("nodes")) {
@@ -257,28 +204,28 @@ void DynamicSceneGraph::deserialize(const std::string& contents) {
       dynamic_contents[node.at("id").get<NodeId>()] = node;
     } else {
       read_node_from_json(
-          node, [this](NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs) {
-            this->emplaceNode(layer, id, std::move(attrs));
+          node, [graph](NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs) {
+            graph->emplaceNode(layer, id, std::move(attrs));
           });
     }
   }
 
   for (const auto& id_content_pair : dynamic_contents) {
     read_node_from_json(id_content_pair.second,
-                        [this](LayerId layer,
-                               char prefix,
-                               std::chrono::nanoseconds time,
-                               NodeAttributes::Ptr&& attrs) {
-                          emplaceDynamicNode(
+                        [graph](LayerId layer,
+                                char prefix,
+                                std::chrono::nanoseconds time,
+                                NodeAttributes::Ptr&& attrs) {
+                          graph->emplaceNode(
                               layer, prefix, time, std::move(attrs), false);
                         });
   }
 
   for (const auto& edge : record.at("edges")) {
-    read_edge_from_json(edge,
-                        [&](NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs) {
-                          insertEdge(source, target, std::move(attrs));
-                        });
+    read_edge_from_json(
+        edge, [graph](NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs) {
+          graph->insertEdge(source, target, std::move(attrs));
+        });
   }
 
   if (record.contains("mesh")) {
@@ -289,7 +236,7 @@ void DynamicSceneGraph::deserialize(const std::string& contents) {
     auto new_faces = std::make_shared<MeshFaces>(faces.begin(), faces.end());
 
     // clear all previous edges
-    setMesh(new_vertices, new_faces, true);
+    graph->setMesh(new_vertices, new_faces, true);
   }
 
   if (record.contains("mesh_edges")) {
@@ -297,11 +244,13 @@ void DynamicSceneGraph::deserialize(const std::string& contents) {
     for (const auto& edge : record.at("mesh_edges")) {
       auto source = edge.at("source").get<NodeId>();
       auto target = edge.at("target").get<size_t>();
-      num_inserted += insertMeshEdge(source, target, true) ? 1 : 0;
+      num_inserted += graph->insertMeshEdge(source, target, true) ? 1 : 0;
     }
 
     VLOG(1) << "Loaded " << num_inserted << " mesh edges";
   }
+
+  return graph;
 }
 
 }  // namespace kimera

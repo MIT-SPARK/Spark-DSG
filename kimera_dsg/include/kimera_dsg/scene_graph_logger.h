@@ -1,7 +1,6 @@
 #pragma once
 
-#include "kimera_dsg/scene_graph.h"
-#include "kimera_dsg/scene_graph_layer.h"
+#include "kimera_dsg/dynamic_scene_graph.h"
 
 #include <string>
 
@@ -21,7 +20,7 @@ class SceneGraphLogger {
     layer_names_.insert({id, name});
   }
 
-  void logGraph(const SceneGraph::Ptr& graph);
+  void logGraph(const DynamicSceneGraph::Ptr& graph);
 
  private:
   std::string output_dir_;

@@ -1,33 +1,25 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/scene_graph_layer.h>
 
-using namespace kimera;
-using Node = kimera::SceneGraphLayer::Node;
-using NodeRef = kimera::SceneGraphLayer::NodeRef;
-using Edge = kimera::SceneGraphLayer::Edge;
-using Edges = kimera::SceneGraphLayer::Edges;
-using EdgeRef = kimera::SceneGraphLayer::EdgeRef;
-using NodeSet = std::unordered_set<NodeId>;
+namespace kimera {
 
-class TestableSceneGraphLayer : public SceneGraphLayer {
- public:
-  TestableSceneGraphLayer(kimera::LayerId id) : SceneGraphLayer(id) {}
-  using SceneGraphLayer::emplaceNode;
-  using SceneGraphLayer::insertNode;
-  using SceneGraphLayer::mergeNodes;
-  using SceneGraphLayer::removeNode;
-};
+using Node = SceneGraphLayer::Node;
+using NodeRef = SceneGraphLayer::NodeRef;
+using Edge = SceneGraphLayer::Edge;
+using Edges = SceneGraphLayer::Edges;
+using EdgeRef = SceneGraphLayer::EdgeRef;
+using NodeSet = std::unordered_set<NodeId>;
 
 // Test that an empty layer has no nodes and edges
 TEST(SceneGraphLayerTests, DefaultLayerInvariants) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numNodes());
   EXPECT_EQ(0u, layer.numEdges());
 }
 
 // Test that we only have nodes that we add, and we can't add the same node
 TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numNodes());
   EXPECT_FALSE(layer.hasNode(0));
   EXPECT_EQ(NodeStatus::NONEXISTENT, layer.checkNode(0));
@@ -49,7 +41,7 @@ TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
 
 // Test that we only have nodes that we add, and we can't add the same node
 TEST(SceneGraphLayerTests, InsertNodeInvariants) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numNodes());
   EXPECT_FALSE(layer.hasNode(0));
   EXPECT_EQ(NodeStatus::NONEXISTENT, layer.checkNode(0));
@@ -83,7 +75,7 @@ TEST(SceneGraphLayerTests, InsertNodeInvariants) {
 //   - That the edge must not already exist
 //   - That edges are bidirectional
 TEST(SceneGraphLayerTests, InsertEdgeInvariants) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numEdges());
   EXPECT_FALSE(layer.hasEdge(0, 1));
 
@@ -111,7 +103,7 @@ TEST(SceneGraphLayerTests, InsertEdgeInvariants) {
 
 // Test that inserting specific edge attributes works
 TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   // source and target nodes
   EXPECT_TRUE(layer.emplaceNode(0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(layer.emplaceNode(1, std::make_unique<NodeAttributes>()));
@@ -149,7 +141,7 @@ TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
 
 // Test that nodes we see via the public iterator match up with what we added
 TEST(SceneGraphLayerTests, BasicNodeIterationCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   size_t num_nodes = 5;
   std::set<int64_t> expected_ids;
   for (size_t i = 0; i < num_nodes; ++i) {
@@ -171,7 +163,7 @@ TEST(SceneGraphLayerTests, BasicNodeIterationCorrect) {
 
 // Test that edges we see via the public iterator match up with what we added
 TEST(SceneGraphLayerTests, BasicEdgeIterationCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   size_t num_nodes = 5;
   for (size_t i = 0; i < num_nodes; ++i) {
     EXPECT_TRUE(layer.emplaceNode(i, std::make_unique<NodeAttributes>()));
@@ -199,7 +191,7 @@ TEST(SceneGraphLayerTests, BasicEdgeIterationCorrect) {
 //   - we don't do anything if it doesn't exist
 //   - we remove all edges related to the node if it does
 TEST(SceneGraphLayerTests, RemoveNodeSound) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(layer.removeNode(0));
@@ -225,7 +217,7 @@ TEST(SceneGraphLayerTests, RemoveNodeSound) {
 //   - we don't do anything if either nodes doesn't exist
 //   - we rewire all edges to the merged nodes if we do
 TEST(SceneGraphLayerTests, MergeNodesCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(layer.mergeNodes(0, 1));
@@ -259,7 +251,7 @@ TEST(SceneGraphLayerTests, MergeNodesCorrect) {
 
 // Test that removing a edge does what it should
 TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(layer.removeEdge(0, 1));
@@ -278,17 +270,18 @@ TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
 
 // Test that rewiring an edge does what it should
 TEST(SceneGraphLayerTests, RewireEdgeCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
 
   size_t num_nodes = 5;
   for (size_t i = 0; i < num_nodes; ++i) {
     EXPECT_TRUE(layer.emplaceNode(i, std::make_unique<NodeAttributes>()));
   }
+
   for (size_t i = 1; i < num_nodes; ++i) {
     EXPECT_TRUE(layer.insertEdge(i - 1, i));
   }
-
   EXPECT_EQ(4u, layer.numEdges());
+
   // we can't rewire an edge that doesn't exist
   EXPECT_FALSE(layer.rewireEdge(4, 5, 0, 1));
   // we can't rewire an edge to itself
@@ -310,8 +303,8 @@ TEST(SceneGraphLayerTests, RewireEdgeCorrect) {
 
 // Test that rewiring an edge does what it should
 TEST(SceneGraphLayerTests, MergeLayerCorrect) {
-  TestableSceneGraphLayer layer_1(1);
-  TestableSceneGraphLayer layer_2(1);
+  IsolatedSceneGraphLayer layer_1(1);
+  IsolatedSceneGraphLayer layer_2(1);
 
   for (size_t i = 0; i < 3; ++i) {
     Eigen::Vector3d node_pos;
@@ -331,7 +324,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
     EXPECT_TRUE(layer_2.insertEdge(i - 1, i));
   }
 
-  std::map<NodeId, LayerId> node_to_layer;
+  std::map<NodeId, LayerKey> node_to_layer;
   layer_1.mergeLayer(layer_2, &node_to_layer);
 
   EXPECT_EQ(2u, node_to_layer.size());
@@ -345,7 +338,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
     EXPECT_EQ(0.0, result(2));
     EXPECT_EQ(NodeStatus::VISIBLE, layer_1.checkNode(i));
     if (i > 2) {
-      EXPECT_EQ(1u, node_to_layer.at(i));
+      EXPECT_EQ(LayerKey(1), node_to_layer.at(i));
     }
   }
 }
@@ -355,7 +348,7 @@ TEST(SceneGraphLayerTests, getPositionCorrect) {
   expected << 1.0, 2.0, 3.0;
   NodeAttributes::Ptr attrs = std::make_unique<NodeAttributes>(expected);
 
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
   layer.emplaceNode(NodeSymbol('x', 0), std::move(attrs));
 
   Eigen::Vector3d result = layer.getPosition(NodeSymbol('x', 0));
@@ -372,7 +365,7 @@ TEST(SceneGraphLayerTests, getPositionCorrect) {
 }
 
 TEST(SceneGraphLayerTests, GetNeighborhoodCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
 
   layer.emplaceNode(0, std::make_unique<NodeAttributes>());
   for (size_t i = 1; i < 7; ++i) {
@@ -400,7 +393,7 @@ TEST(SceneGraphLayerTests, GetNeighborhoodCorrect) {
 }
 
 TEST(SceneGraphLayerTests, GetNeighborhoodFromSetCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
 
   layer.emplaceNode(0, std::make_unique<NodeAttributes>());
   for (size_t i = 1; i < 7; ++i) {
@@ -452,7 +445,7 @@ TEST(SceneGraphLayerTests, GetNeighborhoodFromSetCorrect) {
 }
 
 TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
-  TestableSceneGraphLayer layer(1);
+  IsolatedSceneGraphLayer layer(1);
 
   layer.emplaceNode(0, std::make_unique<NodeAttributes>());
   for (size_t i = 1; i < 7; ++i) {
@@ -460,7 +453,7 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     layer.insertEdge(i - 1, i);
   }
 
-  TestableSceneGraphLayer deserialized_layer(1);
+  IsolatedSceneGraphLayer deserialized_layer(1);
 
   {  // no nodes -> empty result on deserialization
     std::unordered_set<NodeId> nodes;
@@ -505,3 +498,5 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     EXPECT_EQ(0u, deserialized_layer.numEdges());
   }
 }
+
+}  // namespace kimera

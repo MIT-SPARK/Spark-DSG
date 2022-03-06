@@ -1,19 +1,19 @@
 #include <gtest/gtest.h>
 #include <kimera_dsg/dynamic_scene_graph_layer.h>
 
-using namespace kimera;
-using Node = kimera::DynamicSceneGraphLayer::Node;
-using NodeRef = kimera::DynamicSceneGraphLayer::NodeRef;
-using Edge = kimera::DynamicSceneGraphLayer::Edge;
-using Edges = kimera::DynamicSceneGraphLayer::Edges;
-using EdgeRef = kimera::DynamicSceneGraphLayer::EdgeRef;
+namespace kimera {
+
+using Node = DynamicSceneGraphLayer::Node;
+using Edge = DynamicSceneGraphLayer::Edge;
 
 class TestableDynamicLayer : public DynamicSceneGraphLayer {
  public:
   TestableDynamicLayer(kimera::LayerId id, char prefix)
       : DynamicSceneGraphLayer(id, prefix) {}
+
   using DynamicSceneGraphLayer::emplaceNode;
-  // using DynamicSceneGraphLayer::removeNode;
+
+  using DynamicSceneGraphLayer::removeNode;
 };
 
 // Test that an empty layer has no nodes and edges
@@ -40,7 +40,7 @@ TEST(DynamicSceneGraphLayerTests, EmplaceNodeInvariants) {
 
   EXPECT_FALSE(layer.getNodeByIndex(NodeSymbol(layer_prefix + 1, 0)));
   EXPECT_TRUE(layer.getNodeByIndex(0));
-  std::optional<NodeRef> node_opt = layer.getNode(NodeSymbol(layer_prefix, 0));
+  auto node_opt = layer.getNode(NodeSymbol(layer_prefix, 0));
   ASSERT_TRUE(node_opt);
   const Node& node = *node_opt;
   EXPECT_EQ(1u, node.layer);
@@ -63,6 +63,7 @@ TEST(DynamicSceneGraphLayerTests, EmplaceNodeInvariants) {
 //   - That the edge must not already exist
 //   - That edges are bidirectional
 TEST(DynamicSceneGraphLayerTests, InsertEdgeInvariants) {
+  using namespace std::chrono_literals;
   const char prefix = 'a';
 
   TestableDynamicLayer layer(1, prefix);
@@ -71,16 +72,14 @@ TEST(DynamicSceneGraphLayerTests, InsertEdgeInvariants) {
   EXPECT_FALSE(layer.hasEdgeByIndex(0, 1));
 
   // source node
-  EXPECT_TRUE(
-      layer.emplaceNode(std::chrono::seconds(1), std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(layer.emplaceNode(1s, std::make_unique<NodeAttributes>()));
   EXPECT_FALSE(layer.hasEdgeByIndex(0, 1));
   EXPECT_FALSE(layer.insertEdgeByIndex(0, 1));
   EXPECT_FALSE(layer.insertEdge(NodeSymbol(prefix, 0), NodeSymbol(prefix, 1)));
   EXPECT_EQ(0u, layer.numEdges());
 
   // target node (produces an edge)
-  EXPECT_TRUE(
-      layer.emplaceNode(std::chrono::seconds(2), std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(layer.emplaceNode(2s, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(layer.hasEdge(NodeSymbol(prefix, 0), NodeSymbol(prefix, 1)));
   EXPECT_TRUE(layer.hasEdgeByIndex(0, 1));
   EXPECT_TRUE(layer.hasEdge(NodeSymbol(prefix, 1), NodeSymbol(prefix, 0)));
@@ -94,8 +93,7 @@ TEST(DynamicSceneGraphLayerTests, InsertEdgeInvariants) {
   EXPECT_EQ(1u, layer.numEdges());
 
   // adding a node without an automatic edge doesn't produce an edge
-  EXPECT_TRUE(layer.emplaceNode(
-      std::chrono::seconds(3), std::make_unique<NodeAttributes>(), false));
+  EXPECT_TRUE(layer.emplaceNode(3s, std::make_unique<NodeAttributes>(), false));
   EXPECT_FALSE(layer.hasEdgeByIndex(1, 2));
   EXPECT_FALSE(layer.hasEdgeByIndex(2, 1));
   EXPECT_EQ(1u, layer.numEdges());
@@ -114,12 +112,12 @@ TEST(DynamicSceneGraphLayerTests, InsertEdgeInvariants) {
 
 // Test that inserting specific edge attributes works
 TEST(DynamicSceneGraphLayerTests, EdgeAttributesCorrect) {
+  using namespace std::chrono_literals;
+
   TestableDynamicLayer layer(1, 'a');
   // source and target nodes
-  EXPECT_TRUE(layer.emplaceNode(
-      std::chrono::seconds(1), std::make_unique<NodeAttributes>(), false));
-  EXPECT_TRUE(layer.emplaceNode(
-      std::chrono::seconds(2), std::make_unique<NodeAttributes>(), false));
+  EXPECT_TRUE(layer.emplaceNode(1s, std::make_unique<NodeAttributes>(), false));
+  EXPECT_TRUE(layer.emplaceNode(2s, std::make_unique<NodeAttributes>(), false));
 
   // actually add the edge
   auto info = std::make_unique<EdgeAttributes>();
@@ -130,7 +128,7 @@ TEST(DynamicSceneGraphLayerTests, EdgeAttributesCorrect) {
   EXPECT_EQ(1u, layer.numEdges());
 
   EXPECT_TRUE(layer.getEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
-  std::optional<EdgeRef> edge_opt = layer.getEdgeByIndex(0, 1);
+  auto edge_opt = layer.getEdgeByIndex(0, 1);
   ASSERT_TRUE(edge_opt);
   const Edge& edge = *edge_opt;
   EXPECT_EQ(NodeSymbol('a', 0), edge.source);
@@ -139,7 +137,7 @@ TEST(DynamicSceneGraphLayerTests, EdgeAttributesCorrect) {
   EXPECT_TRUE(edge.info->weighted);
   EXPECT_EQ(0.5, edge.info->weight);
 
-  std::optional<EdgeRef> swapped_edge_opt = layer.getEdgeByIndex(1, 0);
+  auto swapped_edge_opt = layer.getEdgeByIndex(1, 0);
   ASSERT_TRUE(swapped_edge_opt);
 
   const Edge& swapped_edge = *swapped_edge_opt;
@@ -201,12 +199,13 @@ TEST(DynamicSceneGraphLayerTests, BasicEdgeIterationCorrect) {
 }
 
 TEST(DynamicSceneGraphLayerTests, getPositionCorrect) {
+  using namespace std::chrono_literals;
   Eigen::Vector3d expected;
   expected << 1.0, 2.0, 3.0;
   NodeAttributes::Ptr attrs = std::make_unique<NodeAttributes>(expected);
 
   TestableDynamicLayer layer(1, 0);
-  layer.emplaceNode(std::chrono::seconds(1), std::move(attrs));
+  layer.emplaceNode(1s, std::move(attrs));
 
   Eigen::Vector3d result = layer.getPosition(NodeSymbol(0, 0));
   EXPECT_EQ(expected(0), result(0));
@@ -241,18 +240,18 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
   for (size_t i = 0; i < 3; ++i) {
     Eigen::Vector3d node_pos;
     node_pos << static_cast<double>(i), 0.0, 0.0;
-    EXPECT_TRUE(layer_1.emplaceNode(
-        std::chrono::seconds(i), std::make_unique<NodeAttributes>(node_pos)));
+    EXPECT_TRUE(layer_1.emplaceNode(std::chrono::seconds(i),
+                                    std::make_unique<NodeAttributes>(node_pos)));
   }
 
   for (size_t i = 0; i < 5; ++i) {
     Eigen::Vector3d node_pos;
     node_pos << static_cast<double>(i + 10), 0.0, 0.0;
-    EXPECT_TRUE(layer_2.emplaceNode(
-        std::chrono::seconds(i), std::make_unique<NodeAttributes>(node_pos)));
+    EXPECT_TRUE(layer_2.emplaceNode(std::chrono::seconds(i),
+                                    std::make_unique<NodeAttributes>(node_pos)));
   }
 
-  std::map<NodeId, DynamicLayerKey> node_to_layer;
+  std::map<NodeId, LayerKey> node_to_layer;
   layer_1.mergeLayer(layer_2, &node_to_layer);
 
   EXPECT_EQ(2u, node_to_layer.size());
@@ -265,8 +264,10 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
     EXPECT_EQ(0.0, result(1));
     EXPECT_EQ(0.0, result(2));
     if (i > 2) {
-      EXPECT_EQ(1u, node_to_layer.at(i).type);
+      EXPECT_EQ(1u, node_to_layer.at(i).layer);
       EXPECT_EQ(0, node_to_layer.at(i).prefix);
     }
   }
 }
+
+}  // namespace kimera
