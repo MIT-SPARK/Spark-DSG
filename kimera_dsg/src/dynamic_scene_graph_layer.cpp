@@ -35,7 +35,7 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
       emplaceNode(other_node.timestamp, other_node.attributes_->clone(), false);
       nodes_.back()->attributes_->position += last_update_delta;
       if (layer_lookup) {
-        layer_lookup->insert({next_node_ - 1, layer_key});
+        layer_lookup->insert({nodes_.back()->id, layer_key});
       }
     }
   }

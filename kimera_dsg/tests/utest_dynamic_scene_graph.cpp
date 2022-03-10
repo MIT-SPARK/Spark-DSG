@@ -723,6 +723,37 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrect) {
   EXPECT_LT(graph_1.getPosition(NodeSymbol('a', 0)).norm(), 1.0e-6);
 }
 
+TEST(DynamicSceneGraphTests, MergeDynamicGraphCorrect) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph graph_1;
+
+  DynamicSceneGraph graph_2;
+  EXPECT_TRUE(graph_2.emplaceNode(2, 'a', 0s, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 'a', 1s, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 'a', 2s, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 'a', 3s, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(2, 'a', 4s, std::make_unique<NodeAttributes>()));
+
+  EXPECT_EQ(0u, graph_1.numNodes());
+  EXPECT_EQ(0u, graph_1.numEdges());
+  EXPECT_EQ(5u, graph_2.numNodes());
+  EXPECT_EQ(4u, graph_2.numEdges());
+
+  graph_1.mergeGraph(graph_2);
+
+  EXPECT_EQ(5u, graph_2.numNodes());
+  EXPECT_EQ(4u, graph_2.numEdges());
+  EXPECT_EQ(graph_1.numNodes(), graph_2.numNodes());
+  EXPECT_EQ(graph_1.numEdges(), graph_2.numEdges());
+
+  EXPECT_TRUE(graph_1.hasLayer(KimeraDsgLayers::AGENTS, 'a'));
+  EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 0)));
+  EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 1)));
+  EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 2)));
+  EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 3)));
+  EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 4)));
+}
+
 TEST(DynamicSceneGraphTests, ClearWithDynamicLayersCorrect) {
   DynamicSceneGraph graph;
   EXPECT_EQ(5u, graph.numLayers());
