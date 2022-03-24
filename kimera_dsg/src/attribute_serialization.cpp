@@ -51,6 +51,10 @@ EdgeFactoryBase& EdgeAttributeFactory::get_default() {
   factory.add("EdgeAttributes", []() -> EdgeAttributes::Ptr {
     return std::make_unique<EdgeAttributes>();
   });
+  // backwards compatability
+  factory.add("SceneGraphEdgeInfo", []() -> EdgeAttributes::Ptr {
+    return std::make_unique<EdgeAttributes>();
+  });
   return factory;
 }
 

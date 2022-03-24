@@ -1,4 +1,5 @@
 #include "kimera_dsg/bounding_box.h"
+#include "kimera_dsg/scene_graph_types.h"
 
 namespace kimera {
 
@@ -43,16 +44,21 @@ BoundingBox::BoundingBox(BoundingBox::Type type,
       world_R_center(world_R_center) {}
 
 std::ostream& operator<<(std::ostream& os, const BoundingBox& box) {
-  os << "Bounding box: " << std::endl
-     << " - Max: " << box.max.transpose() << std::endl
-     << " - Min: " << box.min.transpose() << std::endl;
-  if (box.type == BoundingBox::Type::RAABB) {
-    os << " - Orientation: " << Eigen::Quaternionf(box.world_R_center) << std::endl;
+  if (box.type == BoundingBox::Type::INVALID) {
+    os << "invalid";
+    return os;
+  }
+
+  auto format = getDefaultVectorFormat();
+  os << "{min: " << box.min.transpose().format(format)
+     << ", max: " << box.max.transpose().format(format);
+  if (box.type == BoundingBox::Type::RAABB || box.type == BoundingBox::Type::OBB) {
+    os << ", rot: " << Eigen::Quaternionf(box.world_R_center);
   }
   if (box.type == BoundingBox::Type::OBB) {
-    os << " - Position: " << box.world_P_center.transpose() << std::endl
-       << " - Orientation: " << Eigen::Quaternionf(box.world_R_center) << std::endl;
+    os << ", pos: " << box.world_P_center.transpose().format(format);
   }
+  os << "}";
   return os;
 };
 

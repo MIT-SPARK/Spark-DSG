@@ -1,4 +1,6 @@
 #pragma once
+#include <Eigen/Core>
+
 #include <cstdint>
 #include <limits>
 #include <ostream>
@@ -89,5 +91,9 @@ struct KimeraDsgLayers {
   static std::string LayerIdToString(LayerId id);
   static LayerId StringToLayerId(const std::string& id_str);
 };
+
+inline Eigen::IOFormat getDefaultVectorFormat() {
+  return Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n", "[", "]");
+}
 
 }  // namespace kimera

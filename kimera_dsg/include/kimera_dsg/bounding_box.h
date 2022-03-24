@@ -1,5 +1,7 @@
 #pragma once
+#define PCL_NO_PRECOMPILE
 #include <pcl/features/moment_of_inertia_estimation.h>
+#undef PCL_NO_PRECOMPILE
 #include <Eigen/Geometry>
 #include <iostream>
 

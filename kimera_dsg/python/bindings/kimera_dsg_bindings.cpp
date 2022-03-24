@@ -85,6 +85,137 @@ class EdgeIter {
   typename SceneGraphLayer::Edges::const_iterator end_iter_;
 };
 
+class GlobalNodeIter {
+ public:
+  GlobalNodeIter(const DynamicSceneGraph& dsg) : valid_(true) {
+    curr_layer_iter_ = dsg.layers().begin();
+    end_layer_iter_ = dsg.layers().end();
+
+    setNodeIter();
+  }
+
+  void setNodeIter() {
+    if (curr_layer_iter_ == end_layer_iter_) {
+      valid_ = false;
+      return;
+    }
+
+    curr_node_iter_ = curr_layer_iter_->second->nodes().begin();
+    end_node_iter_ = curr_layer_iter_->second->nodes().end();
+    while (curr_node_iter_ == end_node_iter_) {
+      ++curr_layer_iter_;
+      if (curr_layer_iter_ == end_layer_iter_) {
+        valid_ = false;
+        return;
+      }
+
+      curr_node_iter_ = curr_layer_iter_->second->nodes().begin();
+      end_node_iter_ = curr_layer_iter_->second->nodes().end();
+    }
+  }
+
+  const SceneGraphNode& operator*() const { return *curr_node_iter_->second; }
+
+  GlobalNodeIter& operator++() {
+    ++curr_node_iter_;
+    if (curr_node_iter_ == end_node_iter_) {
+      ++curr_layer_iter_;
+      setNodeIter();
+    }
+
+    return *this;
+  }
+
+  bool operator==(const IterSentinel&) {
+    if (!valid_) {
+      return true;
+    }
+
+    return curr_node_iter_ == end_node_iter_ && curr_layer_iter_ == end_layer_iter_;
+  }
+
+ private:
+  bool valid_;
+  typename SceneGraphLayer::Nodes::const_iterator curr_node_iter_;
+  typename SceneGraphLayer::Nodes::const_iterator end_node_iter_;
+  typename DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
+  typename DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
+};
+
+class GlobalEdgeIter {
+ public:
+  GlobalEdgeIter(const DynamicSceneGraph& dsg) : started_interlayer_(false) {
+    curr_layer_iter_ = dsg.layers().begin();
+    end_layer_iter_ = dsg.layers().end();
+
+    curr_interlayer_iter_ = dsg.interlayer_edges().begin();
+    end_interlayer_iter_ = dsg.interlayer_edges().end();
+
+    setEdgeIter();
+  }
+
+  const SceneGraphEdge* operator*() const {
+    if (started_interlayer_) {
+      return &curr_interlayer_iter_->second;
+    } else {
+      return &curr_edge_iter_->second;
+    }
+  }
+
+  void setEdgeIter() {
+    if (started_interlayer_ || curr_layer_iter_ == end_layer_iter_) {
+      started_interlayer_ = true;
+      return;
+    }
+
+    curr_edge_iter_ = curr_layer_iter_->second->edges().begin();
+    end_edge_iter_ = curr_layer_iter_->second->edges().end();
+
+    while (curr_edge_iter_ == end_edge_iter_) {
+      ++curr_layer_iter_;
+      if (curr_layer_iter_ == end_layer_iter_) {
+        started_interlayer_ = true;
+        return;
+      }
+
+      curr_edge_iter_ = curr_layer_iter_->second->edges().begin();
+      end_edge_iter_ = curr_layer_iter_->second->edges().end();
+    }
+  }
+
+  GlobalEdgeIter& operator++() {
+    if (started_interlayer_) {
+      ++curr_interlayer_iter_;
+      return *this;
+    }
+
+    ++curr_edge_iter_;
+    if (curr_edge_iter_ == end_edge_iter_) {
+      ++curr_layer_iter_;
+      setEdgeIter();
+    }
+
+    return *this;
+  }
+
+  bool operator==(const IterSentinel&) {
+    if (!started_interlayer_) {
+      return false;
+    }
+
+    return curr_interlayer_iter_ == end_interlayer_iter_;
+  }
+
+ private:
+  bool started_interlayer_;
+  typename SceneGraphLayer::Edges::const_iterator curr_edge_iter_;
+  typename SceneGraphLayer::Edges::const_iterator end_edge_iter_;
+  typename DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
+  typename DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
+  typename SceneGraphLayer::Edges::const_iterator curr_interlayer_iter_;
+  typename SceneGraphLayer::Edges::const_iterator end_interlayer_iter_;
+};
+
 class LayerView {
  public:
   LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref_(layer) {}
@@ -122,7 +253,10 @@ class LayerIter {
   typename DynamicSceneGraph::Layers::const_iterator end_iter_;
 };
 
-PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
+PYBIND11_MODULE(_dsg_bindings, module) {
+  py::options options;
+  // options.disable_function_signatures();
+
   py::enum_<BoundingBox::Type>(module, "BoundingBoxType")
       .value("INVALID", BoundingBox::Type::INVALID)
       .value("AABB", BoundingBox::Type::AABB)
@@ -240,7 +374,8 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
                     &SceneGraphNode::getAttributesPtr,
                     &SceneGraphNode::getAttributesPtr,
                     py::return_value_policy::reference_internal)
-      .def_readonly("id", &SceneGraphNode::id)
+      .def_property_readonly(
+          "id", [](const SceneGraphNode& node) { return NodeSymbol(node.id); })
       .def_readonly("layer", &SceneGraphNode::layer)
       .def("__repr__", [](const SceneGraphNode& node) {
         std::stringstream ss;
@@ -320,7 +455,8 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
         graph.emplaceNode(layer_id, node_id, std::move(new_attrs)); \
       })
 
-  py::class_<DynamicSceneGraph>(module, "DynamicSceneGraph")
+  py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(module,
+                                                                    "DynamicSceneGraph")
       .def(py::init<>())
       .def(py::init<const DynamicSceneGraph::LayerIds&>())
       .def("clear", &DynamicSceneGraph::clear)
@@ -346,7 +482,8 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
            static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(
                &DynamicSceneGraph::hasLayer))
       .def("has_node", &DynamicSceneGraph::hasNode)
-      .def("has_edge", py::overload_cast<NodeId, NodeId>(&DynamicSceneGraph::hasEdge, py::const_))
+      .def("has_edge",
+           py::overload_cast<NodeId, NodeId>(&DynamicSceneGraph::hasEdge, py::const_))
       .def("get_layer",
            [](const DynamicSceneGraph& graph, LayerId layer_id) {
              if (!graph.hasLayer(layer_id)) {
@@ -370,15 +507,23 @@ PYBIND11_MODULE(kimera_dsg_python_bindings, module) {
               bool include_mesh) { graph.save(filepath, include_mesh); },
            "filepath"_a,
            "include_mesh"_a = true)
-      .def("load",
-           [](DynamicSceneGraph& graph, const std::string& filepath) {
-             graph.load(filepath);
-           },
-           "filepath"_a)
+      .def_static("load", &DynamicSceneGraph::load)
       .def_property("layers",
                     [](const DynamicSceneGraph& graph) {
                       return py::make_iterator(LayerIter(graph.layers()),
                                                IterSentinel());
+                    },
+                    nullptr,
+                    py::return_value_policy::reference_internal)
+      .def_property("nodes",
+                    [](const DynamicSceneGraph& graph) {
+                      return py::make_iterator(GlobalNodeIter(graph), IterSentinel());
+                    },
+                    nullptr,
+                    py::return_value_policy::reference_internal)
+      .def_property("edges",
+                    [](const DynamicSceneGraph& graph) {
+                      return py::make_iterator(GlobalEdgeIter(graph), IterSentinel());
                     },
                     nullptr,
                     py::return_value_policy::reference_internal)

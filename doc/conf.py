@@ -18,8 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "Kimera-DSG"
-copyright = "2021, Toni Rosinol et al."
-author = "Toni Rosinol et al."
+author = "Nathan Hughes et al."
 
 
 # -- General configuration ---------------------------------------------------
@@ -29,9 +28,6 @@ author = "Toni Rosinol et al."
 # ones.
 extensions = [
     "sphinx.ext.mathjax",
-    "sphinx_rtd_theme",
-    "breathe",
-    "exhale",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
@@ -39,30 +35,6 @@ extensions = [
 ]
 
 autosummary_generate = True
-
-breathe_projects = {"Kimera-DSG": "./_build/doxyoutput/xml"}
-breathe_default_project = "Kimera-DSG"
-
-exhale_args = {
-    "containmentFolder": "./cpp_api",
-    "rootFileName": "kimera_dsg_cpp_api.rst",
-    "rootFileTitle": "Kimera-DSG Core C++ API",
-    "doxygenStripFromPath": ".",
-    "createTreeView": True,
-    "treeViewIsBootstrap": True,
-    "exhaleExecutesDoxygen": True,
-    "verboseBuild": False,
-    "exhaleDoxygenStdin": """
-        INPUT = ../kimera_dsg/include
-        EXTRACT_PRIVATE = NO
-        EXTRACT_ALL = NO
-        MACRO_EXPANSION = YES
-        EXPAND_ONLY_PREDEF = YES
-        EXCLUDE_PATTERNS = "*serialization_helpers*"
-        EXCLUDE_SYMBOLS = "nlohmann*"
-        PREDEFINED += __attribute__((x))=
-    """,
-}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -72,14 +44,17 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+add_module_names = False
+autodoc_typehints = "description"
+autodoc_class_signature = "separated"
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
-# html_theme = "alabaster"
+# html_theme = "sphinx_rtd_theme"
+html_theme = "haiku"
 
 
 # Add any paths that contain custom static files (such as style sheets) here,

@@ -9,8 +9,8 @@ NodeAttributes::NodeAttributes() : position(Eigen::Vector3d::Zero()) {}
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos) : position(pos) {}
 
 std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
-  out << "Attributes: " << std::endl
-      << "  - Position : " << position.transpose() << std::endl;
+  auto format = getDefaultVectorFormat();
+  out << "  - position: " << position.transpose().format(format) << std::endl;
   return out;
 }
 
@@ -22,11 +22,12 @@ SemanticNodeAttributes::SemanticNodeAttributes()
     : NodeAttributes(), name(""), color(ColorVector::Zero()), semantic_label(0u) {}
 
 std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
+  auto format = getDefaultVectorFormat();
   NodeAttributes::fill_ostream(out);
-  out << "  - Color : " << color.cast<float>().transpose() << std::endl
-      << "  - Name: " << name << std::endl
-      << "  - Bounding Box: " << bounding_box << std::endl
-      << "  - Semantic Label: " << std::to_string(semantic_label) << std::endl;
+  out << "  - color: " << color.cast<int>().transpose().format(format) << std::endl
+      << "  - name: " << name << std::endl
+      << "  - bounding box: " << bounding_box << std::endl
+      << "  - label: " << std::to_string(semantic_label) << std::endl;
   return out;
 }
 
@@ -36,7 +37,7 @@ ObjectNodeAttributes::ObjectNodeAttributes()
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   // TODO(nathan) think about printing out rotation here
   SemanticNodeAttributes::fill_ostream(out);
-  out << "  - Is Registered?: " << (registered ? "yes" : "no") << std::endl;
+  out << "  - registered?: " << (registered ? "yes" : "no") << std::endl;
   return out;
 }
 
@@ -57,9 +58,9 @@ PlaceNodeAttributes::PlaceNodeAttributes(double distance, unsigned int num_basis
 
 std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
-  out << " - distance: " << distance;
-  out << " - num_basis_points: " << num_basis_points;
-  out << " - is_active: " << is_active;
+  out << "  - distance: " << distance << std::endl;
+  out << "  - num_basis_points: " << num_basis_points << std::endl;
+  out << "  - is_active: " << is_active << std::endl;
   return out;
 }
 
@@ -78,7 +79,7 @@ AgentNodeAttributes::AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
 
 std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
-  out << " - orientation: " << world_R_body;
+  out << "  - orientation: " << world_R_body << std::endl;
   return out;
 }
 
