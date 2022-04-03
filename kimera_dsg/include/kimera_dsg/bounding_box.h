@@ -109,12 +109,8 @@ struct BoundingBox {
       throw std::runtime_error("invalid point cloud pointer");
     }
 
-    if (cloud->empty()) {
-      throw std::runtime_error("invalid point cloud");
-    }
-
-    if (type == Type::INVALID) {
-      throw std::runtime_error("Can't make a bounding box of type INVALID!");
+    if (cloud->empty() || type == Type::INVALID) {
+      return {};
     }
 
     using PointT = typename CloudT::PointType;

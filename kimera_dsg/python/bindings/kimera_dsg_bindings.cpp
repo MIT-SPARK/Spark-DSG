@@ -1,5 +1,6 @@
 #include <kimera_dsg/dynamic_scene_graph.h>
 #include <kimera_dsg/node_attributes.h>
+#include <kimera_dsg/scene_graph_utilities.h>
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
@@ -536,4 +537,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     py::return_value_policy::reference_internal);
 
 #undef MAKE_SPECIALZIED_NODE_ADD
+
+  module.def("compute_ancestor_bounding_box", &computeAncestorBoundingBox);
+
 }

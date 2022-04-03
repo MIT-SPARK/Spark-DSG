@@ -55,6 +55,7 @@ add_library(
   src/scene_graph_node.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_types.cpp
+  src/scene_graph_utilities.cpp
   src/serialization_helpers.cpp
   src/scene_graph_logger.cpp
 )

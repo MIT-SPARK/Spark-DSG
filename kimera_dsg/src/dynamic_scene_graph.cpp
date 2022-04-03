@@ -266,6 +266,15 @@ std::optional<NodeRef> DynamicSceneGraph::getNode(NodeId node_id) const {
   return std::cref(*getNodePtr(node_id, iter->second));
 }
 
+std::optional<LayerKey> DynamicSceneGraph::getLayerForNode(NodeId node_id) const {
+  auto iter = node_lookup_.find(node_id);
+  if (iter == node_lookup_.end()) {
+    return std::nullopt;
+  }
+
+  return iter->second;
+}
+
 std::optional<DynamicNodeRef> DynamicSceneGraph::getDynamicNode(NodeId node_id) const {
   auto iter = node_lookup_.find(node_id);
   if (iter == node_lookup_.end()) {

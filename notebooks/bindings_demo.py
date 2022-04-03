@@ -133,3 +133,12 @@ print("All Edges:")
 for source_layer in edge_counts:
     print(f"  - {source_layer} -> {edge_counts[source_layer]}")
 print("")
+
+
+# %% [markdown]
+# ## Bounding boxes from nodes in lower layers
+
+dsg.add_bounding_boxes_to_layer(G, dsg.KimeraDsgLayers.ROOMS)
+print("Room bounding boxes:")
+for node in G.get_layer(dsg.KimeraDsgLayers.ROOMS).nodes:
+    print(f"  - {node.id}: {node.attributes.bounding_box}")

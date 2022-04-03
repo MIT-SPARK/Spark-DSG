@@ -901,4 +901,17 @@ TEST(DynamicSceneGraphTests, InsertMixedEdgeCorrect) {
   testSiblingRelationship(graph, NodeSymbol('c', 0), NodeSymbol('a', 0));
 }
 
+TEST(DynamicSceneGraphTests, GetLayerKeyCorrect) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph graph;
+  graph.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(3, NodeSymbol('x', 0), std::make_unique<NodeAttributes>());
+
+  LayerPrefix prefix('a');
+  EXPECT_EQ(*graph.getLayerForNode(NodeSymbol('a', 0)), LayerKey(2, prefix));
+  EXPECT_EQ(*graph.getLayerForNode(NodeSymbol('x', 0)), LayerKey(3));
+
+  EXPECT_FALSE(graph.getLayerForNode(NodeSymbol('b', 0)));
+}
+
 }  // namespace kimera

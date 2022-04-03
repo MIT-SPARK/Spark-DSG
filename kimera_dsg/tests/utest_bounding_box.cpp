@@ -11,13 +11,9 @@ TEST(BoundingBoxTests, InvalidConstructor) {
   BoundingBox box;
   EXPECT_EQ(box.type, BoundingBox::Type::INVALID);
 
-  try {
-    pcl::PointCloud<PointXYZ>::Ptr cloud(new pcl::PointCloud<PointXYZ>());
-    box = BoundingBox::extract(cloud, BoundingBox::Type::INVALID);
-    FAIL() << "Should not be able to extract a bounding box of type INVALID";
-  } catch (const std::runtime_error& e) {
-    SUCCEED();
-  }
+  pcl::PointCloud<PointXYZ>::Ptr cloud(new pcl::PointCloud<PointXYZ>());
+  box = BoundingBox::extract(cloud, BoundingBox::Type::INVALID);
+  EXPECT_EQ(box.type, BoundingBox::Type::INVALID);
 }
 
 inline float getRotationError(const Eigen::Quaternionf& rotation,

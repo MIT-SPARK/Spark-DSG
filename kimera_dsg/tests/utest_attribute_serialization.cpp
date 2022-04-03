@@ -1,3 +1,5 @@
+#include "kimera_dsg_tests/type_comparisons.h"
+
 #include <kimera_dsg/attribute_serialization.h>
 #include <kimera_dsg/attribute_serializer.h>
 #include <kimera_dsg/node_attributes.h>
@@ -17,67 +19,6 @@ nlohmann::json to_json(const T& attributes) {
 }
 
 }  // namespace attributes
-
-template <typename Scalar>
-bool quaternionsEqual(const Eigen::Quaternion<Scalar>& lhs,
-                      const Eigen::Quaternion<Scalar>& rhs) {
-  return lhs.w() == rhs.w() && lhs.x() == rhs.x() && lhs.y() == rhs.y() &&
-         lhs.z() == rhs.z();
-}
-
-bool operator==(const BoundingBox& lhs, const BoundingBox& rhs) {
-  if (lhs.type != rhs.type) {
-    return false;
-  }
-
-  switch (lhs.type) {
-    case BoundingBox::Type::INVALID:
-      return true;
-    case BoundingBox::Type::AABB:
-      return lhs.min == rhs.min && lhs.max == rhs.max;
-    case BoundingBox::Type::OBB:
-      return lhs.min == rhs.min && lhs.max == rhs.max &&
-             lhs.world_P_center == rhs.world_P_center &&
-             quaternionsEqual(Eigen::Quaternionf(lhs.world_R_center),
-                              Eigen::Quaternionf(rhs.world_R_center));
-    default:
-      return false;
-  }
-}
-
-bool operator==(const NodeAttributes& lhs, const NodeAttributes& rhs) {
-  return lhs.position == rhs.position;
-}
-
-bool operator==(const SemanticNodeAttributes& lhs, const SemanticNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label;
-}
-
-bool operator==(const ObjectNodeAttributes& lhs, const ObjectNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label && lhs.registered == rhs.registered &&
-         quaternionsEqual(lhs.world_R_object, rhs.world_R_object);
-}
-
-bool operator==(const RoomNodeAttributes& lhs, const RoomNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label;
-}
-
-bool operator==(const PlaceNodeAttributes& lhs, const PlaceNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label && lhs.distance == rhs.distance &&
-         lhs.num_basis_points == rhs.num_basis_points;
-}
-
-bool operator==(const EdgeAttributes& lhs, const EdgeAttributes& rhs) {
-  return lhs.weighted == rhs.weighted && lhs.weight == rhs.weight;
-}
 
 TEST(AttributeSerializationTests, SerializeEigenVector) {
   {  // double vector

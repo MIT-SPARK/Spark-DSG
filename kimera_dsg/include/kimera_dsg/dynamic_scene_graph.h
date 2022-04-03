@@ -221,6 +221,8 @@ class DynamicSceneGraph {
    */
   std::optional<NodeRef> getNode(NodeId node_id) const;
 
+  std::optional<LayerKey> getLayerForNode(NodeId node_id) const;
+
   std::optional<DynamicNodeRef> getDynamicNode(NodeId node_id) const;
 
   /**

@@ -37,7 +37,9 @@ add_executable(
   utest_scene_graph_node.cpp
   utest_scene_graph_layer.cpp
   utest_scene_graph_types.cpp
+  utest_scene_graph_utilities.cpp
 )
+target_include_directories(utest_${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   utest_${PROJECT_NAME} ${PROJECT_NAME} PkgConfig::glog PkgConfig::gflags gtest
   nlohmann_json::nlohmann_json
