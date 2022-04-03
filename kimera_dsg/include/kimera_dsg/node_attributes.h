@@ -55,6 +55,8 @@ struct NodeAttributes {
 
   //! Position of the node
   Eigen::Vector3d position;
+  //! last time the place was updated (while active)
+  uint64_t last_update_time_ns;
 
  protected:
   //! actually output information to the std::ostream

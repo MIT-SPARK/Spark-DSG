@@ -6,11 +6,15 @@ namespace kimera {
 
 NodeAttributes::NodeAttributes() : position(Eigen::Vector3d::Zero()) {}
 
-NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos) : position(pos) {}
+NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)
+    : position(pos), last_update_time_ns(0) {}
 
 std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
   auto format = getDefaultVectorFormat();
   out << "  - position: " << position.transpose().format(format) << std::endl;
+  if (last_update_time_ns != 0) {
+    out << "  - last update time: " << last_update_time_ns << " [ns]" << std::endl;
+  }
   return out;
 }
 

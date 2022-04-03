@@ -61,6 +61,7 @@ EdgeFactoryBase& EdgeAttributeFactory::get_default() {
 void NodeAttributes::serialize(AttributeSerializer& serializer) const {
   serializer.mark_type("NodeAttributes");
   serializer.write("position", position);
+  serializer.write("last_update_time_ns", last_update_time_ns);
 }
 
 void NodeAttributes::deserialize(const AttributeSerializer& serializer) {
