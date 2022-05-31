@@ -1,89 +1,113 @@
 #pragma once
-#include "kimera_dsg/attribute_serializer.h"
 #include "kimera_dsg/edge_attributes.h"
 #include "kimera_dsg/node_attributes.h"
 
-#include <nlohmann/json.hpp>
-
-#include <sstream>
-
-using json = nlohmann::json;
-
 namespace kimera {
+namespace attributes {
 
-template <class T>
-class AttributeFactory {
- public:
-  using TypePtr = typename T::Ptr;
-  using ConstructorFunc = TypePtr (*)(void);
-  using ConstructorMap = std::map<std::string, ConstructorFunc>;
+template <typename Converter>
+void serialize(Converter& converter, const NodeAttributes& attrs) {
+  converter.write("position", attrs.position);
+  converter.write("last_update_time_ns", attrs.last_update_time_ns);
+}
 
-  virtual ~AttributeFactory() = default;
+template <typename Converter>
+void deserialize(const Converter& converter, NodeAttributes& attrs) {
+  converter.read("position", attrs.position);
+  converter.read("last_update_time_ns", attrs.last_update_time_ns);
+}
 
-  inline void add(const std::string& type, ConstructorFunc constructor) {
-    factory_map_[type] = constructor;
-  }
+template <typename Converter>
+void serialize(Converter& converter, const SemanticNodeAttributes& attrs) {
+  serialize(converter, static_cast<const NodeAttributes&>(attrs));
+  converter.write("name", attrs.name);
+  converter.write("color", attrs.color);
+  converter.write("bounding_box", attrs.bounding_box);
+  converter.write("semantic_label", attrs.semantic_label);
+}
 
-  TypePtr create(const json& record) const {
-    std::string attr_type;
-    try {
-      attr_type = record.at("type").get<std::string>();
-    } catch (const nlohmann::detail::type_error& e) {
-      std::stringstream ss;
-      ss << e.what() << " when reading type: " << record;
-      throw std::domain_error(ss.str());
-    }
+template <typename Converter>
+void deserialize(const Converter& converter, SemanticNodeAttributes& attrs) {
+  deserialize(converter, static_cast<NodeAttributes&>(attrs));
+  converter.read("name", attrs.name);
+  converter.read("color", attrs.color);
+  converter.read("bounding_box", attrs.bounding_box);
+  converter.read("semantic_label", attrs.semantic_label);
+}
 
-    auto map_func = factory_map_.find(attr_type);
-    if (map_func == factory_map_.end()) {
-      std::stringstream ss;
-      ss << "no parser function for type: " << attr_type;
-      throw std::domain_error(ss.str());
-    }
+template <typename Converter>
+void serialize(Converter& converter, const ObjectNodeAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("registered", attrs.registered);
+  converter.write("world_R_object", attrs.world_R_object);
+}
 
-    if (map_func->second == nullptr) {
-      std::stringstream ss;
-      ss << "invalid parser function for type: " << attr_type;
-      throw std::domain_error(ss.str());
-    }
+template <typename Converter>
+void deserialize(const Converter& converter, ObjectNodeAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("registered", attrs.registered);
+  converter.read("world_R_object", attrs.world_R_object);
+}
 
-    auto to_return = map_func->second();
-    try {
-      to_return->deserialize(AttributeSerializer(record));
-    } catch (const nlohmann::detail::type_error& e) {
-      std::stringstream ss;
-      ss << e.what() << " when converting: " << record;
-      throw std::domain_error(ss.str());
-    }
-    return to_return;
-  }
+template <typename Converter>
+void serialize(Converter& converter, const RoomNodeAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+}
 
-  static AttributeFactory<T>& instance() {
-    if (!s_instance_) {
-      s_instance_.reset(new AttributeFactory());
-    }
+template <typename Converter>
+void deserialize(const Converter& converter, RoomNodeAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+}
 
-    return *s_instance_;
-  }
+template <typename Converter>
+void serialize(Converter& converter, const PlaceNodeAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("distance", attrs.distance);
+  converter.write("num_basis_points", attrs.num_basis_points);
+  converter.write("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
+  converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.write("is_active", attrs.is_active);
+}
 
-  bool default_set;
+template <typename Converter>
+void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("distance", attrs.distance);
+  converter.read("num_basis_points", attrs.num_basis_points);
+  converter.read("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
+  converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.read("is_active", attrs.is_active);
+}
 
- protected:
-  AttributeFactory() : default_set(false) {}
+template <typename Converter>
+void serialize(Converter& converter, const AgentNodeAttributes& attrs) {
+  serialize(converter, static_cast<const NodeAttributes&>(attrs));
+  converter.write("world_R_body", attrs.world_R_body);
+  converter.write("external_key", attrs.external_key);
+  converter.write("dbow_ids", attrs.dbow_ids);
+  converter.write("dbow_values", attrs.dbow_values);
+}
 
-  ConstructorMap factory_map_;
+template <typename Converter>
+void deserialize(const Converter& converter, AgentNodeAttributes& attrs) {
+  deserialize(converter, static_cast<NodeAttributes&>(attrs));
+  converter.read("world_R_body", attrs.world_R_body);
+  converter.read("external_key", attrs.external_key);
+  converter.read("dbow_ids", attrs.dbow_ids);
+  converter.read("dbow_values", attrs.dbow_values);
+}
 
-  static std::unique_ptr<AttributeFactory> s_instance_;
-};
+template <typename Converter>
+void serialize(Converter& converter, const EdgeAttributes& attrs) {
+  converter.write("weighted", attrs.weighted);
+  converter.write("weight", attrs.weight);
+}
 
-class NodeAttributeFactory : public AttributeFactory<NodeAttributes> {
- public:
-  static AttributeFactory<NodeAttributes>& get_default();
-};
+template <typename Converter>
+void deserialize(const Converter& converter, EdgeAttributes& attrs) {
+  converter.read("weighted", attrs.weighted);
+  converter.read("weight", attrs.weight);
+}
 
-class EdgeAttributeFactory : public AttributeFactory<EdgeAttributes> {
- public:
-  static AttributeFactory<EdgeAttributes>& get_default();
-};
-
+}  // namespace attributes
 }  // namespace kimera

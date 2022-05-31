@@ -43,13 +43,14 @@ add_subdirectory(${CMAKE_BINARY_DIR}/json-src ${CMAKE_BINARY_DIR}/json-build)
 add_library(
   ${PROJECT_NAME}
   src/adjacency_matrix.cpp
-  src/attribute_serialization.cpp
+  src/binary_serializer.cpp
   src/bounding_box.cpp
   src/dynamic_scene_graph.cpp
   src/dynamic_scene_graph_layer.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
-  src/graph_serialization.cpp
+  src/graph_binary_serialization.cpp
+  src/graph_json_serialization.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
   src/scene_graph_node.cpp
@@ -80,32 +81,30 @@ if(KIMERA_DSG_BUILD_TESTS)
 endif()
 
 if(KIMERA_DSG_INSTALL)
-add_library(
-  kimera_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME}
-)
-install(TARGETS ${PROJECT_NAME} EXPORT kimera_dsg-targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(EXPORT kimera_dsg-targets FILE kimera_dsgTargets.cmake NAMESPACE kimera_dsg::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
-)
+  add_library(kimera_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+  install(TARGETS ${PROJECT_NAME} EXPORT kimera_dsg-targets
+          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(EXPORT kimera_dsg-targets FILE kimera_dsgTargets.cmake NAMESPACE kimera_dsg::
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+  )
 
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-  ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}
-  COMPATIBILITY AnyNewerVersion
-)
+  include(CMakePackageConfigHelpers)
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+  )
 
-configure_package_config_file(
-  ${CMAKE_CURRENT_LIST_DIR}/cmake/kimera_dsgConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
-)
+  configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/kimera_dsgConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+  )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
-)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
+                ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+  )
 endif()

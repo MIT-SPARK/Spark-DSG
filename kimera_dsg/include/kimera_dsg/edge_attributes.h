@@ -1,6 +1,4 @@
 #pragma once
-#include "kimera_dsg/attribute_serializer_fwd.h"
-
 #include <memory>
 
 namespace kimera {
@@ -27,10 +25,6 @@ struct EdgeAttributes {
    * @returns original output stream
    */
   friend std::ostream& operator<<(std::ostream& out, const EdgeAttributes& attrs);
-
-  virtual void serialize(AttributeSerializer& serializer) const;
-
-  virtual void deserialize(const AttributeSerializer& serializer);
 
   virtual EdgeAttributes::Ptr clone() const;
 

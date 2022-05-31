@@ -1,7 +1,7 @@
 #pragma once
 #include "kimera_dsg/edge_attributes.h"
-#include "kimera_dsg/scene_graph_types.h"
 #include "kimera_dsg/node_symbol.h"
+#include "kimera_dsg/scene_graph_types.h"
 
 #include <map>
 #include <vector>
@@ -33,6 +33,17 @@ struct SceneGraphEdge {
   const NodeId target;
   //! attributes about the edge
   AttrPtr info;
+
+  /**
+   * @brief get a reference to the attributes of the node (with an optional
+   * template argument to perform a cast to the desired attribute type
+   */
+  template <typename Derived = EdgeAttributes>
+  Derived& attributes() const {
+    static_assert(std::is_base_of<EdgeAttributes, Derived>::value,
+                  "info can only be downcast to a derived EdgeAttributes class");
+    return dynamic_cast<Derived&>(*info);
+  }
 };
 
 struct EdgeKey {
@@ -76,6 +87,10 @@ struct EdgeContainer {
   void reset();
 
   inline const Edge& get(NodeId source, NodeId target) const {
+    return edges.at(EdgeKey(source, target));
+  }
+
+  inline Edge& get(NodeId source, NodeId target) {
     return edges.at(EdgeKey(source, target));
   }
 

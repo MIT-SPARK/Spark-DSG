@@ -17,6 +17,11 @@ LayerPrefix::LayerPrefix(char key, uint32_t index) {
 
 LayerPrefix::LayerPrefix(uint32_t index) { value_.value = index; }
 
+LayerPrefix LayerPrefix::fromId(NodeId node_id) {
+  // grab the 32 msb portion of the ID
+  return LayerPrefix(static_cast<uint32_t>(node_id >> 32));
+}
+
 std::string LayerPrefix::str(bool with_key) const {
   if (!with_key) {
     return std::to_string(value_.value);

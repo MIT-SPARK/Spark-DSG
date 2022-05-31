@@ -204,6 +204,8 @@ class SceneGraphLayer : public BaseLayer {
                                std::unordered_set<NodeId>& result,
                                std::map<NodeId, size_t>& costs) const;
 
+  inline EdgeContainer& edgeContainer() override { return edges_; }
+
   /**
    * @brief remove a node if it exists
    * @param node_id node to remove

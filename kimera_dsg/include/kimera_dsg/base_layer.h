@@ -51,6 +51,8 @@ class BaseLayer {
                                bool clear_removed) = 0;
 
  protected:
+  virtual EdgeContainer& edgeContainer() = 0;
+
   virtual bool removeNode(NodeId node_id) = 0;
 };
 

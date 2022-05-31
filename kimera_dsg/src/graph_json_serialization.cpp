@@ -1,4 +1,4 @@
-#include "kimera_dsg/attribute_serialization.h"
+#include "kimera_dsg/graph_json_serialization.h"
 #include "kimera_dsg/dynamic_scene_graph.h"
 #include "kimera_dsg/scene_graph_layer.h"
 #include "kimera_dsg/serialization_helpers.h"
@@ -8,6 +8,16 @@
 #include <fstream>
 
 namespace kimera {
+
+template <>
+std::unique_ptr<AttributeFactory<NodeAttributes, JsonConverter>>
+    AttributeFactory<NodeAttributes, JsonConverter>::s_instance_ = nullptr;
+
+template <>
+std::unique_ptr<AttributeFactory<EdgeAttributes, JsonConverter>>
+    AttributeFactory<EdgeAttributes, JsonConverter>::s_instance_ = nullptr;
+
+using nlohmann::json;
 
 using EdgesPtr = std::unique_ptr<SceneGraphLayer::Edges>;
 using NodeSet = std::unordered_set<NodeId>;
@@ -23,13 +33,6 @@ void to_json(json& record, const MeshEdge& edge) {
 void from_json(const json& record, MeshEdge& edge) {
   edge.source_node = record.at("source").get<NodeId>();
   edge.mesh_vertex = record.at("target").get<size_t>();
-}
-
-template <typename T>
-void to_json(json& record, const T& attributes) {
-  AttributeSerializer serializer;
-  attributes.serialize(serializer);
-  record = serializer.record;
 }
 
 void to_json(json& record, const SceneGraphNode& node) {
@@ -51,23 +54,26 @@ void to_json(json& record, const SceneGraphEdge& edge) {
 void read_node_from_json(const json& record, NodeCallback callback) {
   auto node_id = record.at("id").get<NodeId>();
   auto layer = record.at("layer").get<LayerId>();
-  auto attributes = NodeAttributeFactory::get_default().create(record.at("attributes"));
-  callback(node_id, layer, std::move(attributes));
+  JsonConverter converter(&record.at("attributes"));
+  auto attrs = JsonNodeFactory::get_default().create(converter);
+  callback(node_id, layer, std::move(attrs));
 }
 
 void read_node_from_json(const json& record, DynamicNodeCallback callback) {
   auto layer = record.at("layer").get<LayerId>();
   auto prefix = record.at("prefix").get<char>();
   auto timestamp = record.at("timestamp").get<uint64_t>();
-  auto attributes = NodeAttributeFactory::get_default().create(record.at("attributes"));
-  callback(layer, prefix, std::chrono::nanoseconds(timestamp), std::move(attributes));
+  JsonConverter converter(&record.at("attributes"));
+  auto attrs = JsonNodeFactory::get_default().create(converter);
+  callback(layer, prefix, std::chrono::nanoseconds(timestamp), std::move(attrs));
 }
 
 void read_edge_from_json(const json& record, EdgeCallback callback) {
   auto source = record.at("source").get<NodeId>();
   auto target = record.at("target").get<NodeId>();
-  auto info = EdgeAttributeFactory::get_default().create(record.at("info"));
-  callback(source, target, std::move(info));
+  JsonConverter converter(&record.at("info"));
+  auto attrs = JsonEdgeFactory::get_default().create(converter);
+  callback(source, target, std::move(attrs));
 }
 
 std::string SceneGraphLayer::serializeLayer(const NodeSet& nodes) const {

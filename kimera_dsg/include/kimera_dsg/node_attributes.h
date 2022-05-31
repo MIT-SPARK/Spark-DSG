@@ -1,7 +1,6 @@
 #pragma once
-#include "kimera_dsg/attribute_serializer_fwd.h"
-#include "kimera_dsg/scene_graph_types.h"
 #include "kimera_dsg/bounding_box.h"
+#include "kimera_dsg/scene_graph_types.h"
 
 #include <chrono>
 #include <list>
@@ -45,10 +44,6 @@ struct NodeAttributes {
    */
   friend std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs);
 
-  virtual void serialize(AttributeSerializer& serializer) const;
-
-  virtual void deserialize(const AttributeSerializer& serializer);
-
   virtual NodeAttributes::Ptr clone() const {
     return std::make_unique<NodeAttributes>(*this);
   }
@@ -88,10 +83,6 @@ struct SemanticNodeAttributes : public NodeAttributes {
   SemanticNodeAttributes();
 
   virtual ~SemanticNodeAttributes() = default;
-
-  virtual void serialize(AttributeSerializer& serializer) const override;
-
-  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<SemanticNodeAttributes>(*this);
@@ -136,10 +127,6 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~ObjectNodeAttributes() = default;
 
-  virtual void serialize(AttributeSerializer& serializer) const override;
-
-  virtual void deserialize(const AttributeSerializer& serializer) override;
-
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<ObjectNodeAttributes>(*this);
   }
@@ -176,10 +163,6 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   RoomNodeAttributes();
 
   virtual ~RoomNodeAttributes() = default;
-
-  virtual void serialize(AttributeSerializer& serializer) const override;
-
-  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<RoomNodeAttributes>(*this);
@@ -223,10 +206,6 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
 
   virtual ~PlaceNodeAttributes() = default;
 
-  virtual void serialize(AttributeSerializer& serializer) const override;
-
-  virtual void deserialize(const AttributeSerializer& serializer) override;
-
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<PlaceNodeAttributes>(*this);
   }
@@ -259,10 +238,6 @@ struct AgentNodeAttributes : public NodeAttributes {
                       NodeId external_key);
 
   virtual ~AgentNodeAttributes() = default;
-
-  virtual void serialize(AttributeSerializer& serializer) const override;
-
-  virtual void deserialize(const AttributeSerializer& serializer) override;
 
   virtual NodeAttributes::Ptr clone() const override {
     return std::make_unique<AgentNodeAttributes>(*this);

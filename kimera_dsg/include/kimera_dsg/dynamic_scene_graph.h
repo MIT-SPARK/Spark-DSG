@@ -110,6 +110,11 @@ class DynamicSceneGraph {
                    NodeAttributes::Ptr&& attrs,
                    bool add_edge_to_previous = true);
 
+  bool emplacePrevDynamicNode(LayerId layer_id,
+                              NodeId prev_node_id,
+                              std::chrono::nanoseconds timestamp,
+                              NodeAttributes::Ptr&& attrs);
+
   /**
    * @brief add a node to the graph
    *
@@ -150,6 +155,23 @@ class DynamicSceneGraph {
   bool insertMeshEdge(NodeId source,
                       size_t mesh_vertex,
                       bool allow_invalid_mesh = false);
+
+  /**
+   * @brief Set the attributes of an existing node
+   * @param node Node ID to set the attributes for
+   * @param attrs New attributes for the node
+   * @return Returns true if update was successful
+   */
+  bool setNodeAttributes(NodeId node, NodeAttributes::Ptr&& attrs);
+
+  /**
+   * @brief Set the attributes of an existing edge
+   * @param source Source ID to set the attributes for
+   * @param target Target ID to set the attributes for
+   * @param attrs New attributes for the edge
+   * @return Returns true if update was successful
+   */
+  bool setEdgeAttributes(NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs);
 
   /**
    * @brief Check whether the layer exists and is valid
@@ -301,7 +323,7 @@ class DynamicSceneGraph {
    * @brief Get the total number of nodes in the graph
    * @return The number of nodes in the graph
    */
-  size_t numNodes() const;
+  size_t numNodes(bool include_mesh = true) const;
 
   /**
    * @brief Get the number of dynamic nodes in the graph
@@ -313,7 +335,7 @@ class DynamicSceneGraph {
    * @brief Get number of edges in the graph
    * @return number of edges in the graph
    */
-  size_t numEdges() const;
+  size_t numEdges(bool include_mesh = true) const;
 
   /**
    * @brief Get whether or not the scene graph is empty
@@ -380,13 +402,16 @@ class DynamicSceneGraph {
 
   std::vector<EdgeKey> getNewEdges(bool clear_new = false);
 
-  std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id) const;
+  std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id,
+                                                 bool check_invalid = true) const;
 
   std::vector<size_t> getMeshConnectionIndices(NodeId node) const;
 
-  inline MeshEdges getMeshEdges() const { return mesh_edges_; }
+  inline const MeshEdges& getMeshEdges() const { return mesh_edges_; }
 
   void invalidateMeshVertex(size_t index);
+
+  void clearMeshEdges();
 
   void save(const std::string& filepath, bool include_mesh = true) const;
 
@@ -420,8 +445,6 @@ class DynamicSceneGraph {
   const BaseLayer& layerFromKey(const LayerKey& key) const;
 
   bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
-
-  void clearMeshEdges();
 
   SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
 

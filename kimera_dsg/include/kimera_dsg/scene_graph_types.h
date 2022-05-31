@@ -54,6 +54,8 @@ class LayerPrefix {
 
   LayerPrefix(uint32_t index);
 
+  static LayerPrefix fromId(NodeId node);
+
   inline operator uint32_t() const { return value_.value; }
 
   std::string str(bool with_key = true) const;
@@ -93,7 +95,8 @@ struct KimeraDsgLayers {
 };
 
 inline Eigen::IOFormat getDefaultVectorFormat() {
-  return Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n", "[", "]");
+  return Eigen::IOFormat(
+      Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n", "[", "]");
 }
 
 }  // namespace kimera

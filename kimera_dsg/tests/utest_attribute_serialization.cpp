@@ -1,24 +1,14 @@
 #include "kimera_dsg_tests/type_comparisons.h"
 
-#include <kimera_dsg/attribute_serialization.h>
-#include <kimera_dsg/attribute_serializer.h>
-#include <kimera_dsg/node_attributes.h>
+#include <kimera_dsg/attribute_factory.h>
+#include <kimera_dsg/graph_json_serialization.h>
 #include <kimera_dsg/serialization_helpers.h>
 
 #include <gtest/gtest.h>
 
 namespace kimera {
 
-namespace attributes {
-
-template <typename T>
-nlohmann::json to_json(const T& attributes) {
-  AttributeSerializer serializer;
-  attributes.serialize(serializer);
-  return serializer.record;
-}
-
-}  // namespace attributes
+using nlohmann::json;
 
 TEST(AttributeSerializationTests, SerializeEigenVector) {
   {  // double vector
@@ -126,8 +116,8 @@ TEST(AttributeSerializationTests, SerializeNodeAttributes) {
     NodeAttributes expected;
     expected.position << 1.0, 2.0, 3.0;
 
-    json output = attributes::to_json(expected);
-    auto result = NodeAttributeFactory::get_default().create(output);
+    const json output = expected;
+    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
     ASSERT_TRUE(result != nullptr);
     EXPECT_EQ(expected, *result) << output;
@@ -143,8 +133,8 @@ TEST(AttributeSerializationTests, SerializeNodeAttributes) {
     expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
     expected.semantic_label = 13;
 
-    json output = attributes::to_json(expected);
-    auto result = NodeAttributeFactory::get_default().create(output);
+    const json output = expected;
+    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
     ASSERT_TRUE(result != nullptr);
     EXPECT_EQ(expected, *result) << output;
@@ -162,8 +152,8 @@ TEST(AttributeSerializationTests, SerializeNodeAttributes) {
     expected.registered = true;
     expected.world_R_object = Eigen::Quaterniond(0.0, 0.0, 1.0, 0.0);
 
-    json output = attributes::to_json(expected);
-    auto result = NodeAttributeFactory::get_default().create(output);
+    const json output = expected;
+    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
     ASSERT_TRUE(result != nullptr);
     EXPECT_EQ(expected, *result) << output;
@@ -179,8 +169,8 @@ TEST(AttributeSerializationTests, SerializeNodeAttributes) {
     expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
     expected.semantic_label = 13;
 
-    json output = attributes::to_json(expected);
-    auto result = NodeAttributeFactory::get_default().create(output);
+    const json output = expected;
+    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
     ASSERT_TRUE(result != nullptr);
     EXPECT_EQ(expected, *result) << output;
@@ -198,8 +188,8 @@ TEST(AttributeSerializationTests, SerializeNodeAttributes) {
     expected.distance = 14.0;
     expected.num_basis_points = 15;
 
-    json output = attributes::to_json(expected);
-    auto result = NodeAttributeFactory::get_default().create(output);
+    const json output = expected;
+    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
     ASSERT_TRUE(result != nullptr);
     EXPECT_EQ(expected, *result) << output;
@@ -212,8 +202,8 @@ TEST(AttributeSerializationTests, SerializeEdgeInfo) {
     expected.weighted = true;
     expected.weight = 5.0;
 
-    json output = attributes::to_json(expected);
-    auto result = EdgeAttributeFactory::get_default().create(output);
+    const json output = expected;
+    auto result = JsonEdgeFactory::get_default().create(JsonConverter(&output));
 
     ASSERT_TRUE(result != nullptr);
     EXPECT_EQ(expected, *result);
@@ -239,8 +229,8 @@ TEST(AttributeSerializationTests, DeserializeAttributesWithNaN) {
         "world_R_object": {"w": 1.0, "x": 0.0, "y": 0.0, "z": 0.0}
       })delim";
 
-  json attr_json = json::parse(raw_json);
-  auto attrs = NodeAttributeFactory::get_default().create(attr_json);
+  const json attr_json = json::parse(raw_json);
+  auto attrs = JsonNodeFactory::get_default().create(JsonConverter(&attr_json));
   ASSERT_TRUE(attrs != nullptr);
   EXPECT_TRUE(attrs->position.hasNaN());
 
@@ -249,10 +239,10 @@ TEST(AttributeSerializationTests, DeserializeAttributesWithNaN) {
         "position": [null, null, null],
         "type": "ObjectNodeAttributes"
       })delim";
-  json attr_json2 = json::parse(raw_json2);
+  const json attr_json2 = json::parse(raw_json2);
 
   NodeAttributes new_attrs;
-  new_attrs.deserialize(AttributeSerializer(attr_json2));
+  attributes::deserialize(JsonConverter(&attr_json2), new_attrs);
   EXPECT_TRUE(new_attrs.position.hasNaN());
 }
 

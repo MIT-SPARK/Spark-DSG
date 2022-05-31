@@ -76,6 +76,27 @@ bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
   return true;
 }
 
+bool DynamicSceneGraphLayer::emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
+                                                size_t index,
+                                                NodeAttributes::Ptr&& attrs) {
+  if (hasNodeByIndex(index)) {
+    return false;
+  }
+
+  if (index >= nodes_.size()) {
+    size_t num_to_insert = index - nodes_.size();
+    for (size_t i = 0; i <= num_to_insert; ++i) {
+      nodes_.push_back(nullptr);
+      node_status_[nodes_.size()] = NodeStatus::DELETED;
+    }
+  }
+
+  const NodeId new_id = prefix.makeId(index);
+  nodes_[index] = std::make_unique<Node>(new_id, id, std::move(attrs), stamp);
+  node_status_[index] = NodeStatus::NEW;
+  return true;
+}
+
 bool DynamicSceneGraphLayer::hasNode(NodeId node_id) const {
   if (!prefix.matches(node_id)) {
     return false;

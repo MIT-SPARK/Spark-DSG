@@ -46,6 +46,10 @@ TEST(LayerPrefixTests, TestMatches) {
   EXPECT_FALSE(a.matches(NodeSymbol('b', 5)));
 }
 
+TEST(LayerPrefixTests, TestFromId) {
+  EXPECT_EQ(LayerPrefix::fromId("a0"_id), LayerPrefix('a'));
+}
+
 TEST(LayerPrefixTests, TestMakeId) {
   LayerPrefix a('a');
   EXPECT_EQ(a.makeId(0), NodeSymbol('a', 0));

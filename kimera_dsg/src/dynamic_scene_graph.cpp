@@ -67,12 +67,12 @@ bool DynamicSceneGraph::createDynamicLayer(LayerId layer, LayerPrefix layer_pref
 bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
                                     NodeId node_id,
                                     NodeAttributes::Ptr&& attrs) {
-  if (!layers_.count(layer_id)) {
-    LOG(WARNING) << "Invalid layer: " << layer_id;
+  if (node_lookup_.count(node_id)) {
     return false;
   }
 
-  if (node_lookup_.count(node_id)) {
+  if (!layers_.count(layer_id)) {
+    LOG(WARNING) << "Invalid layer: " << layer_id;
     return false;
   }
 
@@ -111,6 +111,31 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer,
   }
 
   node_lookup_[new_node_id] = {layer, prefix};
+  return true;
+}
+
+bool DynamicSceneGraph::emplacePrevDynamicNode(LayerId layer,
+                                               NodeId prev_node_id,
+                                               std::chrono::nanoseconds time,
+                                               NodeAttributes::Ptr&& attrs) {
+  if (hasNode(prev_node_id)) {
+    LOG(ERROR) << "scene graph already contains node "
+               << NodeSymbol(prev_node_id).getLabel();
+    return false;
+  }
+
+  const auto prefix = LayerPrefix::fromId(prev_node_id);
+  if (!hasLayer(layer, prefix)) {
+    createDynamicLayer(layer, prefix);
+  }
+
+  const auto result = dynamic_layers_[layer][prefix]->emplaceNodeAtIndex(
+      time, prefix.index(prev_node_id), std::move(attrs));
+  if (!result) {
+    return false;
+  }
+
+  node_lookup_[prev_node_id] = {layer, prefix};
   return true;
 }
 
@@ -208,6 +233,41 @@ bool DynamicSceneGraph::insertMeshEdge(NodeId source,
   mesh_edges_vertex_lookup_[mesh_vertex][source] = next_mesh_edge_idx_;
   next_mesh_edge_idx_++;
   return true;
+}
+
+bool DynamicSceneGraph::setNodeAttributes(NodeId node, NodeAttributes::Ptr&& attrs) {
+  auto iter = node_lookup_.find(node);
+  if (iter == node_lookup_.end()) {
+    return false;
+  }
+
+  getNodePtr(node, iter->second)->attributes_ = std::move(attrs);
+  return true;
+}
+
+bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
+                                          NodeId target,
+                                          EdgeAttributes::Ptr&& attrs) {
+  if (!hasEdge(source, target)) {
+    return false;
+  }
+
+  // defer to layers if it is a intralayer edge
+  const auto& source_key = node_lookup_.at(source);
+  const auto& target_key = node_lookup_.at(target);
+  if (source_key == target_key) {
+    layerFromKey(source_key).edgeContainer().get(source, target).info =
+        std::move(attrs);
+    return true;
+  }
+
+  if (source_key.dynamic || target_key.dynamic) {
+    dynamic_interlayer_edges_.get(source, target).info = std::move(attrs);
+    return true;
+  } else {
+    interlayer_edges_.get(source, target).info = std::move(attrs);
+    return true;
+  }
 }
 
 bool DynamicSceneGraph::hasLayer(LayerId layer_id) const {
@@ -546,14 +606,14 @@ size_t DynamicSceneGraph::numLayers() const {
   return static_size + unique_dynamic_layers;
 }
 
-size_t DynamicSceneGraph::numNodes() const {
+size_t DynamicSceneGraph::numNodes(bool include_mesh) const {
   size_t total_nodes = 0u;
   for (const auto& id_layer_pair : layers_) {
     total_nodes += id_layer_pair.second->numNodes();
   }
 
   return total_nodes + numDynamicNodes() +
-         ((mesh_vertices_ == nullptr) ? 0 : mesh_vertices_->size());
+         ((mesh_vertices_ == nullptr || !include_mesh) ? 0 : mesh_vertices_->size());
 }
 
 size_t DynamicSceneGraph::numDynamicNodes() const {
@@ -567,8 +627,8 @@ size_t DynamicSceneGraph::numDynamicNodes() const {
   return total_nodes;
 }
 
-size_t DynamicSceneGraph::numEdges() const {
-  size_t total_edges = interlayer_edges_.size();
+size_t DynamicSceneGraph::numEdges(bool include_mesh) const {
+  size_t total_edges = interlayer_edges_.size() + dynamic_interlayer_edges_.size();
   for (const auto& id_layer_pair : layers_) {
     total_edges += id_layer_pair.second->numEdges();
   }
@@ -579,7 +639,7 @@ size_t DynamicSceneGraph::numEdges() const {
     }
   }
 
-  return total_edges + mesh_edges_.size() + dynamic_interlayer_edges_.size();
+  return total_edges + (include_mesh ? mesh_edges_.size() : 0);
 }
 
 bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
@@ -722,7 +782,9 @@ std::vector<EdgeKey> DynamicSceneGraph::getNewEdges(bool clear_new) {
   return to_return;
 }
 
-std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(size_t idx) const {
+std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(
+    size_t idx,
+    bool check_invalid) const {
   if (!mesh_vertices_) {
     return std::nullopt;
   }
@@ -732,6 +794,12 @@ std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(size_t idx) co
   }
 
   const pcl::PointXYZRGBA& point = mesh_vertices_->at(idx);
+
+  // TODO(nathan) this is awkard, but probably fine in the short term
+  if (check_invalid && point.x == 0.0f && point.y == 0.0f && point.z == 0.0f) {
+    return std::nullopt;
+  }
+
   Eigen::Vector3d pos(point.x, point.y, point.z);
   return pos;
 }

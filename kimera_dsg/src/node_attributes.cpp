@@ -2,8 +2,6 @@
 
 namespace kimera {
 
-// TODO(nathan) output stream operators are ugly
-
 NodeAttributes::NodeAttributes() : position(Eigen::Vector3d::Zero()) {}
 
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)

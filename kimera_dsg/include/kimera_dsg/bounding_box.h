@@ -27,6 +27,8 @@ template <typename PointT>
 BoundingBox extractRAABBBox(const pcl::MomentOfInertiaEstimation<PointT>& estimator,
                             const pcl::IndicesPtr& indices);
 
+// TODO(nathan) fix bbox type enum container
+
 /**
  * @brief Bounding box representation
  *
@@ -37,7 +39,7 @@ struct BoundingBox {
   /**
    * @brief type of bounding box (defaults to AABB)
    */
-  enum class Type : int {
+  enum class Type : int32_t {
     INVALID = 0,          /**< an invalid bounding box */
     AABB = 1,             /**< an axis-aligned bounding box */
     OBB = 2,              /**< an oriented bounding box */

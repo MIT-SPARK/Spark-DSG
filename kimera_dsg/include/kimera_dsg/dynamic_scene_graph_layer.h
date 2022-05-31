@@ -83,7 +83,13 @@ class DynamicSceneGraphLayer : public BaseLayer {
                    NodeAttributes::Ptr&& attrs,
                    bool add_edge = true);
 
+  bool emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
+                          size_t index,
+                          NodeAttributes::Ptr&& attrs);
+
   bool removeNode(NodeId node) override;
+
+  inline EdgeContainer& edgeContainer() override { return edges_; }
 
  protected:
   std::set<std::chrono::nanoseconds::rep> times_;
