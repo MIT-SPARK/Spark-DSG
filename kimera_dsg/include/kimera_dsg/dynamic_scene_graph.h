@@ -44,7 +44,7 @@ class DynamicSceneGraph {
   //! container type for the layer ids
   using LayerIds = std::vector<LayerId>;
   //! Edge container
-  using Edges = std::map<size_t, SceneGraphEdge>;
+  using Edges = EdgeContainer::Edges;
   //! Layer container
   using Layers = std::map<LayerId, SceneGraphLayer::Ptr>;
   //! Dynamic layer container
@@ -57,6 +57,8 @@ class DynamicSceneGraph {
   using MeshFaces = std::vector<pcl::Vertices>;
   //! Mesh edge container type
   using MeshEdges = std::map<size_t, MeshEdge>;
+  //! Callback type
+  using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
 
   friend class SceneGraphLogger;
 
@@ -370,6 +372,14 @@ class DynamicSceneGraph {
                   std::map<LayerId, bool>* attribute_update_map = nullptr,
                   bool update_dynamic_attributes = true);
 
+  std::vector<NodeId> getRemovedNodes(bool clear_removed = false);
+
+  std::vector<NodeId> getNewNodes(bool clear_new = false);
+
+  std::vector<EdgeKey> getRemovedEdges(bool clear_removed = false);
+
+  std::vector<EdgeKey> getNewEdges(bool clear_new = false);
+
   std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id) const;
 
   std::vector<size_t> getMeshConnectionIndices(NodeId node) const;
@@ -398,6 +408,8 @@ class DynamicSceneGraph {
   const LayerIds layer_ids;
 
  protected:
+  void visitLayers(const LayerVisitor& cb);
+
   bool hasEdge(NodeId source,
                NodeId target,
                LayerKey* source_key,

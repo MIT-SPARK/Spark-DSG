@@ -270,4 +270,113 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
   }
 }
 
+TEST(SceneGraphLayerTests, GetRemovedNodes) {
+  using namespace std::chrono_literals;
+  TestableDynamicLayer layer(1, 'a');
+  layer.emplaceNode(1s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(2s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(3s, std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+    EXPECT_EQ(std::vector<NodeId>(), removed_nodes);
+  }
+
+  layer.removeNode(NodeSymbol('a', 0));
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+
+    std::vector<NodeId> expected{NodeSymbol('a', 0)};
+    EXPECT_EQ(expected, removed_nodes);
+  }
+
+  layer.emplaceNode(1s, std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+
+    std::vector<NodeId> expected{NodeSymbol('a', 0)};
+    EXPECT_EQ(expected, removed_nodes);
+  }
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, true);
+
+    std::vector<NodeId> expected{NodeSymbol('a', 0)};
+    EXPECT_EQ(expected, removed_nodes);
+  }
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+    EXPECT_EQ(std::vector<NodeId>(), removed_nodes);
+  }
+}
+
+TEST(DynamicSceneGraphLayerTests, GetNewCorrect) {
+  using namespace std::chrono_literals;
+  TestableDynamicLayer layer(1, 'a');
+  layer.emplaceNode(1s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(2s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(3s, std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<NodeId> expected{
+        NodeSymbol('a', 0), NodeSymbol('a', 1), NodeSymbol('a', 2)};
+    std::vector<NodeId> result;
+    layer.getNewNodes(result, true);
+    EXPECT_EQ(expected, result);
+  }
+
+  {
+    std::vector<NodeId> expected;
+    std::vector<NodeId> result;
+    layer.getNewNodes(result, true);
+    EXPECT_EQ(expected, result);
+  }
+}
+
+TEST(DynamicSceneGraphLayerTests, NewRemovedEdgesCorrect) {
+  using namespace std::chrono_literals;
+  TestableDynamicLayer layer(1, 0);
+  layer.emplaceNode(1s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(2s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(3s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(4s, std::make_unique<NodeAttributes>());
+  layer.emplaceNode(5s, std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<EdgeKey> expected{{0, 1}, {1, 2}, {2, 3}, {3, 4}};
+
+    std::vector<EdgeKey> new_edges;
+    layer.getNewEdges(new_edges, false);
+    EXPECT_EQ(new_edges, expected);
+
+    std::vector<EdgeKey> removed;
+    layer.getRemovedEdges(removed, false);
+    EXPECT_EQ(removed, std::vector<EdgeKey>());
+  }
+
+  layer.removeNode(2);
+  layer.removeEdge(0, 1);
+
+  {
+    std::vector<EdgeKey> new_expected{{1, 3}, {3, 4}};
+    std::vector<EdgeKey> removed_expected{{0, 1}, {1, 2}, {2, 3}};
+
+    std::vector<EdgeKey> new_edges;
+    layer.getNewEdges(new_edges, false);
+    EXPECT_EQ(new_edges, new_expected);
+
+    std::vector<EdgeKey> removed;
+    layer.getRemovedEdges(removed, false);
+    EXPECT_EQ(removed, removed_expected);
+  }
+}
+
 }  // namespace kimera

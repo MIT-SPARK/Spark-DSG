@@ -13,7 +13,7 @@ using NodeRef = SceneGraphLayer::NodeRef;
 SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id) {}
 
 bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
-  nodes_status_[node_id] = NodeStatus::VISIBLE;
+  nodes_status_[node_id] = NodeStatus::NEW;
   return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
       .second;
 }
@@ -35,7 +35,7 @@ bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
   }
 
   NodeId to_insert = node->id;
-  nodes_status_[to_insert] = NodeStatus::VISIBLE;
+  nodes_status_[to_insert] = NodeStatus::NEW;
   nodes_[to_insert] = std::move(node);
   return true;
 }
@@ -173,10 +173,7 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
     return true;
   }
 
-  const size_t edge_idx = edges_.getIndex(source, target);
-  auto attrs = edges_.get(edge_idx).info->clone();
-  edges_.remove(source, target);
-  edges_.insert(new_source, new_target, std::move(attrs), edge_idx);
+  edges_.rewire(source, target, new_source, new_target);
 
   // rewire siblings
   nodes_[source]->siblings_.erase(target);
@@ -196,7 +193,7 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
     NodeStatus node_status = checkNode(id_node_pair.first);
     const auto& other = *id_node_pair.second;
 
-    if (node_status == NodeStatus::VISIBLE) {
+    if (node_status == NodeStatus::VISIBLE || node_status == NodeStatus::NEW) {
       // update the last_update_delta
       const Eigen::Vector3d pos = nodes_[id_node_pair.first]->attributes_->position;
       last_update_delta = pos - other.attributes_->position;
@@ -211,7 +208,7 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
       auto attrs = other.attributes_->clone();
       attrs->position += last_update_delta;
       nodes_[other.id] = Node::Ptr(new Node(other.id, id, std::move(attrs)));
-      nodes_status_[other.id] = NodeStatus::VISIBLE;
+      nodes_status_[other.id] = NodeStatus::NEW;
 
       if (layer_lookup) {
         layer_lookup->insert({other.id, id});
@@ -220,11 +217,12 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
   }
 
   for (const auto& id_edge_pair : other_layer.edges_.edges) {
-    if (id_edge_pair.first <= edges_.last_idx) {
+    const auto& edge = id_edge_pair.second;
+    if (hasEdge(edge.source, edge.target)) {
+      // TODO(nathan) clone attributes
       continue;
     }
 
-    const auto& edge = id_edge_pair.second;
     insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
@@ -241,14 +239,54 @@ Eigen::Vector3d SceneGraphLayer::getPosition(NodeId node) const {
   return nodes_.at(node)->attributes().position;
 }
 
-void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>* removed_nodes) const {
-  CHECK(nullptr != removed_nodes);
-  for (const auto& id_status : nodes_status_) {
-    if (id_status.second == NodeStatus::DELETED) {
-      removed_nodes->push_back(id_status.first);
+void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) {
+  auto iter = nodes_status_.begin();
+  while (iter != nodes_status_.end()) {
+    if (iter->second == NodeStatus::NEW) {
+      new_nodes.push_back(iter->first);
+      if (clear_new) {
+        iter->second = NodeStatus::VISIBLE;
+      }
+    }
+
+    ++iter;
+  }
+}
+
+void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes) const {
+  for (const auto& id_status_pair : nodes_status_) {
+    if (id_status_pair.second == NodeStatus::DELETED) {
+      removed_nodes.push_back(id_status_pair.first);
     }
   }
-  return;
+}
+
+void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
+                                      bool clear_removed) {
+  auto iter = nodes_status_.begin();
+  while (iter != nodes_status_.end()) {
+    if (iter->second != NodeStatus::DELETED) {
+      ++iter;
+      continue;
+    }
+
+    removed_nodes.push_back(iter->first);
+
+    if (clear_removed) {
+      iter = nodes_status_.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+}
+
+void SceneGraphLayer::getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) {
+  return edges_.getNew(new_edges, clear_new);
+}
+
+void SceneGraphLayer::getRemovedEdges(std::vector<EdgeKey>& removed_edges,
+                                      bool clear_removed) {
+  return edges_.getRemoved(removed_edges, clear_removed);
 }
 
 void SceneGraphLayer::reset() {

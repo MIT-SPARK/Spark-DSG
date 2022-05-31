@@ -17,7 +17,7 @@ class DynamicSceneGraphLayer : public BaseLayer {
   //! edge type for the layer
   using Edge = SceneGraphEdge;
   //! edge container type for the layer
-  using Edges = std::map<size_t, Edge>;
+  using Edges = EdgeContainer::Edges;
 
   friend class DynamicSceneGraph;
 
@@ -68,6 +68,15 @@ class DynamicSceneGraphLayer : public BaseLayer {
   bool mergeLayer(const DynamicSceneGraphLayer& graph_layer,
                   std::map<NodeId, LayerKey>* layer_lookup = nullptr,
                   bool update_attributes = true);
+
+  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) override;
+
+  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) override;
+
+  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed) override;
+
+  void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
+                       bool clear_removed) override;
 
  protected:
   bool emplaceNode(std::chrono::nanoseconds timestamp,

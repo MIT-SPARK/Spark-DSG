@@ -87,9 +87,8 @@ std::string SceneGraphLayer::serializeLayer(const NodeSet& nodes) const {
       continue;
     }
 
-    for (const auto& sibling_edge_pair : edges_.edges_info.at(node_id)) {
-      const Edge& edge = edges_.get(sibling_edge_pair.second);
-      record["edges"].push_back(edge);
+    for (const auto& sibling : node.siblings()) {
+      record["edges"].push_back(edges_.get(node_id, sibling));
     }
   }
 
@@ -111,16 +110,14 @@ EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
                         });
   }
 
-  size_t temp_edge_idx = 0;
   auto new_edges = std::make_unique<Edges>();
   for (const auto& edge : record.at("edges")) {
     read_edge_from_json(
         edge, [&](NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs) {
           new_edges->emplace(std::piecewise_construct,
-                             std::forward_as_tuple(temp_edge_idx),
+                             std::forward_as_tuple(source, target),
                              std::forward_as_tuple(source, target, std::move(attrs)));
         });
-    temp_edge_idx++;
   }
 
   return new_edges;
@@ -168,17 +165,17 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
     }
   }
 
+  record["mesh_edges"] = json::array();
+  for (const auto& id_edge_pair : mesh_edges_) {
+    record.at("mesh_edges").push_back(id_edge_pair.second);
+  }
+
   if (!mesh_vertices_ || !mesh_faces_ || !include_mesh) {
     return record.dump();
   }
 
   record["mesh"]["vertices"] = *mesh_vertices_;
   record["mesh"]["faces"] = *mesh_faces_;
-  record["mesh_edges"] = json::array();
-  for (const auto& id_edge_pair : mesh_edges_) {
-    record.at("mesh_edges").push_back(id_edge_pair.second);
-  }
-
   return record.dump();
 }
 

@@ -33,4 +33,17 @@ TEST(SceneGraphNodeTests, SymbolCorrect) {
       << "Symbol value: " << static_cast<NodeId>(test2);
 }
 
+TEST(SceneGraphNodeTests, LiteralCorrect) {
+  NodeSymbol n1 = "a123"_id;
+  NodeSymbol n2('a', 123);
+  EXPECT_EQ(n1, n2);
+
+  try {
+    ""_id;
+    FAIL();
+  } catch (std::domain_error&) {
+    SUCCEED();
+  }
+}
+
 }  // namespace kimera

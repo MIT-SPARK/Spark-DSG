@@ -187,16 +187,14 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
 bool DynamicSceneGraph::insertMeshEdge(NodeId source,
                                        size_t mesh_vertex,
                                        bool allow_invalid_mesh) {
-  if (!mesh_vertices_) {
-    return false;
-  }
-
   if (!hasNode(source)) {
     return false;
   }
 
-  if (mesh_vertex >= mesh_vertices_->size() && !allow_invalid_mesh) {
-    return false;
+  if (!allow_invalid_mesh) {
+    if (!mesh_vertices_ || mesh_vertex >= mesh_vertices_->size()) {
+      return false;
+    }
   }
 
   if (hasMeshEdge(source, mesh_vertex)) {
@@ -586,6 +584,7 @@ size_t DynamicSceneGraph::numEdges() const {
 
 bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
                                         std::unique_ptr<Edges>&& edges) {
+  // TODO(nathan) consider condensing with mergeGraph
   if (!layers_.count(other_layer.id)) {
     LOG(ERROR) << "Scene graph does not have layer: " << other_layer.id;
     return false;
@@ -601,7 +600,7 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
       // we need to let the scene graph know about new nodes
       node_lookup_[id_node_pair.first] = internal_layer.id;
       internal_layer.nodes_[id_node_pair.first] = std::move(id_node_pair.second);
-      internal_layer.nodes_status_[id_node_pair.first] = NodeStatus::VISIBLE;
+      internal_layer.nodes_status_[id_node_pair.first] = NodeStatus::NEW;
     }
   }
 
@@ -615,9 +614,7 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
   for (auto& id_edge_pair : *edges) {
     auto& edge = id_edge_pair.second;
     if (internal_layer.hasEdge(edge.source, edge.target)) {
-      // just copy over info
-      auto edge_id = internal_layer.edges_.getIndex(edge.source, edge.target);
-      internal_layer.edges_.edges.at(edge_id).info = std::move(edge.info);
+      internal_layer.edges_.edges.at(id_edge_pair.first).info = std::move(edge.info);
       continue;
     }
 
@@ -658,7 +655,7 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
     const bool update =
         (update_map && update_map->count(layer)) ? update_map->at(layer) : true;
     layers_[layer]->mergeLayer(*id_layer.second, &node_lookup_, update);
-    id_layer.second->getRemovedNodes(&removed_nodes);
+    id_layer.second->getRemovedNodes(removed_nodes, false);
   }
 
   for (const auto& removed_id : removed_nodes) {
@@ -687,6 +684,42 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 
   // TODO(Yun) check the other mesh info (faces, vertices etc. )
   return true;
+}
+
+std::vector<NodeId> DynamicSceneGraph::getRemovedNodes(bool clear_removed) {
+  std::vector<NodeId> to_return;
+  visitLayers([&](LayerKey, BaseLayer* layer) {
+    layer->getRemovedNodes(to_return, clear_removed);
+  });
+  return to_return;
+}
+
+std::vector<NodeId> DynamicSceneGraph::getNewNodes(bool clear_new) {
+  std::vector<NodeId> to_return;
+  visitLayers(
+      [&](LayerKey, BaseLayer* layer) { layer->getNewNodes(to_return, clear_new); });
+  return to_return;
+}
+
+std::vector<EdgeKey> DynamicSceneGraph::getRemovedEdges(bool clear_removed) {
+  std::vector<EdgeKey> to_return;
+  visitLayers([&](LayerKey, BaseLayer* layer) {
+    layer->getRemovedEdges(to_return, clear_removed);
+  });
+
+  interlayer_edges_.getRemoved(to_return, clear_removed);
+  dynamic_interlayer_edges_.getRemoved(to_return, clear_removed);
+  return to_return;
+}
+
+std::vector<EdgeKey> DynamicSceneGraph::getNewEdges(bool clear_new) {
+  std::vector<EdgeKey> to_return;
+  visitLayers(
+      [&](LayerKey, BaseLayer* layer) { layer->getNewEdges(to_return, clear_new); });
+
+  interlayer_edges_.getNew(to_return, clear_new);
+  dynamic_interlayer_edges_.getNew(to_return, clear_new);
+  return to_return;
 }
 
 std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(size_t idx) const {
@@ -743,6 +776,19 @@ void DynamicSceneGraph::invalidateMeshVertex(size_t index) {
 
   for (const auto& node : nodes) {
     removeMeshEdge(node, index);
+  }
+}
+
+void DynamicSceneGraph::visitLayers(const LayerVisitor& cb) {
+  for (auto& id_layer_pair : layers_) {
+    cb(id_layer_pair.first, id_layer_pair.second.get());
+  }
+
+  for (auto& id_group_pair : dynamic_layers_) {
+    for (auto& prefix_layer_pair : id_group_pair.second) {
+      cb(LayerKey(id_group_pair.first, prefix_layer_pair.first),
+         prefix_layer_pair.second.get());
+    }
   }
 }
 

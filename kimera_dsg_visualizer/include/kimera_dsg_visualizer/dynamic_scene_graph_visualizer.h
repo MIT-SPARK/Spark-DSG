@@ -91,7 +91,7 @@ class DynamicSceneGraphVisualizer {
 
   inline void setGraphUpdated() { need_redraw_ = true; }
 
-  void setGraph(const DynamicSceneGraph::Ptr& scene_graph);
+  void setGraph(const DynamicSceneGraph::Ptr& scene_graph, bool need_reset = true);
 
   void reset();
 

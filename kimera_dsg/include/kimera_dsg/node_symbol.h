@@ -77,6 +77,17 @@ class NodeSymbol {
   } value_;
 };
 
+inline NodeSymbol operator"" _id(const char* str, size_t size) {
+  if (size < 1) {
+    throw std::domain_error("invalid literal: must have at least two characters");
+  }
+
+  char prefix = str[0];
+  std::string number(str + 1, size - 1);
+  size_t index = std::stoull(number);
+  return NodeSymbol(prefix, index);
+}
+
 template <typename Container>
 std::string displayNodeSymbolContainer(const Container& set) {
   std::stringstream ss;

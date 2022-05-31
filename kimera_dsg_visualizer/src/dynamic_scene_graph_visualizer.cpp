@@ -109,13 +109,16 @@ bool DynamicSceneGraphVisualizer::redraw() {
   return true;
 }
 
-void DynamicSceneGraphVisualizer::setGraph(const DynamicSceneGraph::Ptr& scene_graph) {
+void DynamicSceneGraphVisualizer::setGraph(const DynamicSceneGraph::Ptr& scene_graph,
+                                           bool need_reset) {
   if (scene_graph == nullptr) {
     ROS_ERROR("Request to visualize invalid scene graph! Ignoring");
     return;
   }
 
-  reset();
+  if (need_reset) {
+    reset();
+  }
 
   scene_graph_ = scene_graph;
   need_redraw_ = true;

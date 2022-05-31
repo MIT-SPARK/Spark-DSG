@@ -12,46 +12,71 @@ using Edge = EdgeContainer::Edge;
 void EdgeContainer::insert(NodeId source,
                            NodeId target,
                            EdgeAttributes::Ptr&& edge_info) {
-  ++last_idx;
-  insert(source, target, std::move(edge_info), last_idx);
-}
-
-void EdgeContainer::insert(NodeId source,
-                           NodeId target,
-                           EdgeAttributes::Ptr&& edge_info,
-                           size_t index) {
   auto attrs = (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
                                       : std::move(edge_info);
 
   edges.emplace(std::piecewise_construct,
-                std::forward_as_tuple(index),
+                std::forward_as_tuple(source, target),
                 std::forward_as_tuple(source, target, std::move(attrs)));
-  edges_info[source][target] = index;
-  edges_info[target][source] = index;
+  edge_status[EdgeKey(source, target)] = EdgeStatus::NEW;
 }
 
 void EdgeContainer::remove(NodeId source, NodeId target) {
-  edges.erase(edges_info.at(source).at(target));
-
-  edges_info.at(source).erase(target);
-  if (edges_info.at(source).empty()) {
-    edges_info.erase(source);
-  }
-
-  edges_info.at(target).erase(source);
-  if (edges_info.at(target).empty()) {
-    edges_info.erase(target);
-  }
+  const EdgeKey key(source, target);
+  edge_status.at(key) = EdgeStatus::DELETED;
+  edges.erase(key);
 }
 
 bool EdgeContainer::contains(NodeId source, NodeId target) const {
-  return edges_info.count(source) && edges_info.at(source).count(target);
+  return edges.count(EdgeKey(source, target));
 }
 
 void EdgeContainer::reset() {
-  last_idx = 0;
-  edges_info.clear();
   edges.clear();
+  edge_status.clear();
+}
+
+void EdgeContainer::rewire(NodeId source,
+                           NodeId target,
+                           NodeId new_source,
+                           NodeId new_target) {
+  auto attrs = get(source, target).info->clone();
+  edge_status.at(EdgeKey(source, target)) = EdgeStatus::MERGED;
+  remove(source, target);
+  insert(new_source, new_target, std::move(attrs));
+}
+
+EdgeStatus EdgeContainer::getStatus(NodeId source, NodeId target) const {
+  const auto iter = edge_status.find(EdgeKey(source, target));
+  return (iter == edge_status.end()) ? EdgeStatus::NONEXISTENT : iter->second;
+}
+
+void EdgeContainer::getNew(std::vector<EdgeKey>& new_edges, bool clear_new) {
+  auto iter = edge_status.begin();
+  while (iter != edge_status.end()) {
+    if (iter->second == EdgeStatus::NEW) {
+      new_edges.push_back(iter->first);
+      if (clear_new) {
+        iter->second = EdgeStatus::VISIBLE;
+      }
+    }
+
+    ++iter;
+  }
+}
+
+void EdgeContainer::getRemoved(std::vector<EdgeKey>& removed_edges,
+                               bool clear_removed) {
+  auto iter = edge_status.begin();
+  while (iter != edge_status.end()) {
+    if (iter->second != EdgeStatus::DELETED) {
+      ++iter;
+      continue;
+    }
+
+    removed_edges.push_back(iter->first);
+    iter = clear_removed ? edge_status.erase(iter) : ++iter;
+  }
 }
 
 }  // namespace kimera

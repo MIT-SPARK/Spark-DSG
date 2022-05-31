@@ -41,11 +41,12 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
   }
 
   for (const auto& id_edge_pair : other.edges()) {
-    if (id_edge_pair.first <= edges_.last_idx) {
+    const auto& edge = id_edge_pair.second;
+    if (hasEdge(edge.source, edge.target)) {
+      // TODO(nathan) clone attributes
       continue;
     }
 
-    const auto& edge = id_edge_pair.second;
     insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
@@ -62,7 +63,10 @@ bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
   const NodeId new_id = prefix.makeId(next_node_);
   times_.insert(stamp.count());
   nodes_.emplace_back(std::make_unique<Node>(new_id, id, std::move(attrs), stamp));
-  node_status_[nodes_.size() - 1] = NodeStatus::VISIBLE;
+  node_status_[nodes_.size() - 1] = NodeStatus::NEW;
+
+  // TODO(nathan) track newest time and don't add edge if node is older than that.
+  // TODO(nathan) handle incorrect time ordering better
 
   if (add_edge && nodes_.size() > 1u) {
     insertEdgeByIndex(nodes_.size() - 2, nodes_.size() - 1);
@@ -86,7 +90,7 @@ bool DynamicSceneGraphLayer::hasNodeByIndex(size_t node_index) const {
     return false;
   }
 
-  return iter->second == NodeStatus::VISIBLE;
+  return iter->second == NodeStatus::VISIBLE || iter->second == NodeStatus::NEW;
 }
 
 bool DynamicSceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
@@ -181,7 +185,7 @@ bool DynamicSceneGraphLayer::removeNode(NodeId node) {
   }
 
   const size_t index = prefix.index(node);
-  std::set<NodeId> targets_to_erase = nodes_.at(node)->siblings_;
+  const auto targets_to_erase = nodes_.at(index)->siblings_;
 
   // reconnect "odom" edges
   const auto prev_node = node - 1;
@@ -222,6 +226,50 @@ Eigen::Vector3d DynamicSceneGraphLayer::getPositionByIndex(size_t node_index) co
   }
 
   return nodes_.at(node_index)->attributes().position;
+}
+
+void DynamicSceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes,
+                                         bool clear_new) {
+  auto iter = node_status_.begin();
+  while (iter != node_status_.end()) {
+    if (iter->second == NodeStatus::NEW) {
+      new_nodes.push_back(prefix.makeId(iter->first));
+      if (clear_new) {
+        iter->second = NodeStatus::VISIBLE;
+      }
+    }
+
+    ++iter;
+  }
+}
+
+void DynamicSceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
+                                             bool clear_removed) {
+  auto iter = node_status_.begin();
+  while (iter != node_status_.end()) {
+    if (iter->second != NodeStatus::DELETED) {
+      ++iter;
+      continue;
+    }
+
+    removed_nodes.push_back(prefix.makeId(iter->first));
+
+    if (clear_removed) {
+      iter = node_status_.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+}
+
+void DynamicSceneGraphLayer::getNewEdges(std::vector<EdgeKey>& new_edges,
+                                         bool clear_new) {
+  return edges_.getNew(new_edges, clear_new);
+}
+
+void DynamicSceneGraphLayer::getRemovedEdges(std::vector<EdgeKey>& removed_edges,
+                                             bool clear_removed) {
+  return edges_.getRemoved(removed_edges, clear_removed);
 }
 
 }  // namespace kimera

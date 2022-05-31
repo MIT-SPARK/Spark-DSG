@@ -48,6 +48,7 @@ void SceneGraphLogger::logGraph(const DynamicSceneGraph::Ptr& graph) {
       size_t num_nodes_with_children = 0;
       for (const auto& id_node_status : id_layer.second->nodes_status_) {
         switch (id_node_status.second) {
+          case NodeStatus::NEW:
           case NodeStatus::VISIBLE:
             num_active_nodes++;
             if (graph->getNode(id_node_status.first)

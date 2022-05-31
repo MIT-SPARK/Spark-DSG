@@ -305,11 +305,6 @@ MarkerArray makeGraphEdgeMarkers(const std_msgs::Header& header,
   std::map<LayerId, size_t> num_since_last_insertion;
 
   for (const auto& edge : graph.interlayer_edges()) {
-    if (!graph.hasNode(edge.second.source) ||
-        !graph.hasNode(edge.second.target)) {
-      continue;
-    }
-
     const Node& source = *(graph.getNode(edge.second.source));
     const Node& target = *(graph.getNode(edge.second.target));
 

@@ -28,6 +28,28 @@ class BaseLayer {
 
   virtual std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const = 0;
 
+  /**
+   * @brief Get node ids of newly inserted nodes
+   */
+  virtual void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) = 0;
+
+  /**
+   * @brief Get node id of deleted nodes
+   */
+  virtual void getRemovedNodes(std::vector<NodeId>& removed_nodes,
+                               bool clear_removed) = 0;
+
+  /**
+   * @brief Get the source and target of newly inserted edges
+   */
+  virtual void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) = 0;
+
+  /**
+   * @brief Get the source and target of deleted edges
+   */
+  virtual void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
+                               bool clear_removed) = 0;
+
  protected:
   virtual bool removeNode(NodeId node_id) = 0;
 };

@@ -410,7 +410,7 @@ TEST(DynamicSceneGraphTests, InvalidMeshEdgeInvariantsCorrect) {
   EXPECT_TRUE(graph.insertEdge(0, 1));
 
   // edges when mesh is invalid don't work
-  EXPECT_FALSE(graph.insertMeshEdge(0, 7, true));
+  EXPECT_FALSE(graph.insertMeshEdge(0, 7, false));
   EXPECT_EQ(1u, graph.numEdges());
 
   TestMesh mesh = makeMesh(5);
@@ -613,10 +613,10 @@ TEST(DynamicSceneGraphTests, updateFromLayerCorrect) {
   separate_layer.emplaceNode(5, std::make_unique<NodeAttributes>());
   std::unique_ptr<Edges> edges(new Edges);
   edges->emplace(std::piecewise_construct,
-                 std::forward_as_tuple(0),
+                 std::forward_as_tuple(5, 2),
                  std::forward_as_tuple(5, 2, std::make_unique<EdgeAttributes>()));
   edges->emplace(std::piecewise_construct,
-                 std::forward_as_tuple(1),
+                 std::forward_as_tuple(1, 2),
                  std::forward_as_tuple(1, 2, std::make_unique<EdgeAttributes>()));
 
   EXPECT_TRUE(graph.updateFromLayer(separate_layer, std::move(edges)));
@@ -912,6 +912,74 @@ TEST(DynamicSceneGraphTests, GetLayerKeyCorrect) {
   EXPECT_EQ(*graph.getLayerForNode(NodeSymbol('x', 0)), LayerKey(3));
 
   EXPECT_FALSE(graph.getLayerForNode(NodeSymbol('b', 0)));
+}
+
+TEST(DynamicSceneGraphTests, RemovedAndNewNodesCorrect) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph graph;
+  graph.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(3, NodeSymbol('x', 0), std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<NodeId> expected{NodeSymbol('x', 0), NodeSymbol('a', 0)};
+    std::vector<NodeId> removed = graph.getNewNodes(true);
+    EXPECT_EQ(expected, removed);
+  }
+
+  {
+    std::vector<NodeId> expected;
+    std::vector<NodeId> removed = graph.getNewNodes(true);
+    EXPECT_EQ(expected, removed);
+  }
+
+  graph.removeNode(NodeSymbol('a', 0));
+  graph.removeNode(NodeSymbol('x', 0));
+
+  {
+    std::vector<NodeId> expected{NodeSymbol('x', 0), NodeSymbol('a', 0)};
+    std::vector<NodeId> removed = graph.getRemovedNodes(true);
+    EXPECT_EQ(expected, removed);
+  }
+
+  {
+    std::vector<NodeId> expected;
+    std::vector<NodeId> removed = graph.getRemovedNodes(true);
+    EXPECT_EQ(expected, removed);
+  }
+}
+
+TEST(DynamicSceneGraphTests, RemovedAndNewEdgesCorrect) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph graph;
+  graph.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, 'a', 11ns, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(4, "y1"_id, std::make_unique<NodeAttributes>());
+  graph.insertEdge("x0"_id, "y1"_id);
+  graph.insertEdge("a1"_id, "x0"_id);
+
+  {
+    std::vector<EdgeKey> new_expected{
+        {"a0"_id, "a1"_id}, {"x0"_id, "y1"_id}, {"a1"_id, "x0"_id}};
+    std::vector<EdgeKey> new_edges = graph.getNewEdges(false);
+    EXPECT_EQ(new_expected, new_edges);
+
+    std::vector<EdgeKey> removed_expected;
+    std::vector<EdgeKey> removed_edges = graph.getRemovedEdges(false);
+    EXPECT_EQ(removed_expected, removed_edges);
+  }
+
+  graph.removeEdge("x0"_id, "y1"_id);
+
+  {
+    std::vector<EdgeKey> new_expected{{"a0"_id, "a1"_id}, {"a1"_id, "x0"_id}};
+    std::vector<EdgeKey> new_edges = graph.getNewEdges(false);
+    EXPECT_EQ(new_expected, new_edges);
+
+    std::vector<EdgeKey> removed_expected{{"x0"_id, "y1"_id}};
+    std::vector<EdgeKey> removed_edges = graph.getRemovedEdges(false);
+    EXPECT_EQ(removed_expected, removed_edges);
+  }
 }
 
 }  // namespace kimera

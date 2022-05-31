@@ -30,7 +30,7 @@ class SceneGraphLayer : public BaseLayer {
   //! edge type for the layer
   using Edge = SceneGraphEdge;
   //! edge container type for the layer
-  using Edges = std::map<size_t, Edge>;
+  using Edges = EdgeContainer::Edges;
 
   friend class DynamicSceneGraph;
   friend class SceneGraphLogger;
@@ -149,9 +149,30 @@ class SceneGraphLayer : public BaseLayer {
   Eigen::Vector3d getPosition(NodeId node) const;
 
   /**
+   * @brief Get node ids of newly inserted nodes
+   */
+  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) override;
+
+  /**
    * @brief Get node id of deleted nodes
    */
-  void getRemovedNodes(std::vector<NodeId>* removed_nodes) const;
+  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed) override;
+
+  /**
+   * @brief Get node id of deleted nodes
+   */
+  void getRemovedNodes(std::vector<NodeId>& removed_nodes) const;
+
+  /**
+   * @brief Get the source and target of newly inserted edges
+   */
+  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) override;
+
+  /**
+   * @brief Get the source and target of deleted edges
+   */
+  void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
+                       bool clear_removed) override;
 
   //! ID of the layer
   const LayerId id;

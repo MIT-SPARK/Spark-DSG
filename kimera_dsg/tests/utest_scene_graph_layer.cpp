@@ -27,7 +27,7 @@ TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
   EXPECT_TRUE(layer.emplaceNode(0, std::make_unique<NodeAttributes>()));
   EXPECT_EQ(1u, layer.numNodes());
   EXPECT_TRUE(layer.hasNode(0));
-  EXPECT_EQ(NodeStatus::VISIBLE, layer.checkNode(0));
+  EXPECT_EQ(NodeStatus::NEW, layer.checkNode(0));
 
   std::optional<NodeRef> node_opt = layer.getNode(0);
   ASSERT_TRUE(node_opt);
@@ -51,7 +51,7 @@ TEST(SceneGraphLayerTests, InsertNodeInvariants) {
   EXPECT_TRUE(layer.insertNode(std::move(valid_node)));
   EXPECT_EQ(1u, layer.numNodes());
   EXPECT_TRUE(layer.hasNode(0));
-  EXPECT_EQ(NodeStatus::VISIBLE, layer.checkNode(0));
+  EXPECT_EQ(NodeStatus::NEW, layer.checkNode(0));
 
   // we already have this node, so we should fail
   Node::Ptr repeat_node =
@@ -336,7 +336,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
     EXPECT_EQ(static_cast<double>(i), result(0));
     EXPECT_EQ(0.0, result(1));
     EXPECT_EQ(0.0, result(2));
-    EXPECT_EQ(NodeStatus::VISIBLE, layer_1.checkNode(i));
+    EXPECT_EQ(NodeStatus::NEW, layer_1.checkNode(i));
     if (i > 2) {
       EXPECT_EQ(LayerKey(1), node_to_layer.at(i));
     }
@@ -453,9 +453,9 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     layer.insertEdge(i - 1, i);
   }
 
-  IsolatedSceneGraphLayer deserialized_layer(1);
-
   {  // no nodes -> empty result on deserialization
+    IsolatedSceneGraphLayer deserialized_layer(1);
+
     std::unordered_set<NodeId> nodes;
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
@@ -466,6 +466,8 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
   }
 
   {  // first node -> 1 edge
+    IsolatedSceneGraphLayer deserialized_layer(1);
+
     std::unordered_set<NodeId> nodes{0};
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
@@ -473,12 +475,12 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
     EXPECT_EQ(1u, edges->size());
     EXPECT_EQ(1u, deserialized_layer.numNodes());
     EXPECT_EQ(0u, deserialized_layer.numEdges());
-    ASSERT_TRUE(edges->count(0));
-    EXPECT_EQ(0u, edges->at(0).source);
-    EXPECT_EQ(1u, edges->at(0).target);
+    EXPECT_TRUE(edges->count(EdgeKey(0, 1)));
   }
 
   {  // second node -> 2 edges
+    IsolatedSceneGraphLayer deserialized_layer(1);
+
     std::unordered_set<NodeId> nodes{1};
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
@@ -489,13 +491,130 @@ TEST(SceneGraphLayerTests, SerializeDeserializeCorrect) {
   }
 
   {  // all nodes -> 12 edges
+    IsolatedSceneGraphLayer deserialized_layer(1);
+
     std::unordered_set<NodeId> nodes{0, 1, 2, 3, 4, 5, 6};
     std::string contents = layer.serializeLayer(nodes);
     std::unique_ptr<Edges> edges = deserialized_layer.deserializeLayer(contents);
     ASSERT_TRUE(edges != nullptr);
-    EXPECT_EQ(12u, edges->size());
+    EXPECT_EQ(6u, edges->size());
     EXPECT_EQ(7u, deserialized_layer.numNodes());
     EXPECT_EQ(0u, deserialized_layer.numEdges());
+  }
+}
+
+TEST(SceneGraphLayerTests, TestRemovedNodes) {
+  IsolatedSceneGraphLayer layer(1);
+
+  for (size_t i = 0; i < 5; ++i) {
+    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+  }
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+    EXPECT_EQ(std::vector<NodeId>(), removed_nodes);
+  }
+
+  layer.removeNode(0);
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+    EXPECT_EQ(std::vector<NodeId>{0}, removed_nodes);
+  }
+
+  layer.emplaceNode(0, std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+    EXPECT_EQ(std::vector<NodeId>(), removed_nodes);
+  }
+
+  layer.removeNode(0);
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, true);
+    EXPECT_EQ(std::vector<NodeId>{0}, removed_nodes);
+  }
+
+  {
+    std::vector<NodeId> removed_nodes;
+    layer.getRemovedNodes(removed_nodes, false);
+    EXPECT_EQ(std::vector<NodeId>(), removed_nodes);
+  }
+}
+
+TEST(SceneGraphLayerTests, TestNewNodes) {
+  IsolatedSceneGraphLayer layer(1);
+
+  for (size_t i = 0; i < 5; ++i) {
+    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+  }
+
+  {
+    std::vector<NodeId> new_nodes;
+    layer.getNewNodes(new_nodes, false);
+    std::vector<NodeId> expected{0, 1, 2, 3, 4};
+    EXPECT_EQ(expected, new_nodes);
+  }
+
+  layer.emplaceNode(5, std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<NodeId> new_nodes;
+    layer.getNewNodes(new_nodes, true);
+    std::vector<NodeId> expected{0, 1, 2, 3, 4, 5};
+    EXPECT_EQ(expected, new_nodes);
+  }
+
+  layer.emplaceNode(6, std::make_unique<NodeAttributes>());
+
+  {
+    std::vector<NodeId> new_nodes;
+    layer.getNewNodes(new_nodes, true);
+    std::vector<NodeId> expected{6};
+    EXPECT_EQ(expected, new_nodes);
+  }
+}
+
+TEST(SceneGraphLayerTests, NewRemovedEdgesCorrect) {
+  IsolatedSceneGraphLayer layer(1);
+
+  layer.emplaceNode(0, std::make_unique<NodeAttributes>());
+  for (size_t i = 1; i < 5; ++i) {
+    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+    layer.insertEdge(i - 1, i);
+  }
+
+  {
+    std::vector<EdgeKey> expected{{0, 1}, {1, 2}, {2, 3}, {3, 4}};
+
+    std::vector<EdgeKey> new_edges;
+    layer.getNewEdges(new_edges, false);
+    EXPECT_EQ(new_edges, expected);
+
+    std::vector<EdgeKey> removed;
+    layer.getRemovedEdges(removed, false);
+    EXPECT_EQ(removed, std::vector<EdgeKey>());
+  }
+
+  layer.removeNode(2);
+  layer.removeEdge(0, 1);
+
+  {
+    std::vector<EdgeKey> new_expected{{3, 4}};
+    std::vector<EdgeKey> removed_expected{{0, 1}, {1, 2}, {2, 3}};
+
+    std::vector<EdgeKey> new_edges;
+    layer.getNewEdges(new_edges, false);
+    EXPECT_EQ(new_edges, new_expected);
+
+    std::vector<EdgeKey> removed;
+    layer.getRemovedEdges(removed, false);
+    EXPECT_EQ(removed, removed_expected);
   }
 }
 

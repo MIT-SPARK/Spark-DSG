@@ -18,7 +18,7 @@ namespace kimera {
  *
  * Mostly for keeping history and status of nodes in a graph
  */
-enum class NodeStatus { VISIBLE, MERGED, DELETED, NONEXISTENT };
+enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
 
 /**
  * @brief Node in the scene graph
