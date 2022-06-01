@@ -163,7 +163,6 @@ class DynamicSceneGraphVisualizer {
   void drawDynamicLayer(const std_msgs::Header& header,
                         const DynamicSceneGraphLayer& layer,
                         const DynamicLayerConfig& config,
-                        const LayerConfig& layer_config,
                         const VisualizerConfig& viz_config,
                         MarkerArray& msg);
 

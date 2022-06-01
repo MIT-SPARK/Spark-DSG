@@ -87,7 +87,6 @@ visualization_msgs::Marker makeDynamicCentroidMarkers(
     const std_msgs::Header& header,
     const DynamicLayerConfig& config,
     const DynamicSceneGraphLayer& layer,
-    const LayerConfig& layer_config,
     const VisualizerConfig& visualizer_config,
     const NodeColor& color,
     const std::string& ns);
@@ -113,7 +112,6 @@ visualization_msgs::Marker makeDynamicEdgeMarkers(
     const std_msgs::Header& header,
     const DynamicLayerConfig& config,
     const DynamicSceneGraphLayer& layer,
-    const LayerConfig& layer_config,
     const VisualizerConfig& visualizer_config,
     const NodeColor& color,
     const std::string& ns);
@@ -122,7 +120,6 @@ visualization_msgs::Marker makeDynamicLabelMarker(
     const std_msgs::Header& header,
     const DynamicLayerConfig& config,
     const DynamicSceneGraphLayer& layer,
-    const LayerConfig& layer_config,
     const VisualizerConfig& visualizer_config,
     const std::string& ns);
 

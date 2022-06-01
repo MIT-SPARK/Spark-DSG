@@ -1,5 +1,5 @@
 visualize: true
-num_colors: 5
+num_colors: 3
 saturation: 0.9
 luminance: 0.7
 edge_sl_ratio: 0.6

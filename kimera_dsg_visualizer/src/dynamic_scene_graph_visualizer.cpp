@@ -137,17 +137,19 @@ const DynamicLayerConfig& DynamicSceneGraphVisualizer::getConfig(LayerId layer) 
   return dynamic_configs_.at(layer)->get();
 }
 
-ColorVector getNodeColor(const DynamicLayerConfig& config, char prefix) {
+inline double getDynamicHue(const DynamicLayerConfig& config, char prefix) {
   // distance is measured from first relatively readable character prefix
-  int color_num = (prefix - '0') % config.num_colors;
-  double hue = static_cast<double>(color_num) / static_cast<double>(config.num_colors);
+  int color_num = (std::abs((prefix - '0')) + config.color_offset) % config.num_colors;
+  return static_cast<double>(color_num) / static_cast<double>(config.num_colors);
+}
+
+ColorVector getNodeColor(const DynamicLayerConfig& config, char prefix) {
+  const double hue = getDynamicHue(config, prefix);
   return dsg_utils::getRgbFromHls(hue, config.luminance, config.saturation);
 }
 
 ColorVector getEdgeColor(const DynamicLayerConfig& config, char prefix) {
-  // distance is measured from first relatively readable character prefix
-  int color_num = (prefix - '0') % config.num_colors;
-  double hue = static_cast<double>(color_num) / static_cast<double>(config.num_colors);
+  const double hue = getDynamicHue(config, prefix);
   const double saturation = config.saturation * config.edge_sl_ratio;
   const double luminance = config.luminance * config.edge_sl_ratio;
   return dsg_utils::getRgbFromHls(hue, saturation, luminance);
@@ -156,27 +158,16 @@ ColorVector getEdgeColor(const DynamicLayerConfig& config, char prefix) {
 void DynamicSceneGraphVisualizer::drawDynamicLayer(const std_msgs::Header& header,
                                                    const DynamicSceneGraphLayer& layer,
                                                    const DynamicLayerConfig& config,
-                                                   const LayerConfig& layer_config,
                                                    const VisualizerConfig& viz_config,
                                                    MarkerArray& msg) {
   const std::string node_ns = getDynamicNodeNamespace(layer.prefix);
-  Marker nodes = makeDynamicCentroidMarkers(header,
-                                            config,
-                                            layer,
-                                            layer_config,
-                                            viz_config,
-                                            getNodeColor(config, layer.prefix),
-                                            node_ns);
+  Marker nodes = makeDynamicCentroidMarkers(
+      header, config, layer, viz_config, getNodeColor(config, layer.prefix), node_ns);
   addMultiMarkerIfValid(nodes, msg);
 
   const std::string edge_ns = getDynamicEdgeNamespace(layer.prefix);
-  Marker edges = makeDynamicEdgeMarkers(header,
-                                        config,
-                                        layer,
-                                        layer_config,
-                                        viz_config,
-                                        getEdgeColor(config, layer.prefix),
-                                        edge_ns);
+  Marker edges = makeDynamicEdgeMarkers(
+      header, config, layer, viz_config, getEdgeColor(config, layer.prefix), edge_ns);
   addMultiMarkerIfValid(edges, msg);
 
   if (layer.numNodes() == 0) {
@@ -185,8 +176,7 @@ void DynamicSceneGraphVisualizer::drawDynamicLayer(const std_msgs::Header& heade
   }
 
   const std::string label_ns = getDynamicLabelNamespace(layer.prefix);
-  Marker label =
-      makeDynamicLabelMarker(header, config, layer, layer_config, viz_config, label_ns);
+  Marker label = makeDynamicLabelMarker(header, config, layer, viz_config, label_ns);
   msg.markers.push_back(label);
   published_dynamic_labels_.insert(label_ns);
 }
@@ -225,7 +215,6 @@ void DynamicSceneGraphVisualizer::drawDynamicLayers(const std_msgs::Header& head
       continue;
     }
 
-    const LayerConfig& layer_config = layer_configs_.at(layer_id)->get();
     const DynamicLayerConfig& config = getConfig(layer_id);
 
     for (const auto& prefix_layer_pair : id_layer_map_pair.second) {
@@ -235,7 +224,7 @@ void DynamicSceneGraphVisualizer::drawDynamicLayers(const std_msgs::Header& head
       }
 
       const DynamicSceneGraphLayer& layer = *prefix_layer_pair.second;
-      drawDynamicLayer(header, layer, config, layer_config, viz_config, msg);
+      drawDynamicLayer(header, layer, config, viz_config, msg);
     }
   }
 }

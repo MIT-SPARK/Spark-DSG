@@ -36,6 +36,7 @@ LayerConfig getLayerConfig(const ros::NodeHandle& nh) {
   READ_PARAM(nh, config, label_height);
   READ_PARAM(nh, config, label_scale);
   READ_PARAM(nh, config, use_bounding_box);
+  READ_PARAM(nh, config, collapse_bounding_box);
   READ_PARAM(nh, config, bounding_box_alpha);
   READ_PARAM(nh, config, use_edge_source);
   READ_PARAM(nh, config, interlayer_edge_scale);
@@ -65,6 +66,7 @@ DynamicLayerConfig getDynamicLayerConfig(const ros::NodeHandle& nh) {
   READ_PARAM(nh, config, z_offset_scale);
   READ_PARAM(nh, config, visualize);
   READ_PARAM(nh, config, num_colors);
+  READ_PARAM(nh, config, color_offset);
   READ_PARAM(nh, config, saturation);
   READ_PARAM(nh, config, luminance);
   READ_PARAM(nh, config, edge_sl_ratio);

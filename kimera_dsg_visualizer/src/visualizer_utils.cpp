@@ -81,14 +81,16 @@ Marker makeBoundingBoxMarker(const std_msgs::Header& header,
       marker.pose.position =
           tf2::toMsg(bounding_box.world_P_center.cast<double>().eval());
       tf2::convert(world_q_center.cast<double>(), marker.pose.orientation);
-      marker.pose.position.z += getZOffset(config, visualizer_config);
+      marker.pose.position.z +=
+          config.collapse_bounding_box ? 0.0 : getZOffset(config, visualizer_config);
       break;
     case BoundingBox::Type::AABB:
     case BoundingBox::Type::RAABB:
       marker.pose.position =
           tf2::toMsg(bounding_box.world_P_center.cast<double>().eval());
       tf2::convert(world_q_center.cast<double>(), marker.pose.orientation);
-      marker.pose.position.z += getZOffset(config, visualizer_config);
+      marker.pose.position.z +=
+          config.collapse_bounding_box ? 0.0 : getZOffset(config, visualizer_config);
       break;
     default:
       ROS_ERROR("Invalid bounding box encountered!");
@@ -516,14 +518,13 @@ Marker makeLayerEdgeMarkers(const std_msgs::Header& header,
 Marker makeDynamicCentroidMarkers(const std_msgs::Header& header,
                                   const DynamicLayerConfig& config,
                                   const DynamicSceneGraphLayer& layer,
-                                  const LayerConfig& layer_config,
                                   const VisualizerConfig& visualizer_config,
                                   const NodeColor& color,
                                   const std::string& ns) {
   return makeDynamicCentroidMarkers(header,
                                     config,
                                     layer,
-                                    layer_config.z_offset_scale,
+                                    config.z_offset_scale,
                                     visualizer_config,
                                     ns,
                                     [&](const auto&) -> NodeColor { return color; });
@@ -564,7 +565,6 @@ Marker makeDynamicCentroidMarkers(const std_msgs::Header& header,
 Marker makeDynamicEdgeMarkers(const std_msgs::Header& header,
                               const DynamicLayerConfig& config,
                               const DynamicSceneGraphLayer& layer,
-                              const LayerConfig& layer_config,
                               const VisualizerConfig& visualizer_config,
                               const NodeColor& color,
                               const std::string& ns) {
@@ -582,12 +582,12 @@ Marker makeDynamicEdgeMarkers(const std_msgs::Header& header,
   for (const auto& id_edge_pair : layer.edges()) {
     geometry_msgs::Point source;
     tf2::convert(layer.getPosition(id_edge_pair.second.source), source);
-    source.z += getZOffset(layer_config, visualizer_config);
+    source.z += getZOffset(config.z_offset_scale, visualizer_config);
     marker.points.push_back(source);
 
     geometry_msgs::Point target;
     tf2::convert(layer.getPosition(id_edge_pair.second.target), target);
-    target.z += getZOffset(layer_config, visualizer_config);
+    target.z += getZOffset(config.z_offset_scale, visualizer_config);
     marker.points.push_back(target);
   }
 
@@ -597,7 +597,6 @@ Marker makeDynamicEdgeMarkers(const std_msgs::Header& header,
 Marker makeDynamicLabelMarker(const std_msgs::Header& header,
                               const DynamicLayerConfig& config,
                               const DynamicSceneGraphLayer& layer,
-                              const LayerConfig& layer_config,
                               const VisualizerConfig& visualizer_config,
                               const std::string& ns) {
   Marker marker;
@@ -615,7 +614,7 @@ Marker makeDynamicLabelMarker(const std_msgs::Header& header,
   fillPoseWithIdentity(marker.pose);
   tf2::convert(latest_position, marker.pose.position);
   marker.pose.position.z +=
-      getZOffset(layer_config, visualizer_config) + config.label_height;
+      getZOffset(config.z_offset_scale, visualizer_config) + config.label_height;
 
   return marker;
 }
