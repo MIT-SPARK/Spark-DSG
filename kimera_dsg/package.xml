@@ -12,7 +12,7 @@
   <buildtool_depend>cmake</buildtool_depend>
   <depend>libpcl-dev</depend>
   <depend>libgoogle-glog-dev</depend>
-  <depend>libeigen3-dev</depend>
+  <depend>eigen</depend>
 
   <export>
       <build_type>cmake</build_type>
