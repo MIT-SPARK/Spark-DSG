@@ -1,4 +1,3 @@
-# adapted from: https://github.com/pybind/cmake_example/blob/master/setup.py
 import os
 import re
 import subprocess

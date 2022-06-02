@@ -2,17 +2,19 @@
 <package format="2">
   <name>kimera_dsg</name>
   <version>1.0.0</version>
-  <description>Kimera Dynamic Scene Graph (DSG) type definitions and core library code</description>
+  <description>Dynamic Scene Graph (DSG) type definitions and core library code</description>
 
-  <author email="arosinol@mit.edu">Antoni Rosinol</author>
+  <author email="na26933@mit.edu">Nathan Hughes</author>
+  <author email="yunchang@mit.edu">Yun Chang</author>
+  <author email="arosinol@mit.edu">Toni Rosinol</author>
   <maintainer email="na26933@mit.edu">Nathan Hughes</maintainer>
 
   <license>BSD</license>
 
   <buildtool_depend>cmake</buildtool_depend>
   <depend>libpcl-dev</depend>
-  <depend>libgoogle-glog-dev</depend>
   <depend>eigen</depend>
+  <depend>libgoogle-glog-dev</depend>
 
   <export>
       <build_type>cmake</build_type>
