@@ -103,7 +103,7 @@ setup(
     ext_modules=[
         CMakeExtension(
             "kimera_dsg._dsg_bindings",
-            sourcedir="kimera_dsg",
+            sourcedir=".",
             extra_cmake_flags=[
                 "-DKIMERA_DSG_BUILD_TESTS=OFF",
                 "-DKIMERA_DSG_BUILD_PYTHON=ON",
