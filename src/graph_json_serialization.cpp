@@ -34,10 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include "kimera_dsg/graph_json_serialization.h"
 #include "kimera_dsg/dynamic_scene_graph.h"
+#include "kimera_dsg/logging.h"
 #include "kimera_dsg/scene_graph_layer.h"
 #include "kimera_dsg/serialization_helpers.h"
-
-#include <glog/logging.h>
 
 #include <fstream>
 
@@ -144,7 +143,7 @@ EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
     read_node_from_json(node,
                         [this](NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs) {
                           if (layer != this->id) {
-                            LOG(ERROR) << "invalid layer found, skipping!";
+                            SG_LOG(ERROR) << "invalid layer found, skipping!";
                           }
                           this->emplaceNode(id, std::move(attrs));
                         });
@@ -284,7 +283,7 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& content
       num_inserted += graph->insertMeshEdge(source, target, true) ? 1 : 0;
     }
 
-    VLOG(1) << "Loaded " << num_inserted << " mesh edges";
+    SG_LOG(INFO) << "Loaded " << num_inserted << " mesh edges";
   }
 
   return graph;

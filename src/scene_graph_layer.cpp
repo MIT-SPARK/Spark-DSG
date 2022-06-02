@@ -34,8 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "kimera_dsg/scene_graph_layer.h"
 #include "kimera_dsg/edge_attributes.h"
+#include "kimera_dsg/logging.h"
 
-#include <glog/logging.h>
 #include <queue>
 #include <sstream>
 
@@ -54,13 +54,13 @@ bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
 
 bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
   if (!node) {
-    LOG(ERROR) << "Attempted to add an unitialized node to layer " << id;
+    SG_LOG(ERROR) << "Attempted to add an unitialized node to layer " << id;
     return false;
   }
 
   if (node->layer != id) {
-    LOG(WARNING) << "Attempted to add a node with layer " << node->layer << " to layer "
-                 << id;
+    SG_LOG(WARNING) << "Attempted to add a node with layer " << node->layer
+                    << " to layer " << id;
     return false;
   }
 
@@ -78,7 +78,7 @@ bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
                                  EdgeAttributes::Ptr&& edge_info) {
   if (source == target) {
-    LOG(WARNING) << "Attempted to add a self-edge";
+    SG_LOG(WARNING) << "Attempted to add a self-edge";
     return false;
   }
 
@@ -123,8 +123,7 @@ std::optional<NodeRef> SceneGraphLayer::getNode(NodeId node_id) const {
     return std::nullopt;
   }
 
-  // TODO(nathan) consider assert instead
-  CHECK(nodes_.at(node_id) != nullptr) << "Unitialized node found!";
+  assert(nodes_.at(node_id) != nullptr);
   return std::cref(*(nodes_.at(node_id)));
 }
 

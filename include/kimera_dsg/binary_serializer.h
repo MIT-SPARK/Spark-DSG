@@ -37,7 +37,6 @@
 #include "kimera_dsg/binary_serialization_utils.h"
 #include "kimera_dsg/dynamic_scene_graph.h"
 
-#include <glog/logging.h>
 
 namespace kimera {
 namespace serialization {

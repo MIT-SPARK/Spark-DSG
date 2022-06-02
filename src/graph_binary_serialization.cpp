@@ -35,7 +35,6 @@
 #include "kimera_dsg/graph_binary_serialization.h"
 #include "kimera_dsg/binary_serializer.h"
 
-#include <glog/logging.h>
 
 namespace kimera {
 

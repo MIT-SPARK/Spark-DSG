@@ -34,8 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "kimera_dsg/dynamic_scene_graph_layer.h"
 #include "kimera_dsg/edge_attributes.h"
-
-#include <glog/logging.h>
+#include "kimera_dsg/logging.h"
 
 namespace kimera {
 
@@ -191,8 +190,8 @@ bool DynamicSceneGraphLayer::insertEdge(NodeId source,
                                         NodeId target,
                                         EdgeAttributes::Ptr&& edge_info) {
   if (source == target) {
-    LOG(WARNING) << "Attempted to add a self-edge for "
-                 << NodeSymbol(source).getLabel();
+    SG_LOG(WARNING) << "Attempted to add a self-edge for "
+                    << NodeSymbol(source).getLabel();
     return false;
   }
 

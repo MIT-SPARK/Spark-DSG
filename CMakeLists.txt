@@ -21,10 +21,6 @@ set(PCL_FIND_QUIETLY TRUE)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(Eigen3 REQUIRED)
 
-# TODO(nathan) clean this up
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(glog REQUIRED IMPORTED_TARGET libglog)
-
 # TODO(nathan) fetch content when possible on 20.04
 configure_file(cmake/json.CMakeLists.txt.in json-download/CMakeLists.txt)
 execute_process(
@@ -69,7 +65,7 @@ target_include_directories(
 )
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES} ${Boost_LIBRARIES} Eigen3::Eigen
-  PRIVATE PkgConfig::glog nlohmann_json::nlohmann_json
+  PRIVATE nlohmann_json::nlohmann_json
 )
 
 if(KIMERA_DSG_BUILD_PYTHON)

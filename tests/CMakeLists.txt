@@ -22,7 +22,6 @@ add_subdirectory(
   "${CMAKE_CURRENT_BINARY_DIR}/googletest-build" EXCLUDE_FROM_ALL
 )
 
-pkg_check_modules(gflags REQUIRED IMPORTED_TARGET gflags)
 add_executable(
   utest_${PROJECT_NAME}
   utest_main.cpp
@@ -41,10 +40,7 @@ add_executable(
   utest_scene_graph_utilities.cpp
 )
 target_include_directories(utest_${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(
-  utest_${PROJECT_NAME} ${PROJECT_NAME} PkgConfig::glog PkgConfig::gflags gtest
-  nlohmann_json::nlohmann_json
-)
+target_link_libraries(utest_${PROJECT_NAME} ${PROJECT_NAME} gtest nlohmann_json::nlohmann_json)
 
 if(${KIMERA_DSG_INSTALL_TESTS})
   # note that ros uses libdir to handle finding executables by package, but this isn't

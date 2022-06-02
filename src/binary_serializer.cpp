@@ -33,8 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "kimera_dsg/binary_serializer.h"
+#include "kimera_dsg/logging.h"
 
-#include <glog/logging.h>
 
 namespace kimera {
 namespace serialization {
@@ -99,7 +99,7 @@ BinaryDeserializer::BinaryDeserializer(const std::vector<uint8_t>* buffer)
 void BinaryDeserializer::checkType(PackType type) const {
   PackType ref_type = static_cast<PackType>(ref->at(pos));
   if (type != ref_type) {
-    LOG(FATAL) << "invalid type: " << type << " (ref is " << ref_type << ")";
+    SG_LOG(FATAL) << "invalid type: " << type << " (ref is " << ref_type << ")";
     throw std::domain_error("type mismatch!");
   }
   ++pos;

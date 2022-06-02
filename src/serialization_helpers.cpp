@@ -34,10 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include "kimera_dsg/serialization_helpers.h"
 
-#include <glog/logging.h>
-
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+
 
 using nlohmann::json;
 
@@ -107,7 +106,6 @@ void to_json(json& j, const BoundingBox& b) {
 
 void from_json(const json& j, BoundingBox& b) {
   if (j.at("type").is_null()) {
-    LOG_FIRST_N(ERROR, 1) << "Found invalid type enum; assuming RAABB for compatibility";
     b.type = BoundingBox::Type::RAABB;
   } else {
     b.type = j.at("type").get<BoundingBox::Type>();

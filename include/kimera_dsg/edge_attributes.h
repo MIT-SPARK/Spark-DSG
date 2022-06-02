@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <memory>
+#include <ostream>
 
 namespace kimera {
 

@@ -34,8 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "kimera_dsg/dynamic_scene_graph.h"
 #include "kimera_dsg/edge_attributes.h"
+#include "kimera_dsg/logging.h"
 
-#include <glog/logging.h>
 #include <pcl/conversions.h>
 
 #include <list>
@@ -106,7 +106,7 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
   }
 
   if (!layers_.count(layer_id)) {
-    LOG(WARNING) << "Invalid layer: " << layer_id;
+    SG_LOG(WARNING) << "Invalid layer: " << layer_id;
     return false;
   }
 
@@ -131,8 +131,8 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer,
   }
 
   if (hasNode(new_node_id)) {
-    LOG(ERROR) << "scene graph contains node " << new_node_id.getLabel()
-               << ". fix conflicting prefix: " << prefix.str();
+    SG_LOG(ERROR) << "scene graph contains node " << new_node_id.getLabel()
+                  << ". fix conflicting prefix: " << prefix.str();
     return false;
   }
 
@@ -153,8 +153,8 @@ bool DynamicSceneGraph::emplacePrevDynamicNode(LayerId layer,
                                                std::chrono::nanoseconds time,
                                                NodeAttributes::Ptr&& attrs) {
   if (hasNode(prev_node_id)) {
-    LOG(ERROR) << "scene graph already contains node "
-               << NodeSymbol(prev_node_id).getLabel();
+    SG_LOG(ERROR) << "scene graph already contains node "
+                  << NodeSymbol(prev_node_id).getLabel();
     return false;
   }
 
@@ -547,7 +547,7 @@ void DynamicSceneGraph::setMesh(const MeshVertices::Ptr& vertices,
                                 const std::shared_ptr<MeshFaces>& faces,
                                 bool invalidate_all_edges) {
   if (!vertices) {
-    VLOG(1) << "received empty mesh. resetting all mesh edges";
+    SG_LOG(INFO) << "received empty mesh. resetting all mesh edges";
     mesh_vertices_.reset();
     mesh_faces_.reset();
     clearMeshEdges();
@@ -680,7 +680,7 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
                                         std::unique_ptr<Edges>&& edges) {
   // TODO(nathan) consider condensing with mergeGraph
   if (!layers_.count(other_layer.id)) {
-    LOG(ERROR) << "Scene graph does not have layer: " << other_layer.id;
+    SG_LOG(ERROR) << "Scene graph does not have layer: " << other_layer.id;
     return false;
   }
 
