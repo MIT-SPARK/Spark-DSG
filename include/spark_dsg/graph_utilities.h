@@ -341,7 +341,7 @@ void breadthFirstSearch(
 
       const auto& neighbor_node = graph_traits<Graph>::get_node(graph, neighbor);
       if (!node_valid(neighbor_node)) {
-        seen.insert(neighbor); // save some computation
+        seen.insert(neighbor);  // save some computation
         continue;
       }
 

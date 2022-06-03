@@ -5,16 +5,16 @@ project(spark_dsg_python)
 configure_file(pybind11.CMakeLists.txt.in pybind11-download/CMakeLists.txt)
 execute_process(
   COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download"
-  OUTPUT_QUIET
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" OUTPUT_QUIET
 )
 execute_process(
   COMMAND "${CMAKE_COMMAND}" --build .
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download"
-  OUTPUT_QUIET
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" OUTPUT_QUIET
 )
 
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/pybind11-src ${CMAKE_CURRENT_BINARY_DIR}/pybind11-build)
+add_subdirectory(
+  ${CMAKE_CURRENT_BINARY_DIR}/pybind11-src ${CMAKE_CURRENT_BINARY_DIR}/pybind11-build
+)
 
 pybind11_add_module(_dsg_bindings bindings/spark_dsg_bindings.cpp)
 target_link_libraries(_dsg_bindings PRIVATE spark_dsg)

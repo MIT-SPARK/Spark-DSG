@@ -1006,10 +1006,8 @@ pcl::PolygonMesh DynamicSceneGraph::getMesh() const {
 };
 
 DynamicSceneGraph::LayerIds getDefaultLayerIds() {
-  return {DsgLayers::OBJECTS,
-          DsgLayers::PLACES,
-          DsgLayers::ROOMS,
-          DsgLayers::BUILDINGS};
+  return {
+      DsgLayers::OBJECTS, DsgLayers::PLACES, DsgLayers::ROOMS, DsgLayers::BUILDINGS};
 }
 
 }  // namespace spark_dsg

@@ -38,8 +38,8 @@
 
 #include <spark_dsg/bounding_box.h>
 
-using spark_dsg::BoundingBox;
 using pcl::PointXYZ;
+using spark_dsg::BoundingBox;
 
 TEST(BoundingBoxTests, InvalidConstructor) {
   BoundingBox box;

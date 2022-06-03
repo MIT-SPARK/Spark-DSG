@@ -9,12 +9,11 @@ execute_process(
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-download" OUTPUT_QUIET
 )
 
-# We use the global cmake option to set the library type for spark_dsg.
-# Unfortunately, this also means that gtest follows the same setting, and
-# when building the shared library (default), gtest picks this up and the
-# test executable tries to load the gtest library which doesn't get installed.
-# Instead, we override the setting for gtest so we always have static gtest
-# linkage.
+# We use the global cmake option to set the library type for spark_dsg. Unfortunately,
+# this also means that gtest follows the same setting, and when building the shared
+# library (default), gtest picks this up and the test executable tries to load the gtest
+# library which doesn't get installed. Instead, we override the setting for gtest so we
+# always have static gtest linkage.
 set(BUILD_SHARED_LIBS OFF)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(
@@ -40,7 +39,9 @@ add_executable(
   utest_scene_graph_utilities.cpp
 )
 target_include_directories(utest_${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(utest_${PROJECT_NAME} ${PROJECT_NAME} gtest nlohmann_json::nlohmann_json)
+target_link_libraries(
+  utest_${PROJECT_NAME} ${PROJECT_NAME} gtest nlohmann_json::nlohmann_json
+)
 
 if(${KIMERA_DSG_INSTALL_TESTS})
   # note that ros uses libdir to handle finding executables by package, but this isn't

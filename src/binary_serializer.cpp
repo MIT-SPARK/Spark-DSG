@@ -35,7 +35,6 @@
 #include "spark_dsg/binary_serializer.h"
 #include "spark_dsg/logging.h"
 
-
 namespace spark_dsg {
 namespace serialization {
 

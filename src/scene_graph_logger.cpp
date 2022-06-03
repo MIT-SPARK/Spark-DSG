@@ -56,9 +56,8 @@ void writeStatsToCsv(size_t num_active,
   } else {
     file.open(csv_file, std::ofstream::out | std::ofstream::app);
   }
-  file << num_active << "," << num_removed << "," << num_merged << ","
-       << total_parents << "," << total_with_children << "," << num_edges
-       << "\n";
+  file << num_active << "," << num_removed << "," << num_merged << "," << total_parents
+       << "," << total_with_children << "," << num_edges << "\n";
   file.close();
   return;
 }
@@ -85,16 +84,10 @@ void SceneGraphLogger::logGraph(const DynamicSceneGraph::Ptr& graph) {
           case NodeStatus::NEW:
           case NodeStatus::VISIBLE:
             num_active_nodes++;
-            if (graph->getNode(id_node_status.first)
-                    .value()
-                    .get()
-                    .hasParent()) {
+            if (graph->getNode(id_node_status.first).value().get().hasParent()) {
               num_nodes_with_parents++;
             }
-            if (graph->getNode(id_node_status.first)
-                    .value()
-                    .get()
-                    .hasChildren()) {
+            if (graph->getNode(id_node_status.first).value().get().hasChildren()) {
               num_nodes_with_children++;
             }
             break;

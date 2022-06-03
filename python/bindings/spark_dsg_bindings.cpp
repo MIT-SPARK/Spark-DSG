@@ -573,5 +573,4 @@ PYBIND11_MODULE(_dsg_bindings, module) {
 #undef MAKE_SPECIALZIED_NODE_ADD
 
   module.def("compute_ancestor_bounding_box", &computeAncestorBoundingBox);
-
 }

@@ -69,13 +69,15 @@ inline bool operator==(const NodeAttributes& lhs, const NodeAttributes& rhs) {
   return lhs.position == rhs.position;
 }
 
-inline bool operator==(const SemanticNodeAttributes& lhs, const SemanticNodeAttributes& rhs) {
+inline bool operator==(const SemanticNodeAttributes& lhs,
+                       const SemanticNodeAttributes& rhs) {
   return lhs.position == rhs.position && lhs.name == rhs.name &&
          lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
          lhs.semantic_label == rhs.semantic_label;
 }
 
-inline bool operator==(const ObjectNodeAttributes& lhs, const ObjectNodeAttributes& rhs) {
+inline bool operator==(const ObjectNodeAttributes& lhs,
+                       const ObjectNodeAttributes& rhs) {
   return lhs.position == rhs.position && lhs.name == rhs.name &&
          lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
          lhs.semantic_label == rhs.semantic_label && lhs.registered == rhs.registered &&

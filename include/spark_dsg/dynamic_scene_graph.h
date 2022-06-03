@@ -107,8 +107,7 @@ class DynamicSceneGraph {
    * @param factor List of layer ids (not including the mesh)
    * @param mesh_layer_id Mesh layer id (must be unique)
    */
-  DynamicSceneGraph(const LayerIds& factory,
-                    LayerId mesh_layer_id = DsgLayers::MESH);
+  DynamicSceneGraph(const LayerIds& factory, LayerId mesh_layer_id = DsgLayers::MESH);
 
   /**
    * @brief Default destructor

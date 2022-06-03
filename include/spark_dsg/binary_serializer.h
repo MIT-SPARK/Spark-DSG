@@ -37,7 +37,6 @@
 #include "spark_dsg/binary_serialization_utils.h"
 #include "spark_dsg/dynamic_scene_graph.h"
 
-
 namespace spark_dsg {
 namespace serialization {
 
