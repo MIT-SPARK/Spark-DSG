@@ -49,7 +49,7 @@
 # ---
 
 # %%
-import kimera_dsg as dsg
+import spark_dsg as dsg
 import pathlib
 
 
@@ -107,7 +107,7 @@ for layer in G.layers:
 print("")
 
 # %%
-room_layer = G.get_layer(dsg.KimeraDsgLayers.ROOMS)
+room_layer = G.get_layer(dsg.DsgLayers.ROOMS)
 room_node_strs = [f"{x.id}" for x in room_layer.nodes]
 print(f"Rooms: {room_node_strs}")
 
@@ -172,7 +172,7 @@ print("")
 # %% [markdown]
 # ## Bounding boxes from nodes in lower layers
 
-dsg.add_bounding_boxes_to_layer(G, dsg.KimeraDsgLayers.ROOMS)
+dsg.add_bounding_boxes_to_layer(G, dsg.DsgLayers.ROOMS)
 print("Room bounding boxes:")
-for node in G.get_layer(dsg.KimeraDsgLayers.ROOMS).nodes:
+for node in G.get_layer(dsg.DsgLayers.ROOMS).nodes:
     print(f"  - {node.id}: {node.attributes.bounding_box}")

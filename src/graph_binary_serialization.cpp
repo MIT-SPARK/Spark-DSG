@@ -32,11 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/graph_binary_serialization.h"
-#include "kimera_dsg/binary_serializer.h"
+#include "spark_dsg/graph_binary_serialization.h"
+#include "spark_dsg/binary_serializer.h"
 
 
-namespace kimera {
+namespace spark_dsg {
 
 using serialization::BinaryConverter;
 using serialization::BinaryDeserializer;
@@ -286,4 +286,4 @@ bool updateGraph(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
   return true;
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

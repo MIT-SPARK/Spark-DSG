@@ -9,7 +9,7 @@ execute_process(
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-download" OUTPUT_QUIET
 )
 
-# We use the global cmake option to set the library type for kimera_dsg.
+# We use the global cmake option to set the library type for spark_dsg.
 # Unfortunately, this also means that gtest follows the same setting, and
 # when building the shared library (default), gtest picks this up and the
 # test executable tries to load the gtest library which doesn't get installed.

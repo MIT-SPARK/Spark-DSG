@@ -1,4 +1,4 @@
-## Kimera-DSG
+## Spark-DSG
 
 This is the core c++ library that contains the dynamic scene graph data-structure used by Hydra. It also has python bindings.
 

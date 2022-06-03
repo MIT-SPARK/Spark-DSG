@@ -1,6 +1,6 @@
-Kimera-DSG Python Bindings
-==========================
+Spark-DSG Python Bindings
+=========================
 
-.. automodule:: kimera_dsg._dsg_bindings
+.. automodule:: spark_dsg._dsg_bindings
     :members:
     :undoc-members:

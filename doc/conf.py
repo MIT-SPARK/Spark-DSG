@@ -51,7 +51,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "Kimera-DSG"
+project = "Spark-DSG"
 author = "Nathan Hughes et al."
 
 

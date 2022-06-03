@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(kimera_dsg VERSION 1.0.0)
+project(spark_dsg VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -77,30 +77,30 @@ if(KIMERA_DSG_BUILD_TESTS)
 endif()
 
 if(KIMERA_DSG_INSTALL)
-  add_library(kimera_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-  install(TARGETS ${PROJECT_NAME} EXPORT kimera_dsg-targets
+  add_library(spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+  install(TARGETS ${PROJECT_NAME} EXPORT spark_dsg-targets
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
   install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  install(EXPORT kimera_dsg-targets FILE kimera_dsgTargets.cmake NAMESPACE kimera_dsg::
-          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+  install(EXPORT spark_dsg-targets FILE spark_dsgTargets.cmake NAMESPACE spark_dsg::
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
   )
 
   include(CMakePackageConfigHelpers)
   write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}
+    ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
   )
 
   configure_package_config_file(
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/kimera_dsgConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/spark_dsgConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
   )
 
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfig.cmake
-                ${CMAKE_CURRENT_BINARY_DIR}/kimera_dsgConfigVersion.cmake
-          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/kimera_dsg
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
+                ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
   )
 endif()

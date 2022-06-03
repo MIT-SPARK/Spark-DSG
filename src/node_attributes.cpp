@@ -32,9 +32,9 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/node_attributes.h"
+#include "spark_dsg/node_attributes.h"
 
-namespace kimera {
+namespace spark_dsg {
 
 NodeAttributes::NodeAttributes() : position(Eigen::Vector3d::Zero()) {}
 
@@ -119,4 +119,4 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

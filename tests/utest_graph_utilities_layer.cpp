@@ -32,12 +32,12 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <kimera_dsg/graph_utilities.h>
-#include <kimera_dsg/scene_graph_layer.h>
+#include <spark_dsg/graph_utilities.h>
+#include <spark_dsg/scene_graph_layer.h>
 
 #include <gtest/gtest.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 using NodeSet = std::set<NodeId>;
 using ResultSet = std::vector<NodeSet>;
@@ -295,4 +295,4 @@ TEST(ConnectedComponentTests, FilteredEmptyCorrect) {
   EXPECT_TRUE(result.empty());
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

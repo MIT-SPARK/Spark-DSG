@@ -32,13 +32,13 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg_tests/type_comparisons.h"
+#include "spark_dsg_tests/type_comparisons.h"
 
-#include <kimera_dsg/scene_graph_utilities.h>
+#include <spark_dsg/scene_graph_utilities.h>
 
 #include <gtest/gtest.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 struct AncestorTestConfig {
   NodeId query;
@@ -143,4 +143,4 @@ INSTANTIATE_TEST_CASE_P(GetChildBoundingBox,
                         BoundingBoxTestFixture,
                         testing::ValuesIn(bbox_test_cases));
 
-}  // namespace kimera
+}  // namespace spark_dsg

@@ -32,11 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/edge_attributes.h"
+#include "spark_dsg/edge_attributes.h"
 
 #include <iomanip>
 
-namespace kimera {
+namespace spark_dsg {
 
 EdgeAttributes::EdgeAttributes() : weighted(false), weight(1.0) {}
 
@@ -59,4 +59,4 @@ EdgeAttributes::Ptr EdgeAttributes::clone() const {
   return std::make_unique<EdgeAttributes>(*this);
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

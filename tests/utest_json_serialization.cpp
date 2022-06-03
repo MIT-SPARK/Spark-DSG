@@ -32,13 +32,13 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg_tests/temp_file.h"
+#include "spark_dsg_tests/temp_file.h"
 
-#include <kimera_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/dynamic_scene_graph.h>
 
 #include <gtest/gtest.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
   DynamicSceneGraph expected({1, 2, 3}, 0);
@@ -135,7 +135,7 @@ TEST(SceneGraphSerializationTests, SaveAndLoadGraph) {
   TempFile tmp_file;
 
   DynamicSceneGraph graph;
-  graph.emplaceNode(KimeraDsgLayers::PLACES,
+  graph.emplaceNode(DsgLayers::PLACES,
                     NodeSymbol('p', 0),
                     std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
 
@@ -153,4 +153,4 @@ TEST(SceneGraphSerializationTests, SaveAndLoadGraph) {
   EXPECT_EQ(graph.hasMesh(), other->hasMesh());
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

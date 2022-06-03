@@ -32,12 +32,12 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/scene_graph_logger.h"
+#include "spark_dsg/scene_graph_logger.h"
 
 #include <fstream>
 #include <iostream>
 
-namespace kimera {
+namespace spark_dsg {
 
 void writeStatsToCsv(size_t num_active,
                      size_t num_removed,
@@ -128,4 +128,4 @@ void SceneGraphLogger::logGraph(const DynamicSceneGraph::Ptr& graph) {
   return;
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

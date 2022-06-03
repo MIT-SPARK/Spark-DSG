@@ -32,11 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/binary_serializer.h"
-#include "kimera_dsg/logging.h"
+#include "spark_dsg/binary_serializer.h"
+#include "spark_dsg/logging.h"
 
 
-namespace kimera {
+namespace spark_dsg {
 namespace serialization {
 
 #define SHOW_CASE(os, enum_value) \
@@ -217,4 +217,4 @@ void BinarySerializer::write<MeshEdge>(const MeshEdge& edge) {
 }
 
 }  // namespace serialization
-}  // namespace kimera
+}  // namespace spark_dsg

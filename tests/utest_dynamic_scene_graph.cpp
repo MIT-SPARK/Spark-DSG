@@ -32,12 +32,12 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <kimera_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/dynamic_scene_graph.h>
 
 #include <gtest/gtest.h>
 #include <pcl/conversions.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
@@ -780,7 +780,7 @@ TEST(DynamicSceneGraphTests, MergeDynamicGraphCorrect) {
   EXPECT_EQ(graph_1.numNodes(), graph_2.numNodes());
   EXPECT_EQ(graph_1.numEdges(), graph_2.numEdges());
 
-  EXPECT_TRUE(graph_1.hasLayer(KimeraDsgLayers::AGENTS, 'a'));
+  EXPECT_TRUE(graph_1.hasLayer(DsgLayers::AGENTS, 'a'));
   EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 0)));
   EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 1)));
   EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 2)));
@@ -1016,4 +1016,4 @@ TEST(DynamicSceneGraphTests, RemovedAndNewEdgesCorrect) {
   }
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

@@ -32,11 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/dynamic_scene_graph_layer.h"
-#include "kimera_dsg/edge_attributes.h"
-#include "kimera_dsg/logging.h"
+#include "spark_dsg/dynamic_scene_graph_layer.h"
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/logging.h"
 
-namespace kimera {
+namespace spark_dsg {
 
 using EdgeRef = DynamicSceneGraphLayer::EdgeRef;
 using NodeRef = DynamicSceneGraphLayer::NodeRef;
@@ -326,4 +326,4 @@ void DynamicSceneGraphLayer::getRemovedEdges(std::vector<EdgeKey>& removed_edges
   return edges_.getRemoved(removed_edges, clear_removed);
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

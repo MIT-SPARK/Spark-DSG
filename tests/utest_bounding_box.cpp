@@ -36,9 +36,9 @@
 
 #include <Eigen/Geometry>
 
-#include <kimera_dsg/bounding_box.h>
+#include <spark_dsg/bounding_box.h>
 
-using kimera::BoundingBox;
+using spark_dsg::BoundingBox;
 using pcl::PointXYZ;
 
 TEST(BoundingBoxTests, InvalidConstructor) {

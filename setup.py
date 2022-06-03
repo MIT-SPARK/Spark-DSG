@@ -101,7 +101,7 @@ class CMakeBuild(build_ext):
 setup(
     ext_modules=[
         CMakeExtension(
-            "kimera_dsg._dsg_bindings",
+            "spark_dsg._dsg_bindings",
             sourcedir=".",
             extra_cmake_flags=[
                 "-DKIMERA_DSG_BUILD_TESTS=OFF",

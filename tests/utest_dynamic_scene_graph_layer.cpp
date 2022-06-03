@@ -33,16 +33,16 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <kimera_dsg/dynamic_scene_graph_layer.h>
+#include <spark_dsg/dynamic_scene_graph_layer.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 using Node = DynamicSceneGraphLayer::Node;
 using Edge = DynamicSceneGraphLayer::Edge;
 
 class TestableDynamicLayer : public DynamicSceneGraphLayer {
  public:
-  TestableDynamicLayer(kimera::LayerId id, char prefix)
+  TestableDynamicLayer(spark_dsg::LayerId id, char prefix)
       : DynamicSceneGraphLayer(id, prefix) {}
 
   using DynamicSceneGraphLayer::emplaceNode;
@@ -413,4 +413,4 @@ TEST(DynamicSceneGraphLayerTests, NewRemovedEdgesCorrect) {
   }
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

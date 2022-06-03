@@ -32,11 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <kimera_dsg/adjacency_matrix.h>
+#include <spark_dsg/adjacency_matrix.h>
 
 #include <gtest/gtest.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 struct AdjacencyMatrixTestConfig {
   std::map<NodeId, size_t> ordering;
@@ -188,4 +188,4 @@ INSTANTIATE_TEST_CASE_P(MatrixMethodsMatchExpected,
                         AdjacencyMatrixFixture,
                         testing::ValuesIn(adjacency_test_cases));
 
-}  // namespace kimera
+}  // namespace spark_dsg

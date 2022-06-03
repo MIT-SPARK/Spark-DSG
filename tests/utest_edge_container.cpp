@@ -33,9 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <kimera_dsg/edge_container.h>
+#include <spark_dsg/edge_container.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 TEST(EdgeContainerTests, NewEdgesCorrect) {
   EdgeContainer container;
@@ -142,4 +142,4 @@ TEST(EdgeContainerTests, RemovedWithAddCorrect) {
   }
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

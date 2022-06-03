@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>kimera_dsg</name>
+  <name>spark_dsg</name>
   <version>1.0.0</version>
   <description>Dynamic Scene Graph (DSG) type definitions and core library code</description>
 

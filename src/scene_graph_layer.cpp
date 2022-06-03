@@ -32,14 +32,14 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/scene_graph_layer.h"
-#include "kimera_dsg/edge_attributes.h"
-#include "kimera_dsg/logging.h"
+#include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/logging.h"
 
 #include <queue>
 #include <sstream>
 
-namespace kimera {
+namespace spark_dsg {
 
 using EdgeRef = SceneGraphLayer::EdgeRef;
 using NodeRef = SceneGraphLayer::NodeRef;
@@ -348,4 +348,4 @@ NodeSet SceneGraphLayer::getNeighborhood(const NodeSet& nodes, size_t num_hops) 
   return result;
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

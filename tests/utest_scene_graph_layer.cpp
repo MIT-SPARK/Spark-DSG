@@ -33,9 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <kimera_dsg/scene_graph_layer.h>
+#include <spark_dsg/scene_graph_layer.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 using Node = SceneGraphLayer::Node;
 using NodeRef = SceneGraphLayer::NodeRef;
@@ -652,4 +652,4 @@ TEST(SceneGraphLayerTests, NewRemovedEdgesCorrect) {
   }
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

@@ -32,15 +32,15 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg_tests/type_comparisons.h"
+#include "spark_dsg_tests/type_comparisons.h"
 
-#include <kimera_dsg/attribute_factory.h>
-#include <kimera_dsg/graph_json_serialization.h>
-#include <kimera_dsg/serialization_helpers.h>
+#include <spark_dsg/attribute_factory.h>
+#include <spark_dsg/graph_json_serialization.h>
+#include <spark_dsg/serialization_helpers.h>
 
 #include <gtest/gtest.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 using nlohmann::json;
 
@@ -280,4 +280,4 @@ TEST(AttributeSerializationTests, DeserializeAttributesWithNaN) {
   EXPECT_TRUE(new_attrs.position.hasNaN());
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

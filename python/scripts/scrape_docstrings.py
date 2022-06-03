@@ -34,7 +34,7 @@
 #
 #!/usr/bin/env python2
 """Make a shim module of the python binding extensions."""
-import kimera_dsg_python_bindings as kimera_dsg
+import spark_dsg_python_bindings as spark_dsg
 import inspect
 import sys
 
@@ -111,7 +111,7 @@ def main():
         print("invalid number of arguments.")
 
     with open(sys.argv[1], "w") as output_file:
-        for name, member in inspect.getmembers(kimera_dsg):
+        for name, member in inspect.getmembers(spark_dsg):
             if inspect.isfunction(member) or inspect.isclass(member):
                 export_member(name, member, output_file)
 

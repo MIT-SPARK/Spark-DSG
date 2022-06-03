@@ -32,11 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <kimera_dsg/scene_graph_node.h>
+#include <spark_dsg/scene_graph_node.h>
 
 #include <gtest/gtest.h>
 
-using namespace kimera;
+using namespace spark_dsg;
 
 // Check that a default node has no edges
 TEST(SceneGraphNodeTests, DefaultNodeIvariants) {

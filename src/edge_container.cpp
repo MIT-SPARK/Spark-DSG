@@ -32,9 +32,9 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/edge_container.h"
+#include "spark_dsg/edge_container.h"
 
-namespace kimera {
+namespace spark_dsg {
 
 SceneGraphEdge::SceneGraphEdge(NodeId source, NodeId target, AttrPtr&& info)
     : source(source), target(target), info(std::move(info)) {}
@@ -113,4 +113,4 @@ void EdgeContainer::getRemoved(std::vector<EdgeKey>& removed_edges,
   }
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(kimera_dsg_python)
+project(spark_dsg_python)
 
 # TODO(nathan) fetch content when possible on 20.04
 configure_file(pybind11.CMakeLists.txt.in pybind11-download/CMakeLists.txt)
@@ -16,5 +16,5 @@ execute_process(
 
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/pybind11-src ${CMAKE_CURRENT_BINARY_DIR}/pybind11-build)
 
-pybind11_add_module(_dsg_bindings bindings/kimera_dsg_bindings.cpp)
-target_link_libraries(_dsg_bindings PRIVATE kimera_dsg)
+pybind11_add_module(_dsg_bindings bindings/spark_dsg_bindings.cpp)
+target_link_libraries(_dsg_bindings PRIVATE spark_dsg)

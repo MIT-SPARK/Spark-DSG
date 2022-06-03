@@ -32,7 +32,7 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/serialization_helpers.h"
+#include "spark_dsg/serialization_helpers.h"
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -94,7 +94,7 @@ void from_json(const json& j, std::vector<pcl::Vertices>& faces) {
 
 }  // namespace pcl
 
-namespace kimera {
+namespace spark_dsg {
 
 void to_json(json& j, const BoundingBox& b) {
   j = json{{"type", b.type},
@@ -137,4 +137,4 @@ void from_json(const json& j, NearestVertexInfo& info) {
   info.vertex = j.at("vertex");
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

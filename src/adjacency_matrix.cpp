@@ -32,11 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/adjacency_matrix.h"
+#include "spark_dsg/adjacency_matrix.h"
 
 #include <Eigen/Dense>
 
-namespace kimera {
+namespace spark_dsg {
 
 // TODO(nathan) think about revising this API
 // TODO(nathan) think about verifying ordering (to check for duplicates)
@@ -147,4 +147,4 @@ SparseMatrixXd getSparseLaplacian(
   return L;
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

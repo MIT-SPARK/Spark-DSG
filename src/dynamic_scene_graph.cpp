@@ -32,15 +32,15 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/dynamic_scene_graph.h"
-#include "kimera_dsg/edge_attributes.h"
-#include "kimera_dsg/logging.h"
+#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/logging.h"
 
 #include <pcl/conversions.h>
 
 #include <list>
 
-namespace kimera {
+namespace spark_dsg {
 
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
@@ -1006,10 +1006,10 @@ pcl::PolygonMesh DynamicSceneGraph::getMesh() const {
 };
 
 DynamicSceneGraph::LayerIds getDefaultLayerIds() {
-  return {KimeraDsgLayers::OBJECTS,
-          KimeraDsgLayers::PLACES,
-          KimeraDsgLayers::ROOMS,
-          KimeraDsgLayers::BUILDINGS};
+  return {DsgLayers::OBJECTS,
+          DsgLayers::PLACES,
+          DsgLayers::ROOMS,
+          DsgLayers::BUILDINGS};
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

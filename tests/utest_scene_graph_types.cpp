@@ -32,12 +32,12 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <kimera_dsg/node_symbol.h>
-#include <kimera_dsg/scene_graph_types.h>
+#include <spark_dsg/node_symbol.h>
+#include <spark_dsg/scene_graph_types.h>
 
 #include <gtest/gtest.h>
 
-namespace kimera {
+namespace spark_dsg {
 
 TEST(LayerKeyTests, TestEquality) {
   EXPECT_EQ(LayerKey(1), LayerKey(1));
@@ -103,14 +103,14 @@ TEST(LayerPrefixTests, TestIndex) {
 }
 
 TEST(LayerHelperTests, TestToString) {
-  EXPECT_EQ("OBJECTS", KimeraDsgLayers::LayerIdToString(KimeraDsgLayers::OBJECTS));
+  EXPECT_EQ("OBJECTS", DsgLayers::LayerIdToString(DsgLayers::OBJECTS));
   // layer 2 always maps to OBJECTS
-  EXPECT_EQ("OBJECTS", KimeraDsgLayers::LayerIdToString(KimeraDsgLayers::AGENTS));
+  EXPECT_EQ("OBJECTS", DsgLayers::LayerIdToString(DsgLayers::AGENTS));
 }
 
 TEST(LayerHelperTests, TestToId) {
-  EXPECT_EQ(KimeraDsgLayers::OBJECTS, KimeraDsgLayers::StringToLayerId("OBJECTS"));
-  EXPECT_EQ(KimeraDsgLayers::AGENTS, KimeraDsgLayers::StringToLayerId("AGENTS"));
+  EXPECT_EQ(DsgLayers::OBJECTS, DsgLayers::StringToLayerId("OBJECTS"));
+  EXPECT_EQ(DsgLayers::AGENTS, DsgLayers::StringToLayerId("AGENTS"));
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

@@ -32,15 +32,15 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/graph_json_serialization.h"
-#include "kimera_dsg/dynamic_scene_graph.h"
-#include "kimera_dsg/logging.h"
-#include "kimera_dsg/scene_graph_layer.h"
-#include "kimera_dsg/serialization_helpers.h"
+#include "spark_dsg/graph_json_serialization.h"
+#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/logging.h"
+#include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/serialization_helpers.h"
 
 #include <fstream>
 
-namespace kimera {
+namespace spark_dsg {
 
 template <>
 std::unique_ptr<AttributeFactory<NodeAttributes, JsonConverter>>
@@ -289,4 +289,4 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& content
   return graph;
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

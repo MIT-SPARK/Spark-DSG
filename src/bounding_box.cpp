@@ -32,10 +32,10 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg/bounding_box.h"
-#include "kimera_dsg/scene_graph_types.h"
+#include "spark_dsg/bounding_box.h"
+#include "spark_dsg/scene_graph_types.h"
 
-namespace kimera {
+namespace spark_dsg {
 
 std::ostream& operator<<(std::ostream& out, const Eigen::Quaternionf& q) {
   out << q.w() << " + " << q.x() << "i + " << q.y() << "j + " << q.z() << "k";
@@ -134,4 +134,4 @@ float BoundingBox::volume() const {
   }
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg

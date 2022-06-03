@@ -32,17 +32,17 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "kimera_dsg_tests/type_comparisons.h"
+#include "spark_dsg_tests/type_comparisons.h"
 
-#include <kimera_dsg/binary_serializer.h>
-#include <kimera_dsg/graph_binary_serialization.h>
+#include <spark_dsg/binary_serializer.h>
+#include <spark_dsg/graph_binary_serialization.h>
 
 #include <gtest/gtest.h>
 
 #include <stdlib.h>
 #include <unistd.h>
 
-namespace kimera {
+namespace spark_dsg {
 namespace serialization {
 
 TEST(BinarySerializationTests, SwapCorrect16) {
@@ -419,4 +419,4 @@ TEST(BinarySerializationTests, SerializeDsgDynamic) {
   EXPECT_TRUE(result->hasLayer(2, 'a'));
 }
 
-}  // namespace kimera
+}  // namespace spark_dsg
