@@ -12,7 +12,7 @@
   <license>BSD</license>
 
   <buildtool_depend>cmake</buildtool_depend>
-  <depend>libpcl-dev</depend>
+  <depend>libpcl-all-dev</depend>
   <depend>eigen</depend>
   <depend>libgoogle-glog-dev</depend>
 
