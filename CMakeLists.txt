@@ -7,10 +7,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-Wall -Wextra)
 
-option(KIMERA_DSG_BUILD_TESTS "Build tests" ON)
-option(KIMERA_DSG_INSTALL "Install C++ package" ON)
-option(KIMERA_DSG_INSTALL_TESTS "Install tests to catkin location" ON)
-option(KIMERA_DSG_BUILD_PYTHON "Build python bindings" OFF)
+option(SPARK_DSG_BUILD_TESTS "Build tests" ON)
+option(SPARK_DSG_INSTALL "Install C++ package" ON)
+option(SPARK_DSG_INSTALL_TESTS "Install tests to catkin location" ON)
+option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 # TODO(nathan) only required for pcl
@@ -68,15 +68,15 @@ target_link_libraries(
   PRIVATE nlohmann_json::nlohmann_json
 )
 
-if(KIMERA_DSG_BUILD_PYTHON)
+if(SPARK_DSG_BUILD_PYTHON)
   add_subdirectory(python)
 endif()
 
-if(KIMERA_DSG_BUILD_TESTS)
+if(SPARK_DSG_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
-if(KIMERA_DSG_INSTALL)
+if(SPARK_DSG_INSTALL)
   add_library(spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
   install(TARGETS ${PROJECT_NAME} EXPORT spark_dsg-targets
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

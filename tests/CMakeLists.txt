@@ -43,7 +43,7 @@ target_link_libraries(
   utest_${PROJECT_NAME} ${PROJECT_NAME} gtest nlohmann_json::nlohmann_json
 )
 
-if(${KIMERA_DSG_INSTALL_TESTS})
+if(${SPARK_DSG_INSTALL_TESTS})
   # note that ros uses libdir to handle finding executables by package, but this isn't
   # an ideal install location normally
   install(TARGETS utest_${PROJECT_NAME}
