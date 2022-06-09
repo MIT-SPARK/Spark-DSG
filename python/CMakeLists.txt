@@ -18,3 +18,4 @@ add_subdirectory(
 
 pybind11_add_module(_dsg_bindings bindings/spark_dsg_bindings.cpp)
 target_link_libraries(_dsg_bindings PRIVATE spark_dsg)
+target_include_directories(_dsg_bindings PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/bindings)

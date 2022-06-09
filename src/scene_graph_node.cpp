@@ -54,4 +54,9 @@ std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
   return node.fill_ostream(out);
 }
 
+std::ostream& DynamicSceneGraphNode::fill_ostream(std::ostream& out) const {
+  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer << ", time=" << timestamp.count() << "[ns]>";
+  return out;
+}
+
 }  // namespace spark_dsg

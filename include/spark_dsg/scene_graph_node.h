@@ -222,6 +222,13 @@ class DynamicSceneGraphNode : public SceneGraphNode {
   DynamicSceneGraphNode& operator=(const DynamicSceneGraphNode& other) = delete;
 
   const std::chrono::nanoseconds timestamp;
+
+ protected:
+  /**
+   * @brief internal function for outputing information to a ostream
+   * @param out ostream to output info to
+   */
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 }  // namespace spark_dsg

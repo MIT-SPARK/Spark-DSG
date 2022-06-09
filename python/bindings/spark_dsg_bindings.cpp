@@ -32,6 +32,8 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+#include "scene_graph_iterators.h"
+
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_utilities.h>
@@ -79,214 +81,6 @@ std::ostream& operator<<(std::ostream& out, const Quaternion<Scalar>& q) {
       << ">";
   return out;
 }
-
-struct IterSentinel {};
-
-class NodeIter {
- public:
-  NodeIter(const SceneGraphLayer::Nodes& container)
-      : curr_iter_(container.begin()), end_iter_(container.end()) {}
-
-  const SceneGraphLayer::Node* operator*() const { return curr_iter_->second.get(); }
-
-  NodeIter& operator++() {
-    ++curr_iter_;
-    return *this;
-  }
-
-  bool operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
-
- private:
-  typename SceneGraphLayer::Nodes::const_iterator curr_iter_;
-  typename SceneGraphLayer::Nodes::const_iterator end_iter_;
-};
-
-class EdgeIter {
- public:
-  EdgeIter(const SceneGraphLayer::Edges& container)
-      : curr_iter_(container.begin()), end_iter_(container.end()) {}
-
-  const SceneGraphLayer::Edge* operator*() const { return &(curr_iter_->second); }
-
-  EdgeIter& operator++() {
-    ++curr_iter_;
-    return *this;
-  }
-
-  bool operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
-
- private:
-  typename SceneGraphLayer::Edges::const_iterator curr_iter_;
-  typename SceneGraphLayer::Edges::const_iterator end_iter_;
-};
-
-class GlobalNodeIter {
- public:
-  GlobalNodeIter(const DynamicSceneGraph& dsg) : valid_(true) {
-    curr_layer_iter_ = dsg.layers().begin();
-    end_layer_iter_ = dsg.layers().end();
-
-    setNodeIter();
-  }
-
-  void setNodeIter() {
-    if (curr_layer_iter_ == end_layer_iter_) {
-      valid_ = false;
-      return;
-    }
-
-    curr_node_iter_ = curr_layer_iter_->second->nodes().begin();
-    end_node_iter_ = curr_layer_iter_->second->nodes().end();
-    while (curr_node_iter_ == end_node_iter_) {
-      ++curr_layer_iter_;
-      if (curr_layer_iter_ == end_layer_iter_) {
-        valid_ = false;
-        return;
-      }
-
-      curr_node_iter_ = curr_layer_iter_->second->nodes().begin();
-      end_node_iter_ = curr_layer_iter_->second->nodes().end();
-    }
-  }
-
-  const SceneGraphNode& operator*() const { return *curr_node_iter_->second; }
-
-  GlobalNodeIter& operator++() {
-    ++curr_node_iter_;
-    if (curr_node_iter_ == end_node_iter_) {
-      ++curr_layer_iter_;
-      setNodeIter();
-    }
-
-    return *this;
-  }
-
-  bool operator==(const IterSentinel&) {
-    if (!valid_) {
-      return true;
-    }
-
-    return curr_node_iter_ == end_node_iter_ && curr_layer_iter_ == end_layer_iter_;
-  }
-
- private:
-  bool valid_;
-  typename SceneGraphLayer::Nodes::const_iterator curr_node_iter_;
-  typename SceneGraphLayer::Nodes::const_iterator end_node_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
-};
-
-class GlobalEdgeIter {
- public:
-  GlobalEdgeIter(const DynamicSceneGraph& dsg) : started_interlayer_(false) {
-    curr_layer_iter_ = dsg.layers().begin();
-    end_layer_iter_ = dsg.layers().end();
-
-    curr_interlayer_iter_ = dsg.interlayer_edges().begin();
-    end_interlayer_iter_ = dsg.interlayer_edges().end();
-
-    setEdgeIter();
-  }
-
-  const SceneGraphEdge* operator*() const {
-    if (started_interlayer_) {
-      return &curr_interlayer_iter_->second;
-    } else {
-      return &curr_edge_iter_->second;
-    }
-  }
-
-  void setEdgeIter() {
-    if (started_interlayer_ || curr_layer_iter_ == end_layer_iter_) {
-      started_interlayer_ = true;
-      return;
-    }
-
-    curr_edge_iter_ = curr_layer_iter_->second->edges().begin();
-    end_edge_iter_ = curr_layer_iter_->second->edges().end();
-
-    while (curr_edge_iter_ == end_edge_iter_) {
-      ++curr_layer_iter_;
-      if (curr_layer_iter_ == end_layer_iter_) {
-        started_interlayer_ = true;
-        return;
-      }
-
-      curr_edge_iter_ = curr_layer_iter_->second->edges().begin();
-      end_edge_iter_ = curr_layer_iter_->second->edges().end();
-    }
-  }
-
-  GlobalEdgeIter& operator++() {
-    if (started_interlayer_) {
-      ++curr_interlayer_iter_;
-      return *this;
-    }
-
-    ++curr_edge_iter_;
-    if (curr_edge_iter_ == end_edge_iter_) {
-      ++curr_layer_iter_;
-      setEdgeIter();
-    }
-
-    return *this;
-  }
-
-  bool operator==(const IterSentinel&) {
-    if (!started_interlayer_) {
-      return false;
-    }
-
-    return curr_interlayer_iter_ == end_interlayer_iter_;
-  }
-
- private:
-  bool started_interlayer_;
-  typename SceneGraphLayer::Edges::const_iterator curr_edge_iter_;
-  typename SceneGraphLayer::Edges::const_iterator end_edge_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
-  typename SceneGraphLayer::Edges::const_iterator curr_interlayer_iter_;
-  typename SceneGraphLayer::Edges::const_iterator end_interlayer_iter_;
-};
-
-class LayerView {
- public:
-  LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref_(layer) {}
-
-  NodeIter nodes() const { return NodeIter(layer_ref_.nodes()); }
-
-  EdgeIter edges() const { return EdgeIter(layer_ref_.edges()); }
-
-  size_t numNodes() const { return layer_ref_.numNodes(); }
-
-  size_t numEdges() const { return layer_ref_.numEdges(); }
-
-  const LayerId id;
-
- private:
-  const SceneGraphLayer& layer_ref_;
-};
-
-class LayerIter {
- public:
-  LayerIter(const DynamicSceneGraph::Layers& container)
-      : curr_iter_(container.begin()), end_iter_(container.end()) {}
-
-  LayerView operator*() const { return LayerView(*(curr_iter_->second)); }
-
-  LayerIter& operator++() {
-    ++curr_iter_;
-    return *this;
-  }
-
-  bool operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
-
- private:
-  typename DynamicSceneGraph::Layers::const_iterator curr_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator end_iter_;
-};
 
 PYBIND11_MODULE(_dsg_bindings, module) {
   py::options options;
@@ -387,6 +181,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("distance", &PlaceNodeAttributes::distance)
       .def_readwrite("num_basis_points", &PlaceNodeAttributes::num_basis_points);
 
+  py::class_<AgentNodeAttributes, NodeAttributes>(module, "AgentNodeAttributes")
+      .def(py::init<>())
+      .def_property("world_R_body",
+                    [](const AgentNodeAttributes& attrs) {
+                      return Quaternion<double>(attrs.world_R_body);
+                    },
+                    [](AgentNodeAttributes& attrs, const Quaternion<double>& rot) {
+                      attrs.world_R_body = rot;
+                    });
+
   py::class_<NodeSymbol>(module, "NodeSymbol")
       .def(py::init([](char key, size_t index) { return NodeSymbol(key, index); }))
       .def(py::init([](size_t value) { return NodeSymbol(value); }))
@@ -397,6 +201,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); },
           nullptr)
       .def("__repr__", &NodeSymbol::getLabel);
+
+  py::class_<LayerPrefix>(module, "LayerPrefix")
+      .def(py::init([](char key) { return LayerPrefix(key); }))
+      .def(py::init([](char key, uint32_t index) { return LayerPrefix(key, index); }))
+      .def(py::init([](uint32_t index) { return LayerPrefix(index); }))
+      .def_property(
+          "value",
+          [](const LayerPrefix& prefix) { return static_cast<uint32_t>(prefix); },
+          nullptr)
+      .def("__repr__", [](const LayerPrefix& prefix) { return prefix.str(true); });
 
   py::class_<SceneGraphNode>(module, "SceneGraphNode")
       .def("has_parent", &SceneGraphNode::hasParent)
@@ -417,6 +231,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
         ss << node;
         return ss.str();
       });
+
+  py::class_<DynamicSceneGraphNode, SceneGraphNode>(module, "DynamicSceneGraphNode")
+      .def_readonly("timestamp", &DynamicSceneGraphNode::timestamp);
 
   py::class_<EdgeAttributes>(module, "EdgeAttributes")
       .def(py::init<>())
@@ -480,6 +297,24 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     nullptr,
                     py::return_value_policy::reference_internal);
 
+  py::class_<DynamicLayerView>(module, "DynamicLayerView")
+      .def_readonly("id", &DynamicLayerView::id)
+      .def_readonly("prefix", &DynamicLayerView::prefix)
+      .def("num_nodes", &DynamicLayerView::numNodes)
+      .def("num_edges", &DynamicLayerView::numEdges)
+      .def_property("nodes",
+                    [](const DynamicLayerView& view) {
+                      return py::make_iterator(view.nodes(), IterSentinel());
+                    },
+                    nullptr,
+                    py::return_value_policy::reference_internal)
+      .def_property("edges",
+                    [](const DynamicLayerView& view) {
+                      return py::make_iterator(view.edges(), IterSentinel());
+                    },
+                    nullptr,
+                    py::return_value_policy::reference_internal);
+
 #define MAKE_SPECIALIZED_NODE_ADD(AttributeClass)                   \
   def("add_node",                                                   \
       [](DynamicSceneGraph& graph,                                  \
@@ -489,6 +324,24 @@ PYBIND11_MODULE(_dsg_bindings, module) {
         AttributeClass::Ptr new_attrs(new AttributeClass(attrs));   \
         graph.emplaceNode(layer_id, node_id, std::move(new_attrs)); \
       })
+
+#define MAKE_SPECIALIZED_DYNAMIC_NODE_ADD(AttributeClass)                             \
+  def("add_node",                                                                     \
+      [](DynamicSceneGraph& graph,                                                    \
+         LayerId layer_id,                                                            \
+         LayerPrefix prefix,                                                          \
+         std::chrono::nanoseconds timestamp,                                          \
+         const AttributeClass& attrs,                                                 \
+         bool add_edge_to_previous) {                                                 \
+        AttributeClass::Ptr new_attrs(new AttributeClass(attrs));                     \
+        graph.emplaceNode(                                                            \
+            layer_id, prefix, timestamp, std::move(new_attrs), add_edge_to_previous); \
+      },                                                                              \
+      "layer_id"_a,                                                                   \
+      "prefix"_a,                                                                     \
+      "timestamp"_a,                                                                  \
+      "attrs"_a,                                                                      \
+      "add_edge_to_previous"_a = true)
 
   py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(module,
                                                                     "DynamicSceneGraph")
@@ -500,6 +353,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .MAKE_SPECIALIZED_NODE_ADD(ObjectNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(RoomNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(PlaceNodeAttributes)
+      .MAKE_SPECIALIZED_DYNAMIC_NODE_ADD(NodeAttributes)
+      .MAKE_SPECIALIZED_DYNAMIC_NODE_ADD(AgentNodeAttributes)
       .def("insert_edge",
            [](DynamicSceneGraph& graph, NodeId source, NodeId target) {
              graph.insertEdge(source, target);
@@ -516,6 +371,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("has_layer",
            static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(
                &DynamicSceneGraph::hasLayer))
+      .def("has_layer",
+           static_cast<bool (DynamicSceneGraph::*)(LayerId, LayerPrefix) const>(
+               &DynamicSceneGraph::hasLayer))
       .def("has_node", &DynamicSceneGraph::hasNode)
       .def("has_edge",
            py::overload_cast<NodeId, NodeId>(&DynamicSceneGraph::hasEdge, py::const_))
@@ -527,12 +385,25 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              return LayerView(graph.getLayer(layer_id));
            },
            py::return_value_policy::reference_internal)
+      .def("get_dynamic_layer",
+           [](const DynamicSceneGraph& graph, LayerId layer_id, LayerPrefix prefix) {
+             if (!graph.hasLayer(layer_id, prefix)) {
+               throw std::out_of_range("layer doesn't exist");
+             }
+             return DynamicLayerView(graph.getLayer(layer_id, prefix));
+           },
+           py::return_value_policy::reference_internal)
       .def("get_node", &DynamicSceneGraph::getNode)
+      .def("get_dynamic_node", &DynamicSceneGraph::getDynamicNode)
       .def("get_edge", &DynamicSceneGraph::getEdge)
       .def("remove_node", &DynamicSceneGraph::removeNode)
       .def("remove_edge", &DynamicSceneGraph::removeEdge)
+      .def("is_dynamic", &DynamicSceneGraph::isDynamic)
       .def("num_layers", &DynamicSceneGraph::numLayers)
+      .def("num_dynamic_layers_of_type", &DynamicSceneGraph::numDynamicLayersOfType)
+      .def("num_dynamic_layers", &DynamicSceneGraph::numDynamicLayers)
       .def("num_nodes", &DynamicSceneGraph::numNodes)
+      .def("num_dynamic_nodes", &DynamicSceneGraph::numDynamicNodes)
       .def("empty", &DynamicSceneGraph::empty)
       .def("num_edges", &DynamicSceneGraph::numEdges)
       .def("get_position", &DynamicSceneGraph::getPosition)
@@ -550,6 +421,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     },
                     nullptr,
                     py::return_value_policy::reference_internal)
+      .def_property("dynamic_layers",
+                    [](const DynamicSceneGraph& graph) {
+                      return py::make_iterator(DynamicLayerIter(graph.dynamicLayers()),
+                                               IterSentinel());
+                    },
+                    nullptr,
+                    py::return_value_policy::reference_internal)
       .def_property("nodes",
                     [](const DynamicSceneGraph& graph) {
                       return py::make_iterator(GlobalNodeIter(graph), IterSentinel());
@@ -563,6 +441,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     nullptr,
                     py::return_value_policy::reference_internal)
       .def_property("interlayer_edges",
+                    [](const DynamicSceneGraph& graph) {
+                      return py::make_iterator(EdgeIter(graph.interlayer_edges()),
+                                               IterSentinel());
+                    },
+                    nullptr,
+                    py::return_value_policy::reference_internal)
+      .def_property("dynamic_interlayer_edges",
                     [](const DynamicSceneGraph& graph) {
                       return py::make_iterator(EdgeIter(graph.interlayer_edges()),
                                                IterSentinel());
