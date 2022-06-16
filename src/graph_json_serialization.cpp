@@ -190,6 +190,10 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
     record["edges"].push_back(id_edge_pair.second);
   }
 
+  for (const auto& id_edge_pair : dynamic_interlayer_edges()) {
+    record["edges"].push_back(id_edge_pair.second);
+  }
+
   for (const auto& id_layer_group_pair : dynamic_layers_) {
     for (const auto& prefix_layer_pair : id_layer_group_pair.second) {
       const DynamicSceneGraphLayer& layer = *prefix_layer_pair.second;

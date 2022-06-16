@@ -199,6 +199,10 @@ void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer) {
   for (const auto& id_edge_pair : graph.interlayer_edges()) {
     serializer.write(id_edge_pair.second);
   }
+
+  for (const auto& id_edge_pair : graph.dynamic_interlayer_edges()) {
+    serializer.write(id_edge_pair.second);
+  }
   serializer.writeArrayEnd();
 
   serializer.writeArrayStart();

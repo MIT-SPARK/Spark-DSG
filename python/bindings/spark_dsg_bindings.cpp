@@ -233,7 +233,10 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       });
 
   py::class_<DynamicSceneGraphNode, SceneGraphNode>(module, "DynamicSceneGraphNode")
-      .def_readonly("timestamp", &DynamicSceneGraphNode::timestamp);
+      .def_property(
+          "timestamp",
+          [](const DynamicSceneGraphNode& node) { return node.timestamp.count(); },
+          nullptr);
 
   py::class_<EdgeAttributes>(module, "EdgeAttributes")
       .def(py::init<>())
@@ -449,7 +452,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     py::return_value_policy::reference_internal)
       .def_property("dynamic_interlayer_edges",
                     [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(EdgeIter(graph.interlayer_edges()),
+                      return py::make_iterator(EdgeIter(graph.dynamic_interlayer_edges()),
                                                IterSentinel());
                     },
                     nullptr,
