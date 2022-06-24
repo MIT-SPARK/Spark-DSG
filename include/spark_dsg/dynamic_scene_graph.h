@@ -229,6 +229,13 @@ class DynamicSceneGraph {
   bool hasNode(NodeId node_id) const;
 
   /**
+   * @brief Check the status of a node
+   * @param node_id node to check for
+   * @returns status of type NodeStatus
+   */
+  NodeStatus checkNode(NodeId node_id) const;
+
+  /**
    * @brief check if a given edge exists
    *
    * This checks either the presence of an
@@ -422,10 +429,32 @@ class DynamicSceneGraph {
    * @param other other graph to update from
    */
   bool mergeGraph(const DynamicSceneGraph& other,
+                  const std::map<NodeId, NodeId>& previous_merges,
                   bool allow_invalid_mesh = false,
                   bool clear_mesh_edges = true,
                   std::map<LayerId, bool>* attribute_update_map = nullptr,
-                  bool update_dynamic_attributes = true);
+                  bool update_dynamic_attributes = true,
+                  bool clear_removed = true);
+
+  /**
+   * @brief Update graph from another graph
+   * @note Will add the nodes and edges not previously added in current graph
+   * @param other other graph to update from
+   */
+  inline bool mergeGraph(const DynamicSceneGraph& other,
+                         bool allow_invalid_mesh = false,
+                         bool clear_mesh_edges = true,
+                         std::map<LayerId, bool>* attribute_update_map = nullptr,
+                         bool update_dynamic_attributes = true,
+                         bool clear_removed = true) {
+    return mergeGraph(other,
+                      {},
+                      allow_invalid_mesh,
+                      clear_mesh_edges,
+                      attribute_update_map,
+                      update_dynamic_attributes,
+                      clear_removed);
+  }
 
   std::vector<NodeId> getRemovedNodes(bool clear_removed = false);
 
@@ -490,10 +519,7 @@ class DynamicSceneGraph {
     removeInterlayerEdge(n1, n2, node_lookup_.at(n1), node_lookup_.at(n2));
   }
 
-  void rewireInterlayerEdge(NodeId source,
-                            NodeId target,
-                            NodeId new_source,
-                            NodeId new_target);
+  void rewireInterlayerEdge(NodeId source, NodeId new_source, NodeId target);
 
   bool addAncestry(NodeId source,
                    NodeId target,

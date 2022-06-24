@@ -303,11 +303,14 @@ TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
   EXPECT_TRUE(graph.emplaceNode(3, 3, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(1, 4, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(1, 5, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, 6, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, 7, std::make_unique<NodeAttributes>()));
   graph.insertEdge(0, 1);
   graph.insertEdge(1, 2);
   graph.insertEdge(1, 3);
   graph.insertEdge(0, 2);
   graph.insertEdge(2, 5);
+  graph.insertEdge(7, 3);
 
   // we can't merge a node with itself
   EXPECT_FALSE(graph.mergeNodes(0, 0));
@@ -317,10 +320,9 @@ TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
 
   // merge node 5 into node 4
   EXPECT_TRUE(graph.mergeNodes(5, 4));
-  EXPECT_EQ(5u, graph.numEdges());
-  EXPECT_EQ(5u, graph.numNodes());
+  EXPECT_EQ(6u, graph.numEdges());
+  EXPECT_EQ(7u, graph.numNodes());
   EXPECT_FALSE(graph.hasNode(5));
-
   EXPECT_TRUE(graph.hasEdge(2, 4));
   ASSERT_TRUE(graph.getNode(4)->get().hasParent());
   EXPECT_EQ(2u, graph.getNode(4)->get().getParent().value());
@@ -328,14 +330,27 @@ TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
 
   // merge node 2 into node 0
   EXPECT_TRUE(graph.mergeNodes(2, 0));
-  EXPECT_EQ(3u, graph.numEdges());
-  EXPECT_EQ(4u, graph.numNodes());
+  EXPECT_EQ(4u, graph.numEdges());
+  EXPECT_EQ(6u, graph.numNodes());
   EXPECT_FALSE(graph.hasNode(2));
-
   EXPECT_TRUE(graph.hasEdge(0, 4));
   ASSERT_TRUE(graph.getNode(4)->get().hasParent());
   EXPECT_EQ(0u, graph.getNode(4)->get().getParent().value());
   EXPECT_EQ(std::set<NodeId>{4}, graph.getNode(0)->get().children());
+
+  // check that we clean up old interlayer edges
+  EXPECT_TRUE(graph.mergeNodes(0, 6));
+  EXPECT_EQ(4u, graph.numEdges());
+  EXPECT_EQ(5u, graph.numNodes());
+  EXPECT_FALSE(graph.hasNode(0));
+  EXPECT_TRUE(graph.hasEdge(6, 4));
+
+  // check that conflicting parents get handled
+  EXPECT_TRUE(graph.mergeNodes(6, 7));
+  EXPECT_EQ(3u, graph.numEdges());
+  EXPECT_EQ(4u, graph.numNodes());
+  EXPECT_FALSE(graph.hasNode(6));
+  EXPECT_TRUE(graph.hasEdge(7, 3));
 }
 
 // Test that removeNode -> !hasNode
@@ -1014,6 +1029,48 @@ TEST(DynamicSceneGraphTests, RemovedAndNewEdgesCorrect) {
     std::vector<EdgeKey> removed_edges = graph.getRemovedEdges(false);
     EXPECT_EQ(removed_expected, removed_edges);
   }
+}
+
+TEST(DynamicSceneGraphTests, MergeGraphCorrectWithPrevMerges) {
+  // graph 1: merged version of graph 2 (where 2 is merged into 1)
+  std::map<NodeId, NodeId> prev_merges{{2, 1}};
+  DynamicSceneGraph graph_1;
+  EXPECT_TRUE(graph_1.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_1.emplaceNode(3, 2, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_1.emplaceNode(3, 1, std::make_unique<NodeAttributes>()));
+  graph_1.mergeNodes(2, 1);
+
+  // graph 2: parent between 0 and 2 (but 2 goes to 1 in graph_1)
+  DynamicSceneGraph graph_2;
+  EXPECT_TRUE(graph_2.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(3, 1, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(3, 2, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.insertEdge(0, 2));
+
+  TestMesh mesh = makeMesh(5);
+  graph_1.setMesh(mesh.vertices, mesh.faces);
+  graph_2.setMesh(mesh.vertices, mesh.faces);
+
+  EXPECT_EQ(7u, graph_1.numNodes());
+  EXPECT_EQ(0u, graph_1.numEdges());
+  EXPECT_EQ(8u, graph_2.numNodes());
+  EXPECT_EQ(1u, graph_2.numEdges());
+
+  graph_1.mergeGraph(graph_2);
+
+  EXPECT_EQ(7u, graph_1.numNodes());
+  EXPECT_EQ(0u, graph_1.numEdges());
+  EXPECT_EQ(8u, graph_2.numNodes());
+  EXPECT_EQ(1u, graph_2.numEdges());
+  EXPECT_FALSE(graph_1.hasEdge(0, 1));
+
+  graph_1.mergeGraph(graph_2, prev_merges);
+
+  EXPECT_EQ(7u, graph_1.numNodes());
+  EXPECT_EQ(1u, graph_1.numEdges());
+  EXPECT_EQ(8u, graph_2.numNodes());
+  EXPECT_EQ(1u, graph_2.numEdges());
+  EXPECT_TRUE(graph_1.hasEdge(0, 1));
 }
 
 }  // namespace spark_dsg

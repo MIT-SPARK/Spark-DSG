@@ -140,13 +140,13 @@ EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
   auto record = json::parse(info);
 
   for (const auto& node : record.at("nodes")) {
-    read_node_from_json(node,
-                        [this](NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs) {
-                          if (layer != this->id) {
-                            SG_LOG(ERROR) << "invalid layer found, skipping!";
-                          }
-                          this->emplaceNode(id, std::move(attrs));
-                        });
+    read_node_from_json(
+        node, [this](NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs) {
+          if (layer != this->id) {
+            SG_LOG(ERROR) << "invalid layer found, skipping!" << std::endl;
+          }
+          this->emplaceNode(id, std::move(attrs));
+        });
   }
 
   auto new_edges = std::make_unique<Edges>();
@@ -287,7 +287,7 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& content
       num_inserted += graph->insertMeshEdge(source, target, true) ? 1 : 0;
     }
 
-    SG_LOG(INFO) << "Loaded " << num_inserted << " mesh edges";
+    SG_LOG(INFO) << "Loaded " << num_inserted << " mesh edges" << std::endl;
   }
 
   return graph;

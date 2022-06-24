@@ -65,6 +65,8 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   bool hasNode(NodeId node_id) const;
 
+  NodeStatus checkNode(NodeId node_id) const override;
+
   bool hasNodeByIndex(size_t node_index) const;
 
   bool hasEdge(NodeId source, NodeId target) const override;

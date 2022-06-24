@@ -106,7 +106,7 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
   }
 
   if (!layers_.count(layer_id)) {
-    SG_LOG(WARNING) << "Invalid layer: " << layer_id;
+    SG_LOG(WARNING) << "Invalid layer: " << layer_id << std::endl;
     return false;
   }
 
@@ -132,7 +132,7 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer,
 
   if (hasNode(new_node_id)) {
     SG_LOG(ERROR) << "scene graph contains node " << new_node_id.getLabel()
-                  << ". fix conflicting prefix: " << prefix.str();
+                  << ". fix conflicting prefix: " << prefix.str() << std::endl;
     return false;
   }
 
@@ -154,7 +154,7 @@ bool DynamicSceneGraph::emplacePrevDynamicNode(LayerId layer,
                                                NodeAttributes::Ptr&& attrs) {
   if (hasNode(prev_node_id)) {
     SG_LOG(ERROR) << "scene graph already contains node "
-                  << NodeSymbol(prev_node_id).getLabel();
+                  << NodeSymbol(prev_node_id).getLabel() << std::endl;
     return false;
   }
 
@@ -323,6 +323,16 @@ bool DynamicSceneGraph::hasLayer(LayerId layer, LayerPrefix layer_prefix) const 
 bool DynamicSceneGraph::hasNode(NodeId node_id) const {
   return node_lookup_.count(node_id) != 0;
 }
+
+NodeStatus DynamicSceneGraph::checkNode(NodeId node_id) const {
+  auto iter = node_lookup_.find(node_id);
+  if (iter == node_lookup_.end()) {
+    return NodeStatus::NONEXISTENT;
+  }
+
+  return layerFromKey(iter->second).checkNode(node_id);
+}
+
 
 bool DynamicSceneGraph::hasMesh() const {
   return mesh_vertices_ != nullptr && mesh_faces_ != nullptr;
@@ -547,7 +557,7 @@ void DynamicSceneGraph::setMesh(const MeshVertices::Ptr& vertices,
                                 const std::shared_ptr<MeshFaces>& faces,
                                 bool invalidate_all_edges) {
   if (!vertices) {
-    SG_LOG(INFO) << "received empty mesh. resetting all mesh edges";
+    SG_LOG(INFO) << "received empty mesh. resetting all mesh edges" << std::endl;
     mesh_vertices_.reset();
     mesh_faces_.reset();
     clearMeshEdges();
@@ -611,13 +621,13 @@ bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
 
   // Remove parent
   if (node->hasParent()) {
-    rewireInterlayerEdge(node_from, node->parent_, node_to, node->parent_);
+    rewireInterlayerEdge(node_from, node_to, node->parent_);
   }
 
   // Reconnect children
   std::set<NodeId> targets_to_rewire = node->children_;
   for (const auto& target : targets_to_rewire) {
-    rewireInterlayerEdge(node_from, target, node_to, target);
+    rewireInterlayerEdge(node_from, node_to, target);
   }
 
   // TODO(nathan) dynamic merge
@@ -680,7 +690,7 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
                                         std::unique_ptr<Edges>&& edges) {
   // TODO(nathan) consider condensing with mergeGraph
   if (!layers_.count(other_layer.id)) {
-    SG_LOG(ERROR) << "Scene graph does not have layer: " << other_layer.id;
+    SG_LOG(ERROR) << "Scene graph does not have layer: " << other_layer.id << std::endl;
     return false;
   }
 
@@ -720,11 +730,18 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
   return true;
 }
 
+inline NodeId getMergedId(NodeId original,
+                          const std::map<NodeId, NodeId>& previous_merges) {
+  return previous_merges.count(original) ? previous_merges.at(original) : original;
+}
+
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
+                                   const std::map<NodeId, NodeId>& previous_merges,
                                    bool allow_invalid_mesh,
                                    bool clear_mesh_edges,
                                    std::map<LayerId, bool>* update_map,
-                                   bool update_dynamic) {
+                                   bool update_dynamic,
+                                   bool clear_removed) {
   for (const auto& id_layers : other.dynamicLayers()) {
     const LayerId layer = id_layers.first;
 
@@ -748,8 +765,9 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 
     const bool update =
         (update_map && update_map->count(layer)) ? update_map->at(layer) : true;
-    layers_[layer]->mergeLayer(*id_layer.second, &node_lookup_, update);
-    id_layer.second->getRemovedNodes(removed_nodes, false);
+    layers_[layer]->mergeLayer(
+        *id_layer.second, previous_merges, &node_lookup_, update);
+    id_layer.second->getRemovedNodes(removed_nodes, clear_removed);
   }
 
   for (const auto& removed_id : removed_nodes) {
@@ -758,18 +776,31 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 
   for (const auto& id_edge_pair : other.interlayer_edges()) {
     const auto& edge = id_edge_pair.second;
-    insertEdge(edge.source, edge.target, edge.info->clone());
+    NodeId new_source = getMergedId(edge.source, previous_merges);
+    NodeId new_target = getMergedId(edge.target, previous_merges);
+    if (new_source == new_target) {
+      continue;
+    }
+
+    insertEdge(new_source, new_target, edge.info->clone());
   }
 
   for (const auto& id_edge_pair : other.dynamic_interlayer_edges()) {
     const auto& edge = id_edge_pair.second;
-    insertEdge(edge.source, edge.target, edge.info->clone());
+    NodeId new_source = getMergedId(edge.source, previous_merges);
+    NodeId new_target = getMergedId(edge.target, previous_merges);
+    if (new_source == new_target) {
+      continue;
+    }
+
+    insertEdge(new_source, new_target, edge.info->clone());
   }
 
   if (clear_mesh_edges) {
     clearMeshEdges();
   }
 
+  // TODO(nathan) this doesn't handle merges
   for (const auto& id_mesh_edge : other.mesh_edges_) {
     insertMeshEdge(id_mesh_edge.second.source_node,
                    id_mesh_edge.second.mesh_vertex,
@@ -829,7 +860,7 @@ std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(
 
   const pcl::PointXYZRGBA& point = mesh_vertices_->at(idx);
 
-  // TODO(nathan) this is awkard, but probably fine in the short term
+  // TODO(nathan) this is awkward, but probably fine in the short term
   if (check_invalid && point.x == 0.0f && point.y == 0.0f && point.z == 0.0f) {
     return std::nullopt;
   }
@@ -961,24 +992,23 @@ void DynamicSceneGraph::removeInterlayerEdge(NodeId source,
 }
 
 void DynamicSceneGraph::rewireInterlayerEdge(NodeId source,
-                                             NodeId target,
                                              NodeId new_source,
-                                             NodeId new_target) {
-  if (source == new_source && target == new_target) {
+                                             NodeId target) {
+  if (source == new_source) {
     return;
   }
 
   const auto& source_key = node_lookup_.at(source);
-  const auto& target_key = node_lookup_.at(target);
 
-  LayerKey new_source_key, new_target_key;
-  if (hasEdge(new_source, new_target, &new_source_key, &new_target_key)) {
+  LayerKey new_source_key, target_key;
+  if (hasEdge(new_source, target, &new_source_key, &target_key)) {
     removeInterlayerEdge(source, target, source_key, target_key);
     return;
   }
 
   removeAncestry(source, target, source_key, target_key);
-  addAncestry(new_source, new_target, new_source_key, new_target_key);
+  bool new_source_has_parent =
+      !addAncestry(new_source, target, new_source_key, target_key);
 
   // TODO(nathan) edges can technically jump from dynamic to static, so problems with
   // index not being available in other container
@@ -991,10 +1021,15 @@ void DynamicSceneGraph::rewireInterlayerEdge(NodeId source,
     interlayer_edges_.remove(source, target);
   }
 
+  if (new_source_has_parent) {
+    // we silently drop edges when the new source node also has a parent
+    return;
+  }
+
   if (new_source_key.dynamic || target_key.dynamic) {
-    dynamic_interlayer_edges_.insert(new_source, new_target, std::move(attrs));
+    dynamic_interlayer_edges_.insert(new_source, target, std::move(attrs));
   } else {
-    interlayer_edges_.insert(new_source, new_target, std::move(attrs));
+    interlayer_edges_.insert(new_source, target, std::move(attrs));
   }
 }
 

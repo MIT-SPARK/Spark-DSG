@@ -98,7 +98,8 @@ BinaryDeserializer::BinaryDeserializer(const std::vector<uint8_t>* buffer)
 void BinaryDeserializer::checkType(PackType type) const {
   PackType ref_type = static_cast<PackType>(ref->at(pos));
   if (type != ref_type) {
-    SG_LOG(FATAL) << "invalid type: " << type << " (ref is " << ref_type << ")";
+    SG_LOG(FATAL) << "invalid type: " << type << " (ref is " << ref_type << ")"
+                  << std::endl;
     throw std::domain_error("type mismatch!");
   }
   ++pos;

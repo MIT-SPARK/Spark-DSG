@@ -60,6 +60,8 @@ class BaseLayer {
 
   virtual bool insertEdge(NodeId source, NodeId target, EdgeAttributes::Ptr&& info) = 0;
 
+  virtual NodeStatus checkNode(NodeId node_id) const = 0;
+
   virtual std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const = 0;
 
   /**

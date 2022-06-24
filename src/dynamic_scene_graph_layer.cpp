@@ -138,6 +138,14 @@ bool DynamicSceneGraphLayer::hasNode(NodeId node_id) const {
   return hasNodeByIndex(prefix.index(node_id));
 }
 
+NodeStatus DynamicSceneGraphLayer::checkNode(NodeId node_id) const {
+  if (!prefix.matches(node_id)) {
+    return NodeStatus::NONEXISTENT;
+  }
+
+  return node_status_.at(prefix.index(node_id));
+}
+
 bool DynamicSceneGraphLayer::hasNodeByIndex(size_t node_index) const {
   auto iter = node_status_.find(node_index);
   if (iter == node_status_.end()) {
@@ -191,7 +199,7 @@ bool DynamicSceneGraphLayer::insertEdge(NodeId source,
                                         EdgeAttributes::Ptr&& edge_info) {
   if (source == target) {
     SG_LOG(WARNING) << "Attempted to add a self-edge for "
-                    << NodeSymbol(source).getLabel();
+                    << NodeSymbol(source).getLabel() << std::endl;
     return false;
   }
 

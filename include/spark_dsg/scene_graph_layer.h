@@ -104,7 +104,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param node_id node to check for
    * @returns status of type NodeStatus
    */
-  NodeStatus checkNode(NodeId node_id) const;
+  NodeStatus checkNode(NodeId node_id) const override;
 
   /**
    * @brief Check whether the layer has the specificied edge
@@ -164,6 +164,7 @@ class SceneGraphLayer : public BaseLayer {
    * @returns true if operation successful
    */
   bool mergeLayer(const SceneGraphLayer& other,
+                  const std::map<NodeId, NodeId>& previous_merges,
                   std::map<NodeId, LayerKey>* layer_lookup = nullptr,
                   bool update_attributes = true);
 

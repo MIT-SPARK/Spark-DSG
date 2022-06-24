@@ -54,13 +54,14 @@ bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
 
 bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
   if (!node) {
-    SG_LOG(ERROR) << "Attempted to add an unitialized node to layer " << id;
+    SG_LOG(ERROR) << "Attempted to add an unitialized node to layer " << id
+                  << std::endl;
     return false;
   }
 
   if (node->layer != id) {
     SG_LOG(WARNING) << "Attempted to add a node with layer " << node->layer
-                    << " to layer " << id;
+                    << " to layer " << id << std::endl;
     return false;
   }
 
@@ -78,7 +79,7 @@ bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
                                  EdgeAttributes::Ptr&& edge_info) {
   if (source == target) {
-    SG_LOG(WARNING) << "Attempted to add a self-edge";
+    SG_LOG(WARNING) << "Attempted to add a self-edge" << std::endl;
     return false;
   }
 
@@ -216,7 +217,13 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
   return true;
 }
 
+inline NodeId getMergedId(NodeId original,
+                          const std::map<NodeId, NodeId>& previous_merges) {
+  return previous_merges.count(original) ? previous_merges.at(original) : original;
+}
+
 bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
+                                 const std::map<NodeId, NodeId>& previous_merges,
                                  std::map<NodeId, LayerKey>* layer_lookup,
                                  bool update_attributes) {
   // TODO(yun)look at better interpolation methods for new nodes
@@ -256,7 +263,13 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
       continue;
     }
 
-    insertEdge(edge.source, edge.target, edge.info->clone());
+    NodeId new_source = getMergedId(edge.source, previous_merges);
+    NodeId new_target = getMergedId(edge.target, previous_merges);
+    if (new_source == new_target) {
+      continue;
+    }
+
+    insertEdge(new_source, new_target, edge.info->clone());
   }
 
   return true;
