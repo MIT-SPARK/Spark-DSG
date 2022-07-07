@@ -148,6 +148,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<NodeAttributes>(module, "NodeAttributes")
       .def(py::init<>())
       .def_readwrite("position", &NodeAttributes::position)
+      .def_readwrite("last_update_time_ns", &NodeAttributes::last_update_time_ns)
       .def("__repr__", [](const NodeAttributes& attrs) {
         std::stringstream ss;
         ss << attrs;
@@ -179,7 +180,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<PlaceNodeAttributes, SemanticNodeAttributes>(module, "PlaceNodeAttributes")
       .def(py::init<>())
       .def_readwrite("distance", &PlaceNodeAttributes::distance)
-      .def_readwrite("num_basis_points", &PlaceNodeAttributes::num_basis_points);
+      .def_readwrite("num_basis_points", &PlaceNodeAttributes::num_basis_points)
+      .def_readwrite("is_active", &PlaceNodeAttributes::is_active);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(module, "AgentNodeAttributes")
       .def(py::init<>())
