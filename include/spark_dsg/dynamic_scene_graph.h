@@ -434,7 +434,7 @@ class DynamicSceneGraph {
                   bool clear_mesh_edges = true,
                   std::map<LayerId, bool>* attribute_update_map = nullptr,
                   bool update_dynamic_attributes = true,
-                  bool clear_removed = true);
+                  bool clear_removed = false);
 
   /**
    * @brief Update graph from another graph
@@ -446,7 +446,7 @@ class DynamicSceneGraph {
                          bool clear_mesh_edges = true,
                          std::map<LayerId, bool>* attribute_update_map = nullptr,
                          bool update_dynamic_attributes = true,
-                         bool clear_removed = true) {
+                         bool clear_removed = false) {
     return mergeGraph(other,
                       {},
                       allow_invalid_mesh,
