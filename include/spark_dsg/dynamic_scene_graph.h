@@ -483,6 +483,14 @@ class DynamicSceneGraph {
 
   static Ptr deserialize(const std::string& contents);
 
+  /** @brief track which edges get used during a serialization update
+   */
+  void markEdgesAsStale();
+
+  /** @brief remove edges that do not appear in serialization update
+   */
+  void removeAllStaleEdges();
+
   /**
    * @brief mesh getter
    */
@@ -495,6 +503,8 @@ class DynamicSceneGraph {
   const LayerIds layer_ids;
 
  protected:
+  void removeStaleEdges(EdgeContainer& edges);
+
   void visitLayers(const LayerVisitor& cb);
 
   bool hasEdge(NodeId source,
@@ -553,6 +563,11 @@ class DynamicSceneGraph {
    * @brief constant iterator around the layers
    */
   inline const Layers& layers() const { return layers_; };
+
+  /**
+   * @brief constant iterator over mapping between nodes and layers
+   */
+  inline const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
 
   /**
    * @brief constant iterator around the inter-layer edges

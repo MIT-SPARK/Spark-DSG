@@ -59,7 +59,7 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   virtual ~DynamicSceneGraphLayer() = default;
 
-  inline size_t numNodes() const { return nodes_.size(); }
+  inline size_t numNodes() const { return times_.size(); }
 
   inline size_t numEdges() const { return edges_.size(); }
 

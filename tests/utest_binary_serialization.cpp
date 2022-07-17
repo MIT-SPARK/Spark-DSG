@@ -419,4 +419,51 @@ TEST(BinarySerializationTests, SerializeDsgDynamic) {
   EXPECT_TRUE(result->hasLayer(2, 'a'));
 }
 
+TEST(BinarySerializationTests, UpdateDsgFromBinaryWithCorrection) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph original;
+  original.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
+  original.emplaceNode(3, 1, std::make_unique<NodeAttributes>());
+  original.emplaceNode(4, 3, std::make_unique<NodeAttributes>());
+
+  original.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  original.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
+  original.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
+  original.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+
+  DynamicSceneGraph updated;
+  EXPECT_TRUE(updated.emplaceNode(3, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.emplaceNode(3, 1, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.emplaceNode(3, 2, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.emplaceNode(4, 3, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.emplaceNode(4, 4, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.insertEdge(0, 1));
+  EXPECT_TRUE(updated.insertEdge(0, 3));
+
+  EXPECT_TRUE(updated.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.emplaceNode(3, 'b', 40ns, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(updated.insertEdge(0, "a0"_id));
+
+  std::vector<uint8_t> buffer;
+  writeGraph(original, buffer);
+  updateGraph(updated, buffer, true);
+
+  EXPECT_EQ(original.numDynamicNodes(), updated.numDynamicNodes());
+  EXPECT_EQ(original.numNodes(), updated.numNodes());
+  EXPECT_EQ(original.numEdges(), updated.numEdges());
+  EXPECT_EQ(original.numLayers(), updated.numLayers());
+  EXPECT_EQ(original.layer_ids, updated.layer_ids);
+
+  EXPECT_FALSE(updated.hasNode(2));
+  EXPECT_FALSE(updated.hasNode(4));
+  EXPECT_FALSE(updated.hasNode("b0"_id));
+  EXPECT_FALSE(updated.hasEdge(0, 1));
+  EXPECT_FALSE(updated.hasEdge(0, 3));
+  EXPECT_FALSE(updated.hasEdge(0, "a0"_id));
+  EXPECT_FALSE(updated.hasEdge("a1"_id, "a2"_id));
+  EXPECT_FALSE(updated.getNode(0)->get().hasParent());
+}
+
 }  // namespace spark_dsg

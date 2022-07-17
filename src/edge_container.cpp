@@ -113,4 +113,11 @@ void EdgeContainer::getRemoved(std::vector<EdgeKey>& removed_edges,
   }
 }
 
+void EdgeContainer::setStale() {
+  stale_edges.clear();
+  for (const auto& key_edge_pair : edges) {
+    stale_edges[key_edge_pair.first] = true;
+  }
+}
+
 }  // namespace spark_dsg

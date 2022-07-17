@@ -142,4 +142,32 @@ TEST(EdgeContainerTests, RemovedWithAddCorrect) {
   }
 }
 
+TEST(EdgeContainerTests, StaleInvariants) {
+  EdgeContainer container;
+
+  for (size_t i = 0; i < 10; ++i) {
+    container.insert(0, i, nullptr);
+  }
+  EXPECT_EQ(container.size(), 10u);
+
+  container.setStale();
+  for (const auto& key_info_pair : container.stale_edges) {
+    EXPECT_TRUE(key_info_pair.second);
+  }
+
+  for (size_t i = 0; i < 3; ++i) {
+    container.get(0, i);
+  }
+  for (const auto& key_info_pair : container.stale_edges) {
+    EXPECT_EQ(key_info_pair.first.k2 >= 3, key_info_pair.second);
+  }
+
+  for (size_t i = 3; i < 6; ++i) {
+    const_cast<const EdgeContainer*>(&container)->get(0, i);
+  }
+  for (const auto& key_info_pair : container.stale_edges) {
+    EXPECT_EQ(key_info_pair.first.k2 >= 6, key_info_pair.second);
+  }
+}
+
 }  // namespace spark_dsg

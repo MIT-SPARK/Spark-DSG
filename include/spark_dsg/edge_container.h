@@ -121,11 +121,15 @@ struct EdgeContainer {
   void reset();
 
   inline const Edge& get(NodeId source, NodeId target) const {
-    return edges.at(EdgeKey(source, target));
+    const EdgeKey key(source, target);
+    stale_edges[key] = false;
+    return edges.at(key);
   }
 
   inline Edge& get(NodeId source, NodeId target) {
-    return edges.at(EdgeKey(source, target));
+    const EdgeKey key(source, target);
+    stale_edges[key] = false;
+    return edges.at(key);
   }
 
   EdgeStatus getStatus(NodeId source, NodeId target) const;
@@ -134,8 +138,11 @@ struct EdgeContainer {
 
   void getNew(std::vector<EdgeKey>& new_edges, bool clear_new);
 
+  void setStale();
+
   Edges edges;
   EdgeStatusMap edge_status;
+  mutable std::map<EdgeKey, bool> stale_edges;
 };
 
 }  // namespace spark_dsg

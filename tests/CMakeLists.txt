@@ -29,6 +29,7 @@ add_executable(
   utest_bounding_box.cpp
   utest_dynamic_scene_graph.cpp
   utest_dynamic_scene_graph_layer.cpp
+  utest_edge_container.cpp
   utest_graph_utilities_layer.cpp
   utest_binary_serialization.cpp
   utest_json_serialization.cpp
