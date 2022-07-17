@@ -63,7 +63,8 @@ void insertNode(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
   converter.finalize();
 }
 
-void updateNode(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
+std::optional<NodeId> updateNode(const BinaryDeserializer& deserializer,
+                                 DynamicSceneGraph& graph) {
   deserializer.checkFixedArrayLength(3);
   LayerId layer;
   deserializer.read(layer);
@@ -78,6 +79,7 @@ void updateNode(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
     graph.emplaceNode(layer, node, BinaryNodeFactory::get_default().create(conv));
   }
   conv.finalize();
+  return node_opt ? std::optional<NodeId>(node_opt->get().id) : std::nullopt;
 }
 
 void insertDynamicNode(const BinaryDeserializer& deserializer,
@@ -98,8 +100,8 @@ void insertDynamicNode(const BinaryDeserializer& deserializer,
   converter.finalize();
 }
 
-void updateDynamicNode(const BinaryDeserializer& deserializer,
-                       DynamicSceneGraph& graph) {
+std::optional<NodeId> updateDynamicNode(const BinaryDeserializer& deserializer,
+                                        DynamicSceneGraph& graph) {
   deserializer.checkFixedArrayLength(4);
   LayerId layer;
   deserializer.read(layer);
@@ -118,6 +120,7 @@ void updateDynamicNode(const BinaryDeserializer& deserializer,
         layer, node, timestamp_ns, BinaryNodeFactory::get_default().create(conv));
   }
   conv.finalize();
+  return node_opt ? std::optional<NodeId>(node_opt->get().id) : std::nullopt;
 }
 
 void insertEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
@@ -245,7 +248,7 @@ DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
   return graph;
 }
 
-bool updateGraph(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
+bool updateGraphNormal(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
   BinaryDeserializer deserializer(&buffer);
 
   std::vector<LayerId> layer_ids;
@@ -287,6 +290,78 @@ bool updateGraph(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
   }
 
   return true;
+}
+
+bool updateGraphRemoveStale(DynamicSceneGraph& graph,
+                            const std::vector<uint8_t>& buffer) {
+  BinaryDeserializer deserializer(&buffer);
+
+  std::vector<LayerId> layer_ids;
+  LayerId mesh_layer_id;
+  deserializer.read(layer_ids);
+  deserializer.read(mesh_layer_id);
+
+  if (graph.layer_ids != layer_ids) {
+    // TODO(nathan) maybe throw exception
+    return false;
+  }
+
+  if (graph.mesh_layer_id != mesh_layer_id) {
+    // TODO(nathan) maybe throw exception
+    return false;
+  }
+
+  std::unordered_set<NodeId> stale_nodes;
+  for (const auto& id_key_pair : graph.node_lookup()) {
+    stale_nodes.insert(id_key_pair.first);
+  }
+
+  deserializer.checkDynamicArray();
+  while (!deserializer.isDynamicArrayEnd()) {
+    const auto node_id = updateNode(deserializer, graph);
+    if (node_id) {
+      stale_nodes.erase(*node_id);
+    }
+  }
+
+  deserializer.checkDynamicArray();
+  while (!deserializer.isDynamicArrayEnd()) {
+    const auto node_id = updateDynamicNode(deserializer, graph);
+    if (node_id) {
+      stale_nodes.erase(*node_id);
+    }
+  }
+
+  for (const auto& node_id : stale_nodes) {
+    graph.removeNode(node_id);
+  }
+
+  graph.markEdgesAsStale();
+  deserializer.checkDynamicArray();
+  while (!deserializer.isDynamicArrayEnd()) {
+    updateEdge(deserializer, graph);
+  }
+  graph.removeAllStaleEdges();
+
+  // TODO(nathan) we might want to not do this
+  graph.clearMeshEdges();
+  deserializer.checkDynamicArray();
+  while (!deserializer.isDynamicArrayEnd()) {
+    // okay to directly insert, internal checks will prevent duplicates
+    insertMeshEdge(deserializer, graph);
+  }
+
+  return true;
+}
+
+bool updateGraph(DynamicSceneGraph& graph,
+                 const std::vector<uint8_t>& buffer,
+                 bool remove_stale) {
+  if (remove_stale) {
+    return updateGraphRemoveStale(graph, buffer);
+  }
+
+  return updateGraphNormal(graph, buffer);
 }
 
 }  // namespace spark_dsg

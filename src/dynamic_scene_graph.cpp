@@ -333,7 +333,6 @@ NodeStatus DynamicSceneGraph::checkNode(NodeId node_id) const {
   return layerFromKey(iter->second).checkNode(node_id);
 }
 
-
 bool DynamicSceneGraph::hasMesh() const {
   return mesh_vertices_ != nullptr && mesh_faces_ != nullptr;
 }
@@ -1039,6 +1038,42 @@ pcl::PolygonMesh DynamicSceneGraph::getMesh() const {
   mesh.polygons = *mesh_faces_;
   return mesh;
 };
+
+void DynamicSceneGraph::markEdgesAsStale() {
+  for (auto& id_layer_pair : layers_) {
+    id_layer_pair.second->edges_.setStale();
+  }
+  for (auto& layer_map : dynamic_layers_) {
+    for (auto& id_layer_pair : layer_map.second) {
+      id_layer_pair.second->edges_.setStale();
+    }
+  }
+
+  dynamic_interlayer_edges_.setStale();
+  interlayer_edges_.setStale();
+}
+
+void DynamicSceneGraph::removeStaleEdges(EdgeContainer& edges) {
+  for (const auto& edge_key_pair : edges.stale_edges) {
+    if (edge_key_pair.second) {
+      removeEdge(edge_key_pair.first.k1, edge_key_pair.first.k2);
+    }
+  }
+}
+
+void DynamicSceneGraph::removeAllStaleEdges() {
+  for (auto& id_layer_pair : layers_) {
+    removeStaleEdges(id_layer_pair.second->edges_);
+  }
+  for (auto& layer_map : dynamic_layers_) {
+    for (auto& id_layer_pair : layer_map.second) {
+      removeStaleEdges(id_layer_pair.second->edges_);
+    }
+  }
+
+  removeStaleEdges(interlayer_edges_);
+  removeStaleEdges(dynamic_interlayer_edges_);
+}
 
 DynamicSceneGraph::LayerIds getDefaultLayerIds() {
   return {
