@@ -353,11 +353,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(py::init<>())
       .def(py::init<const DynamicSceneGraph::LayerIds&>())
       .def("clear", &DynamicSceneGraph::clear)
-      .MAKE_SPECIALIZED_NODE_ADD(NodeAttributes)
-      .MAKE_SPECIALIZED_NODE_ADD(SemanticNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(ObjectNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(RoomNodeAttributes)
       .MAKE_SPECIALIZED_NODE_ADD(PlaceNodeAttributes)
+      .MAKE_SPECIALIZED_NODE_ADD(SemanticNodeAttributes)
+      .MAKE_SPECIALIZED_NODE_ADD(NodeAttributes)
       .MAKE_SPECIALIZED_DYNAMIC_NODE_ADD(NodeAttributes)
       .MAKE_SPECIALIZED_DYNAMIC_NODE_ADD(AgentNodeAttributes)
       .def("insert_edge",
