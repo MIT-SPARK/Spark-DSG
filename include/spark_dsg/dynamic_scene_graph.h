@@ -190,6 +190,11 @@ class DynamicSceneGraph {
                       bool allow_invalid_mesh = false);
 
   /**
+   * @brief Initialize an empty mesh
+   */
+  void initMesh();
+
+  /**
    * @brief Set the attributes of an existing node
    * @param node Node ID to set the attributes for
    * @param attrs New attributes for the node
@@ -255,6 +260,12 @@ class DynamicSceneGraph {
    * @returns Returns true if the mesh exists and is valid
    */
   bool hasMesh() const;
+
+  /**
+   * @brief Check whether the scene graph contains a mesh with actual data
+   * @returns Returns true if the mesh has vertices and faces
+   */
+  bool isMeshEmpty() const;
 
   /**
    * @brief Get a layer if the layer exists

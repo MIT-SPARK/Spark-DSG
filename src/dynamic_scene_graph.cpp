@@ -269,6 +269,14 @@ bool DynamicSceneGraph::insertMeshEdge(NodeId source,
   return true;
 }
 
+void DynamicSceneGraph::initMesh() {
+  DynamicSceneGraph::MeshVertices fake_vertices;
+  pcl::PolygonMesh fake_mesh;
+  pcl::toPCLPointCloud2(fake_vertices, fake_mesh.cloud);
+
+  setMeshDirectly(fake_mesh);
+}
+
 bool DynamicSceneGraph::setNodeAttributes(NodeId node, NodeAttributes::Ptr&& attrs) {
   auto iter = node_lookup_.find(node);
   if (iter == node_lookup_.end()) {
@@ -335,6 +343,14 @@ NodeStatus DynamicSceneGraph::checkNode(NodeId node_id) const {
 
 bool DynamicSceneGraph::hasMesh() const {
   return mesh_vertices_ != nullptr && mesh_faces_ != nullptr;
+}
+
+bool DynamicSceneGraph::isMeshEmpty() const {
+  if (!hasMesh()) {
+    return true;
+  }
+
+  return mesh_vertices_->empty() && mesh_faces_->empty();
 }
 
 const SceneGraphLayer& DynamicSceneGraph::getLayer(LayerId layer) const {
