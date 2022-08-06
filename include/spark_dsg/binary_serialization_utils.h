@@ -314,7 +314,7 @@ size_t read_binary(const Deserializer& s, double& value) {
 template <typename Deserializer>
 size_t read_binary(const Deserializer& s, std::string& value) {
   const size_t length = s.readFixedArrayLength();
-  value = std::string(s.template getReadPtr<char>(), length);
+  value = std::string(s.template getReadPtr<char>(length), length);
   return length;
 }
 
@@ -385,13 +385,22 @@ void write_binary(Serializer& s, const Quaternion<Scalar>& q) {
 
 template <typename Deserializer, typename Derived>
 size_t read_binary(const Deserializer& s, MatrixBase<Derived>& matrix) {
-  s.readFixedArrayLength();
+  const size_t length = s.readFixedArrayLength();
+  if (length < 2u) {
+    throw std::out_of_range("array dimensions not present");
+  }
+
   Index rows, cols;
   s.read(rows);
   s.read(cols);
+  if (rows * cols + 2 != static_cast<int64_t>(length)) {
+    throw std::out_of_range("array dimensions do not match length");
+  }
+
   matrix.derived().resize(rows, cols);
-  for (Index r = 0; r < rows; ++r) {
-    for (Index c = 0; c < cols; ++c) {
+  // TODO(nathan) warn about row/col mismatch
+  for (Index r = 0; r < matrix.rows(); ++r) {
+    for (Index c = 0; c < matrix.cols(); ++c) {
       s.read(matrix(r, c));
     }
   }
