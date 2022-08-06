@@ -92,11 +92,14 @@ void BinarySerializer::write_type(PackType type) {
   ref->push_back(static_cast<uint8_t>(type));
 }
 
-BinaryDeserializer::BinaryDeserializer(const std::vector<uint8_t>* buffer)
-    : ref(buffer), pos(0) {}
+BinaryDeserializer::BinaryDeserializer(const uint8_t* const buffer, size_t size)
+    : ref(buffer), buffer_length(size), pos(0) {}
+
+BinaryDeserializer::BinaryDeserializer(const std::vector<uint8_t>& buffer)
+    : BinaryDeserializer(buffer.data(), buffer.size()) {}
 
 void BinaryDeserializer::checkType(PackType type) const {
-  PackType ref_type = static_cast<PackType>(ref->at(pos));
+  const auto ref_type = getCurrType();
   if (type != ref_type) {
     SG_LOG(FATAL) << "invalid type: " << type << " (ref is " << ref_type << ")"
                   << std::endl;
@@ -106,7 +109,7 @@ void BinaryDeserializer::checkType(PackType type) const {
 }
 
 void BinaryDeserializer::checkDynamicArray() const {
-  PackType ref_type = static_cast<PackType>(ref->at(pos));
+  const auto ref_type = getCurrType();
   if (ref_type != PackType::ARRXX) {
     throw std::domain_error("type mismatch!");
   }
@@ -114,7 +117,7 @@ void BinaryDeserializer::checkDynamicArray() const {
 }
 
 bool BinaryDeserializer::isDynamicArrayEnd() const {
-  PackType ref_type = static_cast<PackType>(ref->at(pos));
+  const auto ref_type = getCurrType();
   if (ref_type != PackType::ARRYY) {
     return false;
   }
@@ -123,14 +126,14 @@ bool BinaryDeserializer::isDynamicArrayEnd() const {
 }
 
 void BinaryDeserializer::checkFixedArrayLength(size_t length) const {
-  PackType ref_type = static_cast<PackType>(ref->at(pos));
+  const auto ref_type = getCurrType();
   if (ref_type != PackType::ARR32 && ref_type != PackType::STR32) {
     throw std::domain_error("type mismatch!");
   }
 
   ++pos;
   uint32_t ref_length;
-  readWord(*ref, pos, ref_length);
+  readWord(getReadPtr<uint32_t>(), ref_length);
   pos += sizeof(ref_length);
   if (length != static_cast<size_t>(length)) {
     throw std::domain_error("length mismatch");
@@ -138,14 +141,14 @@ void BinaryDeserializer::checkFixedArrayLength(size_t length) const {
 }
 
 size_t BinaryDeserializer::readFixedArrayLength() const {
-  PackType ref_type = static_cast<PackType>(ref->at(pos));
+  const auto ref_type = getCurrType();
   if (ref_type != PackType::ARR32 && ref_type != PackType::STR32) {
     throw std::domain_error("type mismatch!");
   }
 
   ++pos;
   uint32_t length;
-  readWord(*ref, pos, length);
+  readWord(getReadPtr<uint32_t>(), length);
   pos += sizeof(length);
   return static_cast<size_t>(length);
 }

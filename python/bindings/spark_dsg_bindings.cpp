@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "scene_graph_iterators.h"
+#include "zmq_bindings.h"
 
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/node_attributes.h>
@@ -85,6 +86,8 @@ std::ostream& operator<<(std::ostream& out, const Quaternion<Scalar>& q) {
 PYBIND11_MODULE(_dsg_bindings, module) {
   py::options options;
   // options.disable_function_signatures();
+
+  add_zmq_bindings(module);
 
   py::enum_<BoundingBox::Type>(module, "BoundingBoxType")
       .value("INVALID", BoundingBox::Type::INVALID)
@@ -139,6 +142,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("max", &BoundingBox::max)
       .def_readwrite("world_P_center", &BoundingBox::world_P_center)
       .def_readwrite("world_R_center", &BoundingBox::world_R_center)
+      .def("is_inside",
+           static_cast<bool (BoundingBox::*)(const Eigen::Vector3d&) const>(
+               &BoundingBox::isInside))
+      .def("is_inside",
+           static_cast<bool (BoundingBox::*)(const Eigen::Vector3f&) const>(
+               &BoundingBox::isInside))
       .def("__repr__", [](const BoundingBox& box) {
         std::stringstream ss;
         ss << box;
@@ -454,8 +463,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     py::return_value_policy::reference_internal)
       .def_property("dynamic_interlayer_edges",
                     [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(EdgeIter(graph.dynamic_interlayer_edges()),
-                                               IterSentinel());
+                      return py::make_iterator(
+                          EdgeIter(graph.dynamic_interlayer_edges()), IterSentinel());
                     },
                     nullptr,
                     py::return_value_policy::reference_internal);

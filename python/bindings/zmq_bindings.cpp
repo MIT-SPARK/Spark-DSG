@@ -1,3 +1,4 @@
+
 /* -----------------------------------------------------------------------------
  * Copyright 2022 Massachusetts Institute of Technology.
  * All Rights Reserved
@@ -32,28 +33,31 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "zmq_bindings.h"
 
-namespace spark_dsg {
+#include <spark_dsg/zmq_interface.h>
 
-void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer);
+using namespace spark_dsg;
+using namespace pybind11::literals;
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
+namespace py = pybind11;
 
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
+#if INCLUDE_ZMQ()
+void add_zmq_bindings(pybind11::module_& module) {
+  py::class_<ZmqSender>(module, "DsgSender")
+      .def(py::init<const std::string&, size_t>(), "url"_a, "num_threads"_a = 1)
+      .def("send", &ZmqSender::send);
+
+  py::class_<ZmqReceiver>(module, "DsgReceiver")
+      .def(py::init<const std::string&, size_t>(), "url"_a, "num_threads"_a = 1)
+      .def("recv", &ZmqReceiver::recv)
+      .def_property_readonly("graph", [](const ZmqReceiver& receiver) {
+        if (!receiver.graph()) {
+          throw pybind11::value_error("no graph received yet");
+        }
+        return receiver.graph();
+      });
 }
-
-bool updateGraph(DynamicSceneGraph& graph,
-                 const uint8_t* const buffer,
-                 size_t length,
-                 bool remove_stale = false);
-
-inline bool updateGraph(DynamicSceneGraph& graph,
-                        const std::vector<uint8_t>& buffer,
-                        bool remove_stale = false) {
-  return updateGraph(graph, buffer.data(), buffer.size(), remove_stale);
-}
-
-}  // namespace spark_dsg
+#else
+void add_zmq_bindings(pybind11::module_&) {}
+#endif

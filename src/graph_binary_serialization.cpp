@@ -215,8 +215,8 @@ void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer) {
   serializer.writeArrayEnd();
 }
 
-DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
-  BinaryDeserializer deserializer(&buffer);
+DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
+  BinaryDeserializer deserializer(buffer, length);
 
   std::vector<LayerId> layer_ids;
   LayerId mesh_layer_id;
@@ -248,9 +248,8 @@ DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
   return graph;
 }
 
-bool updateGraphNormal(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
-  BinaryDeserializer deserializer(&buffer);
-
+bool updateGraphNormal(DynamicSceneGraph& graph,
+                       const BinaryDeserializer& deserializer) {
   std::vector<LayerId> layer_ids;
   LayerId mesh_layer_id;
   deserializer.read(layer_ids);
@@ -293,9 +292,7 @@ bool updateGraphNormal(DynamicSceneGraph& graph, const std::vector<uint8_t>& buf
 }
 
 bool updateGraphRemoveStale(DynamicSceneGraph& graph,
-                            const std::vector<uint8_t>& buffer) {
-  BinaryDeserializer deserializer(&buffer);
-
+                            const BinaryDeserializer& deserializer) {
   std::vector<LayerId> layer_ids;
   LayerId mesh_layer_id;
   deserializer.read(layer_ids);
@@ -355,13 +352,15 @@ bool updateGraphRemoveStale(DynamicSceneGraph& graph,
 }
 
 bool updateGraph(DynamicSceneGraph& graph,
-                 const std::vector<uint8_t>& buffer,
+                 const uint8_t* const buffer,
+                 size_t length,
                  bool remove_stale) {
+  BinaryDeserializer deserializer(buffer, length);
   if (remove_stale) {
-    return updateGraphRemoveStale(graph, buffer);
+    return updateGraphRemoveStale(graph, deserializer);
   }
 
-  return updateGraphNormal(graph, buffer);
+  return updateGraphNormal(graph, deserializer);
 }
 
 }  // namespace spark_dsg

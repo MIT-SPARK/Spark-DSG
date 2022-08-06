@@ -32,28 +32,27 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include "spark_dsg/dynamic_scene_graph.h"
+#include <spark_dsg/zmq_interface.h>
+
+#include <gtest/gtest.h>
 
 namespace spark_dsg {
 
-void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer);
+TEST(ZmqInterfaceTests, BasicSendReceiveCorrect) {
+  ZmqSender sender("tcp://127.0.0.1:8001", 1);
+  ZmqReceiver receiver("tcp://127.0.0.1:8001", 1);
+  EXPECT_TRUE(receiver.graph() == nullptr);
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
+  DynamicSceneGraph graph;
 
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
-}
+  for (size_t i = 0; i < 15; ++i) {
+    sender.send(graph);
+    if (receiver.recv(100)) {
+      break;
+    }
+  }
 
-bool updateGraph(DynamicSceneGraph& graph,
-                 const uint8_t* const buffer,
-                 size_t length,
-                 bool remove_stale = false);
-
-inline bool updateGraph(DynamicSceneGraph& graph,
-                        const std::vector<uint8_t>& buffer,
-                        bool remove_stale = false) {
-  return updateGraph(graph, buffer.data(), buffer.size(), remove_stale);
+  EXPECT_TRUE(receiver.graph() != nullptr);
 }
 
 }  // namespace spark_dsg

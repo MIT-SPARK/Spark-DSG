@@ -44,6 +44,13 @@ target_link_libraries(
   utest_${PROJECT_NAME} ${PROJECT_NAME} gtest nlohmann_json::nlohmann_json
 )
 
+if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
+  target_sources(
+    utest_${PROJECT_NAME}
+    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/utest_zmq_interface.cpp>"
+  )
+endif()
+
 if(${SPARK_DSG_INSTALL_TESTS})
   # note that ros uses libdir to handle finding executables by package, but this isn't
   # an ideal install location normally

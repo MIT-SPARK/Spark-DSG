@@ -37,23 +37,34 @@
 
 namespace spark_dsg {
 
-void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer);
+class ZmqSender {
+ public:
+  ZmqSender(const std::string& url, size_t num_threads);
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
+  ~ZmqSender();
 
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
-}
+  void send(const DynamicSceneGraph& graph);
 
-bool updateGraph(DynamicSceneGraph& graph,
-                 const uint8_t* const buffer,
-                 size_t length,
-                 bool remove_stale = false);
+ private:
+  struct Detail;
 
-inline bool updateGraph(DynamicSceneGraph& graph,
-                        const std::vector<uint8_t>& buffer,
-                        bool remove_stale = false) {
-  return updateGraph(graph, buffer.data(), buffer.size(), remove_stale);
-}
+  std::unique_ptr<Detail> internals_;
+};
+
+class ZmqReceiver {
+ public:
+  ZmqReceiver(const std::string& url, size_t num_threads);
+
+  ~ZmqReceiver();
+
+  bool recv(size_t timeout_ms);
+
+  DynamicSceneGraph::Ptr graph() const;
+
+ private:
+  struct Detail;
+
+  std::unique_ptr<Detail> internals_;
+};
 
 }  // namespace spark_dsg
