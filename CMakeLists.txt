@@ -11,10 +11,13 @@ option(SPARK_DSG_BUILD_TESTS "Build tests" ON)
 option(SPARK_DSG_INSTALL "Install C++ package" ON)
 option(SPARK_DSG_INSTALL_TESTS "Install tests to catkin location" ON)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
+option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 # TODO(nathan) only required for pcl
 find_package(Boost REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(zmq IMPORTED_TARGET libzmq)
 
 # TODO(nathan) consider removing pcl
 set(PCL_FIND_QUIETLY TRUE)
@@ -67,6 +70,14 @@ target_link_libraries(
   ${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES} ${Boost_LIBRARIES} Eigen3::Eigen
   PRIVATE nlohmann_json::nlohmann_json
 )
+
+if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
+  target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::zmq)
+  target_sources(
+    ${PROJECT_NAME}
+    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zmq_interface.cpp>"
+  )
+endif()
 
 if(SPARK_DSG_BUILD_PYTHON)
   add_subdirectory(python)

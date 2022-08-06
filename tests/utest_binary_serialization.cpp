@@ -125,7 +125,7 @@ T writeRT(const T& expected) {
   serialization::BinarySerializer serializer(&buffer);
   serializer.write(expected);
 
-  serialization::BinaryDeserializer deserializer(&buffer);
+  serialization::BinaryDeserializer deserializer(buffer);
 
   T result;
   deserializer.read(result);
@@ -137,7 +137,7 @@ NodeAttributes::Ptr writeAttrsRT(const NodeAttributes& expected) {
   serialization::BinarySerializer serializer(&buffer);
   serializer.write(expected);
 
-  serialization::BinaryDeserializer deserializer(&buffer);
+  serialization::BinaryDeserializer deserializer(buffer);
   serialization::BinaryConverter converter(&deserializer);
   auto result = serialization::BinaryNodeFactory::get_default().create(converter);
   converter.finalize();
@@ -150,7 +150,7 @@ EdgeAttributes::Ptr writeAttrsRT(const EdgeAttributes& expected) {
   serialization::BinarySerializer serializer(&buffer);
   serializer.write(expected);
 
-  serialization::BinaryDeserializer deserializer(&buffer);
+  serialization::BinaryDeserializer deserializer(buffer);
   serialization::BinaryConverter converter(&deserializer);
   auto result = serialization::BinaryEdgeFactory::get_default().create(converter);
   converter.finalize();
