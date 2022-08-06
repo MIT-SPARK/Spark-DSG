@@ -1,0 +1,7 @@
+include CMakeLists.txt
+include python/CMakeLists.txt
+include python/pybind11.CMakeLists.txt.in
+graft src
+graft include
+graft cmake
+graft python/bindings

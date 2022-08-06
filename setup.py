@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import sys
+import shutil
 
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
@@ -50,9 +51,11 @@ class CMakeBuild(build_ext):
 
         cmake_args += ext.extra_cmake_flags
 
-        if self.compiler.compiler_type == "mvsc":
-            cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
+        cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
+        if cmake_generator == "":
+            cmake_args += ["-G", "Ninja"]
 
+        if self.compiler.compiler_type == "mvsc":
             # Single config generators are handled "normally"
             single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
 
@@ -87,8 +90,10 @@ class CMakeBuild(build_ext):
                 # CMake 3.12+ only.
                 build_args += [f"-j{self.parallel}"]
 
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
+        if os.path.exists(self.build_temp):
+            shutil.rmtree(self.build_temp)
+
+        os.makedirs(self.build_temp)
 
         subprocess.check_call(
             ["cmake", ext.sourcedir] + cmake_args, cwd=self.build_temp
