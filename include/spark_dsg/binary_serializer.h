@@ -84,23 +84,20 @@ struct BinaryDeserializer {
 
   template <typename T>
   void read(T& value) const {
-    if (sizeof(value) + pos > buffer_length) {
-      throw std::out_of_range("attempt to read past end of buffer");
-    }
-
     pos += ::spark_dsg::serialization::read_binary(*this, value);
   }
 
   template <typename T>
-  const T* getReadPtr() const {
-    if (sizeof(T) + pos > buffer_length) {
+  const T* getReadPtr(size_t num_elements = 1) const {
+    const size_t end_pos = sizeof(T) * num_elements + pos;
+    if (end_pos > buffer_length) {
       throw std::out_of_range("attempt to read past end of buffer");
     }
 
     return reinterpret_cast<const T*>(ref + pos);
   }
 
-  const uint8_t *const ref;
+  const uint8_t* const ref;
   const size_t buffer_length;
   mutable size_t pos;
 };
