@@ -269,11 +269,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       });
 
   // TODO(nathan) iterator over nodes and edges
-  py::class_<SceneGraphLayer>(module, "SceneGraphLayer")
+  py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(module, "SceneGraphLayer")
       .def(py::init<LayerId>())
       .def("insert_edge",
            [](SceneGraphLayer& layer, NodeId source, NodeId target) {
-             layer.insertEdge(source, target);
+             return layer.insertEdge(source, target);
            })
       .def("insert_edge",
            [](SceneGraphLayer& layer,
@@ -282,7 +282,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
               const EdgeAttributes& info) {
              EdgeAttributes::Ptr edge_info(new EdgeAttributes());
              *edge_info = info;
-             layer.insertEdge(source, target, std::move(edge_info));
+             return layer.insertEdge(source, target, std::move(edge_info));
            })
       .def("has_node", &SceneGraphLayer::hasNode)
       .def("has_edge", &SceneGraphLayer::hasEdge)
@@ -295,9 +295,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readonly("id", &SceneGraphLayer::id);
 
   py::class_<LayerView>(module, "LayerView")
-      .def_readonly("id", &LayerView::id)
+      .def("has_node", &LayerView::hasNode)
+      .def("has_edge", &LayerView::hasEdge)
+      .def("get_node", &LayerView::getNode)
+      .def("get_edge", &LayerView::getEdge)
       .def("num_nodes", &LayerView::numNodes)
       .def("num_edges", &LayerView::numEdges)
+      .def("get_position", &LayerView::getPosition)
+      .def_readonly("id", &LayerView::id)
       .def_property("nodes",
                     [](const LayerView& view) {
                       return py::make_iterator(view.nodes(), IterSentinel());
@@ -371,7 +376,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .MAKE_SPECIALIZED_DYNAMIC_NODE_ADD(AgentNodeAttributes)
       .def("insert_edge",
            [](DynamicSceneGraph& graph, NodeId source, NodeId target) {
-             graph.insertEdge(source, target);
+             return graph.insertEdge(source, target);
            })
       .def("insert_edge",
            [](DynamicSceneGraph& graph,
@@ -380,7 +385,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
               const EdgeAttributes& info) {
              EdgeAttributes::Ptr edge_info(new EdgeAttributes());
              *edge_info = info;
-             graph.insertEdge(source, target, std::move(edge_info));
+             return graph.insertEdge(source, target, std::move(edge_info));
            })
       .def("has_layer",
            static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(
@@ -416,10 +421,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("num_layers", &DynamicSceneGraph::numLayers)
       .def("num_dynamic_layers_of_type", &DynamicSceneGraph::numDynamicLayersOfType)
       .def("num_dynamic_layers", &DynamicSceneGraph::numDynamicLayers)
-      .def("num_nodes", &DynamicSceneGraph::numNodes)
+      .def("num_nodes", &DynamicSceneGraph::numNodes, "include_mesh"_a = false)
+      .def("num_static_nodes", &DynamicSceneGraph::numStaticNodes)
       .def("num_dynamic_nodes", &DynamicSceneGraph::numDynamicNodes)
       .def("empty", &DynamicSceneGraph::empty)
-      .def("num_edges", &DynamicSceneGraph::numEdges)
+      .def("num_edges", &DynamicSceneGraph::numEdges, "include_mesh"_a = false)
+      .def("num_static_edges", &DynamicSceneGraph::numStaticEdges)
+      .def("num_dynamic_edges", &DynamicSceneGraph::numDynamicEdges)
       .def("get_position", &DynamicSceneGraph::getPosition)
       .def("save",
            [](const DynamicSceneGraph& graph,

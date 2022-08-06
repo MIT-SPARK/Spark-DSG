@@ -239,6 +239,24 @@ class LayerView {
 
   size_t numEdges() const { return layer_ref_.numEdges(); }
 
+  bool hasNode(NodeId node_id) const { return layer_ref_.hasNode(node_id); }
+
+  bool hasEdge(NodeId source, NodeId target) const {
+    return layer_ref_.hasEdge(source, target);
+  }
+
+  std::optional<SceneGraphLayer::NodeRef> getNode(NodeId node_id) const {
+    return layer_ref_.getNode(node_id);
+  }
+
+  std::optional<SceneGraphLayer::EdgeRef> getEdge(NodeId source, NodeId target) const {
+    return layer_ref_.getEdge(source, target);
+  }
+
+  Eigen::Vector3d getPosition(NodeId node_id) const {
+    return layer_ref_.getPosition(node_id);
+  }
+
   const LayerId id;
 
  private:
@@ -315,7 +333,9 @@ class DynamicLayerIter {
     }
   }
 
-  DynamicLayerView operator*() const { return DynamicLayerView(*(curr_layer_iter_->second)); }
+  DynamicLayerView operator*() const {
+    return DynamicLayerView(*(curr_layer_iter_->second));
+  }
 
   DynamicLayerIter& operator++() {
     ++curr_layer_iter_;
