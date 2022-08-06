@@ -666,12 +666,7 @@ size_t DynamicSceneGraph::numLayers() const {
 }
 
 size_t DynamicSceneGraph::numNodes(bool include_mesh) const {
-  size_t total_nodes = 0u;
-  for (const auto& id_layer_pair : layers_) {
-    total_nodes += id_layer_pair.second->numNodes();
-  }
-
-  return total_nodes + numDynamicNodes() +
+  return numStaticNodes() + numDynamicNodes() +
          ((mesh_vertices_ == nullptr || !include_mesh) ? 0 : mesh_vertices_->size());
 }
 
@@ -686,11 +681,30 @@ size_t DynamicSceneGraph::numDynamicNodes() const {
   return total_nodes;
 }
 
+size_t DynamicSceneGraph::numStaticNodes() const {
+  size_t total_nodes = 0u;
+  for (const auto& id_layer_pair : layers_) {
+    total_nodes += id_layer_pair.second->numNodes();
+  }
+
+  return total_nodes;
+}
+
 size_t DynamicSceneGraph::numEdges(bool include_mesh) const {
-  size_t total_edges = interlayer_edges_.size() + dynamic_interlayer_edges_.size();
+  return numStaticEdges() + numDynamicEdges() + (include_mesh ? mesh_edges_.size() : 0);
+}
+
+size_t DynamicSceneGraph::numStaticEdges() const {
+  size_t total_edges = interlayer_edges_.size();
   for (const auto& id_layer_pair : layers_) {
     total_edges += id_layer_pair.second->numEdges();
   }
+
+  return total_edges;
+}
+
+size_t DynamicSceneGraph::numDynamicEdges() const {
+  size_t total_edges = dynamic_interlayer_edges_.size();
 
   for (const auto& id_group_pair : dynamic_layers_) {
     for (const auto& prefix_layer_pair : id_group_pair.second) {
@@ -698,7 +712,7 @@ size_t DynamicSceneGraph::numEdges(bool include_mesh) const {
     }
   }
 
-  return total_edges + (include_mesh ? mesh_edges_.size() : 0);
+  return total_edges;
 }
 
 bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,

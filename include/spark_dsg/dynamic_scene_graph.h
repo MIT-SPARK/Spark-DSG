@@ -377,6 +377,12 @@ class DynamicSceneGraph {
   size_t numNodes(bool include_mesh = true) const;
 
   /**
+   * @brief Get the number of static nodes in the graph
+   * @return The number of static nodes in the graph
+   */
+  size_t numStaticNodes() const;
+
+  /**
    * @brief Get the number of dynamic nodes in the graph
    * @return The number of dynamic nodes in the graph
    */
@@ -387,6 +393,18 @@ class DynamicSceneGraph {
    * @return number of edges in the graph
    */
   size_t numEdges(bool include_mesh = true) const;
+
+  /**
+   * @brief Get number of static edges in the graph
+   * @return number of static edges in the graph
+   */
+  size_t numStaticEdges() const;
+
+  /**
+   * @brief Get number of dynamic edges in the graph
+   * @return number of dynamic edges in the graph
+   */
+  size_t numDynamicEdges() const;
 
   /**
    * @brief Get whether or not the scene graph is empty
