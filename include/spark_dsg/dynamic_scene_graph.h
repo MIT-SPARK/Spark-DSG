@@ -525,6 +525,8 @@ class DynamicSceneGraph {
    */
   pcl::PolygonMesh getMesh() const;
 
+  DynamicSceneGraph::Ptr clone() const;
+
   //! mesh layer id
   const LayerId mesh_layer_id;
 

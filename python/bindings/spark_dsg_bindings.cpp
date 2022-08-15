@@ -269,7 +269,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       });
 
   // TODO(nathan) iterator over nodes and edges
-  py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(module, "SceneGraphLayer")
+  py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(module,
+                                                                "SceneGraphLayer")
       .def(py::init<LayerId>())
       .def("insert_edge",
            [](SceneGraphLayer& layer, NodeId source, NodeId target) {
@@ -475,7 +476,10 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                           EdgeIter(graph.dynamic_interlayer_edges()), IterSentinel());
                     },
                     nullptr,
-                    py::return_value_policy::reference_internal);
+                    py::return_value_policy::reference_internal)
+      .def("clone", &DynamicSceneGraph::clone)
+      .def("__deepcopy__",
+           [](const DynamicSceneGraph& G, py::object) { return G.clone(); });
 
 #undef MAKE_SPECIALZIED_NODE_ADD
 

@@ -1073,4 +1073,32 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrectWithPrevMerges) {
   EXPECT_TRUE(graph_1.hasEdge(0, 1));
 }
 
+TEST(DynamicSceneGraphTests, CloneCorrect) {
+  using namespace std::chrono_literals;
+
+  DynamicSceneGraph graph;
+  graph.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, 'a', 11ns, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(3, "x1"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(4, "y1"_id, std::make_unique<NodeAttributes>());
+  graph.insertEdge("x0"_id, "x1"_id);
+  graph.insertEdge("x0"_id, "y1"_id);
+  graph.insertEdge("a1"_id, "x0"_id);
+
+  auto clone = graph.clone();
+  ASSERT_TRUE(clone != nullptr);
+  EXPECT_EQ(clone->numNodes(), graph.numNodes());
+  EXPECT_EQ(clone->numEdges(), graph.numEdges());
+  EXPECT_TRUE(clone->hasNode("a0"_id));
+  EXPECT_TRUE(clone->hasNode("a1"_id));
+  EXPECT_TRUE(clone->hasNode("x0"_id));
+  EXPECT_TRUE(clone->hasNode("x1"_id));
+  EXPECT_TRUE(clone->hasNode("y1"_id));
+  EXPECT_TRUE(clone->hasEdge("x0"_id, "x1"_id));
+  EXPECT_TRUE(clone->hasEdge("x0"_id, "y1"_id));
+  EXPECT_TRUE(clone->hasEdge("a1"_id, "x0"_id));
+  EXPECT_TRUE(clone->hasEdge("a0"_id, "a1"_id));
+}
+
 }  // namespace spark_dsg

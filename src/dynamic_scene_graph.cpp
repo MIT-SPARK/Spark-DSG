@@ -1110,4 +1110,67 @@ DynamicSceneGraph::LayerIds getDefaultLayerIds() {
       DsgLayers::OBJECTS, DsgLayers::PLACES, DsgLayers::ROOMS, DsgLayers::BUILDINGS};
 }
 
+DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
+  auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids, mesh_layer_id);
+  for (const auto id_layer_pair : node_lookup_) {
+    auto node = getNodePtr(id_layer_pair.first, id_layer_pair.second);
+    if (id_layer_pair.second.dynamic) {
+      auto node_dyn = dynamic_cast<DynamicSceneGraphNode*>(node);
+      if (!node_dyn) {
+        // TODO(nathan) fix exception messages
+        std::stringstream ss;
+        ss << "node " << NodeSymbol(node->id).getLabel() << " is not dynamic!";
+        throw std::runtime_error(ss.str());
+      }
+
+      to_return->emplacePrevDynamicNode(node_dyn->layer,
+                                        node_dyn->id,
+                                        node_dyn->timestamp,
+                                        node_dyn->attributes_->clone());
+    } else {
+      to_return->emplaceNode(node->layer, node->id, node->attributes_->clone());
+    }
+  }
+
+  for (const auto& id_layer_pair : layers_) {
+    for (const auto& id_edge_pair : id_layer_pair.second->edges()) {
+      const auto& edge = id_edge_pair.second;
+      to_return->insertEdge(edge.source, edge.target, edge.info->clone());
+    }
+  }
+
+  for (const auto& id_layer_group : dynamic_layers_) {
+    for (const auto& prefix_layer_pair : id_layer_group.second) {
+      for (const auto& id_edge_pair : prefix_layer_pair.second->edges()) {
+        const auto& edge = id_edge_pair.second;
+        to_return->insertEdge(edge.source, edge.target, edge.info->clone());
+      }
+    }
+  }
+
+  for (const auto& id_edge_pair : interlayer_edges()) {
+    const auto& edge = id_edge_pair.second;
+    to_return->insertEdge(edge.source, edge.target, edge.info->clone());
+  }
+
+  for (const auto& id_edge_pair : dynamic_interlayer_edges()) {
+    const auto& edge = id_edge_pair.second;
+    to_return->insertEdge(edge.source, edge.target, edge.info->clone());
+  }
+
+  if (mesh_vertices_) {
+    to_return->mesh_vertices_.reset(new MeshVertices(*mesh_vertices_));
+  }
+  if (mesh_faces_) {
+    to_return->mesh_faces_ = std::make_shared<MeshFaces>(*mesh_faces_);
+  }
+
+  for (const auto& id_edge_pair : mesh_edges_) {
+    const auto& edge = id_edge_pair.second;
+    to_return->insertMeshEdge(edge.source_node, edge.mesh_vertex, true);
+  }
+
+  return to_return;
+}
+
 }  // namespace spark_dsg
