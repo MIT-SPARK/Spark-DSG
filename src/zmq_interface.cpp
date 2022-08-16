@@ -95,6 +95,7 @@ void ZmqSender::send(const DynamicSceneGraph& graph) { internals_->send(graph); 
 struct ZmqReceiver::Detail {
   Detail(const std::string& url, size_t) {
     socket.reset(new zmq::socket_t(ZmqContextHolder::instance().context(), ZMQ_SUB));
+    socket->setsockopt(ZMQ_CONFLATE, 1);
     socket->connect(url);
     socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
   }
