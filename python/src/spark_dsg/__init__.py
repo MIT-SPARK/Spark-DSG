@@ -33,7 +33,8 @@
 #
 #
 """The Spark-DSG package."""
-from spark_dsg._dsg_bindings import *
+from spark_dsg._dsg_bindings import *  # NOQA
+from spark_dsg._dsg_bindings import DsgLayers, compute_ancestor_bounding_box
 
 
 def add_bounding_boxes_to_layer(graph, layer_id):
