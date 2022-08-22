@@ -62,6 +62,12 @@ path_to_dsg = pathlib.Path(path_to_dsg).expanduser().absolute()
 G = dsg.DynamicSceneGraph.load(str(path_to_dsg))
 
 
+# %%
+fig = dsg.plot_scene_graph(G, marker_size=6)
+if fig is not None:
+    fig.show(renderer="notebook")
+
+
 # %% [markdown]
 # ## Node Access and Node Attributes
 
@@ -140,6 +146,8 @@ print("")
 
 # %% [markdown]
 # ## Entire Graph Access
+
+# %%
 node_type_counts = {}
 for node in G.nodes:
     if node.id.category not in node_type_counts:
@@ -172,6 +180,7 @@ print("")
 # %% [markdown]
 # ## Bounding boxes from nodes in lower layers
 
+# %%
 dsg.add_bounding_boxes_to_layer(G, dsg.DsgLayers.ROOMS)
 print("Room bounding boxes:")
 for node in G.get_layer(dsg.DsgLayers.ROOMS).nodes:
