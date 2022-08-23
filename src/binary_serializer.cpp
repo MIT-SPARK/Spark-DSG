@@ -63,7 +63,8 @@ std::ostream& operator<<(std::ostream& out, PackType type) {
     SHOW_CASE(out, PackType::ARRXX);
     SHOW_CASE(out, PackType::ARRYY);
     default:
-      out << "INVALID";
+      out << "INVALID: " << std::hex << std::showbase << std::setw(2)
+          << static_cast<int>(type);
       break;
   }
   return out;
@@ -81,7 +82,9 @@ void BinarySerializer::writeArrayEnd() {
 
 void BinarySerializer::startFixedArray(size_t length) {
   if (length > std::numeric_limits<uint32_t>::max()) {
-    throw std::domain_error("cannot serialize array");
+    THROW_SERIALIZATION_ERROR("cannot serialize array: "
+                              << length << " > "
+                              << std::numeric_limits<uint32_t>::max());
   }
 
   ref->push_back(static_cast<uint8_t>(PackType::ARR32));
@@ -101,9 +104,8 @@ BinaryDeserializer::BinaryDeserializer(const std::vector<uint8_t>& buffer)
 void BinaryDeserializer::checkType(PackType type) const {
   const auto ref_type = getCurrType();
   if (type != ref_type) {
-    SG_LOG(FATAL) << "invalid type: " << type << " (ref is " << ref_type << ")"
-                  << std::endl;
-    throw std::domain_error("type mismatch!");
+    THROW_SERIALIZATION_ERROR("type mismatch: expecting " << type << " but got "
+                                                          << ref_type);
   }
   ++pos;
 }
@@ -111,8 +113,10 @@ void BinaryDeserializer::checkType(PackType type) const {
 void BinaryDeserializer::checkDynamicArray() const {
   const auto ref_type = getCurrType();
   if (ref_type != PackType::ARRXX) {
-    throw std::domain_error("type mismatch!");
+    THROW_SERIALIZATION_ERROR(
+        "type mismatch: expecting ARRXX at dynamic array start but got " << ref_type);
   }
+
   ++pos;
 }
 
@@ -128,7 +132,8 @@ bool BinaryDeserializer::isDynamicArrayEnd() const {
 void BinaryDeserializer::checkFixedArrayLength(size_t length) const {
   const auto ref_type = getCurrType();
   if (ref_type != PackType::ARR32 && ref_type != PackType::STR32) {
-    throw std::domain_error("type mismatch!");
+    THROW_SERIALIZATION_ERROR("type mismatch: expecting ARR32 or STR32 but got "
+                              << ref_type);
   }
 
   ++pos;
@@ -136,14 +141,16 @@ void BinaryDeserializer::checkFixedArrayLength(size_t length) const {
   readWord(getReadPtr<uint32_t>(), ref_length);
   pos += sizeof(ref_length);
   if (length != static_cast<size_t>(length)) {
-    throw std::domain_error("length mismatch");
+    THROW_SERIALIZATION_ERROR("fixed length mismatch: " << ref_length
+                                                        << " != " << length);
   }
 }
 
 size_t BinaryDeserializer::readFixedArrayLength() const {
   const auto ref_type = getCurrType();
   if (ref_type != PackType::ARR32 && ref_type != PackType::STR32) {
-    throw std::domain_error("type mismatch!");
+    THROW_SERIALIZATION_ERROR("type mismatch: expecting ARR32 or STR32 but got "
+                              << ref_type);
   }
 
   ++pos;
@@ -171,7 +178,7 @@ BinaryConverter::~BinaryConverter() {
 
 void BinaryConverter::finalize() const {
   if (deserializer_ && !deserializer_->isDynamicArrayEnd()) {
-    throw std::domain_error("attributes not fully read");
+    THROW_SERIALIZATION_ERROR("attributes not fully read");
   }
 }
 

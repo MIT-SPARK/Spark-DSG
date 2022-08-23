@@ -100,6 +100,8 @@ void serialize(Converter& converter, const PlaceNodeAttributes& attrs) {
   converter.write("num_basis_points", attrs.num_basis_points);
   converter.write("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
   converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.write("mesh_vertex_labels", attrs.mesh_vertex_labels);
+  converter.write("deformation_connections", attrs.deformation_connections);
   converter.write("is_active", attrs.is_active);
 }
 
@@ -110,6 +112,8 @@ void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
   converter.read("num_basis_points", attrs.num_basis_points);
   converter.read("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
   converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
+  converter.read("deformation_connections", attrs.deformation_connections);
   converter.read("is_active", attrs.is_active);
 }
 

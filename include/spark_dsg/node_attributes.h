@@ -252,6 +252,10 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   std::vector<NearestVertexInfo> voxblox_mesh_connections;
   //! pcl mesh vertices that are closest to this place
   std::vector<size_t> pcl_mesh_connections;
+  //! semantic labels of parents
+  std::vector<uint8_t> mesh_vertex_labels;
+  //! deformation vertices that are closest to this place
+  std::vector<size_t> deformation_connections;
   //! whether or not the node is in the active window
   bool is_active = false;
 

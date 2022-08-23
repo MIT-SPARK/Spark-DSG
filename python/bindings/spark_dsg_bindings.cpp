@@ -188,10 +188,38 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<RoomNodeAttributes, SemanticNodeAttributes>(module, "RoomNodeAttributes")
       .def(py::init<>());
 
+  py::class_<NearestVertexInfo>(module, "NearestVertexInfo")
+      .def(py::init<>())
+      .def_property("block",
+                    [](const NearestVertexInfo& info) -> std::array<int32_t, 3> {
+                      return {info.block[0], info.block[1], info.block[2]};
+                    },
+                    [](NearestVertexInfo& info, const std::array<int32_t, 3>& array) {
+                      info.block[0] = array[0];
+                      info.block[1] = array[1];
+                      info.block[2] = array[2];
+                    })
+      .def_property("voxel_pos",
+                    [](const NearestVertexInfo& info) -> std::array<double, 3> {
+                      return {info.voxel_pos[0], info.voxel_pos[1], info.voxel_pos[2]};
+                    },
+                    [](NearestVertexInfo& info, const std::array<double, 3>& array) {
+                      info.voxel_pos[0] = array[0];
+                      info.voxel_pos[1] = array[1];
+                      info.voxel_pos[2] = array[2];
+                    })
+      .def_readwrite("vertex", &NearestVertexInfo::vertex);
+
   py::class_<PlaceNodeAttributes, SemanticNodeAttributes>(module, "PlaceNodeAttributes")
       .def(py::init<>())
       .def_readwrite("distance", &PlaceNodeAttributes::distance)
       .def_readwrite("num_basis_points", &PlaceNodeAttributes::num_basis_points)
+      .def_readwrite("voxblox_mesh_connections",
+                     &PlaceNodeAttributes::voxblox_mesh_connections)
+      .def_readwrite("pcl_mesh_connections", &PlaceNodeAttributes::pcl_mesh_connections)
+      .def_readwrite("mesh_vertex_labels", &PlaceNodeAttributes::mesh_vertex_labels)
+      .def_readwrite("deformation_connections",
+                     &PlaceNodeAttributes::deformation_connections)
       .def_readwrite("is_active", &PlaceNodeAttributes::is_active);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(module, "AgentNodeAttributes")
