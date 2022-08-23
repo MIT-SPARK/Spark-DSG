@@ -208,6 +208,10 @@ def test_place_attributes(resource_dir):
         assert hasattr(node.attributes, "distance")
         assert hasattr(node.attributes, "num_basis_points")
         assert hasattr(node.attributes, "is_active")
+        assert hasattr(node.attributes, "voxblox_mesh_connections")
+        assert hasattr(node.attributes, "mesh_vertex_labels")
+        assert hasattr(node.attributes, "deformation_connections")
+        assert hasattr(node.attributes, "pcl_mesh_connections")
 
 
 def test_room_attributes(resource_dir):
