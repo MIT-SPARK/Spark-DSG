@@ -40,6 +40,11 @@
 namespace spark_dsg {
 namespace serialization {
 
+#define THROW_SERIALIZATION_ERROR(msg)                     \
+  std::stringstream ss;                                    \
+  ss << "[" << __FILE__ << ":" << __LINE__ << "] " << msg; \
+  throw std::domain_error(ss.str())
+
 struct BinarySerializer {
   explicit BinarySerializer(std::vector<uint8_t>* buffer);
 
