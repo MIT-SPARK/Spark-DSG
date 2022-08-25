@@ -190,20 +190,6 @@ struct BoundingBox {
     return box;
   }
 
-  /*
-  template <typename PointT>
-  static BoundingBox extract(const typename pcl::PointCloud<PointT>::Ptr& cloud,
-                             Type type = Type::AABB,
-                             const pcl::IndicesPtr& indices = nullptr) {
-    if (!cloud) {
-      throw std::runtime_error("invalid point cloud pointer");
-    }
-
-    typename pcl::PointCloud<PointT>::ConstPtr const_cloud{cloud, cloud.get()};
-    return extract<PointT>(const_cloud, type, indices);
-  }
-  */
-
  protected:
   bool isInsideOBB(const Eigen::Vector3f& point_world) const;
 
