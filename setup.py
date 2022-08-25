@@ -108,7 +108,6 @@ setup(
                 "-DSPARK_DSG_BUILD_PYTHON=ON",
                 "-DSPARK_DSG_INSTALL=OFF",
                 "-DBUILD_SHARED_LIBS=OFF",
-                "-DCMAKE_VERBOSE_MAKEFILE=ON",
             ],
         )
     ],
