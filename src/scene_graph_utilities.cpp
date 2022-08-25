@@ -73,7 +73,7 @@ BoundingBox computeAncestorBoundingBox(const DynamicSceneGraph& graph,
                         points->push_back(pcl::PointXYZ(pos.x(), pos.y(), pos.z()));
                       });
 
-  return BoundingBox::extract<pcl::PointXYZ>(points);
+  return BoundingBox::extract(points);
 }
 
 }  // namespace spark_dsg

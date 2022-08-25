@@ -13,9 +13,6 @@ option(SPARK_DSG_INSTALL_TESTS "Install tests to catkin location" ON)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
-# TODO(nathan) only required for pcl
-find_package(Boost REQUIRED)
-
 # TODO(nathan) consider removing pcl
 set(PCL_FIND_QUIETLY TRUE)
 find_package(PCL REQUIRED COMPONENTS common)
@@ -61,10 +58,9 @@ target_include_directories(
   ${PROJECT_NAME}
   PUBLIC $<INSTALL_INTERFACE:include>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${PCL_INCLUDE_DIRS}
-         ${Boost_INCLUDE_DIRS}
 )
 target_link_libraries(
-  ${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES} ${Boost_LIBRARIES} Eigen3::Eigen
+  ${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES} Eigen3::Eigen
   PRIVATE nlohmann_json::nlohmann_json
 )
 

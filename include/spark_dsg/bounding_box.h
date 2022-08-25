@@ -137,8 +137,8 @@ struct BoundingBox {
   /**
    * @brief construct a bounding box directly from a pointcloud
    */
-  template <typename PointT>
-  static BoundingBox extract(const typename pcl::PointCloud<PointT>::ConstPtr& cloud,
+  template <typename PclPtr>
+  static BoundingBox extract(const PclPtr& cloud,
                              Type type = Type::AABB,
                              const pcl::IndicesPtr& active_indices = nullptr) {
     if (!cloud) {
@@ -149,6 +149,7 @@ struct BoundingBox {
       return {};
     }
 
+    using PointT = typename PclPtr::element_type::PointType;
     pcl::MomentOfInertiaEstimation<PointT> estimator;
     estimator.setInputCloud(cloud);
     if (active_indices) {
@@ -178,7 +179,7 @@ struct BoundingBox {
         box.world_R_center = Eigen::Quaternionf(pcl_rotation).toRotationMatrix();
         break;
       case Type::RAABB:
-        box = extractRAABBBox(estimator, active_indices);
+        box = extractRAABBBox<PointT>(estimator, active_indices);
         break;
       default:
         std::stringstream ss;
@@ -189,9 +190,7 @@ struct BoundingBox {
     return box;
   }
 
-  /**
-   * @brief extract bounding box directly from pointcloud
-   */
+  /*
   template <typename PointT>
   static BoundingBox extract(const typename pcl::PointCloud<PointT>::Ptr& cloud,
                              Type type = Type::AABB,
@@ -200,9 +199,10 @@ struct BoundingBox {
       throw std::runtime_error("invalid point cloud pointer");
     }
 
-    auto const_cloud = typename pcl::PointCloud<PointT>::ConstPtr{cloud, cloud.get()};
-    return extract(const_cloud, type, indices);
+    typename pcl::PointCloud<PointT>::ConstPtr const_cloud{cloud, cloud.get()};
+    return extract<PointT>(const_cloud, type, indices);
   }
+  */
 
  protected:
   bool isInsideOBB(const Eigen::Vector3f& point_world) const;
