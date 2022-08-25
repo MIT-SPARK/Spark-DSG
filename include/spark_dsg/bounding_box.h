@@ -137,8 +137,8 @@ struct BoundingBox {
   /**
    * @brief construct a bounding box directly from a pointcloud
    */
-  template <typename CloudT>
-  static BoundingBox extract(const boost::shared_ptr<const CloudT>& cloud,
+  template <typename PointT>
+  static BoundingBox extract(const typename pcl::PointCloud<PointT>::ConstPtr& cloud,
                              Type type = Type::AABB,
                              const pcl::IndicesPtr& active_indices = nullptr) {
     if (!cloud) {
@@ -149,7 +149,6 @@ struct BoundingBox {
       return {};
     }
 
-    using PointT = typename CloudT::PointType;
     pcl::MomentOfInertiaEstimation<PointT> estimator;
     estimator.setInputCloud(cloud);
     if (active_indices) {
@@ -193,14 +192,16 @@ struct BoundingBox {
   /**
    * @brief extract bounding box directly from pointcloud
    */
-  template <typename CloudT>
-  static BoundingBox extract(const boost::shared_ptr<CloudT>& cloud,
+  template <typename PointT>
+  static BoundingBox extract(const typename pcl::PointCloud<PointT>::Ptr& cloud,
                              Type type = Type::AABB,
                              const pcl::IndicesPtr& indices = nullptr) {
     if (!cloud) {
       throw std::runtime_error("invalid point cloud pointer");
     }
-    return extract(boost::const_pointer_cast<const CloudT>(cloud), type, indices);
+
+    auto const_cloud = typename pcl::PointCloud<PointT>::ConstPtr{cloud, cloud.get()};
+    return extract(const_cloud, type, indices);
   }
 
  protected:
@@ -222,8 +223,7 @@ BoundingBox extractRAABBBox(const pcl::MomentOfInertiaEstimation<PointT>& estima
 
   const auto& cloud = estimator.getInputCloud();
 
-  boost::shared_ptr<pcl::PointCloud<PointT>> rotated_cloud(
-      new pcl::PointCloud<PointT>());
+  typename pcl::PointCloud<PointT>::Ptr rotated_cloud(new pcl::PointCloud<PointT>());
 
   // from the lavalle motion planning book (http://planning.cs.uiuc.edu/node103.html)
   // this is likely incorrect sometimes
