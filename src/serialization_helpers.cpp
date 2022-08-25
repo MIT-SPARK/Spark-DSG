@@ -86,7 +86,7 @@ void to_json(json& j, const std::vector<pcl::Vertices>& faces) {
 void from_json(const json& j, std::vector<pcl::Vertices>& faces) {
   for (const auto& face : j) {
     pcl::Vertices face_indices;
-    face_indices.vertices = face.get<std::vector<std::uint32_t>>();
+    face_indices.vertices = face.get<decltype(face_indices.vertices)>();
     faces.push_back(face_indices);
   }
 }
