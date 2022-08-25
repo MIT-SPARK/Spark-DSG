@@ -30,7 +30,7 @@ source /path/to/dsg/environment/bin/activate
 # you might want to set cmake to use multiple threads
 # export CMAKE_BUILD_PARALLEL_LEVEL=8
 
-git clone git@github.mit.edu:SPARK/Spark-DSG.git
+git clone git@github.com:MIT-SPARK/Spark-DSG.git
 cd Spark-DSG
 pip install -e .
 ```
