@@ -44,6 +44,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <optional>
 
 namespace spark_dsg {
 

@@ -35,6 +35,7 @@
 #include "spark_dsg_tests/temp_file.h"
 
 #include <spark_dsg/dynamic_scene_graph.h>
+#include <pcl/conversions.h>
 
 #include <gtest/gtest.h>
 

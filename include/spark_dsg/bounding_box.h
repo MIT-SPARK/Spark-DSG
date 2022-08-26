@@ -137,8 +137,8 @@ struct BoundingBox {
   /**
    * @brief construct a bounding box directly from a pointcloud
    */
-  template <typename CloudT>
-  static BoundingBox extract(const boost::shared_ptr<const CloudT>& cloud,
+  template <typename PclPtr>
+  static BoundingBox extract(const PclPtr& cloud,
                              Type type = Type::AABB,
                              const pcl::IndicesPtr& active_indices = nullptr) {
     if (!cloud) {
@@ -149,7 +149,7 @@ struct BoundingBox {
       return {};
     }
 
-    using PointT = typename CloudT::PointType;
+    using PointT = typename PclPtr::element_type::PointType;
     pcl::MomentOfInertiaEstimation<PointT> estimator;
     estimator.setInputCloud(cloud);
     if (active_indices) {
@@ -179,7 +179,7 @@ struct BoundingBox {
         box.world_R_center = Eigen::Quaternionf(pcl_rotation).toRotationMatrix();
         break;
       case Type::RAABB:
-        box = extractRAABBBox(estimator, active_indices);
+        box = extractRAABBBox<PointT>(estimator, active_indices);
         break;
       default:
         std::stringstream ss;
@@ -188,19 +188,6 @@ struct BoundingBox {
     }
 
     return box;
-  }
-
-  /**
-   * @brief extract bounding box directly from pointcloud
-   */
-  template <typename CloudT>
-  static BoundingBox extract(const boost::shared_ptr<CloudT>& cloud,
-                             Type type = Type::AABB,
-                             const pcl::IndicesPtr& indices = nullptr) {
-    if (!cloud) {
-      throw std::runtime_error("invalid point cloud pointer");
-    }
-    return extract(boost::const_pointer_cast<const CloudT>(cloud), type, indices);
   }
 
  protected:
@@ -222,8 +209,7 @@ BoundingBox extractRAABBBox(const pcl::MomentOfInertiaEstimation<PointT>& estima
 
   const auto& cloud = estimator.getInputCloud();
 
-  boost::shared_ptr<pcl::PointCloud<PointT>> rotated_cloud(
-      new pcl::PointCloud<PointT>());
+  typename pcl::PointCloud<PointT>::Ptr rotated_cloud(new pcl::PointCloud<PointT>());
 
   // from the lavalle motion planning book (http://planning.cs.uiuc.edu/node103.html)
   // this is likely incorrect sometimes
