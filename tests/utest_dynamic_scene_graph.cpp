@@ -1101,4 +1101,27 @@ TEST(DynamicSceneGraphTests, CloneCorrect) {
   EXPECT_TRUE(clone->hasEdge("a0"_id, "a1"_id));
 }
 
+TEST(DynamicSceneGraphTests, MergeNodesMeshEdgesCorrect) {
+  DynamicSceneGraph graph({1, 2, 3}, 0);
+  graph.initMesh();
+  EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
+  graph.insertMeshEdge(1, 0, true);
+  graph.insertMeshEdge(1, 1, true);
+  graph.insertMeshEdge(1, 2, true);
+  graph.insertMeshEdge(1, 3, true);
+  graph.insertMeshEdge(0, 0, true);
+  graph.insertMeshEdge(0, 4, true);
+  graph.insertMeshEdge(0, 5, true);
+  graph.insertMeshEdge(0, 6, true);
+
+  // merge node 1 into node 0
+  EXPECT_FALSE(graph.getMeshConnectionIndices(1).empty());
+  EXPECT_TRUE(graph.mergeNodes(1, 0));
+  EXPECT_TRUE(graph.getMeshConnectionIndices(1).empty());
+
+  std::vector<size_t> expected_connections{0, 1, 2, 3, 4, 5, 6};
+  EXPECT_EQ(graph.getMeshConnectionIndices(0), expected_connections);
+}
+
 }  // namespace spark_dsg

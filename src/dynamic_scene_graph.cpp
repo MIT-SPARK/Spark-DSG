@@ -425,13 +425,7 @@ std::optional<EdgeRef> DynamicSceneGraph::getEdge(NodeId source, NodeId target) 
   }
 }
 
-bool DynamicSceneGraph::removeNode(NodeId node_id) {
-  if (!hasNode(node_id)) {
-    return false;
-  }
-
-  const auto info = node_lookup_.at(node_id);
-
+void DynamicSceneGraph::clearMeshEdgesForNode(NodeId node_id) {
   if (mesh_edges_node_lookup_.count(node_id)) {
     std::list<size_t> mesh_edge_targets_to_remove;
     for (const auto& vertex_edge_pair : mesh_edges_node_lookup_.at(node_id)) {
@@ -442,6 +436,15 @@ bool DynamicSceneGraph::removeNode(NodeId node_id) {
       removeMeshEdge(node_id, vertex);
     }
   }
+}
+
+bool DynamicSceneGraph::removeNode(NodeId node_id) {
+  if (!hasNode(node_id)) {
+    return false;
+  }
+
+  const auto info = node_lookup_.at(node_id);
+  clearMeshEdgesForNode(node_id);
 
   auto node = getNodePtr(node_id, info);
   if (node->hasParent()) {
@@ -644,6 +647,16 @@ bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
   for (const auto& target : targets_to_rewire) {
     rewireInterlayerEdge(node_from, node_to, target);
   }
+
+  auto edge_iter = mesh_edges_node_lookup_.find(node_from);
+  if (edge_iter != mesh_edges_node_lookup_.end()) {
+    for (const auto& id_edge_pair : edge_iter->second) {
+      // we always assume that a mesh edge can be invalid (as it was alread added)
+      insertMeshEdge(node_to, id_edge_pair.first, true);
+    }
+  }
+
+  clearMeshEdgesForNode(node_from);
 
   // TODO(nathan) dynamic merge
   layers_[info.layer]->mergeNodes(node_from, node_to);
