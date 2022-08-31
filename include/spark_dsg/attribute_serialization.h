@@ -43,12 +43,14 @@ template <typename Converter>
 void serialize(Converter& converter, const NodeAttributes& attrs) {
   converter.write("position", attrs.position);
   converter.write("last_update_time_ns", attrs.last_update_time_ns);
+  converter.write("is_active", attrs.is_active);
 }
 
 template <typename Converter>
 void deserialize(const Converter& converter, NodeAttributes& attrs) {
   converter.read("position", attrs.position);
   converter.read("last_update_time_ns", attrs.last_update_time_ns);
+  converter.read("is_active", attrs.is_active);
 }
 
 template <typename Converter>
@@ -102,7 +104,6 @@ void serialize(Converter& converter, const PlaceNodeAttributes& attrs) {
   converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
   converter.write("mesh_vertex_labels", attrs.mesh_vertex_labels);
   converter.write("deformation_connections", attrs.deformation_connections);
-  converter.write("is_active", attrs.is_active);
 }
 
 template <typename Converter>
@@ -114,7 +115,6 @@ void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
   converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
   converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
   converter.read("deformation_connections", attrs.deformation_connections);
-  converter.read("is_active", attrs.is_active);
 }
 
 template <typename Converter>

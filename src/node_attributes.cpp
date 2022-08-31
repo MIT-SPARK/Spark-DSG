@@ -47,6 +47,7 @@ std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
   if (last_update_time_ns != 0) {
     out << "  - last update time: " << last_update_time_ns << " [ns]" << std::endl;
   }
+  out << std::boolalpha << " - is_active: " << is_active;
   return out;
 }
 
@@ -96,7 +97,6 @@ std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
   out << "  - distance: " << distance << std::endl;
   out << "  - num_basis_points: " << num_basis_points << std::endl;
-  out << "  - is_active: " << is_active << std::endl;
   return out;
 }
 
