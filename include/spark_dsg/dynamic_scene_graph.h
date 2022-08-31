@@ -534,6 +534,8 @@ class DynamicSceneGraph {
   const LayerIds layer_ids;
 
  protected:
+  void clearMeshEdgesForNode(NodeId node_id);
+
   void removeStaleEdges(EdgeContainer& edges);
 
   void visitLayers(const LayerVisitor& cb);
