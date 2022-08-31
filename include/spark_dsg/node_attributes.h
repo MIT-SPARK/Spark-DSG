@@ -86,6 +86,8 @@ struct NodeAttributes {
   Eigen::Vector3d position;
   //! last time the place was updated (while active)
   uint64_t last_update_time_ns;
+  //! whether or not the node is in the active window
+  bool is_active = false;
 
  protected:
   //! actually output information to the std::ostream
@@ -256,8 +258,6 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   std::vector<uint8_t> mesh_vertex_labels;
   //! deformation vertices that are closest to this place
   std::vector<size_t> deformation_connections;
-  //! whether or not the node is in the active window
-  bool is_active = false;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const;
