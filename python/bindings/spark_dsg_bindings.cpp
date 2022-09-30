@@ -36,6 +36,7 @@
 #include "zmq_bindings.h"
 
 #include <spark_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/graph_binary_serialization.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_utilities.h>
 
@@ -602,7 +603,18 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("clear_mesh_edges", &DynamicSceneGraph::clearMeshEdges)
       .def("invalidate_mesh_vertex", &DynamicSceneGraph::invalidateMeshVertex)
       .def("get_mesh_connections", &DynamicSceneGraph::getMeshConnectionIndices)
-      .def_property_readonly("mesh_edges", &DynamicSceneGraph::getMeshEdges);
+      .def_property_readonly("mesh_edges", &DynamicSceneGraph::getMeshEdges)
+      .def("to_binary",
+           [](const DynamicSceneGraph& graph, bool include_mesh) {
+             std::vector<uint8_t> buffer;
+             writeGraph(graph, buffer, include_mesh);
+             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
+           },
+           "include_mesh"_a = false)
+      .def_static("from_binary", [](const py::bytes& contents) {
+        const auto& view = static_cast<const std::string_view&>(contents);
+        return readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());
+      });
 
 #undef MAKE_SPECIALZIED_NODE_ADD
 
