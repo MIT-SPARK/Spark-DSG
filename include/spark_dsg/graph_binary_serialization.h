@@ -37,7 +37,9 @@
 
 namespace spark_dsg {
 
-void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer);
+void writeGraph(const DynamicSceneGraph& graph,
+                std::vector<uint8_t>& buffer,
+                bool include_mesh = false);
 
 DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
 

@@ -161,7 +161,43 @@ void insertMeshEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& g
   graph.insertMeshEdge(source, target, true);
 }
 
-void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer) {
+void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
+  size_t num_vertices = deserializer.readFixedArrayLength() / 6;
+  MeshVertices::Ptr vertices(new MeshVertices());
+  vertices->resize(num_vertices);
+  for (size_t i = 0; i < num_vertices; ++i) {
+    auto& point = vertices->at(i);
+    deserializer.read(point.x);
+    deserializer.read(point.y);
+    deserializer.read(point.z);
+    float r;
+    deserializer.read(r);
+    float g;
+    deserializer.read(g);
+    float b;
+    deserializer.read(b);
+
+    point.r = static_cast<uint8_t>(255.0f * r);
+    point.g = static_cast<uint8_t>(255.0f * g);
+    point.b = static_cast<uint8_t>(255.0f * b);
+  }
+
+  size_t num_faces = deserializer.readFixedArrayLength() / 3;
+  std::shared_ptr<MeshFaces> faces(new MeshFaces(num_faces));
+  for (size_t i = 0; i < num_faces; ++i) {
+    auto& face = faces->at(i);
+    face.vertices.resize(3);
+    deserializer.read(face.vertices[0]);
+    deserializer.read(face.vertices[1]);
+    deserializer.read(face.vertices[2]);
+  }
+
+  graph.setMesh(vertices, faces, false);
+}
+
+void writeGraph(const DynamicSceneGraph& graph,
+                std::vector<uint8_t>& buffer,
+                bool include_mesh) {
   BinarySerializer serializer(&buffer);
   serializer.write(graph.layer_ids);
   serializer.write(graph.mesh_layer_id);
@@ -213,6 +249,15 @@ void writeGraph(const DynamicSceneGraph& graph, std::vector<uint8_t>& buffer) {
     serializer.write(edge.second);
   }
   serializer.writeArrayEnd();
+
+  if (!include_mesh || !graph.hasMesh()) {
+    serializer.write(false);
+    return;
+  }
+
+  serializer.write(true);
+  serializer.write(*graph.getMeshVertices());
+  serializer.write(*graph.getMeshFaces());
 }
 
 DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
@@ -245,6 +290,21 @@ DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
     insertMeshEdge(deserializer, *graph);
   }
 
+  serialization::PackType type;
+  try {
+    // TODO(nathan) this is ugly
+    type = deserializer.getCurrType();
+    deserializer.checkType(type);
+  } catch (const std::out_of_range&) {
+    std::cerr << "serialized data does not contain mesh flag!" << std::endl;
+    return graph;
+  }
+
+  if (type != serialization::PackType::TRUE) {
+    return graph;
+  }
+
+  insertMesh(deserializer, *graph);
   return graph;
 }
 
