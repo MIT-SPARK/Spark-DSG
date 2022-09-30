@@ -34,9 +34,21 @@
 #
 import pytest
 import pathlib
+import importlib
 
 
 @pytest.fixture
 def resource_dir():
     """Get the test resource path."""
     return pathlib.Path(__file__).resolve().parent / "resources"
+
+
+@pytest.fixture
+def has_torch():
+    """Get whether or not torch if configured correctly."""
+    try:
+        importlib.import_module("torch")
+        importlib.import_module("torch_geometric")
+        return True
+    except ImportError:
+        return False
