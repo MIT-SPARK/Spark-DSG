@@ -34,8 +34,15 @@
 #
 """The Spark-DSG package."""
 from spark_dsg._dsg_bindings import *  # NOQA
-from spark_dsg._dsg_bindings import DsgLayers, compute_ancestor_bounding_box
+from spark_dsg._dsg_bindings import (
+    compute_ancestor_bounding_box,
+    DsgLayers,
+    DynamicSceneGraph,
+    SceneGraphLayer,
+    LayerView,
+)
 from spark_dsg.visualization import plot_scene_graph  # NOQA
+from spark_dsg.torch_conversion import scene_graph_to_torch, scene_graph_layer_to_torch
 
 
 def add_bounding_boxes_to_layer(graph, layer_id):
@@ -53,3 +60,8 @@ def add_bounding_boxes_to_layer(graph, layer_id):
     for node in layer.nodes:
         bbox = compute_ancestor_bounding_box(graph, node.id.value, DsgLayers.PLACES)
         node.attributes.bounding_box = bbox
+
+
+DynamicSceneGraph.to_torch = scene_graph_to_torch
+SceneGraphLayer.to_torch = scene_graph_layer_to_torch
+LayerView.to_torch = scene_graph_layer_to_torch

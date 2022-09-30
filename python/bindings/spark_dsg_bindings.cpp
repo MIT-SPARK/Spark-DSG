@@ -398,8 +398,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       "attrs"_a,                                                                      \
       "add_edge_to_previous"_a = true)
 
-  py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(module,
-                                                                    "DynamicSceneGraph")
+  py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(
+      module, "DynamicSceneGraph", py::dynamic_attr())
       .def(py::init<>())
       .def(py::init<const DynamicSceneGraph::LayerIds&>())
       .def("clear", &DynamicSceneGraph::clear)
