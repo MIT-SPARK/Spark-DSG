@@ -41,8 +41,9 @@ from spark_dsg._dsg_bindings import (
     SceneGraphLayer,
     LayerView,
 )
-from spark_dsg.visualization import plot_scene_graph  # NOQA
 from spark_dsg.torch_conversion import scene_graph_to_torch, scene_graph_layer_to_torch
+from spark_dsg.visualization import plot_scene_graph  # NOQA
+from spark_dsg.open3d_visualization import render_to_open3d  # NOQA
 
 
 def add_bounding_boxes_to_layer(graph, layer_id):

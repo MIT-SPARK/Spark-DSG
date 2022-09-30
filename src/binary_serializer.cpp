@@ -226,5 +226,29 @@ void BinarySerializer::write<MeshEdge>(const MeshEdge& edge) {
   write(edge.mesh_vertex);
 }
 
+template <>
+void BinarySerializer::write<MeshVertices>(const MeshVertices& vertices) {
+  startFixedArray(6 * vertices.size());
+  for (const auto& point : vertices) {
+    // manually specify 32 bit type to save on space
+    write<float>(point.x);
+    write<float>(point.y);
+    write<float>(point.z);
+    write<float>(point.r / 255.0f);
+    write<float>(point.g / 255.0f);
+    write<float>(point.b / 255.0f);
+  }
+}
+
+template <>
+void BinarySerializer::write<MeshFaces>(const MeshFaces& faces) {
+  startFixedArray(3 * faces.size());
+  for (const auto& face : faces) {
+    write(face.vertices.at(0));
+    write(face.vertices.at(1));
+    write(face.vertices.at(2));
+  }
+}
+
 }  // namespace serialization
 }  // namespace spark_dsg

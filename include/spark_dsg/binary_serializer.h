@@ -38,6 +38,10 @@
 #include "spark_dsg/dynamic_scene_graph.h"
 
 namespace spark_dsg {
+
+using MeshVertices = DynamicSceneGraph::MeshVertices;
+using MeshFaces = DynamicSceneGraph::MeshFaces;
+
 namespace serialization {
 
 #define THROW_SERIALIZATION_ERROR(msg)                     \
@@ -163,6 +167,12 @@ void BinarySerializer::write<SceneGraphEdge>(const SceneGraphEdge& edge);
 
 template <>
 void BinarySerializer::write<MeshEdge>(const MeshEdge& edge);
+
+template <>
+void BinarySerializer::write<MeshVertices>(const MeshVertices& vertices);
+
+template <>
+void BinarySerializer::write<MeshFaces>(const MeshFaces& vertices);
 
 }  // namespace serialization
 }  // namespace spark_dsg
