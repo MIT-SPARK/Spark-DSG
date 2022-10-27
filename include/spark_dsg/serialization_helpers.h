@@ -37,6 +37,8 @@
 #include "spark_dsg/node_attributes.h"
 
 #include <pcl/PolygonMesh.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>

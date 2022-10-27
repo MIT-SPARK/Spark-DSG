@@ -35,6 +35,7 @@
 #pragma once
 #include "spark_dsg/attribute_serialization.h"
 
+#include <map>
 #include <sstream>
 #include <typeindex>
 #include <typeinfo>

@@ -37,16 +37,18 @@
 #include <Eigen/Geometry>
 
 #include <spark_dsg/bounding_box.h>
+#include <spark_dsg/bounding_box_extraction.h>
 
 using pcl::PointXYZ;
-using spark_dsg::BoundingBox;
+
+namespace spark_dsg {
 
 TEST(BoundingBoxTests, InvalidConstructor) {
   BoundingBox box;
   EXPECT_EQ(box.type, BoundingBox::Type::INVALID);
 
   pcl::PointCloud<PointXYZ>::Ptr cloud(new pcl::PointCloud<PointXYZ>());
-  box = BoundingBox::extract(cloud, BoundingBox::Type::INVALID);
+  box = bounding_box::extract(cloud, BoundingBox::Type::INVALID);
   EXPECT_EQ(box.type, BoundingBox::Type::INVALID);
 }
 
@@ -96,7 +98,7 @@ TEST(BoundingBoxTests, PCLConstructorAABB) {
   cloud->push_back(PointXYZ(0.0f, 0.0f, 4.0f));
 
   // get bounding box from pointcloud
-  BoundingBox box = BoundingBox::extract(cloud);
+  BoundingBox box = bounding_box::extract(cloud);
   EXPECT_EQ(BoundingBox::Type::AABB, box.type);
 
   EXPECT_EQ(-1.0f, box.min(0));
@@ -127,7 +129,7 @@ TEST(BoundingBoxTests, PCLConstructorAABBSpecifiedIndices) {
   pcl::IndicesPtr indices(new std::vector<int>{0, 1, 2, 3, 4, 5});
 
   // get bounding box from pointcloud
-  BoundingBox box = BoundingBox::extract(cloud, BoundingBox::Type::AABB, indices);
+  BoundingBox box = bounding_box::extract(cloud, BoundingBox::Type::AABB, indices);
 
   EXPECT_EQ(-1.0f, box.min(0));
   EXPECT_EQ(1.0f, box.max(0));
@@ -153,7 +155,7 @@ TEST(BoundingBoxTests, PCLConstructorOBB) {
   cloud->push_back(PointXYZ(0.0f, 0.0f, 4.0f));
 
   // get bounding box from pointcloud
-  BoundingBox box = BoundingBox::extract(cloud, BoundingBox::Type::OBB);
+  BoundingBox box = bounding_box::extract(cloud, BoundingBox::Type::OBB);
   EXPECT_EQ(BoundingBox::Type::OBB, box.type);
 
   Eigen::Vector3f expected_min;
@@ -194,7 +196,7 @@ TEST(BoundingBoxTests, PCLConstructorAABBColor) {
   cloud->push_back(makeRGBPoint(0.0f, 0.0f, 4.0f));
 
   // get bounding box from pointcloud
-  BoundingBox box = BoundingBox::extract(cloud);
+  BoundingBox box = bounding_box::extract(cloud);
   EXPECT_EQ(BoundingBox::Type::AABB, box.type);
 
   EXPECT_EQ(-1.0f, box.min(0));
@@ -212,7 +214,7 @@ TEST(BoundingBoxTests, PCLConstructorRAABBColorNoRotation) {
   cloud->push_back(makeRGBPoint(5.0f, 0.0f, 0.0f));
 
   // get bounding box from pointcloud
-  BoundingBox box = BoundingBox::extract(cloud, BoundingBox::Type::RAABB);
+  BoundingBox box = bounding_box::extract(cloud, BoundingBox::Type::RAABB);
   EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
 
   EXPECT_NEAR(-2.5f, box.min(0), 1.0e-3);
@@ -243,7 +245,7 @@ TEST(BoundingBoxTests, PCLConstructorRAABBColorNonTrivial) {
   }
 
   // get bounding box from pointcloud
-  BoundingBox box = BoundingBox::extract(cloud, BoundingBox::Type::RAABB);
+  BoundingBox box = bounding_box::extract(cloud, BoundingBox::Type::RAABB);
   EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
 
   EXPECT_NEAR(-2.5f, box.min(0), 1.0e-3);
@@ -485,3 +487,5 @@ TEST(BoundingBoxTests, RAABBVolumeChecksCorrectWithRotation) {
     EXPECT_TRUE(box.isInside(test_point2));
   }
 }
+
+}  // namespace spark_dsg
