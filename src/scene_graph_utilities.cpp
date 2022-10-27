@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/scene_graph_utilities.h"
+#include "spark_dsg/bounding_box_extraction.h"
 
 namespace spark_dsg {
 
@@ -73,7 +74,7 @@ BoundingBox computeAncestorBoundingBox(const DynamicSceneGraph& graph,
                         points->push_back(pcl::PointXYZ(pos.x(), pos.y(), pos.z()));
                       });
 
-  return BoundingBox::extract(points);
+  return bounding_box::extract(points);
 }
 
 }  // namespace spark_dsg

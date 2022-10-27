@@ -40,6 +40,7 @@
 #include <list>
 #include <ostream>
 #include <string>
+#include <memory>
 
 namespace spark_dsg {
 
