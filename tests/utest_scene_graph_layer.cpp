@@ -652,4 +652,26 @@ TEST(SceneGraphLayerTests, NewRemovedEdgesCorrect) {
   }
 }
 
+TEST(SceneGraphLayerTests, CloneCorrect) {
+  IsolatedSceneGraphLayer layer(1);
+
+  layer.emplaceNode(0, std::make_unique<NodeAttributes>());
+  for (size_t i = 1; i < 5; ++i) {
+    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
+    layer.insertEdge(i - 1, i);
+  }
+
+  auto result = layer.clone();
+  ASSERT_TRUE(result != nullptr);
+  for (const auto& id_node_pair : layer.nodes()) {
+    EXPECT_TRUE(result->hasNode(id_node_pair.first));
+    // TODO(nathan) consider testing attribute equality
+  }
+
+  for (const auto& id_edge_pair : layer.edges()) {
+    const auto& edge = id_edge_pair.second;
+    EXPECT_TRUE(result->hasEdge(edge.source, edge.target));
+  }
+}
+
 }  // namespace spark_dsg
