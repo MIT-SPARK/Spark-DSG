@@ -209,6 +209,11 @@ class SceneGraphLayer : public BaseLayer {
   void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
                        bool clear_removed) override;
 
+  /**
+   * @brief Get copy of the layer
+   */
+  virtual SceneGraphLayer::Ptr clone() const;
+
   //! ID of the layer
   const LayerId id;
 
@@ -275,6 +280,8 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool mergeNodes(NodeId node_from, NodeId node_to);
 
+  virtual void cloneImpl(SceneGraphLayer& other) const;
+
   //! internal node container
   Nodes nodes_;
   //! internal node status tracking
@@ -311,6 +318,8 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
   explicit IsolatedSceneGraphLayer(LayerId layer_id) : SceneGraphLayer(layer_id) {}
 
   virtual ~IsolatedSceneGraphLayer() = default;
+
+  virtual SceneGraphLayer::Ptr clone() const override;
 
   using SceneGraphLayer::emplaceNode;
 

@@ -361,4 +361,29 @@ NodeSet SceneGraphLayer::getNeighborhood(const NodeSet& nodes, size_t num_hops) 
   return result;
 }
 
+void SceneGraphLayer::cloneImpl(SceneGraphLayer& other) const {
+  for (auto&& [id, node] : nodes_) {
+    other.emplaceNode(id, node->attributes().clone());
+  }
+
+  for (const auto& id_edge_pair : edges_.edges) {
+    const auto& edge = id_edge_pair.second;
+    other.insertEdge(edge.source, edge.target, edge.info->clone());
+  }
+
+  other.nodes_status_ = nodes_status_;
+}
+
+SceneGraphLayer::Ptr SceneGraphLayer::clone() const {
+  SceneGraphLayer::Ptr new_layer(new SceneGraphLayer(id));
+  cloneImpl(*new_layer);
+  return new_layer;
+}
+
+SceneGraphLayer::Ptr IsolatedSceneGraphLayer::clone() const {
+  SceneGraphLayer::Ptr new_layer(new IsolatedSceneGraphLayer(id));
+  cloneImpl(*new_layer);
+  return new_layer;
+}
+
 }  // namespace spark_dsg
