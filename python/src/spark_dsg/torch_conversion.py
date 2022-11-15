@@ -63,6 +63,9 @@ DEFAULT_LAYER_MAP = {
     DsgLayers.BUILDINGS: "buildings",
 }
 
+def _centroid_bbx_embedding(G, x) -> NodeConversionFunc:
+    return np.hstack((x.attributes.position, x.attributes.bounding_box.max - x.attributes.bounding_box.min))
+
 
 def _get_edge_name_map(layer_name_map: Dict[int, str], force_hierarchy: bool = True):
     edge_name_map = {}
@@ -98,7 +101,7 @@ def _get_torch():
 
 
 def _get_directed_edge(G, edge, id_map):
-    if G.get_node(edge.source).layer > G.get_node(edge.target).layer:
+    if G.get_node(edge.source).layer < G.get_node(edge.target).layer:
         return id_map[edge.target], id_map[edge.source]
     else:
         return id_map[edge.source], id_map[edge.target]
@@ -171,7 +174,7 @@ def scene_graph_layer_to_torch(
 
 def scene_graph_to_torch_homogeneous(
     G: DynamicSceneGraph,
-    node_converter: NodeConversionFunc,
+    node_converter: NodeConversionFunc = _centroid_bbx_embedding,
     edge_converter: Optional[EdgeConversionFunc] = None,
     is_undirected: bool = True,
     **kwargs,
@@ -200,6 +203,7 @@ def scene_graph_to_torch_homogeneous(
     node_features = []
     node_positions = torch.zeros((N, 3), dtype=torch.float64)
     node_masks = {x.id: torch.zeros(N, dtype=torch.bool) for x in G.layers}
+    node_labels = []
     id_map = {}
 
     for node in G.nodes:
@@ -208,8 +212,10 @@ def scene_graph_to_torch_homogeneous(
         node_positions[idx, :] = torch.tensor(np.squeeze(node.attributes.position))
         node_features.append(node_converter(G, node))
         id_map[node.id.value] = idx
+        node_labels.append(node.attributes.semantic_label)
 
     node_features = torch.tensor(np.array(node_features))
+    node_labels = torch.tensor(np.array(node_labels))
 
     edge_index = torch.zeros((2, G.num_static_edges()), dtype=torch.long)
     edge_features = []
@@ -234,6 +240,7 @@ def scene_graph_to_torch_homogeneous(
 
     return torch_geometric.data.Data(
         x=node_features,
+        label=node_labels,
         edge_index=edge_index,
         edge_attr=None if edge_converter is None else edge_features,
         pos=node_positions,
@@ -243,7 +250,7 @@ def scene_graph_to_torch_homogeneous(
 
 def scene_graph_to_torch_heterogeneous(
     G: DynamicSceneGraph,
-    node_converter: NodeConversionFunc,
+    node_converter: NodeConversionFunc = _centroid_bbx_embedding,
     edge_converter: Optional[EdgeConversionFunc] = None,
     layer_name_map: Optional[Dict[int, str]] = None,
     is_undirected: bool = True,
@@ -280,21 +287,25 @@ def scene_graph_to_torch_heterogeneous(
 
     node_features = {}
     node_positions = {}
+    node_labels = {}
     id_map = {}
 
     for node in G.nodes:
         if node.layer not in node_features:
             node_features[node.layer] = []
             node_positions[node.layer] = []
+            node_labels[node.layer] = []
 
         idx = len(node_features[node.layer])
         node_positions[node.layer].append(np.squeeze(node.attributes.position))
         node_features[node.layer].append(node_converter(G, node))
+        node_labels[node.layer].append(node.attributes.semantic_label)
         id_map[node.id.value] = idx
 
     for layer in node_features:
         data[layer_map[layer]].x = torch.tensor(np.array(node_features[layer]))
         data[layer_map[layer]].pos = torch.tensor(np.array(node_positions[layer]))
+        data[layer_map[layer]].label = torch.tensor(np.array(node_labels[layer]))
 
     edge_indices = {}
     edge_features = {}
@@ -317,7 +328,7 @@ def scene_graph_to_torch_heterogeneous(
         if len(edge_features[edge_type]) == edge_index.size(dim=1):
             edge_attrs = torch.tensor(np.array(edge_features[edge_type]))
 
-        if edge_index.size(dim=1) > 0 and is_undirected:
+        if edge_index.size(dim=1) > 0 and is_undirected and source_type == target_type:
             if edge_converter is None:
                 edge_index = torch_geometric.utils.to_undirected(edge_index)
             else:
@@ -326,8 +337,8 @@ def scene_graph_to_torch_heterogeneous(
                 )
 
         data[source_type, edge_type, target_type].edge_index = edge_index
-        if edge_features is not None:
-            data[source_type, edge_type, target_type].edge_attrs = edge_features
+        if edge_converter is not None:
+            data[source_type, edge_type, target_type].edge_attrs = edge_attrs
 
     return data
 

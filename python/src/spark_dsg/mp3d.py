@@ -116,7 +116,7 @@ PARSERS = {
 class Mp3dRoom:
     """Class capturing arbitrary room polygon and semantic label."""
 
-    def __init__(self, index, region, vertices, angle_deg=90.0):
+    def __init__(self, index, region, vertices, angle_deg=0.0):
         """
         Construct a room.
 
@@ -136,8 +136,8 @@ class Mp3dRoom:
             ]
         )
 
-        self._min_z = np.mean(np.array(vertices)[:, 2])
-        self._max_z = self._min_z + region["height"]
+        self._min_z = region['bbox_min'][2]
+        self._max_z = region['bbox_max'][2]
 
         # house files are rotated 90 degreees from Hydra convention
         xy_polygon = shapely.geometry.Polygon([x[:2].tolist() for x in vertices])
@@ -150,6 +150,21 @@ class Mp3dRoom:
             (R @ np.array(x)).tolist() for x in xy_polygon.exterior.coords
         ]
         self._polygon_xy = shapely.geometry.Polygon(rotated_vertices)
+        while not self._polygon_xy.is_valid:    # a few rooms have invalid xy-polygon
+            rotated_vertices = rotated_vertices[:-1]
+            self._polygon_xy = shapely.geometry.Polygon(rotated_vertices)
+
+    def pos_on_same_floor(self, pos):
+        """
+        Check if a 3d position is within z-axis bounds.
+
+        Args:
+            pos (List[float]): 3d position to check
+
+        Returns:
+            bool: True if position falls inside [min_z, max_z]
+        """
+        return self._min_z <= pos[2] <= self._max_z
 
     def pos_inside_room(self, pos):
         """
@@ -161,7 +176,7 @@ class Mp3dRoom:
         Returns:
             bool: True if position falls inside [min_z, max_z] and polygon bounds
         """
-        if pos[2] <= self._min_z or pos[2] >= self._max_z:
+        if not self.pos_on_same_floor(pos):
             return False
 
         xy_pos = shapely.geometry.Point(pos[0], pos[1])
@@ -223,7 +238,7 @@ def load_mp3d_info(house_path):
     return info
 
 
-def get_rooms_from_mp3d_info(mp3d_info, angle_deg=90.0):
+def get_rooms_from_mp3d_info(mp3d_info, angle_deg=0.0):
     """
     Generate a list of Mp3dRoom objects from ground-truth segmentation.
 
@@ -253,7 +268,7 @@ def get_rooms_from_mp3d_info(mp3d_info, angle_deg=90.0):
     return rooms
 
 
-def repartition_rooms(G_prev, mp3d_info, angle_deg=90.0, colors=None, verbose=False):
+def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=False):
     """
     Create a copy of the DSG with ground-truth room nodes.
 
@@ -274,7 +289,7 @@ def repartition_rooms(G_prev, mp3d_info, angle_deg=90.0, colors=None, verbose=Fa
     for i in existing_rooms:
         G.remove_node(i)
 
-    new_rooms = get_rooms_from_mp3d_info(mp3d_info, angle_deg=90.0)
+    new_rooms = get_rooms_from_mp3d_info(mp3d_info, angle_deg)
 
     if colors is None:
         colors = sns.color_palette("husl", len(new_rooms))
@@ -324,7 +339,7 @@ def repartition_rooms(G_prev, mp3d_info, angle_deg=90.0, colors=None, verbose=Fa
 
 
 def add_gt_room_label(
-    G, mp3d_info, min_area_threshold=0.01, angle_deg=90.0, verbose=False
+    G, mp3d_info, min_iou_threshold=0.01, angle_deg=-90.0, verbose=False
 ):
     """
     Add ground-truth room label to DSG based on maximum area of intersection.
@@ -332,7 +347,7 @@ def add_gt_room_label(
     Args:
         G (DynamicSceneGraph): Graph to add labels to
         mp3d_info (Dict[str, List[Dict[Str, Any]]]): Parsed house file information
-        min_area_threshold (float): Minimum area of intersection for rooms to be overlap
+        min_iou_threshold (float): Minimum intersection over union for rooms to be overlap
         angle_deg (float): Angle to rotate mp3d rooms by
         verbose (bool): Print information about labeling process
     """
@@ -353,20 +368,20 @@ def add_gt_room_label(
         )
 
         # Find the ground-truth room area of intersection
-        intersection_areas = []
-        for idx, mp3d_room in mp3d_rooms:
+        intersection_over_union = []
+        for idx, mp3d_room in enumerate(mp3d_rooms):
             xy_polygon = mp3d_room.get_polygon_xy()
             # check whether hydra room position is inside the ground-truth room
-            if not mp3d_room.pos_inside_room(room.attributes.position):
+            if not mp3d_room.pos_on_same_floor(room.attributes.position):
                 continue
-
-            area = xy_polygon.intersection(bounding_box_xy).area
-            intersection_areas.append((idx, area))
+            intersection_area = xy_polygon.intersection(bounding_box_xy).area
+            union_area = xy_polygon.union(bounding_box_xy).area
+            intersection_over_union.append((idx, intersection_area/union_area))
             if verbose:
-                print(f"  {mp3d_room.get_id()} - {area} / {xy_polygon.area}")
+                print(f"  {mp3d_room.get_id()} - ({intersection_over_union[-1][1]:.2f} {intersection_area:.2f} / {union_area:.2f})")
 
-        max_index, max_area = max(intersection_areas, key=lambda x: x[1])
-        if max_area < min_area_threshold:
+        max_index, max_iou = max(intersection_over_union, key=lambda x: x[1])
+        if max_iou < min_iou_threshold:
             continue
 
         # Update DSG room label
