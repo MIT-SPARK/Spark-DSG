@@ -37,6 +37,7 @@ from spark_dsg._dsg_bindings import *  # NOQA
 from spark_dsg._dsg_bindings import (
     compute_ancestor_bounding_box,
     DsgLayers,
+    BoundingBoxType,
     DynamicSceneGraph,
     SceneGraphLayer,
     LayerView,
@@ -46,7 +47,9 @@ from spark_dsg.visualization import plot_scene_graph  # NOQA
 from spark_dsg.open3d_visualization import render_to_open3d  # NOQA
 
 
-def add_bounding_boxes_to_layer(graph, layer_id):
+def add_bounding_boxes_to_layer(
+    graph, layer_id, child_layer=DsgLayers.PLACES, bbox_type=BoundingBoxType.AABB
+):
     """
     Add computed bounding boxes to the node attributes in the graph.
 
@@ -59,7 +62,9 @@ def add_bounding_boxes_to_layer(graph, layer_id):
     """
     layer = graph.get_layer(layer_id)
     for node in layer.nodes:
-        bbox = compute_ancestor_bounding_box(graph, node.id.value, DsgLayers.PLACES)
+        bbox = compute_ancestor_bounding_box(
+            graph, node.id.value, child_layer=child_layer, bbox_type=bbox_type
+        )
         node.attributes.bounding_box = bbox
 
 

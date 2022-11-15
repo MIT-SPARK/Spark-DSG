@@ -45,8 +45,10 @@ void getAncestorsOfLayer(const DynamicSceneGraph& graph,
                          LayerKey child_layer,
                          const SgNodeCallback& callback);
 
-BoundingBox computeAncestorBoundingBox(const DynamicSceneGraph& graph,
-                                       NodeId parent,
-                                       LayerId child_layer = DsgLayers::PLACES);
+BoundingBox computeAncestorBoundingBox(
+    const DynamicSceneGraph& graph,
+    NodeId parent,
+    LayerId child_layer = DsgLayers::PLACES,
+    BoundingBox::Type bbox_type = BoundingBox::Type::AABB);
 
 }  // namespace spark_dsg

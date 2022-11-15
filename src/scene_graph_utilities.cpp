@@ -63,7 +63,8 @@ void getAncestorsOfLayer(const DynamicSceneGraph& graph,
 
 BoundingBox computeAncestorBoundingBox(const DynamicSceneGraph& graph,
                                        NodeId parent,
-                                       LayerId child_layer) {
+                                       LayerId child_layer,
+                                       BoundingBox::Type bbox_type) {
   pcl::PointCloud<pcl::PointXYZ>::Ptr points(new pcl::PointCloud<pcl::PointXYZ>());
 
   getAncestorsOfLayer(graph,
@@ -74,7 +75,7 @@ BoundingBox computeAncestorBoundingBox(const DynamicSceneGraph& graph,
                         points->push_back(pcl::PointXYZ(pos.x(), pos.y(), pos.z()));
                       });
 
-  return bounding_box::extract(points);
+  return bounding_box::extract(points, bbox_type);
 }
 
 }  // namespace spark_dsg

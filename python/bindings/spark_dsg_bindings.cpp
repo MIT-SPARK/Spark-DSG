@@ -95,7 +95,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::enum_<BoundingBox::Type>(module, "BoundingBoxType")
       .value("INVALID", BoundingBox::Type::INVALID)
       .value("AABB", BoundingBox::Type::AABB)
-      .value("OBB", BoundingBox::Type::OBB);
+      .value("OBB", BoundingBox::Type::OBB)
+      .value("RAABB", BoundingBox::Type::RAABB);
 
   py::class_<DsgLayers>(module, "DsgLayers")
       .def_readonly_static("MESH", &DsgLayers::MESH)
@@ -618,7 +619,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
 
 #undef MAKE_SPECIALZIED_NODE_ADD
 
-  module.def("compute_ancestor_bounding_box", &computeAncestorBoundingBox);
+  module.def("compute_ancestor_bounding_box",
+             &computeAncestorBoundingBox,
+             "G"_a,
+             "node_id"_a,
+             "child_layer"_a = DsgLayers::PLACES,
+             "bbox_type"_a = BoundingBox::Type::AABB);
 
   py::implicitly_convertible<char, LayerPrefix>();
 }
