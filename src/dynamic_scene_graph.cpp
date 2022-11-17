@@ -779,6 +779,7 @@ inline NodeId getMergedId(NodeId original,
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const std::map<NodeId, NodeId>& previous_merges,
+                                   bool merge_mesh_edges,
                                    bool allow_invalid_mesh,
                                    bool clear_mesh_edges,
                                    std::map<LayerId, bool>* update_map,
@@ -836,6 +837,10 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
     }
 
     insertEdge(new_source, new_target, edge.info->clone());
+  }
+
+  if (!merge_mesh_edges) {
+    return true;
   }
 
   if (clear_mesh_edges) {

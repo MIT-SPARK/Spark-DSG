@@ -459,6 +459,7 @@ class DynamicSceneGraph {
    */
   bool mergeGraph(const DynamicSceneGraph& other,
                   const std::map<NodeId, NodeId>& previous_merges,
+                  bool merge_mesh_edges = true,
                   bool allow_invalid_mesh = false,
                   bool clear_mesh_edges = true,
                   std::map<LayerId, bool>* attribute_update_map = nullptr,
@@ -471,6 +472,7 @@ class DynamicSceneGraph {
    * @param other other graph to update from
    */
   inline bool mergeGraph(const DynamicSceneGraph& other,
+                         bool merge_mesh_edges = true,
                          bool allow_invalid_mesh = false,
                          bool clear_mesh_edges = true,
                          std::map<LayerId, bool>* attribute_update_map = nullptr,
@@ -478,6 +480,7 @@ class DynamicSceneGraph {
                          bool clear_removed = false) {
     return mergeGraph(other,
                       {},
+                      merge_mesh_edges,
                       allow_invalid_mesh,
                       clear_mesh_edges,
                       attribute_update_map,
@@ -527,6 +530,8 @@ class DynamicSceneGraph {
 
   DynamicSceneGraph::Ptr clone() const;
 
+  bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
+
   //! mesh layer id
   const LayerId mesh_layer_id;
 
@@ -548,8 +553,6 @@ class DynamicSceneGraph {
   BaseLayer& layerFromKey(const LayerKey& key);
 
   const BaseLayer& layerFromKey(const LayerKey& key) const;
-
-  bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
 
   SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
 
