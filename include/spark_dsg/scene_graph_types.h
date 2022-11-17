@@ -100,6 +100,10 @@ class LayerPrefix {
 
   size_t index(NodeId node_id) const;
 
+  inline char key() const { return value_.symbol.key; }
+
+  inline uint32_t index() const { return value_.symbol.index; }
+
  private:
   union {
     uint32_t value;

@@ -301,7 +301,8 @@ void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new
 
 void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes) const {
   for (const auto& id_status_pair : nodes_status_) {
-    if (id_status_pair.second == NodeStatus::DELETED) {
+    if (id_status_pair.second == NodeStatus::DELETED ||
+        id_status_pair.second == NodeStatus::MERGED) {
       removed_nodes.push_back(id_status_pair.first);
     }
   }
@@ -311,14 +312,14 @@ void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
                                       bool clear_removed) {
   auto iter = nodes_status_.begin();
   while (iter != nodes_status_.end()) {
-    if (iter->second != NodeStatus::DELETED) {
+    if (iter->second != NodeStatus::DELETED && iter->second != NodeStatus::MERGED) {
       ++iter;
       continue;
     }
 
     removed_nodes.push_back(iter->first);
 
-    if (clear_removed) {
+    if (clear_removed && iter->second == NodeStatus::DELETED) {
       iter = nodes_status_.erase(iter);
     } else {
       ++iter;
