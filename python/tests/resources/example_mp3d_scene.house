@@ -1,0 +1,1932 @@
+ASCII 1.1
+H  -  -  864 48 57 10 27703 187 1659 10 0  1  0 0 0 0 0 -11.5795 -2.92465 -0.113902  5.99388 5.9349 2.78846  0 0 0 0 0 
+L  0  0  -  -2.92031 0.50208 0.00312996  -11.5072 -2.92465 -0.1139  5.19247 5.9349 2.78846  0 0 0 0 0 
+R  0 0  0 0  b  -8.84465 1.00624 -0.00842175  -10.9035 0.587867 -0.00842175  -6.74019 4.79521 2.52724  2.53566  0 0 0 0 
+R  1 0  0 0  a  -6.2772 -0.34982 0.0086211  -8.13822 -2.74781 0.0086211  -4.37099 0.522308 2.19673  2.18811  0 0 0 0 
+R  2 0  0 0  t  -3.81385 -0.287231 0.0117457  -4.34634 -1.55754 0.0117457  -3.35606 0.507769 2.19985  2.1881  0 0 0 0 
+R  3 0  0 0  a  3.60977 -0.68145 -0.00638012  2.46613 -1.99366 -0.00638012  4.63827 0.0578053 2.18173  2.18811  0 0 0 0 
+R  4 0  0 0  v  2.36032 2.46103 -0.000640154  1.02212 0.445752 -0.000640154  4.63471 5.29584 2.58552  2.58616  0 0 0 0 
+R  5 0  0 0  d  -0.714269 2.6733 -0.00935112  -2.1758 0.523216 -0.00935112  0.794515 5.15928 2.57681  2.58616  0 0 0 0 
+R  6 0  0 0  e  0.369999 -0.953237 -0.00878062  -0.799924 -2.08913 -0.00878062  2.3481 0.43497 2.27884  2.28762  0 0 0 0 
+R  7 0  0 0  l  -4.50916 2.59627 0.021234  -6.58635 0.684436 0.021234  -2.12929 5.18929 2.6074  2.58617  0 0 0 0 
+R  8 0  0 0  f  -9.20954 -0.838467 0.0212027  -11.1912 -2.77622 0.0212027  -8.33375 0.531676 2.60737  2.58617  0 0 0 0 
+R  9 0  0 0  k  -2.17456 -0.605839 0.00206988  -3.18871 -1.5401 0.00206988  -0.981305 1.15255 2.19018  2.18811  0 0 0 0 
+S  0 0  0  F  -9.26133 2.13581 -0.00842175  0 0 1  -10.9035 0.587867 -0.00842175  -6.74019 4.79521 -0.00842175  0 0 0 0 0 
+S  1 1  0  F  -6.47846 -1.06227 0.0086211  0 0 1  -8.13822 -2.74781 0.0086211  -4.37099 0.522308 0.0086211  0 0 0 0 0 
+S  2 2  0  F  -3.85113 -0.524921 0.0117457  0 0 1  -4.34634 -1.55754 0.0117457  -3.35606 0.507769 0.0117457  0 0 0 0 0 
+S  3 3  0  F  3.55226 -0.967983 -0.00638012  0 0 1  2.46613 -1.99366 -0.00638012  4.63827 0.0578053 -0.00638012  0 0 0 0 0 
+S  4 4  0  F  2.53459 3.58032 -0.000640154  0 0 1  1.02212 0.445752 -0.000640154  4.63471 5.29584 -0.000640154  0 0 0 0 0 
+S  5 5  0  F  -1.00846 3.17778 -0.00935112  0 0 1  -2.1758 0.523216 -0.00935112  0.794515 5.15928 -0.00935112  0 0 0 0 0 
+S  6 6  0  F  0.940406 -1.10256 -0.00878062  0 0 1  -0.799924 -2.08913 -0.00878062  2.3481 0.43497 -0.00878062  0 0 0 0 0 
+S  7 7  0  F  -4.75054 3.33814 0.021234  0 0 1  -6.58635 0.684436 0.021234  -2.12929 5.18929 0.021234  0 0 0 0 0 
+S  8 8  0  F  -9.76239 -1.12207 0.0212027  0 0 1  -11.1912 -2.77622 0.0212027  -8.33375 0.531676 0.0212027  0 0 0 0 0 
+S  9 9  0  F  -2.12079 0.305978 0.00206988  0 0 1  -3.18871 -1.5401 0.00206988  -0.981305 1.15255 0.00206988  0 0 0 0 0 
+V  0 0  F  -10.1414 0.587867 -0.00842175  0 0 1  0 0 0 
+V  1 0  F  -6.74019 0.588638 -0.00842175  0 0 1  0 0 0 
+V  2 0  F  -6.74021 4.79521 -0.00842175  0 0 1  0 0 0 
+V  3 0  F  -10.9012 4.7951 -0.00842175  0 0 1  0 0 0 
+V  4 0  F  -10.9035 1.02405 -0.00842175  0 0 1  0 0 0 
+V  5 0  F  -10.1415 1.024 -0.00842175  0 0 1  0 0 0 
+V  6 1  F  -8.13789 -2.74774 0.0086211  0 0 1  0 0 0 
+V  7 1  F  -6.9265 -2.74781 0.0086211  0 0 1  0 0 0 
+V  8 1  F  -6.92643 -0.961183 0.0086211  0 0 1  0 0 0 
+V  9 1  F  -5.74457 -0.938801 0.0086211  0 0 1  0 0 0 
+V  10 1  F  -5.73835 -1.52054 0.0086211  0 0 1  0 0 0 
+V  11 1  F  -4.37568 -1.52267 0.0086211  0 0 1  0 0 0 
+V  12 1  F  -4.37099 0.522184 0.0086211  0 0 1  0 0 0 
+V  13 1  F  -8.13822 0.522308 0.0086211  0 0 1  0 0 0 
+V  14 2  F  -4.34607 -1.55754 0.0117457  0 0 1  0 0 0 
+V  15 2  F  -3.35606 -1.55744 0.0117457  0 0 1  0 0 0 
+V  16 2  F  -3.35606 0.507769 0.0117457  0 0 1  0 0 0 
+V  17 2  F  -4.34634 0.507529 0.0117457  0 0 1  0 0 0 
+V  18 3  F  2.46656 -1.99366 -0.00638012  0 0 1  0 0 0 
+V  19 3  F  4.63827 -1.99366 -0.00638012  0 0 1  0 0 0 
+V  20 3  F  4.63808 0.0578053 -0.00638012  0 0 1  0 0 0 
+V  21 3  F  2.46613 0.0575819 -0.00638012  0 0 1  0 0 0 
+V  22 4  F  1.02212 5.02361 -0.000640154  0 0 1  0 0 0 
+V  23 4  F  1.02233 0.445752 -0.000640154  0 0 1  0 0 0 
+V  24 4  F  4.6345 0.449142 -0.000640154  0 0 1  0 0 0 
+V  25 4  F  4.63471 5.29584 -0.000640154  0 0 1  0 0 0 
+V  26 4  F  2.04613 5.27199 -0.000640154  0 0 1  0 0 0 
+V  27 4  F  2.04602 5.02333 -0.000640154  0 0 1  0 0 0 
+V  28 5  F  -2.1758 4.44514 -0.00935112  0 0 1  0 0 0 
+V  29 5  F  -2.04535 1.28568 -0.00935112  0 0 1  0 0 0 
+V  30 5  F  -0.862035 0.523386 -0.00935112  0 0 1  0 0 0 
+V  31 5  F  0.794514 0.523216 -0.00935112  0 0 1  0 0 0 
+V  32 5  F  0.794515 5.15913 -0.00935112  0 0 1  0 0 0 
+V  33 5  F  -1.78019 5.15928 -0.00935112  0 0 1  0 0 0 
+V  34 5  F  -1.78037 4.4564 -0.00935112  0 0 1  0 0 0 
+V  35 6  F  -0.799924 0.43497 -0.00878062  0 0 1  0 0 0 
+V  36 6  F  -0.799817 -2.08913 -0.00878062  0 0 1  0 0 0 
+V  37 6  F  1.27325 -2.08912 -0.00878062  0 0 1  0 0 0 
+V  38 6  F  1.27316 -1.65319 -0.00878062  0 0 1  0 0 0 
+V  39 6  F  2.3481 -1.6532 -0.00878062  0 0 1  0 0 0 
+V  40 6  F  2.34767 0.434329 -0.00878062  0 0 1  0 0 0 
+V  41 7  F  -6.58635 0.684436 0.021234  0 0 1  0 0 0 
+V  42 7  F  -3.19961 0.684465 0.021234  0 0 1  0 0 0 
+V  43 7  F  -2.12929 1.3211 0.021234  0 0 1  0 0 0 
+V  44 7  F  -2.32136 5.18929 0.021234  0 0 1  0 0 0 
+V  45 7  F  -6.11975 5.18923 0.021234  0 0 1  0 0 0 
+V  46 7  F  -6.1199 4.85114 0.021234  0 0 1  0 0 0 
+V  47 7  F  -6.58589 4.85038 0.021234  0 0 1  0 0 0 
+V  48 8  F  -11.1912 -2.7754 0.0212027  0 0 1  0 0 0 
+V  49 8  F  -8.33459 -2.77622 0.0212027  0 0 1  0 0 0 
+V  50 8  F  -8.33375 0.531651 0.0212027  0 0 1  0 0 0 
+V  51 8  F  -11.19 0.531676 0.0212027  0 0 1  0 0 0 
+V  52 9  F  -3.18871 -1.5401 0.00206988  0 0 1  0 0 0 
+V  53 9  F  -0.981469 -1.53998 0.00206988  0 0 1  0 0 0 
+V  54 9  F  -0.981305 0.446611 0.00206988  0 0 1  0 0 0 
+V  55 9  F  -2.06523 1.15255 0.00206988  0 0 1  0 0 0 
+V  56 9  F  -3.18468 0.506244 0.00206988  0 0 1  0 0 0 
+C  0  1 wall  1 wall  0 0 0 0 0 
+C  1  2 door  4 door  0 0 0 0 0 
+C  2  3 ceiling  17 ceiling  0 0 0 0 0 
+C  3  4 floor  2 floor  0 0 0 0 0 
+C  4  5 picture  6 picture  0 0 0 0 0 
+C  5  6 window  9 window  0 0 0 0 0 
+C  6  7 chair  3 chair  0 0 0 0 0 
+C  7  8 doorframe  4 door  0 0 0 0 0 
+C  8  9 remove  0 void  0 0 0 0 0 
+C  9  10 pillow  8 cushion  0 0 0 0 0 
+C  10  11 object  39 objects  0 0 0 0 0 
+C  11  12 light  28 lighting  0 0 0 0 0 
+C  12  13 cabinet  7 cabinet  0 0 0 0 0 
+C  13  14 curtain  12 curtain  0 0 0 0 0 
+C  14  15 table  5 table  0 0 0 0 0 
+C  15  16 plant  14 plant  0 0 0 0 0 
+C  16  17 decoration  39 objects  0 0 0 0 0 
+C  17  18 window#frame  9 window  0 0 0 0 0 
+C  18  19 lamp  28 lighting  0 0 0 0 0 
+C  19  20 mirror  21 mirror  0 0 0 0 0 
+C  20  21 towel  20 towel  0 0 0 0 0 
+C  21  22 sink  15 sink  0 0 0 0 0 
+C  22  23 shelf  31 shelving  0 0 0 0 0 
+C  23  24 couch  10 sofa  0 0 0 0 0 
+C  24  25 dining#chair  3 chair  0 0 0 0 0 
+C  25  26 bed  11 bed  0 0 0 0 0 
+C  26  27 nightstand  13 chest_of_drawers  0 0 0 0 0 
+C  27  28 toilet  18 toilet  0 0 0 0 0 
+C  28  29 sofa#chair  3 chair  0 0 0 0 0 
+C  29  30 column  24 column  0 0 0 0 0 
+C  30  31 handrail  30 railing  0 0 0 0 0 
+C  31  32 stair  16 stairs  0 0 0 0 0 
+C  32  33 stool  19 stool  0 0 0 0 0 
+C  33  34 armchair  3 chair  0 0 0 0 0 
+C  34  35 kitchen#cabinet  7 cabinet  0 0 0 0 0 
+C  35  36 vase  39 objects  0 0 0 0 0 
+C  36  37 cushion  8 cushion  0 0 0 0 0 
+C  37  38 tv  22 tv_monitor  0 0 0 0 0 
+C  38  39 door#frame  4 door  0 0 0 0 0 
+C  39  40 unknown  40 misc  0 0 0 0 0 
+C  40  41 pot  39 objects  0 0 0 0 0 
+C  41  42 desk  5 table  0 0 0 0 0 
+C  42  43 painting  6 picture  0 0 0 0 0 
+C  43  44 roof  17 ceiling  0 0 0 0 0 
+C  44  45 box  39 objects  0 0 0 0 0 
+C  45  46 shower#wall  23 shower  0 0 0 0 0 
+C  46  47 coffee#table  5 table  0 0 0 0 0 
+C  47  48 countertop  26 counter  0 0 0 0 0 
+C  48  49 bench  34 seating  0 0 0 0 0 
+C  49  50 wall#frame  6 picture  0 0 0 0 0 
+C  50  51 trash#can  39 objects  0 0 0 0 0 
+C  51  52 fireplace  27 fireplace  0 0 0 0 0 
+C  52  53 clothes  38 clothes  0 0 0 0 0 
+C  53  54 pillar  24 column  0 0 0 0 0 
+C  54  55 bathtub  25 bathtub  0 0 0 0 0 
+C  55  56 ceiling#duct  17 ceiling  0 0 0 0 0 
+C  56  57 bath#cabinet  7 cabinet  0 0 0 0 0 
+C  57  58 book  39 objects  0 0 0 0 0 
+C  58  59 beam  29 beam  0 0 0 0 0 
+C  59  60 vent  40 misc  0 0 0 0 0 
+C  60  61 shower#floor  23 shower  0 0 0 0 0 
+C  61  62 faucet  39 objects  0 0 0 0 0 
+C  62  63 photo  6 picture  0 0 0 0 0 
+C  63  64 delete  0 void  0 0 0 0 0 
+C  64  65 toilet#paper  39 objects  0 0 0 0 0 
+C  65  66 counter  26 counter  0 0 0 0 0 
+C  66  67 fan  39 objects  0 0 0 0 0 
+C  67  68 step  16 stairs  0 0 0 0 0 
+C  68  69 table#lamp  28 lighting  0 0 0 0 0 
+C  69  70 wall#/#other#room  1 wall  0 0 0 0 0 
+C  70  71 washbasin  15 sink  0 0 0 0 0 
+C  71  72 rail  30 railing  0 0 0 0 0 
+C  72  73 side#table  5 table  0 0 0 0 0 
+C  73  74 decor  39 objects  0 0 0 0 0 
+C  74  75 shelves  31 shelving  0 0 0 0 0 
+C  75  76 statue  39 objects  0 0 0 0 0 
+C  76  77 dresser  13 chest_of_drawers  0 0 0 0 0 
+C  77  78 stairs  16 stairs  0 0 0 0 0 
+C  78  79 rug  2 floor  0 0 0 0 0 
+C  79  80 ottoman  19 stool  0 0 0 0 0 
+C  80  81 round#table  5 table  0 0 0 0 0 
+C  81  82 bottle  39 objects  0 0 0 0 0 
+C  82  83 kitchen#counter  26 counter  0 0 0 0 0 
+C  83  84 windowframe  9 window  0 0 0 0 0 
+C  84  85 office#chair  3 chair  0 0 0 0 0 
+C  85  86 frame  40 misc  0 0 0 0 0 
+C  86  87 refrigerator  37 appliances  0 0 0 0 0 
+C  87  88 bookshelf  31 shelving  0 0 0 0 0 
+C  88  89 end#table  5 table  0 0 0 0 0 
+C  89  90 wardrobe  36 furniture  0 0 0 0 0 
+C  90  91 toiletry  39 objects  0 0 0 0 0 
+C  91  92 windowsill  9 window  0 0 0 0 0 
+C  92  93 pipe  40 misc  0 0 0 0 0 
+C  93  94 monitor  22 tv_monitor  0 0 0 0 0 
+C  94  95 stand  5 table  0 0 0 0 0 
+C  95  96 drawers  13 chest_of_drawers  0 0 0 0 0 
+C  96  97 dining#table  5 table  0 0 0 0 0 
+C  97  98 container  39 objects  0 0 0 0 0 
+C  98  99 light#switch  39 objects  0 0 0 0 0 
+C  99  100 skylight  9 window  0 0 0 0 0 
+C  100  101 purse  39 objects  0 0 0 0 0 
+C  101  102 wall#/otherroom  1 wall  0 0 0 0 0 
+C  102  103 sofa  10 sofa  0 0 0 0 0 
+C  103  104 books  39 objects  0 0 0 0 0 
+C  104  105 doorway  4 door  0 0 0 0 0 
+C  105  106 railing  30 railing  0 0 0 0 0 
+C  106  107 wainscotting  1 wall  0 0 0 0 0 
+C  107  108 basket  39 objects  0 0 0 0 0 
+C  108  109 closet  7 cabinet  0 0 0 0 0 
+C  109  110 arch  40 misc  0 0 0 0 0 
+C  110  111 chandelier  28 lighting  0 0 0 0 0 
+C  111  112 oven  37 appliances  0 0 0 0 0 
+C  112  113 clock  39 objects  0 0 0 0 0 
+C  113  114 footstool  19 stool  0 0 0 0 0 
+C  114  115 stove  37 appliances  0 0 0 0 0 
+C  115  116 trashcan  39 objects  0 0 0 0 0 
+C  116  117 drawer  13 chest_of_drawers  0 0 0 0 0 
+C  117  118 bathroom#countertop#object  39 objects  0 0 0 0 0 
+C  118  119 washing#machine  37 appliances  0 0 0 0 0 
+C  119  120 shower#curtain  12 curtain  0 0 0 0 0 
+C  120  121 rack  31 shelving  0 0 0 0 0 
+C  121  122 art  6 picture  0 0 0 0 0 
+C  122  123 firealarm  39 objects  0 0 0 0 0 
+C  123  124 bin  39 objects  0 0 0 0 0 
+C  124  125 chest  40 misc  0 0 0 0 0 
+C  125  126 microwave  37 appliances  0 0 0 0 0 
+C  126  127 blinds  32 blinds  0 0 0 0 0 
+C  127  128 bowl  39 objects  0 0 0 0 0 
+C  128  129 ceiling#pipe  17 ceiling  0 0 0 0 0 
+C  129  130 tree  14 plant  0 0 0 0 0 
+C  130  131 vanity  5 table  0 0 0 0 0 
+C  131  132 ceiling#fan  39 objects  0 0 0 0 0 
+C  132  133 tissue#box  39 objects  0 0 0 0 0 
+C  133  134 desk#chair  3 chair  0 0 0 0 0 
+C  134  135 plate  39 objects  0 0 0 0 0 
+C  135  136 tv#stand  36 furniture  0 0 0 0 0 
+C  136  137 shoes  39 objects  0 0 0 0 0 
+C  137  138 heater  39 objects  0 0 0 0 0 
+C  138  139 bedframe  11 bed  0 0 0 0 0 
+C  139  140 headboard  11 bed  0 0 0 0 0 
+C  140  141 post  24 column  0 0 0 0 0 
+C  141  142 swivel#chair  3 chair  0 0 0 0 0 
+C  142  143 pedestal  40 misc  0 0 0 0 0 
+C  143  144 fence  40 misc  0 0 0 0 0 
+C  144  145 ceiling#pipes  17 ceiling  0 0 0 0 0 
+C  145  146 pew  34 seating  0 0 0 0 0 
+C  146  147 decorative#object  39 objects  0 0 0 0 0 
+C  147  148 bucket  39 objects  0 0 0 0 0 
+C  148  149 mask  39 objects  0 0 0 0 0 
+C  149  150 candle  39 objects  0 0 0 0 0 
+C  150  151 flowerpot  39 objects  0 0 0 0 0 
+C  151  152 speaker  39 objects  0 0 0 0 0 
+C  152  153 seat  34 seating  0 0 0 0 0 
+C  153  154 sign  40 misc  0 0 0 0 0 
+C  154  155 air#conditioner  39 objects  0 0 0 0 0 
+C  155  156 shower#curtain#rod  12 curtain  0 0 0 0 0 
+C  156  157 unknown#/#other#room  40 misc  0 0 0 0 0 
+C  157  158 flowers  14 plant  0 0 0 0 0 
+C  158  159 clutter  40 misc  0 0 0 0 0 
+C  159  160 pillows  8 cushion  0 0 0 0 0 
+C  160  161 plants  14 plant  0 0 0 0 0 
+C  161  162 wall#\other#room  1 wall  0 0 0 0 0 
+C  162  163 fire#extinguisher  39 objects  0 0 0 0 0 
+C  163  164 towels  20 towel  0 0 0 0 0 
+C  164  165 curtains  12 curtain  0 0 0 0 0 
+C  165  166 curtain#rod  12 curtain  0 0 0 0 0 
+C  166  167 kitchen#countertop#object  39 objects  0 0 0 0 0 
+C  167  168 mat  2 floor  0 0 0 0 0 
+C  168  169 flower  14 plant  0 0 0 0 0 
+C  169  170 sculpture  39 objects  0 0 0 0 0 
+C  170  171 shelving  31 shelving  0 0 0 0 0 
+C  171  172 wall/other#room  1 wall  0 0 0 0 0 
+C  172  173 knickknack  39 objects  0 0 0 0 0 
+C  173  174 printer  39 objects  0 0 0 0 0 
+C  174  175 wall#behind  1 wall  0 0 0 0 0 
+C  175  176 telephone  39 objects  0 0 0 0 0 
+C  176  177 bedside#table  13 chest_of_drawers  0 0 0 0 0 
+C  177  178 moulding  1 wall  0 0 0 0 0 
+C  178  179 handbag  39 objects  0 0 0 0 0 
+C  179  180 wall#/other#room  1 wall  0 0 0 0 0 
+C  180  181 blanket  39 objects  0 0 0 0 0 
+C  181  182 shower  23 shower  0 0 0 0 0 
+C  182  183 steps  16 stairs  0 0 0 0 0 
+C  183  184 switch  39 objects  0 0 0 0 0 
+C  184  185 toilet#paper#dispenser  40 misc  0 0 0 0 0 
+C  185  186 objects  39 objects  0 0 0 0 0 
+C  186  187 handle  39 objects  0 0 0 0 0 
+C  187  188 frame#/outside  40 misc  0 0 0 0 0 
+C  188  189 screen  12 curtain  0 0 0 0 0 
+C  189  190 shower#head  23 shower  0 0 0 0 0 
+C  190  191 baracade  40 misc  0 0 0 0 0 
+C  191  192 picture#frame  6 picture  0 0 0 0 0 
+C  192  193 soap  39 objects  0 0 0 0 0 
+C  193  194 staircase#railing  30 railing  0 0 0 0 0 
+C  194  195 keyboard  39 objects  0 0 0 0 0 
+C  195  196 thermostat  39 objects  0 0 0 0 0 
+C  196  197 radiator  39 objects  0 0 0 0 0 
+C  197  198 kitchen#island  26 counter  0 0 0 0 0 
+C  198  199 paper#towel  20 towel  0 0 0 0 0 
+C  199  200 wall#decoration  6 picture  0 0 0 0 0 
+C  200  201 phone  39 objects  0 0 0 0 0 
+C  201  202 mirror#frame  21 mirror  0 0 0 0 0 
+C  202  203 clothes#dryer  37 appliances  0 0 0 0 0 
+C  203  204 panel  35 board_panel  0 0 0 0 0 
+C  204  205 glass  39 objects  0 0 0 0 0 
+C  205  206 soap#dispenser  39 objects  0 0 0 0 0 
+C  206  207 dishwasher  37 appliances  0 0 0 0 0 
+C  207  208 cup  39 objects  0 0 0 0 0 
+C  208  209 bathroom#cabinet  7 cabinet  0 0 0 0 0 
+C  209  210 ladder  16 stairs  0 0 0 0 0 
+C  210  211 garage#door  4 door  0 0 0 0 0 
+C  211  212 hat  38 clothes  0 0 0 0 0 
+C  212  213 chest#of#drawers  13 chest_of_drawers  0 0 0 0 0 
+C  213  214 exit#sign  40 misc  0 0 0 0 0 
+C  214  215 sidetable  5 table  0 0 0 0 0 
+C  215  216 office#table  5 table  0 0 0 0 0 
+C  216  217 piano  39 objects  0 0 0 0 0 
+C  217  218 painter  6 picture  0 0 0 0 0 
+C  218  219 board  35 board_panel  0 0 0 0 0 
+C  219  220 windows  9 window  0 0 0 0 0 
+C  220  221 archway  4 door  0 0 0 0 0 
+C  221  222 rope  39 objects  0 0 0 0 0 
+C  222  223 ball  40 misc  0 0 0 0 0 
+C  223  224 gym#equipment  33 gym_equipment  0 0 0 0 0 
+C  224  225 clothes#hangers  39 objects  0 0 0 0 0 
+C  225  226 bathroom#object  39 objects  0 0 0 0 0 
+C  226  227 easy#chair  3 chair  0 0 0 0 0 
+C  227  228 lounge#chair  3 chair  0 0 0 0 0 
+C  228  229 furniture  36 furniture  0 0 0 0 0 
+C  229  230 cabinets  7 cabinet  0 0 0 0 0 
+C  230  231 carpet  2 floor  0 0 0 0 0 
+C  231  232 food  40 misc  0 0 0 0 0 
+C  232  233 plant#pot  39 objects  0 0 0 0 0 
+C  233  234 duct  40 misc  0 0 0 0 0 
+C  234  235 ridge  40 misc  0 0 0 0 0 
+C  235  236 candlestick  39 objects  0 0 0 0 0 
+C  236  237 computer#desk  5 table  0 0 0 0 0 
+C  237  238 shower#door  23 shower  0 0 0 0 0 
+C  238  239 trash  39 objects  0 0 0 0 0 
+C  239  240 crown#molding  1 wall  0 0 0 0 0 
+C  240  241 wall#sconce  28 lighting  0 0 0 0 0 
+C  241  242 door#handle  40 misc  0 0 0 0 0 
+C  242  243 scale  39 objects  0 0 0 0 0 
+C  243  244 trash#bin  39 objects  0 0 0 0 0 
+C  244  245 baseboard  1 wall  0 0 0 0 0 
+C  245  246 window#/otherroom  9 window  0 0 0 0 0 
+C  246  247 bag  39 objects  0 0 0 0 0 
+C  247  248 laptop  39 objects  0 0 0 0 0 
+C  248  249 treadmill  33 gym_equipment  0 0 0 0 0 
+C  249  250 staircase  16 stairs  0 0 0 0 0 
+C  250  251 guitar  39 objects  0 0 0 0 0 
+C  251  252 light#fixture  28 lighting  0 0 0 0 0 
+C  252  253 pipes  40 misc  0 0 0 0 0 
+C  253  254 display#case  39 objects  0 0 0 0 0 
+C  254  255 weight#machine  33 gym_equipment  0 0 0 0 0 
+C  255  256 toilet#paper#holder  40 misc  0 0 0 0 0 
+C  256  257 basin  15 sink  0 0 0 0 0 
+C  257  258 towel#bar  39 objects  0 0 0 0 0 
+C  258  259 floor#behind  2 floor  0 0 0 0 0 
+C  259  260 wooden#chair  3 chair  0 0 0 0 0 
+C  260  261 potted#plant  14 plant  0 0 0 0 0 
+C  261  262 ceiling#/#other#room  17 ceiling  0 0 0 0 0 
+C  262  263 window#sill  9 window  0 0 0 0 0 
+C  263  264 floor#/#other#room  2 floor  0 0 0 0 0 
+C  264  265 cupboard  7 cabinet  0 0 0 0 0 
+C  265  266 tray  39 objects  0 0 0 0 0 
+C  266  267 urn  39 objects  0 0 0 0 0 
+C  267  268 church#seating  34 seating  0 0 0 0 0 
+C  268  269 decorative#plate  40 misc  0 0 0 0 0 
+C  269  270 doors  4 door  0 0 0 0 0 
+C  270  271 bar  39 objects  0 0 0 0 0 
+C  271  272 stair#rail  30 railing  0 0 0 0 0 
+C  272  273 window#shade  32 blinds  0 0 0 0 0 
+C  273  274 grass  14 plant  0 0 0 0 0 
+C  274  275 pool#table  5 table  0 0 0 0 0 
+C  275  276 coat  38 clothes  0 0 0 0 0 
+C  276  277 trees  14 plant  0 0 0 0 0 
+C  277  278 cloth  39 objects  0 0 0 0 0 
+C  278  279 bottle#of#soap  40 misc  0 0 0 0 0 
+C  279  280 floor#lamp  28 lighting  0 0 0 0 0 
+C  280  281 water#cooler  39 objects  0 0 0 0 0 
+C  281  282 pews  34 seating  0 0 0 0 0 
+C  282  283 ledge  39 objects  0 0 0 0 0 
+C  283  284 kitchen#shelf  31 shelving  0 0 0 0 0 
+C  284  285 bathroom#utencils  39 objects  0 0 0 0 0 
+C  285  286 hanger  39 objects  0 0 0 0 0 
+C  286  287 shrubbery  39 objects  0 0 0 0 0 
+C  287  288 teapot  39 objects  0 0 0 0 0 
+C  288  289 bottles  39 objects  0 0 0 0 0 
+C  289  290 exercise#equipment  33 gym_equipment  0 0 0 0 0 
+C  290  291 boxes  39 objects  0 0 0 0 0 
+C  291  292 locker  40 misc  0 0 0 0 0 
+C  292  293 wall#cabinet  7 cabinet  0 0 0 0 0 
+C  293  294 wainscotting#\other#room  1 wall  0 0 0 0 0 
+C  294  295 ceiling#light  28 lighting  0 0 0 0 0 
+C  295  296 ornament  39 objects  0 0 0 0 0 
+C  296  297 bidet  18 toilet  0 0 0 0 0 
+C  297  298 shower#soap#shelf  40 misc  0 0 0 0 0 
+C  298  299 window#/#door  40 misc  0 0 0 0 0 
+C  299  300 stuffed#animal  39 objects  0 0 0 0 0 
+C  300  301 paper#towel#dispenser  40 misc  0 0 0 0 0 
+C  301  302 chair#bottom  3 chair  0 0 0 0 0 
+C  302  303 fencing  40 misc  0 0 0 0 0 
+C  303  304 lampshade  28 lighting  0 0 0 0 0 
+C  304  305 door#side  4 door  0 0 0 0 0 
+C  305  306 bust  39 objects  0 0 0 0 0 
+C  306  307 car  39 objects  0 0 0 0 0 
+C  307  308 figure  40 misc  0 0 0 0 0 
+C  308  309 sofa#set  10 sofa  0 0 0 0 0 
+C  309  310 commode  18 toilet  0 0 0 0 0 
+C  310  311 toilet#brush  40 misc  0 0 0 0 0 
+C  311  312 doll  39 objects  0 0 0 0 0 
+C  312  313 drums  39 objects  0 0 0 0 0 
+C  313  314 bathroom#counter  26 counter  0 0 0 0 0 
+C  314  315 dress  38 clothes  0 0 0 0 0 
+C  315  316 shower#handle  40 misc  0 0 0 0 0 
+C  316  317 closet#door  4 door  0 0 0 0 0 
+C  317  318 whiteboard  22 tv_monitor  0 0 0 0 0 
+C  318  319 garage#door#opener  40 misc  0 0 0 0 0 
+C  319  320 range#hood  39 objects  0 0 0 0 0 
+C  320  321 window#curtain  12 curtain  0 0 0 0 0 
+C  321  322 easel  31 shelving  0 0 0 0 0 
+C  322  323 bowl#of#fruit  39 objects  0 0 0 0 0 
+C  323  324 molding  1 wall  0 0 0 0 0 
+C  324  325 pool  40 misc  0 0 0 0 0 
+C  325  326 kitchen#appliance  37 appliances  0 0 0 0 0 
+C  326  327 candelabra  39 objects  0 0 0 0 0 
+C  327  328 ceiling#lamp  28 lighting  0 0 0 0 0 
+C  328  329 toy  39 objects  0 0 0 0 0 
+C  329  330 top  40 misc  0 0 0 0 0 
+C  330  331 wall#art  6 picture  0 0 0 0 0 
+C  331  332 highchair  3 chair  0 0 0 0 0 
+C  332  333 footrest  19 stool  0 0 0 0 0 
+C  333  334 bathroom#sink  15 sink  0 0 0 0 0 
+C  334  335 soap#dish  39 objects  0 0 0 0 0 
+C  335  336 miscellaneous#object  39 objects  0 0 0 0 0 
+C  336  337 trim  1 wall  0 0 0 0 0 
+C  337  338 tabletop#object  39 objects  0 0 0 0 0 
+C  338  339 clothes#hanger#rod  39 objects  0 0 0 0 0 
+C  339  340 altar  5 table  0 0 0 0 0 
+C  340  341 candles  39 objects  0 0 0 0 0 
+C  341  342 placemat  39 objects  0 0 0 0 0 
+C  342  343 kitchen#center#island  26 counter  0 0 0 0 0 
+C  343  344 plate#of#food  40 misc  0 0 0 0 0 
+C  344  345 sheet  40 misc  0 0 0 0 0 
+C  345  346 wood  40 misc  0 0 0 0 0 
+C  346  347 robe  38 clothes  0 0 0 0 0 
+C  347  348 bathroom#stall  40 misc  0 0 0 0 0 
+C  348  349 tabletop#decoration  39 objects  0 0 0 0 0 
+C  349  350 plush#toy  39 objects  0 0 0 0 0 
+C  350  351 wash#basin  15 sink  0 0 0 0 0 
+C  351  352 celing  17 ceiling  0 0 0 0 0 
+C  352  353 hangers  39 objects  0 0 0 0 0 
+C  353  354 bushes  14 plant  0 0 0 0 0 
+C  354  355 floor/other#room  2 floor  0 0 0 0 0 
+C  355  356 dinner#placesetting  39 objects  0 0 0 0 0 
+C  356  357 curtain#valence  12 curtain  0 0 0 0 0 
+C  357  358 control  39 objects  0 0 0 0 0 
+C  358  359 tap  39 objects  0 0 0 0 0 
+C  359  360 shampoo  39 objects  0 0 0 0 0 
+C  360  361 computer  39 objects  0 0 0 0 0 
+C  361  362 massage#bed  11 bed  0 0 0 0 0 
+C  362  363 knob  40 misc  0 0 0 0 0 
+C  363  364 door#stopper  40 misc  0 0 0 0 0 
+C  364  365 bulletin#board  22 tv_monitor  0 0 0 0 0 
+C  365  366 brick#archway  4 door  0 0 0 0 0 
+C  366  367 fruit#bowl  39 objects  0 0 0 0 0 
+C  367  368 electric#wire#casing  40 misc  0 0 0 0 0 
+C  368  369 bookcase  31 shelving  0 0 0 0 0 
+C  369  370 other#room  40 misc  0 0 0 0 0 
+C  370  371 exercise#machine  33 gym_equipment  0 0 0 0 0 
+C  371  372 storage#shelving  31 shelving  0 0 0 0 0 
+C  372  373 coffee#maker  37 appliances  0 0 0 0 0 
+C  373  374 shower#ceiling  23 shower  0 0 0 0 0 
+C  374  375 fire#alarm  39 objects  0 0 0 0 0 
+C  375  376 tissue#paper  40 misc  0 0 0 0 0 
+C  376  377 projector  39 objects  0 0 0 0 0 
+C  377  378 coat#hanger  39 objects  0 0 0 0 0 
+C  378  379 wall#cubby  40 misc  0 0 0 0 0 
+C  379  380 balcony#railing  40 misc  0 0 0 0 0 
+C  380  381 shelf#/w#clutter  31 shelving  0 0 0 0 0 
+C  381  382 case  40 misc  0 0 0 0 0 
+C  382  383 coat#rack  40 misc  0 0 0 0 0 
+C  383  384 pan  39 objects  0 0 0 0 0 
+C  384  385 fridge  37 appliances  0 0 0 0 0 
+C  385  386 suitcase  39 objects  0 0 0 0 0 
+C  386  387 wardrobe#rod  39 objects  0 0 0 0 0 
+C  387  388 hamper  39 objects  0 0 0 0 0 
+C  388  389 trinket  39 objects  0 0 0 0 0 
+C  389  390 c;lothes#hangers  39 objects  0 0 0 0 0 
+C  390  391 paper  39 objects  0 0 0 0 0 
+C  391  392 back#splash  40 misc  0 0 0 0 0 
+C  392  393 chimney  40 misc  0 0 0 0 0 
+C  393  394 arc  40 misc  0 0 0 0 0 
+C  394  395 shower#bench  34 seating  0 0 0 0 0 
+C  395  396 person  39 objects  0 0 0 0 0 
+C  396  397 tablet  5 table  0 0 0 0 0 
+C  397  398 exercise#mat  33 gym_equipment  0 0 0 0 0 
+C  398  399 smoke#alarm  39 objects  0 0 0 0 0 
+C  399  400 kitchen#utensils  39 objects  0 0 0 0 0 
+C  400  401 weights  33 gym_equipment  0 0 0 0 0 
+C  401  402 display#cabinet  7 cabinet  0 0 0 0 0 
+C  402  403 showcase  7 cabinet  0 0 0 0 0 
+C  403  404 bedpost  11 bed  0 0 0 0 0 
+C  404  405 file#cabinet  7 cabinet  0 0 0 0 0 
+C  405  406 umbrella  39 objects  0 0 0 0 0 
+C  406  407 massage#table  5 table  0 0 0 0 0 
+C  407  408 laundry#basket  39 objects  0 0 0 0 0 
+C  408  409 jar  39 objects  0 0 0 0 0 
+C  409  410 exercise#bike  33 gym_equipment  0 0 0 0 0 
+C  410  411 hose  40 misc  0 0 0 0 0 
+C  411  412 window#dormer  40 misc  0 0 0 0 0 
+C  412  413 closet#shelf  31 shelving  0 0 0 0 0 
+C  413  414 power#breaker#box  40 misc  0 0 0 0 0 
+C  414  415 smoke#detector  40 misc  0 0 0 0 0 
+C  415  416 door#knob  40 misc  0 0 0 0 0 
+C  416  417 shelf#side  31 shelving  0 0 0 0 0 
+C  417  418 jacuzzi  40 misc  0 0 0 0 0 
+C  418  419 backpack  39 objects  0 0 0 0 0 
+C  419  420 wooden#desk  5 table  0 0 0 0 0 
+C  420  421 bath#mat  2 floor  0 0 0 0 0 
+C  421  422 unknown#clutter  40 misc  0 0 0 0 0 
+C  422  423 hook  40 misc  0 0 0 0 0 
+C  423  424 sauna#wall  1 wall  0 0 0 0 0 
+C  424  425 elevator  40 misc  0 0 0 0 0 
+C  425  426 tool  39 objects  0 0 0 0 0 
+C  426  427 recliner  3 chair  0 0 0 0 0 
+C  427  428 recessed#wall  40 misc  0 0 0 0 0 
+C  428  429 closet#bar  39 objects  0 0 0 0 0 
+C  429  430 tank  40 misc  0 0 0 0 0 
+C  430  431 toaster  37 appliances  0 0 0 0 0 
+C  431  432 toilet#brush#holder  40 misc  0 0 0 0 0 
+C  432  433 handrail#/otherroom  30 railing  0 0 0 0 0 
+C  433  434 landing  39 objects  0 0 0 0 0 
+C  434  435 book#rack  40 misc  0 0 0 0 0 
+C  435  436 wall#mirror  21 mirror  0 0 0 0 0 
+C  436  437 hunting#trophy  40 misc  0 0 0 0 0 
+C  437  438 rod  39 objects  0 0 0 0 0 
+C  438  439 floor#mat  2 floor  0 0 0 0 0 
+C  439  440 motion#detector  40 misc  0 0 0 0 0 
+C  440  441 clothing  38 clothes  0 0 0 0 0 
+C  441  442 can#of#paint  40 misc  0 0 0 0 0 
+C  442  443 medicine#cabinet  7 cabinet  0 0 0 0 0 
+C  443  444 sensor  39 objects  0 0 0 0 0 
+C  444  445 cart  39 objects  0 0 0 0 0 
+C  445  446 slab  39 objects  0 0 0 0 0 
+C  446  447 bean#bag#chair  3 chair  0 0 0 0 0 
+C  447  448 window#valence  12 curtain  0 0 0 0 0 
+C  448  449 window#/outside  9 window  0 0 0 0 0 
+C  449  450 pole  39 objects  0 0 0 0 0 
+C  450  451 picture#/#other#room  6 picture  0 0 0 0 0 
+C  451  452 canister  40 misc  0 0 0 0 0 
+C  452  453 washbasin#counter  26 counter  0 0 0 0 0 
+C  453  454 kitchen#top  26 counter  0 0 0 0 0 
+C  454  455 unknown#object  39 objects  0 0 0 0 0 
+C  455  456 pitcher  39 objects  0 0 0 0 0 
+C  456  457 showerhead  23 shower  0 0 0 0 0 
+C  457  458 podium  39 objects  0 0 0 0 0 
+C  458  459 ceiling#vent  40 misc  0 0 0 0 0 
+C  459  460 throw#pillow  8 cushion  0 0 0 0 0 
+C  460  461 grill  40 misc  0 0 0 0 0 
+C  461  462 sink#cabinet  7 cabinet  0 0 0 0 0 
+C  462  463 tapestry  39 objects  0 0 0 0 0 
+C  463  464 bed#sheet  11 bed  0 0 0 0 0 
+C  464  465 shade  39 objects  0 0 0 0 0 
+C  465  466 doorknob  4 door  0 0 0 0 0 
+C  466  467 stair#railing  30 railing  0 0 0 0 0 
+C  467  468 vacuum#cleaner  37 appliances  0 0 0 0 0 
+C  468  469 bed#comforter  40 misc  0 0 0 0 0 
+C  469  470 door#/#other#room  4 door  0 0 0 0 0 
+C  470  471 pictures  6 picture  0 0 0 0 0 
+C  471  472 bed#table  5 table  0 0 0 0 0 
+C  472  473 shirt  38 clothes  0 0 0 0 0 
+C  473  474 dressing#table  5 table  0 0 0 0 0 
+C  474  475 shower#wall#cubby  23 shower  0 0 0 0 0 
+C  475  476 side#wall  1 wall  0 0 0 0 0 
+C  476  477 beside#table  5 table  0 0 0 0 0 
+C  477  478 curb  39 objects  0 0 0 0 0 
+C  478  479 arches  40 misc  0 0 0 0 0 
+C  479  480 storage#bin  40 misc  0 0 0 0 0 
+C  480  481 support#beam  29 beam  0 0 0 0 0 
+C  481  482 globe  40 misc  0 0 0 0 0 
+C  482  483 pantry  40 misc  0 0 0 0 0 
+C  483  484 skateboard  39 objects  0 0 0 0 0 
+C  484  485 stove#hood  39 objects  0 0 0 0 0 
+C  485  486 cabin  40 misc  0 0 0 0 0 
+C  486  487 shower#bar  40 misc  0 0 0 0 0 
+C  487  488 chaise  3 chair  0 0 0 0 0 
+C  488  489 flower#wash  39 objects  0 0 0 0 0 
+C  489  490 desk#and#chairs  40 misc  0 0 0 0 0 
+C  490  491 plant#vase  39 objects  0 0 0 0 0 
+C  491  492 towel#rack  40 misc  0 0 0 0 0 
+C  492  493 cross  39 objects  0 0 0 0 0 
+C  493  494 sliding#door  4 door  0 0 0 0 0 
+C  494  495 cosmetics  39 objects  0 0 0 0 0 
+C  495  496 wall#other#room  1 wall  0 0 0 0 0 
+C  496  497 kettle  39 objects  0 0 0 0 0 
+C  497  498 junk  39 objects  0 0 0 0 0 
+C  498  499 stationery  39 objects  0 0 0 0 0 
+C  499  500 lights  28 lighting  0 0 0 0 0 
+C  500  501 window#/#other#room  9 window  0 0 0 0 0 
+C  501  502 dish#cabinet  7 cabinet  0 0 0 0 0 
+C  502  503 wall#panel  1 wall  0 0 0 0 0 
+C  503  504 gate  40 misc  0 0 0 0 0 
+C  504  505 safe  39 objects  0 0 0 0 0 
+C  505  506 ventilation  39 objects  0 0 0 0 0 
+C  506  507 logs  40 misc  0 0 0 0 0 
+C  507  508 sliding#doors  4 door  0 0 0 0 0 
+C  508  509 shower#rod  12 curtain  0 0 0 0 0 
+C  509  510 towel#shelf  31 shelving  0 0 0 0 0 
+C  510  511 row#of#theater#chairs  40 misc  0 0 0 0 0 
+C  511  512 closet#wall  1 wall  0 0 0 0 0 
+C  512  513 bath#utencils  40 misc  0 0 0 0 0 
+C  513  514 sconce  28 lighting  0 0 0 0 0 
+C  514  515 garage#light  40 misc  0 0 0 0 0 
+C  515  516 ceiling#beam  29 beam  0 0 0 0 0 
+C  516  517 toolbox  39 objects  0 0 0 0 0 
+C  517  518 sponge#stool  19 stool  0 0 0 0 0 
+C  518  519 security#camera  39 objects  0 0 0 0 0 
+C  519  520 gym#machine  33 gym_equipment  0 0 0 0 0 
+C  520  521 wall#/outside  1 wall  0 0 0 0 0 
+C  521  522 mantle  27 fireplace  0 0 0 0 0 
+C  522  523 floor#2  2 floor  0 0 0 0 0 
+C  523  524 skirting  40 misc  0 0 0 0 0 
+C  524  525 banister  30 railing  0 0 0 0 0 
+C  525  526 lockers  40 misc  0 0 0 0 0 
+C  526  527 trophy  40 misc  0 0 0 0 0 
+C  527  528 tile  39 objects  0 0 0 0 0 
+C  528  529 unknown#/#room#below  40 misc  0 0 0 0 0 
+C  529  530 picture#car  39 objects  0 0 0 0 0 
+C  530  531 outlet  39 objects  0 0 0 0 0 
+C  531  532 plant#ridge  40 misc  0 0 0 0 0 
+C  532  533 backsplash  40 misc  0 0 0 0 0 
+C  533  534 computer#monitor  22 tv_monitor  0 0 0 0 0 
+C  534  535 doorframe#/#other#room  4 door  0 0 0 0 0 
+C  535  536 shower#wall#/otherroom  23 shower  0 0 0 0 0 
+C  536  537 shelves#with#wine  31 shelving  0 0 0 0 0 
+C  537  538 shoe  39 objects  0 0 0 0 0 
+C  538  539 hedge  40 misc  0 0 0 0 0 
+C  539  540 glass#window  9 window  0 0 0 0 0 
+C  540  541 sofachair  3 chair  0 0 0 0 0 
+C  541  542 hand#soap  39 objects  0 0 0 0 0 
+C  542  543 window#blinds  32 blinds  0 0 0 0 0 
+C  543  544 flower#vase  39 objects  0 0 0 0 0 
+C  544  545 appliance  40 misc  0 0 0 0 0 
+C  545  546 christmas#tree  40 misc  0 0 0 0 0 
+C  546  547 support#column  40 misc  0 0 0 0 0 
+C  547  548 dish  39 objects  0 0 0 0 0 
+C  548  549 closet#floor  40 misc  0 0 0 0 0 
+C  549  550 celling  17 ceiling  0 0 0 0 0 
+C  550  551 stuffed#animals  39 objects  0 0 0 0 0 
+C  551  552 casket  40 misc  0 0 0 0 0 
+C  552  553 rowing#machine  40 misc  0 0 0 0 0 
+C  553  554 dining#table#centerpiece  40 misc  0 0 0 0 0 
+C  554  555 bedside#lamp  28 lighting  0 0 0 0 0 
+C  555  556 kitchen#countertop#item  40 misc  0 0 0 0 0 
+C  556  557 fountain  40 misc  0 0 0 0 0 
+C  557  558 window#glass  39 objects  0 0 0 0 0 
+C  558  559 wall#soffet  39 objects  0 0 0 0 0 
+C  559  560 urinal  39 objects  0 0 0 0 0 
+C  560  561 kitchen#hood  39 objects  0 0 0 0 0 
+C  561  562 showpiece  39 objects  0 0 0 0 0 
+C  562  563 wall#trim  1 wall  0 0 0 0 0 
+C  563  564 barrel  40 misc  0 0 0 0 0 
+C  564  565 firewood  40 misc  0 0 0 0 0 
+C  565  566 columns  24 column  0 0 0 0 0 
+C  566  567 beams  29 beam  0 0 0 0 0 
+C  567  568 carpet#roll  40 misc  0 0 0 0 0 
+C  568  569 portrait  6 picture  0 0 0 0 0 
+C  569  570 table#light  40 misc  0 0 0 0 0 
+C  570  571 water#heater  39 objects  0 0 0 0 0 
+C  571  572 stairs#2  16 stairs  0 0 0 0 0 
+C  572  573 pouffe  34 seating  0 0 0 0 0 
+C  573  574 ceiling#behind  17 ceiling  0 0 0 0 0 
+C  574  575 pillars  24 column  0 0 0 0 0 
+C  575  576 concrete#block  40 misc  0 0 0 0 0 
+C  576  577 range  37 appliances  0 0 0 0 0 
+C  577  578 shelf#with#objects  31 shelving  0 0 0 0 0 
+C  578  579 toilet#seat#liner#dispenser  40 misc  0 0 0 0 0 
+C  579  580 patio#chair  3 chair  0 0 0 0 0 
+C  580  581 folding#chair  3 chair  0 0 0 0 0 
+C  581  582 island  26 counter  0 0 0 0 0 
+C  582  583 toaster#oven  37 appliances  0 0 0 0 0 
+C  583  584 overlook#railing  30 railing  0 0 0 0 0 
+C  584  585 bathroom#mirror  21 mirror  0 0 0 0 0 
+C  585  586 recycle#bin  40 misc  0 0 0 0 0 
+C  586  587 counter#top  26 counter  0 0 0 0 0 
+C  587  588 rafter  29 beam  0 0 0 0 0 
+C  588  589 dryer  37 appliances  0 0 0 0 0 
+C  589  590 bed#lamp  28 lighting  0 0 0 0 0 
+C  590  591 wall#paneling  1 wall  0 0 0 0 0 
+C  591  592 stage  40 misc  0 0 0 0 0 
+C  592  593 fire#sprinkler  40 misc  0 0 0 0 0 
+C  593  594 brush  39 objects  0 0 0 0 0 
+C  594  595 wall#2  1 wall  0 0 0 0 0 
+C  595  596 balcony  40 misc  0 0 0 0 0 
+C  596  597 water#tank  39 objects  0 0 0 0 0 
+C  597  598 pile#of#objects  40 misc  0 0 0 0 0 
+C  598  599 garage#door#frame  40 misc  0 0 0 0 0 
+C  599  600 back#wall  1 wall  0 0 0 0 0 
+C  600  601 plant#soil  40 misc  0 0 0 0 0 
+C  601  602 globe#stand  40 misc  0 0 0 0 0 
+C  602  603 bicycle  39 objects  0 0 0 0 0 
+C  603  604 stairframe  40 misc  0 0 0 0 0 
+C  604  605 separating#screen  40 misc  0 0 0 0 0 
+C  605  606 unknown#wall#object  39 objects  0 0 0 0 0 
+C  606  607 air#duct  40 misc  0 0 0 0 0 
+C  607  608 kitchen#upper#cabinet  7 cabinet  0 0 0 0 0 
+C  608  609 chair#pillow  8 cushion  0 0 0 0 0 
+C  609  610 led#tv  40 misc  0 0 0 0 0 
+C  610  611 deco  39 objects  0 0 0 0 0 
+C  611  612 ceiling#under#staircase  40 misc  0 0 0 0 0 
+C  612  613 chair#/w#books  40 misc  0 0 0 0 0 
+C  613  614 bed#back#rest  11 bed  0 0 0 0 0 
+C  614  615 giraffe  39 objects  0 0 0 0 0 
+C  615  616 lightswitch  39 objects  0 0 0 0 0 
+C  616  617 doorframe#\other#room  4 door  0 0 0 0 0 
+C  617  618 object#/#camera?  39 objects  0 0 0 0 0 
+C  618  619 grandfather#clock  39 objects  0 0 0 0 0 
+C  619  620 jewelry#box  40 misc  0 0 0 0 0 
+C  620  621 bottles#of#wine  40 misc  0 0 0 0 0 
+C  621  622 massage#table#base  5 table  0 0 0 0 0 
+C  622  623 hood  39 objects  0 0 0 0 0 
+C  623  624 mirrorframe  21 mirror  0 0 0 0 0 
+C  624  625 wall#beam  40 misc  0 0 0 0 0 
+C  625  626 wooden#trim  1 wall  0 0 0 0 0 
+C  626  627 stalls  40 misc  0 0 0 0 0 
+C  627  628 partition  40 misc  0 0 0 0 0 
+C  628  629 dog  40 misc  0 0 0 0 0 
+C  629  630 valance  40 misc  0 0 0 0 0 
+C  630  631 radio  40 misc  0 0 0 0 0 
+C  631  632 bush  14 plant  0 0 0 0 0 
+C  632  633 row#of#theater#seats  40 misc  0 0 0 0 0 
+C  633  634 bath#utencil  40 misc  0 0 0 0 0 
+C  634  635 basket#of#towels  40 misc  0 0 0 0 0 
+C  635  636 laundry#machine  37 appliances  0 0 0 0 0 
+C  636  637 mirror#/otherroom  21 mirror  0 0 0 0 0 
+C  637  638 toilet#sink  40 misc  0 0 0 0 0 
+C  638  639 sauna#heater  40 misc  0 0 0 0 0 
+C  639  640 dining#bench  34 seating  0 0 0 0 0 
+C  640  641 fume#cupboard  40 misc  0 0 0 0 0 
+C  641  642 mouse  39 objects  0 0 0 0 0 
+C  642  643 boiler  40 misc  0 0 0 0 0 
+C  643  644 hearth  40 misc  0 0 0 0 0 
+C  644  645 curtain#darker  12 curtain  0 0 0 0 0 
+C  645  646 round#chair  3 chair  0 0 0 0 0 
+C  646  647 toilet#bowl  18 toilet  0 0 0 0 0 
+C  647  648 whine#rack  40 misc  0 0 0 0 0 
+C  648  649 doorstep  39 objects  0 0 0 0 0 
+C  649  650 binder  40 misc  0 0 0 0 0 
+C  650  651 shower#door#frame  23 shower  0 0 0 0 0 
+C  651  652 bed#runner  11 bed  0 0 0 0 0 
+C  652  653 cubicle  40 misc  0 0 0 0 0 
+C  653  654 fitness#device  33 gym_equipment  0 0 0 0 0 
+C  654  655 support  40 misc  0 0 0 0 0 
+C  655  656 overhang  40 misc  0 0 0 0 0 
+C  656  657 electric#box  40 misc  0 0 0 0 0 
+C  657  658 bathrobe  38 clothes  0 0 0 0 0 
+C  658  659 door#mat  2 floor  0 0 0 0 0 
+C  659  660 jacket  38 clothes  0 0 0 0 0 
+C  660  661 cabinet#table  5 table  0 0 0 0 0 
+C  661  662 side#frame  40 misc  0 0 0 0 0 
+C  662  663 wainscoting  1 wall  0 0 0 0 0 
+C  663  664 staircase#trim  40 misc  0 0 0 0 0 
+C  664  665 box#/w#books  40 misc  0 0 0 0 0 
+C  665  666 nighstand  13 chest_of_drawers  0 0 0 0 0 
+C  666  667 window#reflection  40 misc  0 0 0 0 0 
+C  667  668 pulpit  39 objects  0 0 0 0 0 
+C  668  669 set#of#armchairs  40 misc  0 0 0 0 0 
+C  669  670 fish#tank  40 misc  0 0 0 0 0 
+C  670  671 bathroom#countertop#objects  39 objects  0 0 0 0 0 
+C  671  672 concrete#shelf  31 shelving  0 0 0 0 0 
+C  672  673 ceiling#wall  40 misc  0 0 0 0 0 
+C  673  674 picture#\other#room  6 picture  0 0 0 0 0 
+C  674  675 wall#entry  1 wall  0 0 0 0 0 
+C  675  676 lintel  29 beam  0 0 0 0 0 
+C  676  677 wall#table  5 table  0 0 0 0 0 
+C  677  678 small#table  5 table  0 0 0 0 0 
+C  678  679 lighting#fixture  39 objects  0 0 0 0 0 
+C  679  680 bed#frame  11 bed  0 0 0 0 0 
+C  680  681 freezer  37 appliances  0 0 0 0 0 
+C  681  682 glass#doors  4 door  0 0 0 0 0 
+C  682  683 extractor  40 misc  0 0 0 0 0 
+C  683  684 flower#pot  39 objects  0 0 0 0 0 
+C  684  685 soffet  39 objects  0 0 0 0 0 
+C  685  686 platform  40 misc  0 0 0 0 0 
+C  686  687 hot#tub  25 bathtub  0 0 0 0 0 
+C  687  688 paper#towels  20 towel  0 0 0 0 0 
+C  688  689 kitchen#utencils  39 objects  0 0 0 0 0 
+C  689  690 shower#grab#bar  40 misc  0 0 0 0 0 
+C  690  691 wall#detail  40 misc  0 0 0 0 0 
+C  691  692 whineshelf  40 misc  0 0 0 0 0 
+C  692  693 painting/other#room  39 objects  0 0 0 0 0 
+C  693  694 television  40 misc  0 0 0 0 0 
+C  694  695 sauna#bench  34 seating  0 0 0 0 0 
+C  695  696 fruits  39 objects  0 0 0 0 0 
+C  696  697 picture#frames  6 picture  0 0 0 0 0 
+C  697  698 buffet  26 counter  0 0 0 0 0 
+C  698  699 billow  40 misc  0 0 0 0 0 
+C  699  700 computer#chair  3 chair  0 0 0 0 0 
+C  700  701 sofa#seat  40 misc  0 0 0 0 0 
+C  701  702 wall#tv  40 misc  0 0 0 0 0 
+C  702  703 ground  2 floor  0 0 0 0 0 
+C  703  704 wall2  1 wall  0 0 0 0 0 
+C  704  705 ceiling#under#stairs  40 misc  0 0 0 0 0 
+C  705  706 calendar  40 misc  0 0 0 0 0 
+C  706  707 dome  40 misc  0 0 0 0 0 
+C  707  708 object#/outside  39 objects  0 0 0 0 0 
+C  708  709 poll  39 objects  0 0 0 0 0 
+C  709  710 wet#bar  26 counter  0 0 0 0 0 
+C  710  711 folding#table  5 table  0 0 0 0 0 
+C  711  712 stovetop  40 misc  0 0 0 0 0 
+C  712  713 gym#equip  33 gym_equipment  0 0 0 0 0 
+C  713  714 fruitbowl  39 objects  0 0 0 0 0 
+C  714  715 vending#machine  39 objects  0 0 0 0 0 
+C  715  716 handwash  40 misc  0 0 0 0 0 
+C  716  717 wall#clock  39 objects  0 0 0 0 0 
+C  717  718 liquid#soap  40 misc  0 0 0 0 0 
+C  718  719 trinkets  39 objects  0 0 0 0 0 
+C  719  720 small#table#/#stand  40 misc  0 0 0 0 0 
+C  720  721 window#shuts  39 objects  0 0 0 0 0 
+C  721  722 door#frame#3  4 door  0 0 0 0 0 
+C  722  723 stone  39 objects  0 0 0 0 0 
+C  723  724 tripod  31 shelving  0 0 0 0 0 
+C  724  725 projector#screen  40 misc  0 0 0 0 0 
+C  725  726 window#frame#/#other#room  9 window  0 0 0 0 0 
+C  726  727 wreath  39 objects  0 0 0 0 0 
+C  727  728 door#hinge  40 misc  0 0 0 0 0 
+C  728  729 sound  39 objects  0 0 0 0 0 
+C  729  730 french#door  4 door  0 0 0 0 0 
+C  730  731 staircase#handrail  40 misc  0 0 0 0 0 
+C  731  732 nighttable  5 table  0 0 0 0 0 
+C  732  733 photo#in#frame  40 misc  0 0 0 0 0 
+C  733  734 photoframe  6 picture  0 0 0 0 0 
+C  734  735 stair#wall  40 misc  0 0 0 0 0 
+C  735  736 closet#ceiling  40 misc  0 0 0 0 0 
+C  736  737 stick  40 misc  0 0 0 0 0 
+C  737  738 fluorescent#light  40 misc  0 0 0 0 0 
+C  738  739 wash#cabinet  7 cabinet  0 0 0 0 0 
+C  739  740 shower#seat  40 misc  0 0 0 0 0 
+C  740  741 trellis  40 misc  0 0 0 0 0 
+C  741  742 patio  40 misc  0 0 0 0 0 
+C  742  743 dart#board  39 objects  0 0 0 0 0 
+C  743  744 comforter  39 objects  0 0 0 0 0 
+C  744  745 table#/w#books  40 misc  0 0 0 0 0 
+C  745  746 picture/other#room  6 picture  0 0 0 0 0 
+C  746  747 dirt  40 misc  0 0 0 0 0 
+C  747  748 base  40 misc  0 0 0 0 0 
+C  748  749 chemical#tank  40 misc  0 0 0 0 0 
+C  749  750 step#stool  19 stool  0 0 0 0 0 
+C  750  751 misc  40 misc  0 0 0 0 0 
+C  751  752 sink#table  5 table  0 0 0 0 0 
+C  752  753 curved#wall  1 wall  0 0 0 0 0 
+C  753  754 roof#beam  29 beam  0 0 0 0 0 
+C  754  755 cover  40 misc  0 0 0 0 0 
+C  755  756 reading#table  5 table  0 0 0 0 0 
+C  756  757 side#steps#wall  40 misc  0 0 0 0 0 
+C  757  758 sideboard  40 misc  0 0 0 0 0 
+C  758  759 wall#from#another#room  1 wall  0 0 0 0 0 
+C  759  760 electric#outlet  39 objects  0 0 0 0 0 
+C  760  761 stall#door  4 door  0 0 0 0 0 
+C  761  762 separator  39 objects  0 0 0 0 0 
+C  762  763 toilet#bowl#brush#holder  40 misc  0 0 0 0 0 
+C  763  764 vessel  39 objects  0 0 0 0 0 
+C  764  765 table#clutter  40 misc  0 0 0 0 0 
+C  765  766 partition#wall  1 wall  0 0 0 0 0 
+C  766  767 bed#curtain  40 misc  0 0 0 0 0 
+C  767  768 stairs#skirt  40 misc  0 0 0 0 0 
+C  768  769 small#chair  3 chair  0 0 0 0 0 
+C  769  770 ceiling#window  40 misc  0 0 0 0 0 
+C  770  771 rocking#chair  3 chair  0 0 0 0 0 
+C  771  772 window#\other#room  9 window  0 0 0 0 0 
+C  772  773 under#stair  40 misc  0 0 0 0 0 
+C  773  774 unknown#outside#building  40 misc  0 0 0 0 0 
+C  774  775 bath#wall  40 misc  0 0 0 0 0 
+C  775  776 panel#screen  40 misc  0 0 0 0 0 
+C  776  777 doorfra,e  4 door  0 0 0 0 0 
+C  777  778 shower#mat  2 floor  0 0 0 0 0 
+C  778  779 blackboard  39 objects  0 0 0 0 0 
+C  779  780 drawer#desk  40 misc  0 0 0 0 0 
+C  780  781 poster  6 picture  0 0 0 0 0 
+C  781  782 fireplace#sconce  40 misc  0 0 0 0 0 
+C  782  783 table#support  40 misc  0 0 0 0 0 
+C  783  784 wall#lamp  28 lighting  0 0 0 0 0 
+C  784  785 closet#shelving  40 misc  0 0 0 0 0 
+C  785  786 closest#area  40 misc  0 0 0 0 0 
+C  786  787 scroll  40 misc  0 0 0 0 0 
+C  787  788 foot#stand  40 misc  0 0 0 0 0 
+C  788  789 button  40 misc  0 0 0 0 0 
+C  789  790 art#/#clutter  40 misc  0 0 0 0 0 
+C  790  791 door#arc  40 misc  0 0 0 0 0 
+C  791  792 stairs#railing  40 misc  0 0 0 0 0 
+C  792  793 floor#/otherroom  2 floor  0 0 0 0 0 
+C  793  794 shovel  40 misc  0 0 0 0 0 
+C  794  795 alarm#controls  40 misc  0 0 0 0 0 
+C  795  796 lamb  28 lighting  0 0 0 0 0 
+C  796  797 cluttered#objects  40 misc  0 0 0 0 0 
+C  797  798 door/other#room  4 door  0 0 0 0 0 
+C  798  799 closet#shelves  31 shelving  0 0 0 0 0 
+C  799  800 scultpure  39 objects  0 0 0 0 0 
+C  800  801 arm#chair  3 chair  0 0 0 0 0 
+C  801  802 door#behind  4 door  0 0 0 0 0 
+C  802  803 exercise#ball  33 gym_equipment  0 0 0 0 0 
+C  803  804 yard  40 misc  0 0 0 0 0 
+C  804  805 semi#chair  3 chair  0 0 0 0 0 
+C  805  806 bouquet  39 objects  0 0 0 0 0 
+C  806  807 garage#door#opener#bar  40 misc  0 0 0 0 0 
+C  807  808 pots  39 objects  0 0 0 0 0 
+C  808  809 decorations  39 objects  0 0 0 0 0 
+C  809  810 unkown  40 misc  0 0 0 0 0 
+C  810  811 kitchen#decoration  39 objects  0 0 0 0 0 
+C  811  812 archway#corner  40 misc  0 0 0 0 0 
+C  812  813 kitchen#wall  1 wall  0 0 0 0 0 
+C  813  814 cabinet#door  40 misc  0 0 0 0 0 
+C  814  815 sauna#bowl  39 objects  0 0 0 0 0 
+C  815  816 bar#chair  3 chair  0 0 0 0 0 
+C  816  817 shelf#cubby  40 misc  0 0 0 0 0 
+C  817  818 toilet#plunger  39 objects  0 0 0 0 0 
+C  818  819 belts  40 misc  0 0 0 0 0 
+C  819  820 sewing#machine  37 appliances  0 0 0 0 0 
+C  820  821 hot#water/cold#water#knob  40 misc  0 0 0 0 0 
+C  821  822 barbeque  40 misc  0 0 0 0 0 
+C  822  823 cutting#board  39 objects  0 0 0 0 0 
+C  823  824 soapbox  40 misc  0 0 0 0 0 
+C  824  825 washing#stuff  40 misc  0 0 0 0 0 
+C  825  826 dining#table#decoration  39 objects  0 0 0 0 0 
+C  826  827 copier  39 objects  0 0 0 0 0 
+C  827  828 unknown#(picture#or#window)  40 misc  0 0 0 0 0 
+C  828  829 stair#handle  30 railing  0 0 0 0 0 
+C  829  830 reflection  6 picture  0 0 0 0 0 
+C  830  831 horizonal#bar#for#exercise?  33 gym_equipment  0 0 0 0 0 
+C  831  832 shelving#/#other#room  31 shelving  0 0 0 0 0 
+C  832  833 seats  34 seating  0 0 0 0 0 
+C  833  834 shower#stall  40 misc  0 0 0 0 0 
+C  834  835 chairs  3 chair  0 0 0 0 0 
+C  835  836 stair#/otherroom  16 stairs  0 0 0 0 0 
+C  836  837 kitchen#stuff  40 misc  0 0 0 0 0 
+C  837  838 unkown#object  39 objects  0 0 0 0 0 
+C  838  839 throne  3 chair  0 0 0 0 0 
+C  839  840 socket  39 objects  0 0 0 0 0 
+C  840  841 bathroom#art  39 objects  0 0 0 0 0 
+C  841  842 night#table  5 table  0 0 0 0 0 
+C  842  843 display  22 tv_monitor  0 0 0 0 0 
+C  843  844 tabletop  39 objects  0 0 0 0 0 
+C  844  845 thrash#bin  39 objects  0 0 0 0 0 
+C  845  846 l#shape#sofa  10 sofa  0 0 0 0 0 
+C  846  847 cardboard#box  40 misc  0 0 0 0 0 
+C  847  848 wall#borader  40 misc  0 0 0 0 0 
+C  848  849 kitchen#appliances  37 appliances  0 0 0 0 0 
+C  849  850 ceiling#object  39 objects  0 0 0 0 0 
+C  850  851 wall#hanging#decoration  40 misc  0 0 0 0 0 
+C  851  852 stand#/#small#table  5 table  0 0 0 0 0 
+C  852  853 kitchen#ceiling  17 ceiling  0 0 0 0 0 
+C  853  854 floor#matt  2 floor  0 0 0 0 0 
+C  854  855 wall#indent  40 misc  0 0 0 0 0 
+C  855  856 chairir  3 chair  0 0 0 0 0 
+C  856  857 window#seat  34 seating  0 0 0 0 0 
+C  857  858 bike  39 objects  0 0 0 0 0 
+C  858  859 towels#(rolled)  20 towel  0 0 0 0 0 
+C  859  860 wall#\other#oom  1 wall  0 0 0 0 0 
+C  860  861 shower#pipe  40 misc  0 0 0 0 0 
+C  861  862 towel#or#curtain#bar  40 misc  0 0 0 0 0 
+C  862  863 shower#glass  40 misc  0 0 0 0 0 
+C  863  864 stone#bench  34 seating  0 0 0 0 0 
+C  864  865 window/other#room  9 window  0 0 0 0 0 
+C  865  866 back#splash#sink  15 sink  0 0 0 0 0 
+C  866  867 iron#board  40 misc  0 0 0 0 0 
+C  867  868 computer#equipment  40 misc  0 0 0 0 0 
+C  868  869 shelf#/#cabinet  40 misc  0 0 0 0 0 
+C  869  870 stove#door  40 misc  0 0 0 0 0 
+C  870  871 door#inside  4 door  0 0 0 0 0 
+C  871  872 unknown#stove#accessory  40 misc  0 0 0 0 0 
+C  872  873 circular#sofa  10 sofa  0 0 0 0 0 
+C  873  874 dustpan  39 objects  0 0 0 0 0 
+C  874  875 bathroom#door  4 door  0 0 0 0 0 
+C  875  876 paining  39 objects  0 0 0 0 0 
+C  876  877 luggage  39 objects  0 0 0 0 0 
+C  877  878 dooframe  4 door  0 0 0 0 0 
+C  878  879 outside#wall  1 wall  0 0 0 0 0 
+C  879  880 alarm#control  40 misc  0 0 0 0 0 
+C  880  881 oil#lamp  28 lighting  0 0 0 0 0 
+C  881  882 scaffolding  39 objects  0 0 0 0 0 
+C  882  883 bed#light  40 misc  0 0 0 0 0 
+C  883  884 baluster  39 objects  0 0 0 0 0 
+C  884  885 leg#rest  40 misc  0 0 0 0 0 
+C  885  886 ceiling#/#upstairs#room  40 misc  0 0 0 0 0 
+C  886  887 tv#cabinet  36 furniture  0 0 0 0 0 
+C  887  888 hole  39 objects  0 0 0 0 0 
+C  888  889 ping#pong#table  5 table  0 0 0 0 0 
+C  889  890 hutch  40 misc  0 0 0 0 0 
+C  890  891 low#shelf  31 shelving  0 0 0 0 0 
+C  891  892 foliage  40 misc  0 0 0 0 0 
+C  892  893 windows#sill  9 window  0 0 0 0 0 
+C  893  894 toilet#cistern  18 toilet  0 0 0 0 0 
+C  894  895 stone#circle  40 misc  0 0 0 0 0 
+C  895  896 bathroom##sink  15 sink  0 0 0 0 0 
+C  896  897 record#player  39 objects  0 0 0 0 0 
+C  897  898 table#cushion  40 misc  0 0 0 0 0 
+C  898  899 power#outlet  39 objects  0 0 0 0 0 
+C  899  900 machine  39 objects  0 0 0 0 0 
+C  900  901 door#post  39 objects  0 0 0 0 0 
+C  901  902 briefcase  39 objects  0 0 0 0 0 
+C  902  903 wall#of#doors  4 door  0 0 0 0 0 
+C  903  904 showe#wall  23 shower  0 0 0 0 0 
+C  904  905 door#stand  40 misc  0 0 0 0 0 
+C  905  906 energy#box  40 misc  0 0 0 0 0 
+C  906  907 balcony#floor  2 floor  0 0 0 0 0 
+C  907  908 bean#bag  3 chair  0 0 0 0 0 
+C  908  909 kitchen#extractor  40 misc  0 0 0 0 0 
+C  909  910 toilet#bin  40 misc  0 0 0 0 0 
+C  910  911 wall#in#other#room  1 wall  0 0 0 0 0 
+C  911  912 plumbing  39 objects  0 0 0 0 0 
+C  912  913 moose#head#/#sculpture#/#hunting#trophy  40 misc  0 0 0 0 0 
+C  913  914 ceiling#dome  40 misc  0 0 0 0 0 
+C  914  915 cabinet#counter  40 misc  0 0 0 0 0 
+C  915  916 cabinet#\other#room  7 cabinet  0 0 0 0 0 
+C  916  917 flowerbed  39 objects  0 0 0 0 0 
+C  917  918 paingitn  39 objects  0 0 0 0 0 
+C  918  919 bed#headboard  11 bed  0 0 0 0 0 
+C  919  920 antique#clock  39 objects  0 0 0 0 0 
+C  920  921 rocks  39 objects  0 0 0 0 0 
+C  921  922 shower#caddy#for#soap#etc.  40 misc  0 0 0 0 0 
+C  922  923 window#/#frame  9 window  0 0 0 0 0 
+C  923  924 media#console  40 misc  0 0 0 0 0 
+C  924  925 cloths  39 objects  0 0 0 0 0 
+C  925  926 vaccum#cleaner  37 appliances  0 0 0 0 0 
+C  926  927 door#frame#fireplace#wall  4 door  0 0 0 0 0 
+C  927  928 fruit#dish  40 misc  0 0 0 0 0 
+C  928  929 risers#for#theater#seating  40 misc  0 0 0 0 0 
+C  929  930 interior#bathroom#wall  1 wall  0 0 0 0 0 
+C  930  931 hall#wall  1 wall  0 0 0 0 0 
+C  931  932 drawer#sink#table  5 table  0 0 0 0 0 
+C  932  933 keyboard#piano  39 objects  0 0 0 0 0 
+C  933  934 tree#branch  39 objects  0 0 0 0 0 
+C  934  935 tiled#floor  40 misc  0 0 0 0 0 
+C  935  936 ceiling#bedroom  40 misc  0 0 0 0 0 
+C  936  937 chandellier  28 lighting  0 0 0 0 0 
+C  937  938 ceilin  17 ceiling  0 0 0 0 0 
+C  938  939 hearst  39 objects  0 0 0 0 0 
+C  939  940 random#wall  1 wall  0 0 0 0 0 
+C  940  941 condiments  40 misc  0 0 0 0 0 
+C  941  942 shelf#cubbies  40 misc  0 0 0 0 0 
+C  942  943 book#display  40 misc  0 0 0 0 0 
+C  943  944 endtable  5 table  0 0 0 0 0 
+C  944  945 antique#telephone  39 objects  0 0 0 0 0 
+C  945  946 clothes#rack  40 misc  0 0 0 0 0 
+C  946  947 doore  4 door  0 0 0 0 0 
+C  947  948 heater#piping  40 misc  0 0 0 0 0 
+C  948  949 tissue#box#stand  40 misc  0 0 0 0 0 
+C  949  950 utencils  39 objects  0 0 0 0 0 
+C  950  951 foodtray  39 objects  0 0 0 0 0 
+C  951  952 shelves#/otherroom  40 misc  0 0 0 0 0 
+C  952  953 cailing  17 ceiling  0 0 0 0 0 
+C  953  954 cluttered#chair  3 chair  0 0 0 0 0 
+C  954  955 countertop#object  39 objects  0 0 0 0 0 
+C  955  956 art#frames  40 misc  0 0 0 0 0 
+C  956  957 soap#bottle  39 objects  0 0 0 0 0 
+C  957  958 small#wall  1 wall  0 0 0 0 0 
+C  958  959 watch  39 objects  0 0 0 0 0 
+C  959  960 ceil  30 railing  0 0 0 0 0 
+C  960  961 fuse#box  40 misc  0 0 0 0 0 
+C  961  962 painting#board  39 objects  0 0 0 0 0 
+C  962  963 door#locker#handle  40 misc  0 0 0 0 0 
+C  963  964 box#with#clutter  39 objects  0 0 0 0 0 
+C  964  965 knive#holder  40 misc  0 0 0 0 0 
+C  965  966 computer#mouse  39 objects  0 0 0 0 0 
+C  966  967 mirror#/#other#room  21 mirror  0 0 0 0 0 
+C  967  968 door#back#side  4 door  0 0 0 0 0 
+C  968  969 ceiling#bath  40 misc  0 0 0 0 0 
+C  969  970 chandelier?  28 lighting  0 0 0 0 0 
+C  970  971 table#tray  40 misc  0 0 0 0 0 
+C  971  972 aquarium  40 misc  0 0 0 0 0 
+C  972  973 wheelbarrow  39 objects  0 0 0 0 0 
+C  973  974 curtain#rail  40 misc  0 0 0 0 0 
+C  974  975 rods#/#table  40 misc  0 0 0 0 0 
+C  975  976 counter#/otherroom  26 counter  0 0 0 0 0 
+C  976  977 gable  1 wall  0 0 0 0 0 
+C  977  978 bothroom#wall  1 wall  0 0 0 0 0 
+C  978  979 balustrade  30 railing  0 0 0 0 0 
+C  979  980 bathroom  40 misc  0 0 0 0 0 
+C  980  981 three  40 misc  0 0 0 0 0 
+C  981  982 handcloth  40 misc  0 0 0 0 0 
+C  982  983 wall#curved  1 wall  0 0 0 0 0 
+C  983  984 teapoy  5 table  0 0 0 0 0 
+C  984  985 table#with#clutter  5 table  0 0 0 0 0 
+C  985  986 back#door  4 door  0 0 0 0 0 
+C  986  987 rocky#ground  40 misc  0 0 0 0 0 
+C  987  988 doormat  2 floor  0 0 0 0 0 
+C  988  989 backrest  39 objects  0 0 0 0 0 
+C  989  990 cabinet#with#desk  7 cabinet  0 0 0 0 0 
+C  990  991 faucet#handles  39 objects  0 0 0 0 0 
+C  991  992 floor#trim  40 misc  0 0 0 0 0 
+C  992  993 toilet#sliding#door  40 misc  0 0 0 0 0 
+C  993  994 gym#stuff  33 gym_equipment  0 0 0 0 0 
+C  994  995 clothes#container  40 misc  0 0 0 0 0 
+C  995  996 basketball#hoop  33 gym_equipment  0 0 0 0 0 
+C  996  997 cooktop  40 misc  0 0 0 0 0 
+C  997  998 both#tub  25 bathtub  0 0 0 0 0 
+C  998  999 fireplace#heart  27 fireplace  0 0 0 0 0 
+C  999  1000 spice#racks  31 shelving  0 0 0 0 0 
+C  1000  1001 wall#fireplace  1 wall  0 0 0 0 0 
+C  1001  1002 cabinet#/w#cluttered#art  40 misc  0 0 0 0 0 
+C  1002  1003 inside#wall  1 wall  0 0 0 0 0 
+C  1003  1004 transformer  39 objects  0 0 0 0 0 
+C  1004  1005 wall#light  28 lighting  0 0 0 0 0 
+C  1005  1006 bathroom#shelf  31 shelving  0 0 0 0 0 
+C  1006  1007 glass#french#door  4 door  0 0 0 0 0 
+C  1007  1008 lamp#/#other#room  28 lighting  0 0 0 0 0 
+C  1008  1009 picutre  6 picture  0 0 0 0 0 
+C  1009  1010 gift  40 misc  0 0 0 0 0 
+C  1010  1011 mirror#door  40 misc  0 0 0 0 0 
+C  1011  1012 deorative#object  39 objects  0 0 0 0 0 
+C  1012  1013 ceiling#door  40 misc  0 0 0 0 0 
+C  1013  1014 stack#of#papers  40 misc  0 0 0 0 0 
+C  1014  1015 holy#cross  40 misc  0 0 0 0 0 
+C  1015  1016 door#window  40 misc  0 0 0 0 0 
+C  1016  1017 computer#screen  22 tv_monitor  0 0 0 0 0 
+C  1017  1018 while#bottles  39 objects  0 0 0 0 0 
+C  1018  1019 arcade#game  40 misc  0 0 0 0 0 
+C  1019  1020 unknown#-#probably#part#of#trellis#--#maybe#blinds  40 misc  0 0 0 0 0 
+C  1020  1021 compound#wall  40 misc  0 0 0 0 0 
+C  1021  1022 lamps  28 lighting  0 0 0 0 0 
+C  1022  1023 plug  40 misc  0 0 0 0 0 
+C  1023  1024 round#cushion  40 misc  0 0 0 0 0 
+C  1024  1025 ceiling#frame  1 wall  0 0 0 0 0 
+C  1025  1026 magazine  39 objects  0 0 0 0 0 
+C  1026  1027 stair#case  16 stairs  0 0 0 0 0 
+C  1027  1028 rolling#pin  39 objects  0 0 0 0 0 
+C  1028  1029 shower#knob  40 misc  0 0 0 0 0 
+C  1029  1030 wall#statue  40 misc  0 0 0 0 0 
+C  1030  1031 wal  1 wall  0 0 0 0 0 
+C  1031  1032 sink#/#basin  40 misc  0 0 0 0 0 
+C  1032  1033 celling#borader  40 misc  0 0 0 0 0 
+C  1033  1034 clothes#bag  40 misc  0 0 0 0 0 
+C  1034  1035 perfumes  39 objects  0 0 0 0 0 
+C  1035  1036 heat  39 objects  0 0 0 0 0 
+C  1036  1037 kitchen#counter#support#leg  40 misc  0 0 0 0 0 
+C  1037  1038 window##frame  9 window  0 0 0 0 0 
+C  1038  1039 glassdoor  4 door  0 0 0 0 0 
+C  1039  1040 window#closet#door  40 misc  0 0 0 0 0 
+C  1040  1041 sticks  40 misc  0 0 0 0 0 
+C  1041  1042 photo#frame  6 picture  0 0 0 0 0 
+C  1042  1043 water#pump  39 objects  0 0 0 0 0 
+C  1043  1044 shower#doorframe  23 shower  0 0 0 0 0 
+C  1044  1045 stairs#behind  16 stairs  0 0 0 0 0 
+C  1045  1046 flood  2 floor  0 0 0 0 0 
+C  1046  1047 columned#perimeter  40 misc  0 0 0 0 0 
+C  1047  1048 shrine  40 misc  0 0 0 0 0 
+C  1048  1049 papers  39 objects  0 0 0 0 0 
+C  1049  1050 fireplace#/w#art  27 fireplace  0 0 0 0 0 
+C  1050  1051 canvas#stand  40 misc  0 0 0 0 0 
+C  1051  1052 art#/#man#statue  40 misc  0 0 0 0 0 
+C  1052  1053 bath#towel  20 towel  0 0 0 0 0 
+C  1053  1054 cradenza  36 furniture  0 0 0 0 0 
+C  1054  1055 doorr#frame  4 door  0 0 0 0 0 
+C  1055  1056 column#statue  40 misc  0 0 0 0 0 
+C  1056  1057 water#basin  40 misc  0 0 0 0 0 
+C  1057  1058 moulidng  1 wall  0 0 0 0 0 
+C  1058  1059 tablet#computer  40 misc  0 0 0 0 0 
+C  1059  1060 artwork  6 picture  0 0 0 0 0 
+C  1060  1061 towel#bar#shelf  40 misc  0 0 0 0 0 
+C  1061  1062 floor#carpet  2 floor  0 0 0 0 0 
+C  1062  1063 wine#cabinet  7 cabinet  0 0 0 0 0 
+C  1063  1064 shower#rail  40 misc  0 0 0 0 0 
+C  1064  1065 skirting#board  1 wall  0 0 0 0 0 
+C  1065  1066 playpen  40 misc  0 0 0 0 0 
+C  1066  1067 room#door  4 door  0 0 0 0 0 
+C  1067  1068 doorgrame  4 door  0 0 0 0 0 
+C  1068  1069 makeup  39 objects  0 0 0 0 0 
+C  1069  1070 plant#/#art  40 misc  0 0 0 0 0 
+C  1070  1071 sauna#seating  34 seating  0 0 0 0 0 
+C  1071  1072 bot  39 objects  0 0 0 0 0 
+C  1072  1073 handrail#/#other#room  30 railing  0 0 0 0 0 
+C  1073  1074 rocking#horse  39 objects  0 0 0 0 0 
+C  1074  1075 kitchen#lower#cabinet  7 cabinet  0 0 0 0 0 
+C  1075  1076 floor#/other#room  2 floor  0 0 0 0 0 
+C  1076  1077 chair#stand  40 misc  0 0 0 0 0 
+C  1077  1078 wall#pack  40 misc  0 0 0 0 0 
+C  1078  1079 towel#box  40 misc  0 0 0 0 0 
+C  1079  1080 vessel#sink  40 misc  0 0 0 0 0 
+C  1080  1081 can  39 objects  0 0 0 0 0 
+C  1081  1082 ceiling#lattice  17 ceiling  0 0 0 0 0 
+C  1082  1083 backslash  40 misc  0 0 0 0 0 
+C  1083  1084 ire#place  27 fireplace  0 0 0 0 0 
+C  1084  1085 divider  40 misc  0 0 0 0 0 
+C  1085  1086 pathway  40 misc  0 0 0 0 0 
+C  1086  1087 laundry  38 clothes  0 0 0 0 0 
+C  1087  1088 tablecloth  39 objects  0 0 0 0 0 
+C  1088  1089 water#dispenser  39 objects  0 0 0 0 0 
+C  1089  1090 ;photo  6 picture  0 0 0 0 0 
+C  1090  1091 door#frame#wall#entry  4 door  0 0 0 0 0 
+C  1091  1092 plastic#tarp  39 objects  0 0 0 0 0 
+C  1092  1093 clothing#stand  40 misc  0 0 0 0 0 
+C  1093  1094 bathtab  25 bathtub  0 0 0 0 0 
+C  1094  1095 apron  40 misc  0 0 0 0 0 
+C  1095  1096 ceiling#bedroom#entry  17 ceiling  0 0 0 0 0 
+C  1096  1097 ashtray  39 objects  0 0 0 0 0 
+C  1097  1098 control#panel  39 objects  0 0 0 0 0 
+C  1098  1099 ironing#board  39 objects  0 0 0 0 0 
+C  1099  1100 exhaust#pipe  40 misc  0 0 0 0 0 
+C  1100  1101 rack#of#theater#electronics  31 shelving  0 0 0 0 0 
+C  1101  1102 canvas  40 misc  0 0 0 0 0 
+C  1102  1103 alarm#clock  39 objects  0 0 0 0 0 
+C  1103  1104 ceiling#lower  40 misc  0 0 0 0 0 
+C  1104  1105 yarn#machine  40 misc  0 0 0 0 0 
+C  1105  1106 tarrace#door  40 misc  0 0 0 0 0 
+C  1106  1107 stand/table  40 misc  0 0 0 0 0 
+C  1107  1108 statue#base  39 objects  0 0 0 0 0 
+C  1108  1109 swing  39 objects  0 0 0 0 0 
+C  1109  1110 extractor#fan  40 misc  0 0 0 0 0 
+C  1110  1111 crib  40 misc  0 0 0 0 0 
+C  1111  1112 hallway#wall  1 wall  0 0 0 0 0 
+C  1112  1113 side#wall#2  1 wall  0 0 0 0 0 
+C  1113  1114 side#wall#5  1 wall  0 0 0 0 0 
+C  1114  1115 mens#urinal  39 objects  0 0 0 0 0 
+C  1115  1116 stacked#chairs  3 chair  0 0 0 0 0 
+C  1116  1117 patio#floor  40 misc  0 0 0 0 0 
+C  1117  1118 stair#steps  40 misc  0 0 0 0 0 
+C  1118  1119 electrical#controller  40 misc  0 0 0 0 0 
+C  1119  1120 kitchencounter  26 counter  0 0 0 0 0 
+C  1120  1121 rotunda#railing  40 misc  0 0 0 0 0 
+C  1121  1122 lamp#table  5 table  0 0 0 0 0 
+C  1122  1123 cabinet#top  7 cabinet  0 0 0 0 0 
+C  1123  1124 tray#with#bottles#of#soap#and#lotion  39 objects  0 0 0 0 0 
+C  1124  1125 speakers  39 objects  0 0 0 0 0 
+C  1125  1126 fancy#cabinet  7 cabinet  0 0 0 0 0 
+C  1126  1127 air#vent  40 misc  0 0 0 0 0 
+C  1127  1128 sofa#couch  10 sofa  0 0 0 0 0 
+C  1128  1129 channel  40 misc  0 0 0 0 0 
+C  1129  1130 wall#sign  40 misc  0 0 0 0 0 
+C  1130  1131 bench#back  34 seating  0 0 0 0 0 
+C  1131  1132 baby#changing#station  40 misc  0 0 0 0 0 
+C  1132  1133 paip  39 objects  0 0 0 0 0 
+C  1133  1134 bed#arm#pillows  8 cushion  0 0 0 0 0 
+C  1134  1135 shower#tap  40 misc  0 0 0 0 0 
+C  1135  1136 axe  39 objects  0 0 0 0 0 
+C  1136  1137 table#shelf  31 shelving  0 0 0 0 0 
+C  1137  1138 washcloth  39 objects  0 0 0 0 0 
+C  1138  1139 coffee#mug  39 objects  0 0 0 0 0 
+C  1139  1140 iron#panel  35 board_panel  0 0 0 0 0 
+C  1140  1141 door#or#window#frame  40 misc  0 0 0 0 0 
+C  1141  1142 coffe#table  5 table  0 0 0 0 0 
+C  1142  1143 dice  39 objects  0 0 0 0 0 
+C  1143  1144 title  40 misc  0 0 0 0 0 
+C  1144  1145 toilet#seat  18 toilet  0 0 0 0 0 
+C  1145  1146 coffee#table#leg  5 table  0 0 0 0 0 
+C  1146  1147 soft#chair  3 chair  0 0 0 0 0 
+C  1147  1148 icebox  37 appliances  0 0 0 0 0 
+C  1148  1149 showerfloor  23 shower  0 0 0 0 0 
+C  1149  1150 floor#outside  2 floor  0 0 0 0 0 
+C  1150  1151 framing  40 misc  0 0 0 0 0 
+C  1151  1152 wall#patch  1 wall  0 0 0 0 0 
+C  1152  1153 decorative#bowl  39 objects  0 0 0 0 0 
+C  1153  1154 dog#bed  11 bed  0 0 0 0 0 
+C  1154  1155 pool#sticks  39 objects  0 0 0 0 0 
+C  1155  1156 exericse#equipment  33 gym_equipment  0 0 0 0 0 
+C  1156  1157 remove#floor#behind  2 floor  0 0 0 0 0 
+C  1157  1158 doorhandle  40 misc  0 0 0 0 0 
+C  1158  1159 dishrag  39 objects  0 0 0 0 0 
+C  1159  1160 behind  40 misc  0 0 0 0 0 
+C  1160  1161 drinking#fountain  40 misc  0 0 0 0 0 
+C  1161  1162 bureau  13 chest_of_drawers  0 0 0 0 0 
+C  1162  1163 night#stand#object  39 objects  0 0 0 0 0 
+C  1163  1164 tub  25 bathtub  0 0 0 0 0 
+C  1164  1165 parapet  40 misc  0 0 0 0 0 
+C  1165  1166 attic#door  40 misc  0 0 0 0 0 
+C  1166  1167 wall#object  39 objects  0 0 0 0 0 
+C  1167  1168 closet#door#knob  40 misc  0 0 0 0 0 
+C  1168  1169 bathroom#accessory  38 clothes  0 0 0 0 0 
+C  1169  1170 teddy  39 objects  0 0 0 0 0 
+C  1170  1171 wall#toilet#paper  40 misc  0 0 0 0 0 
+C  1171  1172 coffee#machine  37 appliances  0 0 0 0 0 
+C  1172  1173 excercise#equipment#/#other#room  40 misc  0 0 0 0 0 
+C  1173  1174 storage#cabinet  7 cabinet  0 0 0 0 0 
+C  1174  1175 toilet#stall#door  40 misc  0 0 0 0 0 
+C  1175  1176 bin#of#posters  39 objects  0 0 0 0 0 
+C  1176  1177 photos  6 picture  0 0 0 0 0 
+C  1177  1178 push#broom  39 objects  0 0 0 0 0 
+C  1178  1179 art#stand  40 misc  0 0 0 0 0 
+C  1179  1180 shelf#/w#art  40 misc  0 0 0 0 0 
+C  1180  1181 spiderman  40 misc  0 0 0 0 0 
+C  1181  1182 mount  40 misc  0 0 0 0 0 
+C  1182  1183 ac#unit  39 objects  0 0 0 0 0 
+C  1183  1184 newspaper  40 misc  0 0 0 0 0 
+C  1184  1185 towel#basket  39 objects  0 0 0 0 0 
+C  1185  1186 base#rail  40 misc  0 0 0 0 0 
+C  1186  1187 show#pack  40 misc  0 0 0 0 0 
+C  1187  1188 coutertop  26 counter  0 0 0 0 0 
+C  1188  1189 stair#stepper  40 misc  0 0 0 0 0 
+C  1189  1190 car#batteries  39 objects  0 0 0 0 0 
+C  1190  1191 pad  40 misc  0 0 0 0 0 
+C  1191  1192 old#fireplace  27 fireplace  0 0 0 0 0 
+C  1192  1193 desk#lamp  28 lighting  0 0 0 0 0 
+C  1193  1194 easychair  3 chair  0 0 0 0 0 
+C  1194  1195 wees  5 table  0 0 0 0 0 
+C  1195  1196 tabletop#box  40 misc  0 0 0 0 0 
+C  1196  1197 canopy  40 misc  0 0 0 0 0 
+C  1197  1198 wall#behind#door  1 wall  0 0 0 0 0 
+C  1198  1199 cabinet#/#other#room  7 cabinet  0 0 0 0 0 
+C  1199  1200 objects#/#other#room  39 objects  0 0 0 0 0 
+C  1200  1201 bar#soap  40 misc  0 0 0 0 0 
+C  1201  1202 column#/otherroom  40 misc  0 0 0 0 0 
+C  1202  1203 outer#wall  1 wall  0 0 0 0 0 
+C  1203  1204 wall#control  40 misc  0 0 0 0 0 
+C  1204  1205 desktop  39 objects  0 0 0 0 0 
+C  1205  1206 fire#screen  39 objects  0 0 0 0 0 
+C  1206  1207 fireplace#counter  27 fireplace  0 0 0 0 0 
+C  1207  1208 bread  40 misc  0 0 0 0 0 
+C  1208  1209 piano#bench  34 seating  0 0 0 0 0 
+C  1209  1210 window#shutter  39 objects  0 0 0 0 0 
+C  1210  1211 draw  39 objects  0 0 0 0 0 
+C  1211  1212 flower#wage  39 objects  0 0 0 0 0 
+C  1212  1213 ceiling/west#wall  40 misc  0 0 0 0 0 
+C  1213  1214 decorative#quilt  40 misc  0 0 0 0 0 
+C  1214  1215 knife  39 objects  0 0 0 0 0 
+C  1215  1216 projector#opening  40 misc  0 0 0 0 0 
+C  1216  1217 boader  40 misc  0 0 0 0 0 
+C  1217  1218 lights#/#deco  40 misc  0 0 0 0 0 
+C  1218  1219 tv3  40 misc  0 0 0 0 0 
+C  1219  1220 desk#clutter  40 misc  0 0 0 0 0 
+C  1220  1221 curatain  12 curtain  0 0 0 0 0 
+C  1221  1222 shoe#shelves  31 shelving  0 0 0 0 0 
+C  1222  1223 mixer  40 misc  0 0 0 0 0 
+C  1223  1224 ceiling#fixture  40 misc  0 0 0 0 0 
+C  1224  1225 scuplture  39 objects  0 0 0 0 0 
+C  1225  1226 countertop#/otherroom  26 counter  0 0 0 0 0 
+C  1226  1227 work#bench  5 table  0 0 0 0 0 
+C  1227  1228 wall#desk  40 misc  0 0 0 0 0 
+C  1228  1229 shelf#of#cloth  31 shelving  0 0 0 0 0 
+C  1229  1230 telescope  39 objects  0 0 0 0 0 
+C  1230  1231 shower#hoses  40 misc  0 0 0 0 0 
+C  1231  1232 step;  16 stairs  0 0 0 0 0 
+C  1232  1233 bathtub#platform  40 misc  0 0 0 0 0 
+C  1233  1234 sauna#seats  34 seating  0 0 0 0 0 
+C  1234  1235 bucker  39 objects  0 0 0 0 0 
+C  1235  1236 ac  39 objects  0 0 0 0 0 
+C  1236  1237 unknown#/#remove  40 misc  0 0 0 0 0 
+C  1237  1238 art#/#statue  40 misc  0 0 0 0 0 
+C  1238  1239 dinner#table  5 table  0 0 0 0 0 
+C  1239  1240 storage  39 objects  0 0 0 0 0 
+C  1240  1241 unknown#kitchen#stuff  40 misc  0 0 0 0 0 
+C  1241  1242 alamari  36 furniture  0 0 0 0 0 
+C  1242  1243 cement#drum  40 misc  0 0 0 0 0 
+C  1243  1244 kitchen#cupboard  7 cabinet  0 0 0 0 0 
+C  1244  1245 platter  40 misc  0 0 0 0 0 
+C  1245  1246 large#chunk#of#art  40 misc  0 0 0 0 0 
+C  1246  1247 dushbin  39 objects  0 0 0 0 0 
+C  1247  1248 couch#pillows  8 cushion  0 0 0 0 0 
+C  1248  1249 ceiling#/other#room  17 ceiling  0 0 0 0 0 
+C  1249  1250 object#on#cutting#board  39 objects  0 0 0 0 0 
+C  1250  1251 show#wall  1 wall  0 0 0 0 0 
+C  1251  1252 robes  38 clothes  0 0 0 0 0 
+C  1252  1253 cusion  8 cushion  0 0 0 0 0 
+C  1253  1254 column#/outside  40 misc  0 0 0 0 0 
+C  1254  1255 hanging#clothes  38 clothes  0 0 0 0 0 
+C  1255  1256 newspaper#basket  39 objects  0 0 0 0 0 
+C  1256  1257 towels#in#a#bowl  20 towel  0 0 0 0 0 
+C  1257  1258 detached#door  4 door  0 0 0 0 0 
+C  1258  1259 big#door  4 door  0 0 0 0 0 
+C  1259  1260 wall#molding  1 wall  0 0 0 0 0 
+C  1260  1261 bed#/#other#room  11 bed  0 0 0 0 0 
+C  1261  1262 window#/w#pictures  40 misc  0 0 0 0 0 
+C  1262  1263 ceiling#corridor  40 misc  0 0 0 0 0 
+C  1263  1264 rotunda#base  40 misc  0 0 0 0 0 
+C  1264  1265 fire#extinguisher'  39 objects  0 0 0 0 0 
+C  1265  1266 unicycle  39 objects  0 0 0 0 0 
+C  1266  1267 ceiling#under#balcony  17 ceiling  0 0 0 0 0 
+C  1267  1268 laundary#machines  40 misc  0 0 0 0 0 
+C  1268  1269 nightstand#/reflection  13 chest_of_drawers  0 0 0 0 0 
+C  1269  1270 pile#of#magazines  40 misc  0 0 0 0 0 
+C  1270  1271 wall#of#statue#inset  40 misc  0 0 0 0 0 
+C  1271  1272 cosmetic  39 objects  0 0 0 0 0 
+C  1272  1273 unknown#item  39 objects  0 0 0 0 0 
+C  1273  1274 side#steps#4  16 stairs  0 0 0 0 0 
+C  1274  1275 kitchen#table  5 table  0 0 0 0 0 
+C  1275  1276 round#footstool  40 misc  0 0 0 0 0 
+C  1276  1277 firewood#holder  40 misc  0 0 0 0 0 
+C  1277  1278 flag  40 misc  0 0 0 0 0 
+C  1278  1279 window#frame#and#shelves  40 misc  0 0 0 0 0 
+C  1279  1280 towel#ring  39 objects  0 0 0 0 0 
+C  1280  1281 window#frame#/reflection  9 window  0 0 0 0 0 
+C  1281  1282 basket#of#something  40 misc  0 0 0 0 0 
+C  1282  1283 towel#rod  40 misc  0 0 0 0 0 
+C  1283  1284 window#/reflection  9 window  0 0 0 0 0 
+C  1284  1285 paper#storage  40 misc  0 0 0 0 0 
+C  1285  1286 t.v  22 tv_monitor  0 0 0 0 0 
+C  1286  1287 kitchen#bell  40 misc  0 0 0 0 0 
+C  1287  1288 ceiling#from#another#room  17 ceiling  0 0 0 0 0 
+C  1288  1289 throw#blanket  40 misc  0 0 0 0 0 
+C  1289  1290 wall#post  40 misc  0 0 0 0 0 
+C  1290  1291 sink#pipe  40 misc  0 0 0 0 0 
+C  1291  1292 workstation  39 objects  0 0 0 0 0 
+C  1292  1293 room#1#wall  1 wall  0 0 0 0 0 
+C  1293  1294 storage#space  40 misc  0 0 0 0 0 
+C  1294  1295 mattress  11 bed  0 0 0 0 0 
+C  1295  1296 kitchen#handle  39 objects  0 0 0 0 0 
+C  1296  1297 bed#side#table  13 chest_of_drawers  0 0 0 0 0 
+C  1297  1298 lookout  40 misc  0 0 0 0 0 
+C  1298  1299 bag#of#sand  40 misc  0 0 0 0 0 
+C  1299  1300 walll  1 wall  0 0 0 0 0 
+C  1300  1301 kitchen#countertop#object'  39 objects  0 0 0 0 0 
+C  1301  1302 bed#rest  11 bed  0 0 0 0 0 
+C  1302  1303 furniture#2  36 furniture  0 0 0 0 0 
+C  1303  1304 wall#ac#vent  40 misc  0 0 0 0 0 
+C  1304  1305 dumbbells  33 gym_equipment  0 0 0 0 0 
+C  1305  1306 weight  33 gym_equipment  0 0 0 0 0 
+C  1306  1307 fixture  39 objects  0 0 0 0 0 
+C  1307  1308 llight  28 lighting  0 0 0 0 0 
+C  1308  1309 show#space  40 misc  0 0 0 0 0 
+C  1309  1310 recessed#cubby  40 misc  0 0 0 0 0 
+C  1310  1311 oven#hood  39 objects  0 0 0 0 0 
+C  1311  1312 counter#doors  40 misc  0 0 0 0 0 
+C  1312  1313 roof#grill  40 misc  0 0 0 0 0 
+C  1313  1314 shower#dial  40 misc  0 0 0 0 0 
+C  1314  1315 riser  40 misc  0 0 0 0 0 
+C  1315  1316 plant#ornament  40 misc  0 0 0 0 0 
+C  1316  1317 floor#stand  40 misc  0 0 0 0 0 
+C  1317  1318 fruit  39 objects  0 0 0 0 0 
+C  1318  1319 frige  37 appliances  0 0 0 0 0 
+C  1319  1320 stairwell  16 stairs  0 0 0 0 0 
+C  1320  1321 trash#bag  40 misc  0 0 0 0 0 
+C  1321  1322 cups  39 objects  0 0 0 0 0 
+C  1322  1323 photo#mount  40 misc  0 0 0 0 0 
+C  1323  1324 drawers#for#clothes  40 misc  0 0 0 0 0 
+C  1324  1325 strange#ceiling  17 ceiling  0 0 0 0 0 
+C  1325  1326 bilow  40 misc  0 0 0 0 0 
+C  1326  1327 ceilng  17 ceiling  0 0 0 0 0 
+C  1327  1328 bathroom#towel  20 towel  0 0 0 0 0 
+C  1328  1329 john  18 toilet  0 0 0 0 0 
+C  1329  1330 refrigerator#cabinet  7 cabinet  0 0 0 0 0 
+C  1330  1331 fish#picture  40 misc  0 0 0 0 0 
+C  1331  1332 painting#frame  40 misc  0 0 0 0 0 
+C  1332  1333 display#table  5 table  0 0 0 0 0 
+C  1333  1334 round#seat  40 misc  0 0 0 0 0 
+C  1334  1335 lower#floor  2 floor  0 0 0 0 0 
+C  1335  1336 lid  40 misc  0 0 0 0 0 
+C  1336  1337 bonsai#tree  40 misc  0 0 0 0 0 
+C  1337  1338 window3  9 window  0 0 0 0 0 
+C  1338  1339 window2  9 window  0 0 0 0 0 
+C  1339  1340 window1  9 window  0 0 0 0 0 
+C  1340  1341 window5  9 window  0 0 0 0 0 
+C  1341  1342 shower#floor#surround  23 shower  0 0 0 0 0 
+C  1342  1343 folders  39 objects  0 0 0 0 0 
+C  1343  1344 decorative#plant  40 misc  0 0 0 0 0 
+C  1344  1345 cooker#unit  40 misc  0 0 0 0 0 
+C  1345  1346 towel#holder  40 misc  0 0 0 0 0 
+C  1346  1347 laundrybag  40 misc  0 0 0 0 0 
+C  1347  1348 bathroom#utencil  39 objects  0 0 0 0 0 
+C  1348  1349 wine#bottles  39 objects  0 0 0 0 0 
+C  1349  1350 high#shelf  40 misc  0 0 0 0 0 
+C  1350  1351 loveseat  10 sofa  0 0 0 0 0 
+C  1351  1352 couch#pillow  8 cushion  0 0 0 0 0 
+C  1352  1353 ceiling#molding  40 misc  0 0 0 0 0 
+C  1353  1354 firewook  40 misc  0 0 0 0 0 
+C  1354  1355 door#/otherroom  4 door  0 0 0 0 0 
+C  1355  1356 toaster?  37 appliances  0 0 0 0 0 
+C  1356  1357 foodstand  40 misc  0 0 0 0 0 
+C  1357  1358 weight#bench  33 gym_equipment  0 0 0 0 0 
+C  1358  1359 floor#/#room#above  2 floor  0 0 0 0 0 
+C  1359  1360 mini#fridge  37 appliances  0 0 0 0 0 
+C  1360  1361 bars  39 objects  0 0 0 0 0 
+C  1361  1362 lion  39 objects  0 0 0 0 0 
+C  1362  1363 cuddly#toy  40 misc  0 0 0 0 0 
+C  1363  1364 toilet#stall  40 misc  0 0 0 0 0 
+C  1364  1365 copier#machine  40 misc  0 0 0 0 0 
+C  1365  1366 raised#platform  40 misc  0 0 0 0 0 
+C  1366  1367 bell  40 misc  0 0 0 0 0 
+C  1367  1368 fireextinctioms  39 objects  0 0 0 0 0 
+C  1368  1369 table#vase  40 misc  0 0 0 0 0 
+C  1369  1370 bedroom#ceiling  40 misc  0 0 0 0 0 
+C  1370  1371 ceiling#\other#room  17 ceiling  0 0 0 0 0 
+C  1371  1372 chair#parts  40 misc  0 0 0 0 0 
+C  1372  1373 door#/#window  40 misc  0 0 0 0 0 
+C  1373  1374 closet#mirror#wall  40 misc  0 0 0 0 0 
+C  1374  1375 beam#across#top#of#arch  40 misc  0 0 0 0 0 
+C  1375  1376 fireplace#utensils  40 misc  0 0 0 0 0 
+C  1376  1377 liight  28 lighting  0 0 0 0 0 
+C  1377  1378 self#side  40 misc  0 0 0 0 0 
+C  1378  1379 kitchen#faucet  39 objects  0 0 0 0 0 
+C  1379  1380 candle#holder  39 objects  0 0 0 0 0 
+C  1380  1381 mirror/other#room  21 mirror  0 0 0 0 0 
+C  1381  1382 hall#top  40 misc  0 0 0 0 0 
+C  1382  1383 decoration#/#other#room  39 objects  0 0 0 0 0 
+C  1383  1384 shower#hose  40 misc  0 0 0 0 0 
+C  1384  1385 bottle#of#detergent  40 misc  0 0 0 0 0 
+C  1385  1386 box#opening  40 misc  0 0 0 0 0 
+C  1386  1387 hunting#trohpy  40 misc  0 0 0 0 0 
+C  1387  1388 rack#with#pool#cues  31 shelving  0 0 0 0 0 
+C  1388  1389 stack  40 misc  0 0 0 0 0 
+C  1389  1390 bed#stand  40 misc  0 0 0 0 0 
+C  1390  1391 planter#curb  40 misc  0 0 0 0 0 
+C  1391  1392 garage#door#motor  40 misc  0 0 0 0 0 
+C  1392  1393 entry  40 misc  0 0 0 0 0 
+C  1393  1394 a-frame#sign  40 misc  0 0 0 0 0 
+C  1394  1395 cuboid  40 misc  0 0 0 0 0 
+C  1395  1396 shelf#with#jars  31 shelving  0 0 0 0 0 
+C  1396  1397 wall#top  40 misc  0 0 0 0 0 
+C  1397  1398 window4  9 window  0 0 0 0 0 
+C  1398  1399 bath#faucet  39 objects  0 0 0 0 0 
+C  1399  1400 statue#/#art  40 misc  0 0 0 0 0 
+C  1400  1401 cabinet#/w#clutter  7 cabinet  0 0 0 0 0 
+C  1401  1402 workout#bike  40 misc  0 0 0 0 0 
+C  1402  1403 closet#area#for#hanging#clothes  40 misc  0 0 0 0 0 
+C  1403  1404 vase#\other#room  39 objects  0 0 0 0 0 
+C  1404  1405 art#/#muscle#shell  40 misc  0 0 0 0 0 
+C  1405  1406 center#island  26 counter  0 0 0 0 0 
+C  1406  1407 dedore  39 objects  0 0 0 0 0 
+C  1407  1408 dome#roof  40 misc  0 0 0 0 0 
+C  1408  1409 chair#/w#clutter  3 chair  0 0 0 0 0 
+C  1409  1410 basket#of#objects#(popcorn?)  39 objects  0 0 0 0 0 
+C  1410  1411 outer#side#wall  1 wall  0 0 0 0 0 
+C  1411  1412 top#floor  2 floor  0 0 0 0 0 
+C  1412  1413 pelt  39 objects  0 0 0 0 0 
+C  1413  1414 washer-dryer  40 misc  0 0 0 0 0 
+C  1414  1415 yellow#egg#shaped#vase  40 misc  0 0 0 0 0 
+C  1415  1416 entry#table  5 table  0 0 0 0 0 
+C  1416  1417 domino#decoration  40 misc  0 0 0 0 0 
+C  1417  1418 pc#tower  40 misc  0 0 0 0 0 
+C  1418  1419 unknown/#other#room  40 misc  0 0 0 0 0 
+C  1419  1420 bathroom#glass  39 objects  0 0 0 0 0 
+C  1420  1421 chanellier  28 lighting  0 0 0 0 0 
+C  1421  1422 makeup#area  40 misc  0 0 0 0 0 
+C  1422  1423 fireplace#mirror  40 misc  0 0 0 0 0 
+C  1423  1424 jug  39 objects  0 0 0 0 0 
+C  1424  1425 bathroom#window  9 window  0 0 0 0 0 
+C  1425  1426 falling#light  40 misc  0 0 0 0 0 
+C  1426  1427 snow#globe  40 misc  0 0 0 0 0 
+C  1427  1428 unknown#kitchen#appliance  40 misc  0 0 0 0 0 
+C  1428  1429 boxes#/w#books  40 misc  0 0 0 0 0 
+C  1429  1430 alarm  39 objects  0 0 0 0 0 
+C  1430  1431 electirc#outlet  39 objects  0 0 0 0 0 
+C  1431  1432 sauna#floor  2 floor  0 0 0 0 0 
+C  1432  1433 picture#/otherroom  6 picture  0 0 0 0 0 
+C  1433  1434 garage#door#railing  40 misc  0 0 0 0 0 
+C  1434  1435 other#ceiling  17 ceiling  0 0 0 0 0 
+C  1435  1436 lightbox#frame  40 misc  0 0 0 0 0 
+C  1436  1437 air#hole  40 misc  0 0 0 0 0 
+C  1437  1438 mantel  27 fireplace  0 0 0 0 0 
+C  1438  1439 cooker  39 objects  0 0 0 0 0 
+C  1439  1440 partial  40 misc  0 0 0 0 0 
+C  1440  1441 amplifier  39 objects  0 0 0 0 0 
+C  1441  1442 emergency#exit  16 stairs  0 0 0 0 0 
+C  1442  1443 barbecue  40 misc  0 0 0 0 0 
+C  1443  1444 unkown#/#other#room  40 misc  0 0 0 0 0 
+C  1444  1445 bath#sink  40 misc  0 0 0 0 0 
+C  1445  1446 spa#bench  34 seating  0 0 0 0 0 
+C  1446  1447 handsoap  39 objects  0 0 0 0 0 
+C  1447  1448 folding#stand  40 misc  0 0 0 0 0 
+C  1448  1449 table#plant  40 misc  0 0 0 0 0 
+C  1449  1450 hose#outlet  40 misc  0 0 0 0 0 
+C  1450  1451 theater#stage  39 objects  0 0 0 0 0 
+C  1451  1452 bar#cabinet  7 cabinet  0 0 0 0 0 
+C  1452  1453 washer#and#dryer  37 appliances  0 0 0 0 0 
+C  1453  1454 door#trim#molding  1 wall  0 0 0 0 0 
+C  1454  1455 paintings  6 picture  0 0 0 0 0 
+C  1455  1456 unknown#wall#part  40 misc  0 0 0 0 0 
+C  1456  1457 wooden#balcony  40 misc  0 0 0 0 0 
+C  1457  1458 shelves#with#shoes  31 shelving  0 0 0 0 0 
+C  1458  1459 stair#landing  39 objects  0 0 0 0 0 
+C  1459  1460 rack#of#excercise#weights  31 shelving  0 0 0 0 0 
+C  1460  1461 unknown#-#hot#tub?  40 misc  0 0 0 0 0 
+C  1461  1462 wall#window  9 window  0 0 0 0 0 
+C  1462  1463 ceiling#smoke#detector  40 misc  0 0 0 0 0 
+C  1463  1464 couch#type#chair  3 chair  0 0 0 0 0 
+C  1464  1465 scales  39 objects  0 0 0 0 0 
+C  1465  1466 chair#rail  40 misc  0 0 0 0 0 
+C  1466  1467 kitchen#backsplash  40 misc  0 0 0 0 0 
+C  1467  1468 shelves#/#other#room  40 misc  0 0 0 0 0 
+C  1468  1469 tools  39 objects  0 0 0 0 0 
+C  1469  1470 hoses#for#chemical#tank  40 misc  0 0 0 0 0 
+C  1470  1471 wall#behind#/#remove  1 wall  0 0 0 0 0 
+C  1471  1472 sauna#heat#rocks  40 misc  0 0 0 0 0 
+C  1472  1473 camera  39 objects  0 0 0 0 0 
+C  1473  1474 curtain#lighter  40 misc  0 0 0 0 0 
+C  1474  1475 table#decor  39 objects  0 0 0 0 0 
+C  1475  1476 brochure  39 objects  0 0 0 0 0 
+C  1476  1477 flowerwage  39 objects  0 0 0 0 0 
+C  1477  1478 drill  40 misc  0 0 0 0 0 
+C  1478  1479 book#stand  31 shelving  0 0 0 0 0 
+C  1479  1480 china#cabinet  7 cabinet  0 0 0 0 0 
+C  1480  1481 remove#/#behind  0 void  0 0 0 0 0 
+C  1481  1482 rotunda#wall  40 misc  0 0 0 0 0 
+C  1482  1483 stone#support#structure  40 misc  0 0 0 0 0 
+C  1483  1484 dresser#decor  39 objects  0 0 0 0 0 
+C  1484  1485 roof#/#other#room  17 ceiling  0 0 0 0 0 
+C  1485  1486 elliptical  33 gym_equipment  0 0 0 0 0 
+C  1486  1487 furnace  40 misc  0 0 0 0 0 
+C  1487  1488 foosball#table  5 table  0 0 0 0 0 
+C  1488  1489 maracas  39 objects  0 0 0 0 0 
+C  1489  1490 box#of#fruit  40 misc  0 0 0 0 0 
+C  1490  1491 window#screen  9 window  0 0 0 0 0 
+C  1491  1492 door#tag  40 misc  0 0 0 0 0 
+C  1492  1493 fire#pit  39 objects  0 0 0 0 0 
+C  1493  1494 box#of#tissues  40 misc  0 0 0 0 0 
+C  1494  1495 portal  39 objects  0 0 0 0 0 
+C  1495  1496 yoga#mat  40 misc  0 0 0 0 0 
+C  1496  1497 toy#duck  40 misc  0 0 0 0 0 
+C  1497  1498 motorcycle  39 objects  0 0 0 0 0 
+C  1498  1499 computer#tower  39 objects  0 0 0 0 0 
+C  1499  1500 frame#for#door  40 misc  0 0 0 0 0 
+C  1500  1501 theater#screen  40 misc  0 0 0 0 0 
+C  1501  1502 swimming#pool  40 misc  0 0 0 0 0 
+C  1502  1503 shelf#with#clutter  31 shelving  0 0 0 0 0 
+C  1503  1504 spice#rack  31 shelving  0 0 0 0 0 
+C  1504  1505 bed#small  40 misc  0 0 0 0 0 
+C  1505  1506 object/other#room  39 objects  0 0 0 0 0 
+C  1506  1507 dinnerware  39 objects  0 0 0 0 0 
+C  1507  1508 storage#shelves  31 shelving  0 0 0 0 0 
+C  1508  1509 tanning#bed  11 bed  0 0 0 0 0 
+C  1509  1510 grid#door  4 door  0 0 0 0 0 
+C  1510  1511 background#chair  3 chair  0 0 0 0 0 
+C  1511  1512 boarder  40 misc  0 0 0 0 0 
+C  1512  1513 closte  7 cabinet  0 0 0 0 0 
+C  1513  1514 doorframe#/#upstairs#room  4 door  0 0 0 0 0 
+C  1514  1515 rolling#cart  40 misc  0 0 0 0 0 
+C  1515  1516 box#of#tissue  40 misc  0 0 0 0 0 
+C  1516  1517 door#nob  40 misc  0 0 0 0 0 
+C  1517  1518 floor#\other#room  2 floor  0 0 0 0 0 
+C  1518  1519 table#w/#clutter  5 table  0 0 0 0 0 
+C  1519  1520 table#vase#soil  40 misc  0 0 0 0 0 
+C  1520  1521 light#box  40 misc  0 0 0 0 0 
+C  1521  1522 wines  40 misc  0 0 0 0 0 
+C  1522  1523 sliding#glass#door  40 misc  0 0 0 0 0 
+C  1523  1524 toilet#handle  40 misc  0 0 0 0 0 
+C  1524  1525 bath#deco  40 misc  0 0 0 0 0 
+C  1525  1526 shower#hose/head  40 misc  0 0 0 0 0 
+C  1526  1527 shower#case  40 misc  0 0 0 0 0 
+C  1527  1528 mortar  40 misc  0 0 0 0 0 
+C  1528  1529 watering#can  39 objects  0 0 0 0 0 
+C  1529  1530 scarf  38 clothes  0 0 0 0 0 
+C  1530  1531 softer  40 misc  0 0 0 0 0 
+C  1531  1532 soap#dish#cubby  40 misc  0 0 0 0 0 
+C  1532  1533 paintintg  6 picture  0 0 0 0 0 
+C  1533  1534 cleaning#clutter  40 misc  0 0 0 0 0 
+C  1534  1535 fireplace#tool#set  40 misc  0 0 0 0 0 
+C  1535  1536 table#stand  40 misc  0 0 0 0 0 
+C  1536  1537 shower#valve  40 misc  0 0 0 0 0 
+C  1537  1538 long#sofa  10 sofa  0 0 0 0 0 
+C  1538  1539 wall#soap#shelf  40 misc  0 0 0 0 0 
+C  1539  1540 ceiling#inset#for#fan  40 misc  0 0 0 0 0 
+C  1540  1541 beanbag#chair  3 chair  0 0 0 0 0 
+C  1541  1542 door#bottom#rail  40 misc  0 0 0 0 0 
+C  1542  1543 sowing#machine  40 misc  0 0 0 0 0 
+C  1543  1544 couch#chair  3 chair  0 0 0 0 0 
+C  1544  1545 tabletop#trinket  40 misc  0 0 0 0 0 
+C  1545  1546 ceilling  17 ceiling  0 0 0 0 0 
+C  1546  1547 flowerstand  40 misc  0 0 0 0 0 
+C  1547  1548 wall#stand  40 misc  0 0 0 0 0 
+C  1548  1549 shower#cabin  40 misc  0 0 0 0 0 
+C  1549  1550 shower-bath#cabinet  7 cabinet  0 0 0 0 0 
+C  1550  1551 teddy#bear  39 objects  0 0 0 0 0 
+C  1551  1552 foor#lamp  28 lighting  0 0 0 0 0 
+C  1552  1553 water#fountain  40 misc  0 0 0 0 0 
+C  1553  1554 elephant#sculpture  40 misc  0 0 0 0 0 
+C  1554  1555 grate  40 misc  0 0 0 0 0 
+C  1555  1556 chicken  39 objects  0 0 0 0 0 
+C  1556  1557 bathroom#fan  39 objects  0 0 0 0 0 
+C  1557  1558 roomba  40 misc  0 0 0 0 0 
+C  1558  1559 planter  39 objects  0 0 0 0 0 
+C  1559  1560 controls  39 objects  0 0 0 0 0 
+C  1560  1561 nightstand#/#other#room  13 chest_of_drawers  0 0 0 0 0 
+C  1561  1562 worktop  40 misc  0 0 0 0 0 
+C  1562  1563 steps#wall  40 misc  0 0 0 0 0 
+C  1563  1564 door#fireplace#wall  4 door  0 0 0 0 0 
+C  1564  1565 floor#/#upstairs#room  2 floor  0 0 0 0 0 
+C  1565  1566 oven#and#stove  40 misc  0 0 0 0 0 
+C  1566  1567 chest#drawer  40 misc  0 0 0 0 0 
+C  1567  1568 door#outside  4 door  0 0 0 0 0 
+C  1568  1569 fireplace#\other#room  27 fireplace  0 0 0 0 0 
+C  1569  1570 hammock  11 bed  0 0 0 0 0 
+C  1570  1571 dartboard  39 objects  0 0 0 0 0 
+C  1571  1572 fireplace#brush  40 misc  0 0 0 0 0 
+C  1572  1573 drum  39 objects  0 0 0 0 0 
+C  1573  1574 rotunda#ceiling  17 ceiling  0 0 0 0 0 
+C  1574  1575 ceiling#light#fixture#connection  40 misc  0 0 0 0 0 
+C  1575  1576 stair#fencing  30 railing  0 0 0 0 0 
+C  1576  1577 piano#stool  19 stool  0 0 0 0 0 
+C  1577  1578 swing#door  4 door  0 0 0 0 0 
+C  1578  1579 bathtub#utencils  40 misc  0 0 0 0 0 
+C  1579  1580 access#area  40 misc  0 0 0 0 0 
+C  1580  1581 exercise#mat#roll  40 misc  0 0 0 0 0 
+C  1581  1582 ceiling##duct  17 ceiling  0 0 0 0 0 
+C  1582  1583 motorbike  39 objects  0 0 0 0 0 
+C  1583  1584 floor#elevator  40 misc  0 0 0 0 0 
+C  1584  1585 kitchen#countertop#items  40 misc  0 0 0 0 0 
+C  1585  1586 entertainment#set  40 misc  0 0 0 0 0 
+C  1586  1587 shower#curtain#bar  40 misc  0 0 0 0 0 
+C  1587  1588 bedroom#entry#walls  1 wall  0 0 0 0 0 
+C  1588  1589 oven#vent  40 misc  0 0 0 0 0 
+C  1589  1590 shower#floor#/otherroom  23 shower  0 0 0 0 0 
+C  1590  1591 washing#bowl  15 sink  0 0 0 0 0 
+C  1591  1592 desert#plate  40 misc  0 0 0 0 0 
+C  1592  1593 fuse#panel  40 misc  0 0 0 0 0 
+C  1593  1594 barbers#chair  3 chair  0 0 0 0 0 
+C  1594  1595 diploma  40 misc  0 0 0 0 0 
+C  1595  1596 wall#behind#stove  1 wall  0 0 0 0 0 
+C  1596  1597 window6  9 window  0 0 0 0 0 
+C  1597  1598 ceiling#/otherroom  17 ceiling  0 0 0 0 0 
+C  1598  1599 ventilation#hood  40 misc  0 0 0 0 0 
+C  1599  1600 dirt#ground  40 misc  0 0 0 0 0 
+C  1600  1601 awning  39 objects  0 0 0 0 0 
+C  1601  1602 stiarcase#step  16 stairs  0 0 0 0 0 
+C  1602  1603 rack#of#weights  40 misc  0 0 0 0 0 
+C  1603  1604 shower#tub  25 bathtub  0 0 0 0 0 
+C  1604  1605 washing#powder  40 misc  0 0 0 0 0 
+C  1605  1606 toilet#cleaner  40 misc  0 0 0 0 0 
+C  1606  1607 soap#displensor#shelf#in#shower  40 misc  0 0 0 0 0 
+C  1607  1608 window#or#door  40 misc  0 0 0 0 0 
+C  1608  1609 storage#boxes  40 misc  0 0 0 0 0 
+C  1609  1610 closet#storage#area  40 misc  0 0 0 0 0 
+C  1610  1611 stationary#bike  33 gym_equipment  0 0 0 0 0 
+C  1611  1612 bedding  39 objects  0 0 0 0 0 
+C  1612  1613 stair#handrail  30 railing  0 0 0 0 0 
+C  1613  1614 room#divider  40 misc  0 0 0 0 0 
+C  1614  1615 window#frames  9 window  0 0 0 0 0 
+C  1615  1616 wall#electrics  40 misc  0 0 0 0 0 
+C  1616  1617 other#step  16 stairs  0 0 0 0 0 
+C  1617  1618 tabletop#objects  39 objects  0 0 0 0 0 
+C  1618  1619 foosball#game#table  5 table  0 0 0 0 0 
+C  1619  1620 wall#showcase  40 misc  0 0 0 0 0 
+C  1620  1621 kitchen#utencil  39 objects  0 0 0 0 0 
+C  1621  1622 towels#in#a#basket  39 objects  0 0 0 0 0 
+C  1622  1623 lamp#stand  40 misc  0 0 0 0 0 
+C  1623  1624 toy#giraffe  40 misc  0 0 0 0 0 
+C  1624  1625 big#door#frame  4 door  0 0 0 0 0 
+C  1625  1626 unknown#/#probably#shrubbery  40 misc  0 0 0 0 0 
+C  1626  1627 wooden#wall#paneling  1 wall  0 0 0 0 0 
+C  1627  1628 bedstead  11 bed  0 0 0 0 0 
+C  1628  1629 fire#dish  40 misc  0 0 0 0 0 
+C  1629  1630 tray#with#tea#cups  39 objects  0 0 0 0 0 
+C  1630  1631 television#table  36 furniture  0 0 0 0 0 
+C  1631  1632 tissues  40 misc  0 0 0 0 0 
+C  1632  1633 sitting#area  40 misc  0 0 0 0 0 
+C  1633  1634 wall#vent  40 misc  0 0 0 0 0 
+C  1634  1635 utensils  39 objects  0 0 0 0 0 
+C  1635  1636 pip  39 objects  0 0 0 0 0 
+C  1636  1637 fireplace#wall  40 misc  0 0 0 0 0 
+C  1637  1638 stonework  40 misc  0 0 0 0 0 
+C  1638  1639 bottom#of#stairs  40 misc  0 0 0 0 0 
+C  1639  1640 star  39 objects  0 0 0 0 0 
+C  1640  1641 art#/#deer#statue  39 objects  0 0 0 0 0 
+C  1641  1642 unknown#objects  39 objects  0 0 0 0 0 
+C  1642  1643 wall#side  1 wall  0 0 0 0 0 
+C  1643  1644 shower#glass#/shifted  40 misc  0 0 0 0 0 
+C  1644  1645 toilet#stall#partition  40 misc  0 0 0 0 0 
+C  1645  1646 ceiling#design  40 misc  0 0 0 0 0 
+C  1646  1647 conference#table  5 table  0 0 0 0 0 
+C  1647  1648 edge  40 misc  0 0 0 0 0 
+C  1648  1649 electrical#box  39 objects  0 0 0 0 0 
+C  1649  1650 entrance  40 misc  0 0 0 0 0 
+C  1650  1651 gap  39 objects  0 0 0 0 0 
+C  1651  1652 garage#door#opener#motor  40 misc  0 0 0 0 0 
+C  1652  1653 lamp#base  28 lighting  0 0 0 0 0 
+C  1653  1654 racks  31 shelving  0 0 0 0 0 
+C  1654  1655 stringer  40 misc  0 0 0 0 0 
+C  1655  1656 supporting#structure  40 misc  0 0 0 0 0 
+C  1656  1657 typewriter  39 objects  0 0 0 0 0 
+C  1657  1658 walls  1 wall  0 0 0 0 0 
+C  1658  1659 washbasin#top  15 sink  0 0 0 0 0 
+O  0 0 0  -8.86568 2.73879 1.28177  0 1 0  1 -0 0  2.29591 2.29455 1.29074  0 0 0 0 0 0 0 0 
+O  1 0 2  -8.91329 2.80575 2.20326  -1 2.22045e-16 0  2.22045e-16 1 0  2.2381 2.23004 0.356218  0 0 0 0 0 0 0 0 
+O  2 0 1613  -8.69572 4.21347 1.16334  1 0 0  -0 0 1  1.25106 1.17037 0.309755  0 0 0 0 0 0 0 0 
+O  3 0 13  -10.9129 2.92287 1.04546  2.22045e-16 1 0  -0 0 1  1.92746 1.06743 0.245857  0 0 0 0 0 0 0 0 
+O  4 0 63  -8.06444 1.722 1.44916  0 0 1  0.382683 0.92388 -0  0.767361 0.419009 0.161133  0 0 0 0 0 0 0 0 
+O  5 0 25  -8.71032 2.784 0.656716  0 1 0  1 -0 0  1.22826 1.01288 0.633634  0 0 0 0 0 0 0 0 
+O  6 0 63  -6.79918 1.91666 1.40336  0 0 1  -1 2.22045e-16 0  0.409792 0.142383 0.0423602  0 0 0 0 0 0 0 0 
+O  7 0 37  -10.9803 1.43764 1.01896  -0.382683 0.92388 0  0 0 1  0.547055 0.337188 0.277268  0 0 0 0 0 0 0 0 
+O  8 7 -1  -2.33883 2.3017 1.45142  -1 2.22045e-16 0  2.22045e-16 1 0  7.22495 2.28041 1.33704  0 0 0 0 0 0 0 0 
+O  9 0 176  -9.89281 3.54748 0.314919  0 0 1  1 0 0  0.318378 0.287548 0.238253  0 0 0 0 0 0 0 0 
+O  10 0 9  -9.2041 3.71507 0.582789  -1 2.22045e-16 0  0 0 1  0.50482 0.451421 0.157346  0 0 0 0 0 0 0 0 
+O  11 0 176  -7.5574 3.44432 0.322684  0 0 1  1 0 0  0.309951 0.296034 0.219009  0 0 0 0 0 0 0 0 
+O  12 0 3  -8.8765 2.76246 0.212638  1 0 0  0 1 0  2.27455 2.27287 0.234669  0 0 0 0 0 0 0 0 
+O  13 0 39  -8.86988 2.79008 1.2759  1 0 0  0 1 0  2.28705 2.1515 1.29378  0 0 0 0 0 0 0 0 
+O  14 0 18  -6.91922 4.75588 1.43543  0 1 0  1 -0 0  0.239953 0.225588 0.206906  0 0 0 0 0 0 0 0 
+O  15 0 403  -9.53177 3.9048 1.64997  0 0 1  2.22045e-16 1 -0  0.684586 0.0940824 0.0551605  0 0 0 0 0 0 0 0 
+O  16 0 9  -8.28132 3.62131 0.869451  1 0 0  -0 0 1  0.481083 0.164759 0.120711  0 0 0 0 0 0 0 0 
+O  17 0 63  -8.20673 2.67057 1.37575  0 0 1  0 1 -0  0.495782 0.136776 0.0449648  0 0 0 0 0 0 0 0 
+O  18 0 9  -9.10539 3.47545 0.782078  -1 2.22045e-16 0  0 0 1  0.554033 0.208451 0.185685  0 0 0 0 0 0 0 0 
+O  19 0 94  -10.7531 1.55627 0.503434  -0.382683 0.92388 0  0.92388 0.382683 0  0.198218 0.170497 0.0518161  0 0 0 0 0 0 0 0 
+O  20 0 18  -9.87859 3.55091 1.66398  0 0 1  -0.707107 0.707107 0  0.267379 0.0772787 0.0724955  0 0 0 0 0 0 0 0 
+O  21 0 9  -8.25543 3.39671 0.823072  1 0 0  -0 0 1  0.483323 0.170613 0.163888  0 0 0 0 0 0 0 0 
+O  22 0 9  -8.67591 3.26904 0.764917  1 0 0  0 1 0  0.262263 0.132249 0.12425  0 0 0 0 0 0 0 0 
+O  23 1 3  -6.30858 -0.473252 0.0997504  -1 2.22045e-16 0  2.22045e-16 1 0  1.99382 1.0688 0.115647  0 0 0 0 0 0 0 0 
+O  24 1 1  -7.88933 0.396992 1.12326  0 0 1  1 0 0  1.12014 0.415869 0.159198  0 0 0 0 0 0 0 0 
+O  25 1 20  -6.34468 -0.88458 1.00749  0 0 1  1 0 0  0.193647 0.142313 0.0610025  0 0 0 0 0 0 0 0 
+O  26 1 45  -7.46994 -1.91884 1.1393  0 0 1  0 1 -0  1.09996 0.971402 0.698596  0 0 0 0 0 0 0 0 
+O  27 1 20  -5.23814 -1.01072 0.301346  -0.92388 -0.382683 0  -0.382683 0.92388 0  0.162751 0.118405 0.106915  0 0 0 0 0 0 0 0 
+O  28 1 21  -5.11158 -1.26111 0.540966  1 0 0  -0 0 1  0.766943 0.522925 0.301834  0 0 0 0 0 0 0 0 
+O  29 1 0  -6.28502 -1.06648 1.15027  1 0 0  0 1 0  2.02074 1.72104 1.14435  0 0 0 0 0 0 0 0 
+O  30 1 39  -6.25138 -0.606215 1.1302  1 0 0  0 1 0  1.92081 1.16217 1.11015  0 0 0 0 0 0 0 0 
+O  31 1 41  -6.24197 0.328448 0.791637  1 0 0  0 1 0  0.547728 0.215084 0.193557  0 0 0 0 0 0 0 0 
+O  32 1 19  -5.12834 -1.50688 1.57184  0 0 1  1 0 0  0.549153 0.48578 0.0688209  0 0 0 0 0 0 0 0 
+O  33 1 19  -6.36272 0.532729 1.40373  1 0 0  -0 0 1  0.534787 0.502664 0.118784  0 0 0 0 0 0 0 0 
+O  34 1 657  -8.02624 -0.637746 0.829816  0 0 1  2.22045e-16 1 -0  0.676992 0.29527 0.112002  0 0 0 0 0 0 0 0 
+O  35 1 2  -6.27911 -1.08386 2.1538  1 0 0  0 1 0  1.96651 1.69036 0.101368  0 0 0 0 0 0 0 0 
+O  36 1 1544  -6.1586 0.455514 1.15315  0 0 1  -0.92388 0.382683 0  0.23586 0.159031 0.139726  0 0 0 0 0 0 0 0 
+O  37 1 20  -6.52214 -0.873028 1.00457  0 0 1  1 0 0  0.197438 0.0897419 0.0758385  0 0 0 0 0 0 0 0 
+O  38 1 19  -8.14282 -2.45954 1.20601  0 0 1  2.22045e-16 1 -0  1.02117 0.319693 0.0423112  0 0 0 0 0 0 0 0 
+O  39 1 107  -4.63514 -1.14331 0.192412  1 0 0  0 1 0  0.279514 0.17952 0.173952  0 0 0 0 0 0 0 0 
+O  40 1 107  -5.09848 -1.14052 0.199353  -1 2.22045e-16 0  2.22045e-16 1 0  0.322111 0.228457 0.182874  0 0 0 0 0 0 0 0 
+O  41 1 32  -6.20754 0.320502 0.30116  1 0 0  0 1 0  0.259885 0.227518 0.217547  0 0 0 0 0 0 0 0 
+O  42 1 20  -6.15957 -0.899453 0.997701  0 0 1  1 0 0  0.211276 0.157426 0.0496685  0 0 0 0 0 0 0 0 
+O  43 1 11  -5.81431 -1.31515 1.25902  0 0 1  0 1 -0  0.191172 0.134135 0.0764794  0 0 0 0 0 0 0 0 
+O  44 1 20  -5.07013 -0.99312 0.307974  1 0 0  -0 0 1  0.111795 0.0715152 0.0661107  0 0 0 0 0 0 0 0 
+O  45 1 81  -5.80124 0.474887 0.997148  0 0 1  0 1 -0  0.080892 0.0667849 0.0645595  0 0 0 0 0 0 0 0 
+O  46 1 81  -5.36155 -1.44561 0.967391  0 0 1  0 1 -0  0.116156 0.0830521 0.0407848  0 0 0 0 0 0 0 0 
+O  47 1 20  -5.55976 -1.31517 0.942865  2.22045e-16 1 0  -0 0 1  0.137552 0.0595535 0.0590084  0 0 0 0 0 0 0 0 
+O  48 1 375  -4.55448 -1.47119 0.975724  0 0 1  -1 2.22045e-16 0  0.091539 0.0800965 0.0796235  0 0 0 0 0 0 0 0 
+O  49 1 20  -4.88857 -1.02283 0.297308  -0.707107 0.707107 0  0 0 1  0.121389 0.0822257 0.0802904  0 0 0 0 0 0 0 0 
+O  50 1 11  -7.5625 -2.15562 2.2213  0 1 0  1 -0 0  0.0967648 0.067728 0.00398576  0 0 0 0 0 0 0 0 
+O  51 1 60  -7.46171 -1.84906 0.0780964  2.22045e-16 1 0  -1 2.22045e-16 0  0.915263 0.631632 0.062751  0 0 0 0 0 0 0 0 
+O  52 1 78  -5.15562 -0.604533 0.0277602  1 0 0  0 1 0  0.471532 0.339668 0.0148121  0 0 0 0 0 0 0 0 
+O  53 2 0  -3.84606 -0.472761 1.07556  0 1 0  0 0 1  1.10054 1.07431 0.600033  0 0 0 0 0 0 0 0 
+O  54 2 27  -3.71415 -1.19677 0.600688  0 0 1  0 1 -0  0.577717 0.348753 0.216146  0 0 0 0 0 0 0 0 
+O  55 2 788  -3.32806 -0.6353 0.896609  0 1 0  0 0 1  0.100802 0.0835057 0.0204377  0 0 0 0 0 0 0 0 
+O  56 2 1  -4.01703 0.49125 1.07404  0 0 1  1 0 0  1.07025 0.405194 0.128988  0 0 0 0 0 0 0 0 
+O  57 2 3  -3.85786 -0.478695 0.0965491  0 1 0  1 -0 0  1.06641 0.547465 0.0965429  0 0 0 0 0 0 0 0 
+O  58 2 2  -3.87177 -0.465856 2.09983  2.22045e-16 1 0  -1 2.22045e-16 0  1.09477 0.564315 0.076511  0 0 0 0 0 0 0 0 
+O  59 1 39  -4.38042 -1.52318 0.429914  0 0 1  -0.92388 0.382683 0  0.417671 0.0482211 0.0363006  0 0 0 0 0 0 0 0 
+O  60 2 64  -3.40167 -0.616908 0.480647  1 0 0  -0 0 1  0.0989672 0.0844612 0.072293  0 0 0 0 0 0 0 0 
+O  61 2 11  -3.82388 -1.21818 2.1198  1 0 0  0 1 0  0.0910631 0.0861049 0.0139294  0 0 0 0 0 0 0 0 
+O  62 1 56  -4.36833 -0.951934 0.46881  0 0 1  0 1 -0  0.0806327 0.0378057 0.0339835  0 0 0 0 0 0 0 0 
+O  63 1 65  -4.36262 -1.31342 0.846648  0 1 0  0 0 1  0.188618 0.0400586 0.0396621  0 0 0 0 0 0 0 0 
+O  64 3 0  3.60742 -0.988435 1.03731  1 0 0  -0 0 1  1.2787 1.07518 1.07237  0 0 0 0 0 0 0 0 
+O  65 3 2  3.65716 -0.996136 2.0063  1 0 0  0 1 0  1.22366 1.06192 0.109429  0 0 0 0 0 0 0 0 
+O  66 3 3  3.48251 -0.968298 0.112687  1 0 0  0 1 0  1.14534 1.0373 0.15117  0 0 0 0 0 0 0 0 
+O  67 3 19  4.62341 -0.531252 1.47571  0 0 1  0 1 -0  0.56005 0.477925 0.0737991  0 0 0 0 0 0 0 0 
+O  68 3 1  2.80099 -0.828473 1.00345  0 0 1  -0.92388 0.382683 0  1.02612 0.436492 0.113585  0 0 0 0 0 0 0 0 
+O  69 3 56  4.35359 -0.519822 0.466405  0 1 0  1 -0 0  0.586162 0.286318 0.261187  0 0 0 0 0 0 0 0 
+O  70 3 27  4.2501 -1.6494 0.382824  0 0 1  1 0 0  0.411579 0.387474 0.288002  0 0 0 0 0 0 0 0 
+O  71 3 21  4.37183 -0.546896 0.773246  0 1 0  1 -0 0  0.326141 0.24148 0.0993583  0 0 0 0 0 0 0 0 
+O  72 3 64  3.71309 -1.95555 0.419891  0 0 1  1 0 0  0.0738123 0.0711428 0.0702838  0 0 0 0 0 0 0 0 
+O  73 3 11  4.33218 -1.75022 2.07282  1 0 0  0 1 0  0.118379 0.108992 0.0141755  0 0 0 0 0 0 0 0 
+O  74 3 65  4.35029 -0.518219 0.622984  0 1 0  1 -0 0  0.585086 0.281418 0.147749  0 0 0 0 0 0 0 0 
+O  75 3 50  4.45604 -1.27812 0.144403  0 1 0  0 0 1  0.165729 0.162777 0.142388  0 0 0 0 0 0 0 0 
+O  76 3 20  3.83078 0.000283532 1.03579  0 0 1  1 0 0  0.192142 0.105256 0.0806184  0 0 0 0 0 0 0 0 
+O  77 3 20  4.43966 -0.940347 0.783653  1 0 0  0 1 0  0.15125 0.0816882 0.0595557  0 0 0 0 0 0 0 0 
+O  78 3 39  4.44918 -0.76837 0.576297  -0.382683 0.92388 0  0 0 1  1.00434 0.561716 0.388522  0 0 0 0 0 0 0 0 
+O  79 3 81  4.55607 -0.329305 0.910545  0 0 1  1 0 0  0.0989437 0.0610325 0.0399822  0 0 0 0 0 0 0 0 
+O  80 3 64  4.56925 -1.76356 0.847978  0 1 0  0 0 1  0.10476 0.0944994 0.0678604  0 0 0 0 0 0 0 0 
+O  81 4 39  2.74784 3.6499 1.0001  1 0 0  0 1 0  1.84274 1.73701 1.114  0 0 0 0 0 0 0 0 
+O  82 4 0  2.82726 2.9695 1.27236  0 1 0  1 -0 0  2.39924 1.94122 1.27365  0 0 0 0 0 0 0 0 
+O  83 4 11  1.38924 4.76383 1.48365  0 0 1  0 1 -0  0.186126 0.183328 0.136482  0 0 0 0 0 0 0 0 
+O  84 4 1  1.09621 0.871142 1.06275  0 0 1  0 1 -0  1.0442 0.440622 0.119726  0 0 0 0 0 0 0 0 
+O  85 4 36  3.86015 4.21918 0.626733  -0.382683 0.92388 0  0 0 1  0.26704 0.231153 0.182401  0 0 0 0 0 0 0 0 
+O  86 4 23  3.26058 2.99687 0.647559  0 1 0  1 -0 0  2.37135 1.25308 0.656385  0 0 0 0 0 0 0 0 
+O  87 4 37  1.04098 2.83595 1.50769  2.22045e-16 1 0  -0 0 1  1.00342 0.605555 0.0676671  0 0 0 0 0 0 0 0 
+O  88 4 7  1.67485 0.483638 1.09855  0 0 1  -1 2.22045e-16 0  1.09406 0.715624 0.120928  0 0 0 0 0 0 0 0 
+O  89 4 36  4.14528 2.87913 0.629199  2.22045e-16 1 0  -0 0 1  0.261906 0.234969 0.152408  0 0 0 0 0 0 0 0 
+O  90 4 3  2.328 2.71997 0.0688434  0 1 0  1 -0 0  2.34957 1.32673 0.158977  0 0 0 0 0 0 0 0 
+O  91 4 126  3.3081 5.35946 1.55235  -1 2.22045e-16 0  0 0 1  1.23172 0.507774 0.104995  0 0 0 0 0 0 0 0 
+O  92 4 135  1.36847 2.74707 0.232416  0 1 0  1 -0 0  0.944274 0.362881 0.217255  0 0 0 0 0 0 0 0 
+O  93 6 2  1.68818 0.424312 2.1309  1 0 0  -0 0 1  0.694539 0.0617023 0.0474796  0 0 0 0 0 0 0 0 
+O  94 4 151  1.45795 4.1391 0.159478  -0.92388 0.382683 0  -0.382683 -0.92388 0  0.168735 0.151613 0.15041  0 0 0 0 0 0 0 0 
+O  95 5 0  -0.706589 2.85023 1.27102  0 1 0  1 -0 0  2.44639 1.57791 1.29198  0 0 0 0 0 0 0 0 
+O  96 5 13  -0.507388 5.22716 1.04849  -1 2.22045e-16 0  0 0 1  1.35415 1.06972 0.140878  0 0 0 0 0 0 0 0 
+O  97 5 232  -0.647833 2.9152 0.771967  0 1 0  1 -0 0  0.243794 0.243184 0.238673  0 0 0 0 0 0 0 0 
+O  98 5 2  -0.711096 2.52398 2.48066  2.22045e-16 1 0  -1 2.22045e-16 0  1.98055 1.57345 0.0910085  0 0 0 0 0 0 0 0 
+O  99 5 28  -1.15022 3.15321 0.406441  0 0 1  -0.382683 0.92388 0  0.396412 0.380915 0.366341  0 0 0 0 0 0 0 0 
+O  100 5 3  -0.694198 2.89041 0.22786  0 1 0  1 -0 0  2.47764 1.51593 0.255658  0 0 0 0 0 0 0 0 
+O  101 5 42  0.804281 3.03451 1.37052  2.22045e-16 1 0  -0 0 1  0.698209 0.689638 0.014689  0 0 0 0 0 0 0 0 
+O  102 5 28  -0.0489648 2.57532 0.390479  -0.382683 0.92388 0  0 0 1  0.409249 0.401629 0.327904  0 0 0 0 0 0 0 0 
+O  103 5 39  -0.877934 3.32679 1.28087  -0.382683 -0.92388 0  -0.92388 0.382683 0  1.96817 1.28489 1.28013  0 0 0 0 0 0 0 0 
+O  104 5 28  -0.143146 3.2015 0.535723  -0.92388 -0.382683 0  -0.382683 0.92388 0  0.44263 0.380768 0.261594  0 0 0 0 0 0 0 0 
+O  105 5 28  -0.0309775 3.96807 0.416401  0 0 1  -0.707107 0.707107 0  0.371193 0.364292 0.357591  0 0 0 0 0 0 0 0 
+O  106 5 11  -0.493326 3.26886 2.40722  1 0 0  0 1 0  0.571367 0.570856 0.0739945  0 0 0 0 0 0 0 0 
+O  107 5 28  -0.603298 1.86697 0.443924  0.92388 0.382683 0  -0.382683 0.92388 0  0.412456 0.373282 0.351095  0 0 0 0 0 0 0 0 
+O  108 5 28  -0.552733 4.55888 0.389298  0 0 1  0 1 -0  0.397518 0.37656 0.341015  0 0 0 0 0 0 0 0 
+O  109 5 37  -2.17001 3.24498 1.25283  2.22045e-16 1 0  -0 0 1  0.648137 0.429797 0.0542367  0 0 0 0 0 0 0 0 
+O  110 5 28  -1.09422 2.39938 0.410828  1 0 0  -0 0 1  0.406006 0.39069 0.387327  0 0 0 0 0 0 0 0 
+O  111 5 232  -0.629162 3.6424 0.759032  1 0 0  0 1 0  0.232651 0.198081 0.149491  0 0 0 0 0 0 0 0 
+O  112 5 28  -1.14942 3.94301 0.43317  0 0 1  -0.382683 0.92388 0  0.414689 0.370631 0.35557  0 0 0 0 0 0 0 0 
+O  113 5 11  -1.68522 4.47648 2.32765  0 0 1  -1 2.22045e-16 0  0.0672753 0.0536098 0.0250854  0 0 0 0 0 0 0 0 
+O  114 6 44  1.86202 -1.43625 0.589406  -1 2.22045e-16 0  0 0 1  0.482468 0.285857 0.250728  0 0 0 0 0 0 0 0 
+O  115 6 0  0.758759 -0.797976 1.08999  1 0 0  0 1 0  1.70908 1.35577 1.10483  0 0 0 0 0 0 0 0 
+O  116 6 1  0.351876 -2.10108 1.06001  0 0 1  1 0 0  1.04879 0.941981 0.0476655  0 0 0 0 0 0 0 0 
+O  117 3 7  2.40795 -0.402091 1.00947  0 0 1  0 1 -0  1.02034 0.393294 0.0743766  0 0 0 0 0 0 0 0 
+O  118 6 2  0.719852 -0.777813 2.11352  1 0 0  0 1 0  1.66664 1.33965 0.0911297  0 0 0 0 0 0 0 0 
+O  119 4 7  1.55134 0.469907 1.04289  0 0 1  -1 2.22045e-16 0  1.0308 0.448115 0.0385894  0 0 0 0 0 0 0 0 
+O  120 6 3  0.734306 -0.771673 0.1164  1 0 0  0 1 0  1.68073 1.32475 0.134348  0 0 0 0 0 0 0 0 
+O  121 6 19  1.89513 -1.67373 1.58084  0 0 1  -1 2.22045e-16 0  0.42151 0.408001 0.0365698  0 0 0 0 0 0 0 0 
+O  122 6 39  1.71626 -0.485486 1.11899  0.382683 0.92388 0  -0 0 1  1.02646 0.688218 0.0918723  0 0 0 0 0 0 0 0 
+O  123 6 11  0.246428 -0.901119 2.18852  0.707107 0.707107 0  -0.707107 0.707107 0  0.390591 0.273597 0.00760615  0 0 0 0 0 0 0 0 
+O  124 7 8  -5.09359 2.01419 0.246299  -0.92388 0.382683 0  0.382683 0.92388 0  0.315603 0.158078 0.13471  0 0 0 0 0 0 0 0 
+O  125 7 0  -4.41307 2.94232 1.27845  2.22045e-16 1 0  -1 2.22045e-16 0  2.382 2.32313 1.29871  0 0 0 0 0 0 0 0 
+O  126 7 2  -4.41698 2.55967 2.61976  1 0 0  0 1 0  2.2995 1.99364 0.152207  0 0 0 0 0 0 0 0 
+O  127 7 13  -4.21181 5.15368 1.04133  -1 2.22045e-16 0  0 0 1  1.94803 1.06006 0.210999  0 0 0 0 0 0 0 0 
+O  128 7 8  -2.97975 3.18726 0.578674  0 1 0  0 0 1  0.347343 0.237491 0.180526  0 0 0 0 0 0 0 0 
+O  129 7 8  -3.81192 0.917471 2.04423  1 0 0  0 1 0  0.618123 0.218204 0.146148  0 0 0 0 0 0 0 0 
+O  130 7 23  -4.74524 3.84594 0.415309  0.707107 0.707107 0  -0.707107 0.707107 0  2.09816 0.856079 0.40673  0 0 0 0 0 0 0 0 
+O  131 7 9  -4.60865 4.6192 0.630444  0.92388 0.382683 0  -0 0 1  0.239639 0.210474 0.178329  0 0 0 0 0 0 0 0 
+O  132 7 46  -4.11897 2.93842 0.356208  0.92388 0.382683 0  -0.382683 0.92388 0  0.880053 0.369351 0.137163  0 0 0 0 0 0 0 0 
+O  133 7 8  -6.04725 4.15714 1.17013  -0.92388 0.382683 0  0 0 1  0.139559 0.10673 0.0944036  0 0 0 0 0 0 0 0 
+O  134 7 8  -2.64218 3.5175 2.48077  -0.382683 0.92388 0  0.92388 0.382683 0  0.902072 0.475759 0.0612218  0 0 0 0 0 0 0 0 
+O  135 7 37  -2.32368 3.20754 1.24868  0 1 0  0 0 1  0.732954 0.460653 0.153939  0 0 0 0 0 0 0 0 
+O  136 7 39  -4.39152 3.02934 1.27564  0 1 0  1 -0 0  2.3818 2.26164 1.27555  0 0 0 0 0 0 0 0 
+O  137 7 3  -4.45083 3.00237 0.287454  0 1 0  1 -0 0  2.34189 2.28201 0.314294  0 0 0 0 0 0 0 0 
+O  138 7 8  -6.25397 1.87385 1.25153  0 0 1  1 0 0  0.761273 0.422789 0.130582  0 0 0 0 0 0 0 0 
+O  139 7 9  -3.97799 4.83858 0.641375  1 0 0  -0 0 1  0.254566 0.220825 0.210004  0 0 0 0 0 0 0 0 
+O  140 7 8  -5.40092 2.13688 0.709959  -1 2.22045e-16 0  0 0 1  0.445287 0.274466 0.192736  0 0 0 0 0 0 0 0 
+O  141 7 6  -2.69462 2.36104 0.464061  1 0 0  -0 0 1  0.535149 0.439673 0.37845  0 0 0 0 0 0 0 0 
+O  142 7 8  -2.92176 3.85695 0.579781  0.382683 0.92388 0  -0 0 1  0.324809 0.22668 0.120395  0 0 0 0 0 0 0 0 
+O  143 7 9  -2.72866 4.9144 0.26234  -0.707107 0.707107 0  0 0 1  0.37609 0.26275 0.230049  0 0 0 0 0 0 0 0 
+O  144 7 9  -5.78342 3.46733 0.663815  -0.382683 -0.92388 0  0 0 1  0.278461 0.225489 0.156782  0 0 0 0 0 0 0 0 
+O  145 7 8  -6.10364 1.38976 2.18549  1 0 0  0 1 0  0.586688 0.476627 0.053269  0 0 0 0 0 0 0 0 
+O  146 7 42  -4.88446 0.662743 1.29333  0 0 1  1 0 0  0.769919 0.534662 0.0341425  0 0 0 0 0 0 0 0 
+O  147 7 8  -5.27316 1.54003 2.38293  -0.382683 0.92388 0  -0.92388 -0.382683 0  0.316478 0.137628 0.114851  0 0 0 0 0 0 0 0 
+O  148 7 8  -2.98232 2.63624 0.653849  -0.707107 0.707107 0  0 0 1  0.230661 0.148698 0.0527843  0 0 0 0 0 0 0 0 
+O  149 7 9  -5.23374 4.23352 0.65733  0.92388 0.382683 0  -0.382683 0.92388 0  0.243786 0.222256 0.2165  0 0 0 0 0 0 0 0 
+O  150 7 18  -2.58455 4.8938 0.840639  0 0 1  0 1 -0  0.357143 0.270517 0.236135  0 0 0 0 0 0 0 0 
+O  151 7 8  -2.59255 3.7979 1.76329  0 0 1  -0.92388 -0.382683 0  0.300534 0.119654 0.0666811  0 0 0 0 0 0 0 0 
+O  152 8 28  -10.0295 -1.8037 0.369458  1 0 0  0 1 0  1.40979 1.03238 0.358546  0 0 0 0 0 0 0 0 
+O  153 8 13  -11.2659 -0.959555 1.0529  2.22045e-16 1 0  -0 0 1  1.54469 1.05035 0.23746  0 0 0 0 0 0 0 0 
+O  154 8 3  -9.79274 -1.10506 0.265708  0 1 0  1 -0 0  1.72916 1.60379 0.292581  0 0 0 0 0 0 0 0 
+O  155 8 0  -9.83263 -1.13769 1.27327  2.22045e-16 1 0  -1 2.22045e-16 0  1.78696 1.66685 1.28133  0 0 0 0 0 0 0 0 
+O  156 8 230  -9.42634 -1.6294 0.266194  0 1 0  1 -0 0  1.24162 1.19009 0.287189  0 0 0 0 0 0 0 0 
+O  157 8 33  -10.7676 0.023728 0.575477  -0.92388 0.382683 0  0 0 1  0.601347 0.585183 0.480858  0 0 0 0 0 0 0 0 
+O  158 8 46  -9.59478 -1.2597 0.196837  -0.382683 0.92388 0  0.92388 0.382683 0  0.354459 0.330563 0.191895  0 0 0 0 0 0 0 0 
+O  159 8 2  -9.53221 -1.16112 2.52754  2.22045e-16 1 0  -1 2.22045e-16 0  1.7583 1.26567 0.0291023  0 0 0 0 0 0 0 0 
+O  160 8 4  -8.30908 -1.28505 1.22097  0 1 0  0 0 1  0.621654 0.394813 0.0489688  0 0 0 0 0 0 0 0 
+O  161 8 4  -9.81059 -2.81537 1.44864  1 0 0  -0 0 1  0.877522 0.6033 0.0639752  0 0 0 0 0 0 0 0 
+O  162 8 39  -10.3255 -1.12919 0.517693  0 1 0  1 -0 0  1.69725 1.03129 0.524879  0 0 0 0 0 0 0 0 
+O  163 8 11  -8.70695 -2.70043 1.55666  0 0 1  0 1 -0  0.233574 0.154788 0.111842  0 0 0 0 0 0 0 0 
+O  164 8 49  -10.98 -1.15777 2.20849  2.22045e-16 1 0  -1 2.22045e-16 0  1.72737 0.514402 0.331434  0 0 0 0 0 0 0 0 
+O  165 8 36  -11.0354 -2.64092 0.620228  1 0 0  -0 0 1  0.447306 0.28736 0.191301  0 0 0 0 0 0 0 0 
+O  166 8 1  -8.2451 -2.47784 1.29495  0 0 1  0 1 -0  0.95141 0.318017 0.073771  0 0 0 0 0 0 0 0 
+O  167 8 36  -9.05013 -2.64887 0.656584  -1 2.22045e-16 0  0 0 1  0.406174 0.256355 0.182663  0 0 0 0 0 0 0 0 
+O  168 8 36  -9.87468 -2.61696 0.613612  1 0 0  -0 0 1  0.323177 0.236099 0.203309  0 0 0 0 0 0 0 0 
+O  169 8 36  -10.7305 0.0980471 0.548903  0.707107 0.707107 0  -0.707107 0.707107 0  0.258111 0.187423 0.186446  0 0 0 0 0 0 0 0 
+O  170 8 11  -8.59487 -2.77952 1.89329  0 0 1  0 1 -0  0.088871 0.076831 0.070415  0 0 0 0 0 0 0 0 
+O  171 9 0  -2.0443 0.235172 1.25087  0 1 0  0 0 1  1.87166 1.25805 1.23854  0 0 0 0 0 0 0 0 
+O  172 9 270  -2.07942 0.247721 0.440792  1 0 0  -0 0 1  1.15062 0.441112 0.302382  0 0 0 0 0 0 0 0 
+O  173 9 82  -2.07904 -1.22905 0.941257  -1 2.22045e-16 0  2.22045e-16 1 0  1.14478 0.345697 0.159911  0 0 0 0 0 0 0 0 
+O  174 9 39  -2.53742 0.0816932 1.5525  -0.382683 0.92388 0  0.92388 0.382683 0  1.61484 1.25903 0.956418  0 0 0 0 0 0 0 0 
+O  175 9 34  -2.0159 -0.875622 0.476939  1 0 0  -0 0 1  1.20474 0.474546 0.106189  0 0 0 0 0 0 0 0 
+O  176 9 283  -2.08329 -1.48943 1.89007  -1 2.22045e-16 0  0 0 1  1.15779 0.228249 0.103474  0 0 0 0 0 0 0 0 
+O  177 9 206  -2.79001 -0.925831 0.428299  0 0 1  1 0 0  0.428598 0.385012 0.0559801  0 0 0 0 0 0 0 0 
+O  178 9 2  -2.04759 -0.487293 2.12324  -1 2.22045e-16 0  2.22045e-16 1 0  1.18811 1.06382 0.0305808  0 0 0 0 0 0 0 0 
+O  179 9 111  -1.59465 -0.879735 0.635224  1 0 0  -0 0 1  0.338165 0.235969 0.0462427  0 0 0 0 0 0 0 0 
+O  180 9 32  -1.31347 0.665678 0.409296  0 0 1  0 1 -0  0.355853 0.302755 0.237296  0 0 0 0 0 0 0 0 
+O  181 9 32  -2.06982 0.662558 0.418793  0 0 1  0 1 -0  0.348909 0.294485 0.244751  0 0 0 0 0 0 0 0 
+O  182 9 32  -2.80641 0.623761 0.422851  0 0 1  -0.92388 0.382683 0  0.375649 0.332085 0.264174  0 0 0 0 0 0 0 0 
+O  183 9 3  -2.01889 0.531769 0.150591  0 1 0  1 -0 0  1.49229 1.18872 0.15909  0 0 0 0 0 0 0 0 
+O  184 9 47  -2.06889 0.267384 0.837285  1 0 0  0 1 0  1.13897 0.324006 0.0996413  0 0 0 0 0 0 0 0 
+O  185 9 283  -2.08645 -1.49612 1.40872  1 0 0  -0 0 1  1.1473 0.22764 0.120797  0 0 0 0 0 0 0 0 
+O  186 9 21  -2.28589 -1.22761 0.837503  2.22045e-16 1 0  -1 2.22045e-16 0  0.21383 0.210793 0.0920243  0 0 0 0 0 0 0 0 
+E  0 0 0  4.02693  -8.77509 4.94247 1.13497  -9.87074 4.91921 0.0428404  -7.67944 4.96574 2.2271  0 0 0 0 0 
+E  1 1 668  0.0253867  -9.8279 2.20735 2.49601  -9.8499 2.01035 2.45163  -9.8059 2.40435 2.5404  0 0 0 0 0 
+E  2 0 523  0.00902312  -6.66859 4.08979 1.99546  -6.67412 4.03006 1.89623  -6.66305 4.14951 2.09469  0 0 0 0 0 
+E  3 2 49  0.602912  -9.30017 4.02637 0.955098  -9.81174 4.00138 0.120928  -8.7886 4.05136 1.78927  0 0 0 0 0 
+E  4 0 2025  0.00708415  -6.7041 4.02643 2.03874  -6.72414 4.00065 1.9136  -6.68406 4.0522 2.16388  0 0 0 0 0 
+E  5 3 392  0.0448203  -10.9379 3.29331 1.19721  -10.9728 3.28852 0.63771  -10.903 3.29809 1.75671  0 0 0 0 0 
