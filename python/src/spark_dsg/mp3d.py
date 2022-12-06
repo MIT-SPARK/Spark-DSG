@@ -167,6 +167,18 @@ class Mp3dRoom:
         """
         return self._min_z <= pos[2] <= self._max_z
 
+    def pos_on_same_floor(self, pos):
+        """
+        Check if a 3d position is within z-axis bounds.
+
+        Args:
+            pos (List[float]): 3d position to check
+
+        Returns:
+            bool: True if position falls inside [min_z, max_z]
+        """
+        return self._min_z <= pos[2] <= self._max_z
+
     def pos_inside_room(self, pos):
         """
         Check if a 3d position falls within the bounds of the room.
