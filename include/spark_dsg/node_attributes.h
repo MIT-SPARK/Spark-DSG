@@ -38,9 +38,9 @@
 
 #include <chrono>
 #include <list>
+#include <memory>
 #include <ostream>
 #include <string>
-#include <memory>
 
 namespace spark_dsg {
 
@@ -168,6 +168,8 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
     return std::make_unique<ObjectNodeAttributes>(*this);
   }
 
+  //! Mesh vertice connections
+  std::list<size_t> mesh_connections;
   //! Whether or not the object is known (and registered)
   bool registered;
   //! rotation of object w.r.t. world (only valid when registerd)
