@@ -268,6 +268,7 @@ bool DynamicSceneGraphLayer::removeNode(NodeId node) {
   // TODO(nathan) this is slightly brittle, maybe consider std::map instead
   node_status_[index] = NodeStatus::DELETED;
   times_.erase(nodes_.at(index)->timestamp.count());
+  nodes_[index].reset();
   return true;
 }
 

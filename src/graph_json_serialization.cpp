@@ -55,8 +55,8 @@ using nlohmann::json;
 using EdgesPtr = std::unique_ptr<SceneGraphLayer::Edges>;
 using NodeSet = std::unordered_set<NodeId>;
 using NodeCallback = std::function<void(NodeId, LayerId, NodeAttributes::Ptr&&)>;
-using DynamicNodeCallback =
-    std::function<void(LayerId, char, std::chrono::nanoseconds, NodeAttributes::Ptr&&)>;
+using DynamicNodeCallback = std::function<
+    void(LayerId, NodeId, std::chrono::nanoseconds, NodeAttributes::Ptr&&)>;
 using EdgeCallback = std::function<void(NodeId, NodeId, EdgeAttributes::Ptr&&)>;
 
 void to_json(json& record, const MeshEdge& edge) {
@@ -94,11 +94,12 @@ void read_node_from_json(const json& record, NodeCallback callback) {
 
 void read_node_from_json(const json& record, DynamicNodeCallback callback) {
   auto layer = record.at("layer").get<LayerId>();
-  auto prefix = record.at("prefix").get<char>();
+  // auto prefix = record.at("prefix").get<char>();
+  auto node_id = record.at("id").get<NodeId>();
   auto timestamp = record.at("timestamp").get<uint64_t>();
   JsonConverter converter(&record.at("attributes"));
   auto attrs = JsonNodeFactory::get_default().create(converter);
-  callback(layer, prefix, std::chrono::nanoseconds(timestamp), std::move(attrs));
+  callback(layer, node_id, std::chrono::nanoseconds(timestamp), std::move(attrs));
 }
 
 void read_edge_from_json(const json& record, EdgeCallback callback) {
@@ -176,7 +177,7 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
   record["layer_ids"] = layer_ids;
   record["mesh_layer_id"] = mesh_layer_id;
 
-  for (const auto& id_layer_pair : layers_) {
+  for (const auto& id_layer_pair : layers_){
     for (const auto& id_node_pair : id_layer_pair.second->nodes_) {
       record["nodes"].push_back(*id_node_pair.second);
     }
@@ -198,8 +199,16 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
     for (const auto& prefix_layer_pair : id_layer_group_pair.second) {
       const DynamicSceneGraphLayer& layer = *prefix_layer_pair.second;
 
-      for (const auto& node : layer.nodes_) {
-        record["nodes"].push_back(*node);
+      for (size_t i = 0; i < layer.nodes_.size(); ++i) {
+        if (!layer.node_status_.count(i)) {
+          continue;
+        }
+
+        if (layer.node_status_.at(i) == NodeStatus::DELETED) {
+          continue;
+        }
+
+        record["nodes"].push_back(*layer.nodes_.at(i));
       }
 
       for (const auto& id_edge_pair : layer.edges_.edges) {
@@ -251,20 +260,29 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& content
   }
 
   for (const auto& id_content_pair : dynamic_contents) {
-    read_node_from_json(id_content_pair.second,
-                        [graph](LayerId layer,
-                                char prefix,
-                                std::chrono::nanoseconds time,
-                                NodeAttributes::Ptr&& attrs) {
-                          graph->emplaceNode(
-                              layer, prefix, time, std::move(attrs), false);
-                        });
+    read_node_from_json(
+        id_content_pair.second,
+        [graph](LayerId layer,
+                NodeId node,
+                std::chrono::nanoseconds time,
+                NodeAttributes::Ptr&& attrs) {
+          if (!graph->emplacePrevDynamicNode(layer, node, time, std::move(attrs))) {
+            std::stringstream ss;
+            ss << "failed to add " << NodeSymbol(node).getLabel();
+            throw std::runtime_error(ss.str());
+          }
+        });
   }
 
   for (const auto& edge : record.at("edges")) {
     read_edge_from_json(
         edge, [graph](NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs) {
-          graph->insertEdge(source, target, std::move(attrs));
+          if (!graph->insertEdge(source, target, std::move(attrs))) {
+            std::stringstream ss;
+            ss << "failed to add " << NodeSymbol(source).getLabel() << " →  "
+               << NodeSymbol(target).getLabel();
+            throw std::runtime_error(ss.str());
+          }
         });
   }
 

@@ -61,12 +61,19 @@ class NodeIter {
 class DynamicNodeIter {
  public:
   DynamicNodeIter(const DynamicSceneGraphLayer::Nodes& container)
-      : curr_iter_(container.begin()), end_iter_(container.end()) {}
+      : curr_iter_(container.begin()), end_iter_(container.end()) {
+    while (*curr_iter_ == nullptr && curr_iter_ != end_iter_) {
+      ++curr_iter_;
+    }
+  }
 
   const DynamicSceneGraphLayer::Node* operator*() const { return curr_iter_->get(); }
 
   DynamicNodeIter& operator++() {
     ++curr_iter_;
+    while (*curr_iter_ == nullptr && curr_iter_ != end_iter_) {
+      ++curr_iter_;
+    }
     return *this;
   }
 
