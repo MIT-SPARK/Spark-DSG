@@ -74,6 +74,7 @@ void deserialize(const Converter& converter, SemanticNodeAttributes& attrs) {
 template <typename Converter>
 void serialize(Converter& converter, const ObjectNodeAttributes& attrs) {
   serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("mesh_connections", attrs.mesh_connections);
   converter.write("registered", attrs.registered);
   converter.write("world_R_object", attrs.world_R_object);
 }
@@ -81,6 +82,7 @@ void serialize(Converter& converter, const ObjectNodeAttributes& attrs) {
 template <typename Converter>
 void deserialize(const Converter& converter, ObjectNodeAttributes& attrs) {
   deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("mesh_connections", attrs.mesh_connections);
   converter.read("registered", attrs.registered);
   converter.read("world_R_object", attrs.world_R_object);
 }

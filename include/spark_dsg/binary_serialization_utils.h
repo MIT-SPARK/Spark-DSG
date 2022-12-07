@@ -225,6 +225,14 @@ void write_binary(Serializer& s, const std::vector<T>& values) {
   }
 }
 
+template <typename Serializer, typename T>
+void write_binary(Serializer& s, const std::list<T>& values) {
+  s.startFixedArray(values.size());
+  for (const auto& value : values) {
+    s.write(value);
+  }
+}
+
 template <typename Deserializer>
 size_t read_binary(const Deserializer& s, bool& value) {
   PackType ref_type = s.getCurrType();
@@ -324,6 +332,17 @@ size_t read_binary(const Deserializer& s, std::vector<T>& values) {
   values.resize(length);
   for (size_t i = 0; i < length; ++i) {
     s.read(values[i]);
+  }
+  return 0;
+}
+
+template <typename Deserializer, typename T>
+size_t read_binary(const Deserializer& s, std::list<T>& values) {
+  const size_t length = s.readFixedArrayLength();
+  for (size_t i = 0; i < length; ++i) {
+    T temp;
+    s.read(temp);
+    values.push_back(temp);
   }
   return 0;
 }
