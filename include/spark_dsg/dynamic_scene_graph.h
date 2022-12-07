@@ -137,12 +137,29 @@ class DynamicSceneGraph {
    */
   bool emplaceNode(LayerId layer_id, NodeId node_id, NodeAttributes::Ptr&& attrs);
 
+  /**
+   * @brief construct and add a dynamic node to the specified layer in the graph
+   * @param layer_id layer to add to
+   * @param prefix dynamic layer prefix to add to
+   * @param timestamp dynamic node timestamp in nanoseconds
+   * @param attrs node attributes
+   * @param add_edge_to_previous add edge to previous dynamic node (if it exists)
+   * @return true if the node was added successfully
+   */
   bool emplaceNode(LayerId layer_id,
                    LayerPrefix prefix,
                    std::chrono::nanoseconds timestamp,
                    NodeAttributes::Ptr&& attrs,
                    bool add_edge_to_previous = true);
 
+  /**
+   * @brief Add a dynamic node with a specific node id
+   * @param layer_id layer to add to
+   * @param prev_node_id Node id to insert with
+   * @param timestamp dynamic node timestamp
+   * @param attrs node attributes to use
+   * @returns true if the node was added successfully
+   */
   bool emplacePrevDynamicNode(LayerId layer_id,
                               NodeId prev_node_id,
                               std::chrono::nanoseconds timestamp,
@@ -176,23 +193,6 @@ class DynamicSceneGraph {
   bool insertEdge(NodeId source,
                   NodeId target,
                   EdgeAttributes::Ptr&& edge_info = nullptr);
-
-  /**
-   * @brief Add an edge from another node to the mesh
-   * @param source Source node id in the scene graph
-   * @param mesh_vertex Target mesh vertex index
-   * @param allow_invalid_mesh Allow edge insertion even if the edge points to an
-   * invalid vertice
-   * @return Returns true if edge would be valid and was added
-   */
-  bool insertMeshEdge(NodeId source,
-                      size_t mesh_vertex,
-                      bool allow_invalid_mesh = false);
-
-  /**
-   * @brief Initialize an empty mesh
-   */
-  void initMesh();
 
   /**
    * @brief Set the attributes of an existing node
@@ -243,29 +243,14 @@ class DynamicSceneGraph {
   /**
    * @brief check if a given edge exists
    *
-   * This checks either the presence of an
-   * edge from source to target or from target
+   * This checks either the presence of an edge from source to target or from target
    * to source
    *
    * @param source source id of edge to check for
    * @param target target id of edge to check for
    * @returns true if the given edge exists
    */
-  inline bool hasEdge(NodeId source, NodeId target) const {
-    return hasEdge(source, target, nullptr, nullptr);
-  }
-
-  /**
-   * @brief Check whether the mesh exists and is valid
-   * @returns Returns true if the mesh exists and is valid
-   */
-  bool hasMesh() const;
-
-  /**
-   * @brief Check whether the scene graph contains a mesh with actual data
-   * @returns Returns true if the mesh has vertices and faces
-   */
-  bool isMeshEmpty() const;
+  bool hasEdge(NodeId source, NodeId target) const;
 
   /**
    * @brief Get a layer if the layer exists
@@ -296,8 +281,18 @@ class DynamicSceneGraph {
    */
   std::optional<NodeRef> getNode(NodeId node_id) const;
 
+  /**
+   * @brief Get node layer information (if the node exists)
+   * @param node_id Node ID to get
+   * @returns A potentially valid Layer ID and prefix
+   */
   std::optional<LayerKey> getLayerForNode(NodeId node_id) const;
 
+  /**
+   * @brief Get a reference to a dynamic node (if the node exists)
+   * @param node_id Dynamic node to get
+   * @returns Potentially valid dynamic node reference
+   */
   std::optional<DynamicNodeRef> getDynamicNode(NodeId node_id) const;
 
   /**
@@ -329,27 +324,11 @@ class DynamicSceneGraph {
   bool removeEdge(NodeId source, NodeId target);
 
   /**
-   * @brief Remove an edge from another node to the mesh
-   * @param source Source node id in the scene graph
-   * @param mesh_vertex Target mesh vertex index
-   * @returns Returns true if edge was removed
-   */
-  bool removeMeshEdge(NodeId source, size_t mesh_vertex);
-
-  /**
    * @brief check if a particular node id is a dynamic node
    * @param source Node to check
    * @returns Return true if the node is a dynamic node
    */
   bool isDynamic(NodeId source) const;
-
-  /**
-   * @brief merge two nodes
-   * @param node_from node to remove
-   * @param node_to node to merge to
-   * @returns true if operation succeeded
-   */
-  bool mergeNodes(NodeId node_from, NodeId node_to);
 
   /**
    * @brief Get the number of layers in the graph
@@ -411,7 +390,7 @@ class DynamicSceneGraph {
    * @note the scene graph invariants make it so only nodes have to be checked
    * @return true if the scene graph is empty
    */
-  inline bool empty() const { return numNodes() == 0; }
+  bool empty() const;
 
   /**
    * @brief Get the position of a node in the layer with bounds checking
@@ -419,10 +398,9 @@ class DynamicSceneGraph {
   Eigen::Vector3d getPosition(NodeId node) const;
 
   /**
-   * @brief Set mesh components directly from a polygon mesh
-   * @note doesn't invalidate any edges
+   * @brief Initialize an empty mesh
    */
-  void setMeshDirectly(const pcl::PolygonMesh& mesh);
+  void initMesh();
 
   /**
    * @brief Set mesh components individually
@@ -438,9 +416,110 @@ class DynamicSceneGraph {
                const std::shared_ptr<MeshFaces>& faces,
                bool invalidate_all_edges = false);
 
-  inline MeshVertices::Ptr getMeshVertices() const { return mesh_vertices_; }
+  /**
+   * @brief Set mesh components directly from a polygon mesh
+   * @note doesn't invalidate any edges
+   */
+  void setMeshDirectly(const pcl::PolygonMesh& mesh);
 
-  inline std::shared_ptr<MeshFaces> getMeshFaces() const { return mesh_faces_; }
+  /**
+   * @brief Check whether the mesh exists and is valid
+   * @returns Returns true if the mesh exists and is valid
+   */
+  bool hasMesh() const;
+
+  /**
+   * @brief Check whether the scene graph contains a mesh with actual data
+   * @returns Returns true if the mesh has vertices and faces
+   */
+  bool isMeshEmpty() const;
+
+  /**
+   * @brief mesh getter
+   * @returns Return scene graph mesh
+   */
+  pcl::PolygonMesh getMesh() const;
+
+  /**
+   * @brief Get mesh vertices pointer (may be invalid)
+   * @return Pointer to mesh vertices
+   */
+  MeshVertices::Ptr getMeshVertices() const;
+
+  /**
+   * @brief Get pointer to mesh faces (may be invalid)
+   * @returns Pointer to mesh faces
+   */
+  std::shared_ptr<MeshFaces> getMeshFaces() const;
+
+  /**
+   * @brief Get the mesh vertex position (if vaild)
+   * @param vertex_id Mesh vertex index
+   * @param check_invalid Do bounds checking when getting vertex
+   * @returns Potentially valid mesh vertex position
+   */
+  std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id,
+                                                 bool check_invalid = true) const;
+
+  /**
+   * @brief Add an edge from another node to the mesh
+   * @param source Source node id in the scene graph
+   * @param mesh_vertex Target mesh vertex index
+   * @param allow_invalid_mesh Allow edge insertion even if the edge points to an
+   * invalid vertice
+   * @return Returns true if edge would be valid and was added
+   */
+  bool insertMeshEdge(NodeId source,
+                      size_t mesh_vertex,
+                      bool allow_invalid_mesh = false);
+
+  /**
+   * @brief check if an edge between a source node and a target mesh vertex exists
+   * @param source Source node to check
+   * @param mesh_vertex Target mesh vertex to check
+   * @returns True if the specified edge exists
+   */
+  bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
+
+  /**
+   * @brief Get all mesh edges
+   * @returns Mesh edges
+   */
+  const MeshEdges& getMeshEdges() const;
+
+  /**
+   * @brief Get mesh vertex indices for a specific node
+   * @param node Node to get mesh edges for
+   * @returns All mesh vertices the node is connected to
+   */
+  std::vector<size_t> getMeshConnectionIndices(NodeId node) const;
+
+  /**
+   * @brief Remove an edge from another node to the mesh
+   * @param source Source node id in the scene graph
+   * @param mesh_vertex Target mesh vertex index
+   * @returns Returns true if edge was removed
+   */
+  bool removeMeshEdge(NodeId source, size_t mesh_vertex);
+
+  /**
+   * @brief Delete all edges associated with a mesh vertex
+   * @param index vertex index to delete
+   */
+  void invalidateMeshVertex(size_t index);
+
+  /**
+   * @brief Delete all mesh edges
+   */
+  void clearMeshEdges();
+
+  /**
+   * @brief merge two nodes
+   * @param node_from node to remove
+   * @param node_to node to merge to
+   * @returns true if operation succeeded
+   */
+  bool mergeNodes(NodeId node_from, NodeId node_to);
 
   /**
    * @brief Update graph from separate layer
@@ -456,6 +535,14 @@ class DynamicSceneGraph {
    * @brief Update graph from another graph
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
+   * @param previous_merges Prevously merged nodes in current graph
+   * @param merge_mesh_edges Allow combining mesh edges
+   * @param allow_invalid_mesh Add mesh edges for mesh vertices that don't exist
+   * @param clear_mesh_edges Delete all previous mesh edges
+   * @param attribute_update_map flags per layer to enable merging attributes
+   * @param update_dynamic_attributes update dynamic node attributes from other
+   * @param clear_removed Delete any removed nodes in other
+   * @returns true if merge was successful
    */
   bool mergeGraph(const DynamicSceneGraph& other,
                   const std::map<NodeId, NodeId>& previous_merges,
@@ -470,102 +557,111 @@ class DynamicSceneGraph {
    * @brief Update graph from another graph
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
+   * @param merge_mesh_edges Allow combining mesh edges
+   * @param allow_invalid_mesh Add mesh edges for mesh vertices that don't exist
+   * @param clear_mesh_edges Delete all previous mesh edges
+   * @param attribute_update_map flags per layer to enable merging attributes
+   * @param update_dynamic_attributes update dynamic node attributes from other
+   * @param clear_removed Delete any removed nodes in other
+   * @returns true if merge was successful
    */
-  inline bool mergeGraph(const DynamicSceneGraph& other,
-                         bool merge_mesh_edges = true,
-                         bool allow_invalid_mesh = false,
-                         bool clear_mesh_edges = true,
-                         std::map<LayerId, bool>* attribute_update_map = nullptr,
-                         bool update_dynamic_attributes = true,
-                         bool clear_removed = false) {
-    return mergeGraph(other,
-                      {},
-                      merge_mesh_edges,
-                      allow_invalid_mesh,
-                      clear_mesh_edges,
-                      attribute_update_map,
-                      update_dynamic_attributes,
-                      clear_removed);
-  }
+  bool mergeGraph(const DynamicSceneGraph& other,
+                  bool merge_mesh_edges = true,
+                  bool allow_invalid_mesh = false,
+                  bool clear_mesh_edges = true,
+                  std::map<LayerId, bool>* attribute_update_map = nullptr,
+                  bool update_dynamic_attributes = true,
+                  bool clear_removed = false);
 
+  /**
+   * @brief Get all removed nodes from the graph
+   * @param clear_removed Reset removed node tracking
+   * @returns List of all removed nodes
+   */
   std::vector<NodeId> getRemovedNodes(bool clear_removed = false);
 
+  /**
+   * @brief Get all new nodes in the graph
+   * @param clear_new Clear new status for all new nodes up until this point
+   * @returns list of all new nodes
+   */
   std::vector<NodeId> getNewNodes(bool clear_new = false);
 
+  /**
+   * @brief Get all removed edges from the graph
+   * @param clear_removed Reset removed edge tracking
+   * @returns List of all removed edges
+   */
   std::vector<EdgeKey> getRemovedEdges(bool clear_removed = false);
 
+  /**
+   * @brief Get all new edges in the graph
+   * @param clear_new Clear new status for all new edges up until this point
+   * @returns list of all new edges
+   */
   std::vector<EdgeKey> getNewEdges(bool clear_new = false);
 
-  std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id,
-                                                 bool check_invalid = true) const;
-
-  std::vector<size_t> getMeshConnectionIndices(NodeId node) const;
-
-  inline const MeshEdges& getMeshEdges() const { return mesh_edges_; }
-
-  void invalidateMeshVertex(size_t index);
-
-  void clearMeshEdges();
-
-  void save(const std::string& filepath, bool include_mesh = true) const;
-
-  std::string serialize(bool include_mesh = false) const;
-
-  static Ptr load(const std::string& filepath);
-
-  static Ptr deserialize(const std::string& contents);
-
-  /** @brief track which edges get used during a serialization update
+  /**
+   * @brief track which edges get used during a serialization update
    */
   void markEdgesAsStale();
 
-  /** @brief remove edges that do not appear in serialization update
+  /**
+   * @brief remove edges that do not appear in serialization update
    */
   void removeAllStaleEdges();
 
   /**
-   * @brief mesh getter
+   * @brief Clone the scene graph
+   * @returns Copy of the scene graph
    */
-  pcl::PolygonMesh getMesh() const;
-
   DynamicSceneGraph::Ptr clone() const;
 
-  bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
+  /**
+   * @brief Save JSON graph representation to file
+   * @param filepath Filepath to save graph to
+   * @param include_mesh Optionally encode mesh (defaults to true)
+   */
+  void save(const std::string& filepath, bool include_mesh = true) const;
+
+  /**
+   * @brief Get JSON string representing graph
+   * @param include_mesh Optionally encode mesh (defaults to false)
+   * @returns JSON string representing graph
+   */
+  std::string serialize(bool include_mesh = false) const;
+
+  /**
+   * @brief parse graph from JSON file
+   * @param filepath Path to JSON file to read
+   * @returns Resulting parsed scene graph
+   */
+  static Ptr load(const std::string& filepath);
+
+  /**
+   * @brief parse graph from JSON string
+   * @param contents JSON string to parse
+   * @returns Resulting parsed scene graph
+   */
+  static Ptr deserialize(const std::string& contents);
 
   //! mesh layer id
   const LayerId mesh_layer_id;
 
-  // current static layer ids in the graph
+  //! current static layer ids in the graph
   const LayerIds layer_ids;
 
  protected:
-  void clearMeshEdgesForNode(NodeId node_id);
-
-  void removeStaleEdges(EdgeContainer& edges);
-
-  void visitLayers(const LayerVisitor& cb);
-
-  bool hasEdge(NodeId source,
-               NodeId target,
-               LayerKey* source_key,
-               LayerKey* target_key) const;
-
   BaseLayer& layerFromKey(const LayerKey& key);
 
   const BaseLayer& layerFromKey(const LayerKey& key) const;
 
   SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
 
-  void removeInterlayerEdge(NodeId source,
-                            NodeId target,
-                            const LayerKey& source_key,
-                            const LayerKey& target_key);
-
-  inline void removeInterlayerEdge(NodeId n1, NodeId n2) {
-    removeInterlayerEdge(n1, n2, node_lookup_.at(n1), node_lookup_.at(n2));
-  }
-
-  void rewireInterlayerEdge(NodeId source, NodeId new_source, NodeId target);
+  bool hasEdge(NodeId source,
+               NodeId target,
+               LayerKey* source_key,
+               LayerKey* target_key) const;
 
   bool addAncestry(NodeId source,
                    NodeId target,
@@ -576,6 +672,21 @@ class DynamicSceneGraph {
                       NodeId target,
                       const LayerKey& source_key,
                       const LayerKey& target_key);
+
+  void removeInterlayerEdge(NodeId source,
+                            NodeId target,
+                            const LayerKey& source_key,
+                            const LayerKey& target_key);
+
+  void removeInterlayerEdge(NodeId n1, NodeId n2);
+
+  void rewireInterlayerEdge(NodeId source, NodeId new_source, NodeId target);
+
+  void removeStaleEdges(EdgeContainer& edges);
+
+  void clearMeshEdgesForNode(NodeId node_id);
+
+  void visitLayers(const LayerVisitor& cb);
 
  protected:
   Layers layers_;
