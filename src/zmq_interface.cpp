@@ -78,8 +78,11 @@ struct ZmqSender::Detail {
 
     // TODO(nathan) it'd be nice if we could avoid the memcpy
     zmq::message_t msg(buffer.data(), buffer.size());
-    // TODO(nathan) think about handling flags better
+#if ZMQ_VERSION < ZMQ_MAKE_VERSION(4, 3, 1)
     socket->send(msg, 0);
+#else
+    socket->send(msg, zmq::send_flags::none);
+#endif
   }
 
   std::unique_ptr<zmq::socket_t> socket;
@@ -114,7 +117,14 @@ struct ZmqReceiver::Detail {
     }
 
     zmq::message_t msg;
+#if ZMQ_VERSION < ZMQ_MAKE_VERSION(4, 3, 1)
     socket->recv(&msg);
+#else
+    const auto ret = socket->recv(msg, zmq::recv_flags::none);
+    if (!ret) {
+      throw std::runtime_error("zmq internal error: no data received");
+    }
+#endif
 
     if (!graph) {
       graph = readGraph(static_cast<uint8_t*>(msg.data()), msg.size());
