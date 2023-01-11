@@ -710,16 +710,18 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrect) {
   DynamicSceneGraph graph_1;
   EXPECT_TRUE(graph_1.emplaceNode(2, 0, std::make_unique<NodeAttributes>(pos_1)));
   EXPECT_TRUE(graph_1.emplaceNode(3, 1, std::make_unique<NodeAttributes>(pos_1)));
+  EXPECT_TRUE(graph_1.emplaceNode(3, 2, std::make_unique<NodeAttributes>(pos_1)));
   EXPECT_TRUE(graph_1.emplaceNode(2, 8, std::make_unique<NodeAttributes>(pos_1)));
   EXPECT_TRUE(graph_1.emplaceNode(2, 'a', 0s, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph_1.insertEdge(0, 1));
+  EXPECT_TRUE(graph_1.insertEdge(1, 2));
   EXPECT_TRUE(graph_1.insertEdge(0, 8));
   EXPECT_TRUE(graph_1.insertEdge(1, 8));
 
   DynamicSceneGraph graph_2;
   EXPECT_TRUE(graph_2.emplaceNode(2, 0, std::make_unique<NodeAttributes>(pos_2)));
   EXPECT_TRUE(graph_2.emplaceNode(3, 1, std::make_unique<NodeAttributes>(pos_2)));
-  EXPECT_TRUE(graph_2.emplaceNode(3, 2, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph_2.emplaceNode(3, 2, std::make_unique<NodeAttributes>(pos_2)));
   EXPECT_TRUE(graph_2.emplaceNode(3, 3, std::make_unique<NodeAttributes>(pos_2)));
   EXPECT_TRUE(graph_2.emplaceNode(4, 4, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph_2.emplaceNode(4, 5, std::make_unique<NodeAttributes>()));
@@ -731,42 +733,33 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrect) {
   EXPECT_TRUE(graph_2.insertEdge(1, 3));
   EXPECT_TRUE(graph_2.insertEdge(2, 4));
   EXPECT_TRUE(graph_2.insertEdge(3, 4));
+  EXPECT_TRUE(graph_2.removeEdge(1, 2));
 
-  TestMesh mesh = makeMesh(5);
-  graph_1.setMesh(mesh.vertices, mesh.faces);
-  graph_2.setMesh(mesh.vertices, mesh.faces);
-
-  for (size_t i = 0; i < 5; ++i) {
-    graph_2.insertMeshEdge(1, i);
-    graph_2.insertMeshEdge(2, i);
-  }
-
-  EXPECT_EQ(9u, graph_1.numNodes());
-  EXPECT_EQ(3u, graph_1.numEdges());
-  EXPECT_EQ(14u, graph_2.numNodes());
-  EXPECT_EQ(15u, graph_2.numEdges());
+  EXPECT_EQ(5u, graph_1.numNodes());
+  EXPECT_EQ(4u, graph_1.numEdges());
+  EXPECT_EQ(9u, graph_2.numNodes());
+  EXPECT_EQ(4u, graph_2.numEdges());
 
   graph_1.mergeGraph(graph_2);
 
-  EXPECT_EQ(15u, graph_1.numNodes());
-  EXPECT_EQ(17u, graph_1.numEdges());
-  EXPECT_EQ(14u, graph_2.numNodes());
-  EXPECT_EQ(15u, graph_2.numEdges());
+  EXPECT_EQ(10u, graph_1.numNodes());
+  EXPECT_EQ(7u, graph_1.numEdges());
+  EXPECT_EQ(9u, graph_2.numNodes());
+  EXPECT_EQ(4u, graph_2.numEdges());
 
-  const Eigen::Vector3d pos_3(-1.0, -1.0, -1.0);
   // 0 and 1 have no change; they existed already
-  EXPECT_LT((graph_1.getPosition(0) - pos_1).norm(), 1.0e-6);
-  EXPECT_LT((graph_1.getPosition(1) - pos_1).norm(), 1.0e-6);
+  EXPECT_LT((graph_1.getPosition(0) - pos_2).norm(), 1.0e-6);
+  EXPECT_LT((graph_1.getPosition(1) - pos_2).norm(), 1.0e-6);
   // 2 has a position of 0 and delta of -1
-  EXPECT_LT((graph_1.getPosition(2) - pos_3).norm(), 1.0e-6);
+  EXPECT_LT((graph_1.getPosition(2) - pos_2).norm(), 1.0e-6);
   // 3 has a position of 2 and delta of -1
-  EXPECT_LT((graph_1.getPosition(3) - pos_1).norm(), 1.0e-6);
+  EXPECT_LT((graph_1.getPosition(3) - pos_2).norm(), 1.0e-6);
   // 4 and 5 have a position of 0 and delta of 0
   EXPECT_LT(graph_1.getPosition(4).norm(), 1.0e-6);
   EXPECT_LT(graph_1.getPosition(5).norm(), 1.0e-6);
   // 6 and 7 have a position of 2 and delta of -1
-  EXPECT_LT((graph_1.getPosition(6) - pos_1).norm(), 1.0e-6);
-  EXPECT_LT((graph_1.getPosition(7) - pos_1).norm(), 1.0e-6);
+  EXPECT_LT((graph_1.getPosition(6) - pos_2).norm(), 1.0e-6);
+  EXPECT_LT((graph_1.getPosition(7) - pos_2).norm(), 1.0e-6);
   // 8 and a(0) have no change; they existed already
   EXPECT_LT((graph_1.getPosition(8) - pos_1).norm(), 1.0e-6);
   EXPECT_LT(graph_1.getPosition(NodeSymbol('a', 0)).norm(), 1.0e-6);

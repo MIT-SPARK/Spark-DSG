@@ -838,22 +838,28 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
     }
   }
 
-  std::vector<NodeId> removed_nodes;
   for (const auto& id_layer : other.layers()) {
     const LayerId layer = id_layer.first;
     if (!hasLayer(layer)) {
       continue;
     }
 
+    std::vector<NodeId> removed_nodes;
+    id_layer.second->getRemovedNodes(removed_nodes, clear_removed);
+    for (const auto& removed_id : removed_nodes) {
+      removeNode(removed_id);
+    }
+
+    std::vector<EdgeKey> removed_edges;
+    id_layer.second->edges_.getRemoved(removed_edges, clear_removed);
+    for (const auto& removed_edge : removed_edges) {
+      layers_[layer]->removeEdge(removed_edge.k1, removed_edge.k2);
+    }
+
     const bool update =
         (update_map && update_map->count(layer)) ? update_map->at(layer) : true;
     layers_[layer]->mergeLayer(
         *id_layer.second, previous_merges, &node_lookup_, update);
-    id_layer.second->getRemovedNodes(removed_nodes, clear_removed);
-  }
-
-  for (const auto& removed_id : removed_nodes) {
-    removeNode(removed_id);
   }
 
   for (const auto& id_edge_pair : other.interlayer_edges()) {

@@ -226,33 +226,24 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
                                  const std::map<NodeId, NodeId>& previous_merges,
                                  std::map<NodeId, LayerKey>* layer_lookup,
                                  bool update_attributes) {
-  // TODO(yun)look at better interpolation methods for new nodes
-  Eigen::Vector3d last_update_delta = Eigen::Vector3d::Zero();
-
   for (const auto& id_node_pair : other_layer.nodes_) {
-    NodeStatus node_status = checkNode(id_node_pair.first);
     const auto& other = *id_node_pair.second;
-
-    if (node_status == NodeStatus::VISIBLE || node_status == NodeStatus::NEW) {
-      // update the last_update_delta
-      const Eigen::Vector3d pos = nodes_[id_node_pair.first]->attributes_->position;
-      last_update_delta = pos - other.attributes_->position;
-      // Update node attributed (except for position)
+    auto iter = nodes_.find(id_node_pair.first);
+    if (iter != nodes_.end()) {
       if (!update_attributes) {
         continue;
       }
 
-      nodes_[id_node_pair.first]->attributes_ = other.attributes_->clone();
-      nodes_[id_node_pair.first]->attributes_->position = pos;
-    } else if (node_status == NodeStatus::NONEXISTENT) {
-      auto attrs = other.attributes_->clone();
-      attrs->position += last_update_delta;
-      nodes_[other.id] = Node::Ptr(new Node(other.id, id, std::move(attrs)));
-      nodes_status_[other.id] = NodeStatus::NEW;
+      iter->second->attributes_ = other.attributes_->clone();
+      continue;
+    }
 
-      if (layer_lookup) {
-        layer_lookup->insert({other.id, id});
-      }
+    auto attrs = other.attributes_->clone();
+    nodes_[other.id] = Node::Ptr(new Node(other.id, id, std::move(attrs)));
+    nodes_status_[other.id] = NodeStatus::NEW;
+
+    if (layer_lookup) {
+      layer_lookup->insert({other.id, id});
     }
   }
 
