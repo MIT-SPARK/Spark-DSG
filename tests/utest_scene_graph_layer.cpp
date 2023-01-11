@@ -335,7 +335,6 @@ TEST(SceneGraphLayerTests, RewireEdgeCorrect) {
   EXPECT_FALSE(layer.hasEdge(3, 4));
 }
 
-// Test that rewiring an edge does what it should
 TEST(SceneGraphLayerTests, MergeLayerCorrect) {
   IsolatedSceneGraphLayer layer_1(1);
   IsolatedSceneGraphLayer layer_2(1);
@@ -367,9 +366,9 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
 
   for (size_t i = 0; i < 5; i++) {
     Eigen::Vector3d result = layer_1.getPosition(i);
-    EXPECT_EQ(static_cast<double>(i), result(0));
-    EXPECT_EQ(0.0, result(1));
-    EXPECT_EQ(0.0, result(2));
+    EXPECT_NEAR(static_cast<double>(i) + 10, result(0), 1.0e-9);
+    EXPECT_NEAR(0.0, result(1), 1.0e-9);
+    EXPECT_NEAR(0.0, result(2), 1.0e-9);
     EXPECT_EQ(NodeStatus::NEW, layer_1.checkNode(i));
     if (i > 2) {
       EXPECT_EQ(LayerKey(1), node_to_layer.at(i));

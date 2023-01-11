@@ -109,7 +109,11 @@ void EdgeContainer::getRemoved(std::vector<EdgeKey>& removed_edges,
     }
 
     removed_edges.push_back(iter->first);
-    iter = clear_removed ? edge_status.erase(iter) : ++iter;
+    if (clear_removed) {
+      iter = edge_status.erase(iter);
+    } else {
+      ++iter;
+    }
   }
 }
 
