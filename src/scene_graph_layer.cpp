@@ -227,6 +227,11 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
                                  std::map<NodeId, LayerKey>* layer_lookup,
                                  bool update_attributes) {
   for (const auto& id_node_pair : other_layer.nodes_) {
+    const auto siter = nodes_status_.find(id_node_pair.first);
+    if (siter != nodes_status_.end() && siter->second == NodeStatus::MERGED) {
+      continue;  // don't try to update or add previously merged nodes
+    }
+
     const auto& other = *id_node_pair.second;
     auto iter = nodes_.find(id_node_pair.first);
     if (iter != nodes_.end()) {

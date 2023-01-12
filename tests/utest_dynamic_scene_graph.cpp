@@ -743,7 +743,7 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrect) {
   graph_1.mergeGraph(graph_2);
 
   EXPECT_EQ(10u, graph_1.numNodes());
-  EXPECT_EQ(7u, graph_1.numEdges());
+  EXPECT_EQ(6u, graph_1.numEdges());
   EXPECT_EQ(9u, graph_2.numNodes());
   EXPECT_EQ(4u, graph_2.numEdges());
 
@@ -1040,28 +1040,24 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrectWithPrevMerges) {
   EXPECT_TRUE(graph_2.emplaceNode(3, 2, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph_2.insertEdge(0, 2));
 
-  TestMesh mesh = makeMesh(5);
-  graph_1.setMesh(mesh.vertices, mesh.faces);
-  graph_2.setMesh(mesh.vertices, mesh.faces);
-
-  EXPECT_EQ(7u, graph_1.numNodes());
+  EXPECT_EQ(2u, graph_1.numNodes());
   EXPECT_EQ(0u, graph_1.numEdges());
-  EXPECT_EQ(8u, graph_2.numNodes());
+  EXPECT_EQ(3u, graph_2.numNodes());
   EXPECT_EQ(1u, graph_2.numEdges());
 
   graph_1.mergeGraph(graph_2);
 
-  EXPECT_EQ(7u, graph_1.numNodes());
+  EXPECT_EQ(2u, graph_1.numNodes());
   EXPECT_EQ(0u, graph_1.numEdges());
-  EXPECT_EQ(8u, graph_2.numNodes());
+  EXPECT_EQ(3u, graph_2.numNodes());
   EXPECT_EQ(1u, graph_2.numEdges());
   EXPECT_FALSE(graph_1.hasEdge(0, 1));
 
   graph_1.mergeGraph(graph_2, prev_merges);
 
-  EXPECT_EQ(7u, graph_1.numNodes());
+  EXPECT_EQ(2u, graph_1.numNodes());
   EXPECT_EQ(1u, graph_1.numEdges());
-  EXPECT_EQ(8u, graph_2.numNodes());
+  EXPECT_EQ(3u, graph_2.numNodes());
   EXPECT_EQ(1u, graph_2.numEdges());
   EXPECT_TRUE(graph_1.hasEdge(0, 1));
 }
