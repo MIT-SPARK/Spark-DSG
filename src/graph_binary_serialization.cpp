@@ -147,7 +147,9 @@ void updateEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
   if (edge_opt) {
     BinaryEdgeFactory::get_default().update(conv, edge_opt->get().attributes());
   } else {
-    graph.insertEdge(source, target, BinaryEdgeFactory::get_default().create(conv));
+    // always force parents to switch
+    graph.insertEdge(
+        source, target, BinaryEdgeFactory::get_default().create(conv), true);
   }
   conv.finalize();
 }
@@ -420,6 +422,7 @@ bool updateGraph(DynamicSceneGraph& graph,
     return updateGraphRemoveStale(graph, deserializer);
   }
 
+  graph.clear();
   return updateGraphNormal(graph, deserializer);
 }
 
