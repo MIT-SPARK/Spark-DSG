@@ -227,6 +227,48 @@ TEST(DynamicSceneGraphTests, InsertEdgeInvariants) {
   EXPECT_FALSE(graph.insertEdge(7, 0));
 }
 
+// Test that we can force switching a parent edge
+TEST(DynamicSceneGraphTests, InsertNewParent) {
+  DynamicSceneGraph graph({1, 2, 3}, 0);
+  EXPECT_EQ(0u, graph.numEdges());
+  EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, 2, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(3, 3, std::make_unique<NodeAttributes>()));
+  const SceneGraphNode& child = graph.getNode(0).value();
+  const SceneGraphNode& p1 = graph.getNode(2).value();
+  const SceneGraphNode& p2 = graph.getNode(3).value();
+
+  EXPECT_TRUE(graph.insertEdge(0, 2));
+  EXPECT_EQ(1u, graph.numEdges());
+  EXPECT_TRUE(graph.hasEdge(0, 2));
+  EXPECT_TRUE(graph.hasEdge(2, 0));
+  ASSERT_TRUE(child.hasParent());
+  EXPECT_EQ(child.getParent().value(), 2u);
+  EXPECT_TRUE(p1.children().count(0));
+  EXPECT_FALSE(p2.children().count(0));
+
+  // add an improper edge (0 already has a parent)
+  EXPECT_FALSE(graph.insertEdge(0, 3));
+  ASSERT_TRUE(child.hasParent());
+  EXPECT_EQ(child.getParent().value(), 2u);
+  EXPECT_TRUE(p1.children().count(0));
+  EXPECT_FALSE(p2.children().count(0));
+
+  EXPECT_TRUE(graph.insertEdge(0, 3, nullptr, true));
+  ASSERT_TRUE(child.hasParent());
+  EXPECT_EQ(child.getParent().value(), 3u);
+  EXPECT_FALSE(p1.children().count(0));
+  EXPECT_TRUE(p2.children().count(0));
+
+  // reset the original parent (but flip argument order)
+  EXPECT_TRUE(graph.insertEdge(2, 0, nullptr, true));
+  ASSERT_TRUE(child.hasParent());
+  EXPECT_EQ(child.getParent().value(), 2u);
+  EXPECT_TRUE(p1.children().count(0));
+  EXPECT_FALSE(p2.children().count(0));
+}
+
 // Test that inserting specific edge attributes works for a inter-layer edge
 TEST(DynamicSceneGraphTests, EdgeAttributesCorrect) {
   DynamicSceneGraph graph({1, 2}, 0);

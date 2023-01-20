@@ -217,7 +217,8 @@ bool DynamicSceneGraph::insertNode(Node::Ptr&& node) {
 
 bool DynamicSceneGraph::insertEdge(NodeId source,
                                    NodeId target,
-                                   EdgeAttributes::Ptr&& edge_info) {
+                                   EdgeAttributes::Ptr&& edge_info,
+                                   bool force_insert) {
   LayerKey source_key, target_key;
   if (hasEdge(source, target, &source_key, &target_key)) {
     return false;
@@ -232,6 +233,10 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
 
   if (source_key == target_key) {
     return layerFromKey(source_key).insertEdge(source, target, std::move(attrs));
+  }
+
+  if (force_insert) {
+    clearParentAncestry(source, target, source_key, target_key);
   }
 
   if (!addAncestry(source, target, source_key, target_key)) {
@@ -1144,6 +1149,28 @@ void DynamicSceneGraph::removeAncestry(NodeId source,
   } else {
     source_node->siblings_.erase(target);
     target_node->siblings_.erase(source);
+  }
+}
+
+void DynamicSceneGraph::clearParentAncestry(NodeId source,
+                                            NodeId target,
+                                            const LayerKey& source_key,
+                                            const LayerKey& target_key) {
+  SceneGraphNode* source_node = getNodePtr(source, source_key);
+  SceneGraphNode* target_node = getNodePtr(target, target_key);
+  const auto source_parent = source_node->getParent();
+  const auto target_parent = target_node->getParent();
+
+  if (source_key.isParent(target_key) && target_parent) {
+    removeInterlayerEdge(
+        target, *target_parent, target_key, node_lookup_.at(*target_parent));
+    return;
+  }
+
+  if (target_key.isParent(source_key) && source_parent) {
+    removeInterlayerEdge(
+        source, *source_parent, source_key, node_lookup_.at(*source_parent));
+    return;
   }
 }
 

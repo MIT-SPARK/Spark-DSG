@@ -192,7 +192,8 @@ class DynamicSceneGraph {
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributes::Ptr&& edge_info = nullptr);
+                  EdgeAttributes::Ptr&& edge_info = nullptr,
+                  bool force_insert = false);
 
   /**
    * @brief Set the attributes of an existing node
@@ -672,6 +673,11 @@ class DynamicSceneGraph {
                       NodeId target,
                       const LayerKey& source_key,
                       const LayerKey& target_key);
+
+  void clearParentAncestry(NodeId source,
+                           NodeId target,
+                           const LayerKey& source_key,
+                           const LayerKey& target_key);
 
   void removeInterlayerEdge(NodeId source,
                             NodeId target,
