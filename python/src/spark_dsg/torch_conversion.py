@@ -153,11 +153,11 @@ def scene_graph_layer_to_torch(
 
     node_features = torch.tensor(np.array(node_features), dtype=dtype_float)
 
-    edge_index = torch.zeros((2, G.num_edges()), dtype=dtype_int)
+    edge_index = torch.zeros((2, G.num_edges()))
     edge_features = []
     for idx, edge in enumerate(G.edges):
         edge_index[:, idx] = torch.tensor(
-            _get_directed_edge(G, edge, id_map), dtype=dtype_int
+            _get_directed_edge(G, edge, id_map)
         )
 
         if edge_converter is not None:
@@ -237,11 +237,11 @@ def scene_graph_to_torch_homogeneous(
     node_features = torch.tensor(np.array(node_features), dtype=dtype_float)
     node_labels = torch.tensor(np.array(node_labels), dtype=dtype_int)
 
-    edge_index = torch.zeros((2, G.num_static_edges()), dtype=dtype_int)
+    edge_index = torch.zeros((2, G.num_static_edges()))
     edge_features = []
     for idx, edge in enumerate(G.edges):
         edge_index[:, idx] = torch.tensor(
-            _get_directed_edge(G, edge, id_map), dtype=dtype_int
+            _get_directed_edge(G, edge, id_map)
         )
 
         if edge_converter is not None:
@@ -353,7 +353,7 @@ def scene_graph_to_torch_heterogeneous(
 
     for edge_type in edge_indices:
         source_type, target_type = edge_type_map[edge_type]
-        edge_index = torch.tensor(np.array(edge_indices[edge_type]).T, dtype=dtype_int)
+        edge_index = torch.tensor(np.array(edge_indices[edge_type]).T)
         edge_attrs = None
         if len(edge_features[edge_type]) == edge_index.size(dim=1):
             edge_attrs = torch.tensor(np.array(edge_features[edge_type]), dtype=dtype_float)
