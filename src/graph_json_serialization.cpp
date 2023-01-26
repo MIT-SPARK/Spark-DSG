@@ -112,6 +112,7 @@ void read_edge_from_json(const json& record, EdgeCallback callback) {
 
 std::string SceneGraphLayer::serializeLayer(const NodeSet& nodes) const {
   json record;
+  record["id"] = id;
   record["nodes"] = json::array();
   record["edges"] = json::array();
 
@@ -133,6 +134,61 @@ std::string SceneGraphLayer::serializeLayer(const NodeSet& nodes) const {
   }
 
   return record.dump();
+}
+
+std::string IsolatedSceneGraphLayer::toBson() const {
+  json record;
+  record["id"] = id;
+  record["nodes"] = json::array();
+  record["edges"] = json::array();
+
+  for (const auto& id_node_pair : nodes()) {
+    record["nodes"].push_back(*id_node_pair.second);
+  }
+
+  for (const auto& id_edge_pair : edges()) {
+    record["edges"].push_back(id_edge_pair.second);
+  }
+
+  std::string output;
+  json::to_bson(record, output);
+  return output;
+}
+
+using LayerPtr = std::shared_ptr<IsolatedSceneGraphLayer>;
+
+LayerPtr layerFromJson(const json& record) {
+  const auto layer_id = record.at("id").get<LayerId>();
+  auto layer = std::make_shared<IsolatedSceneGraphLayer>(layer_id);
+
+  for (const auto& node : record.at("nodes")) {
+    read_node_from_json(
+        node, [&layer](NodeId id, LayerId layer_id, NodeAttributes::Ptr&& attrs) {
+          if (layer->id != layer_id) {
+            SG_LOG(ERROR) << "invalid layer found, skipping!" << std::endl;
+          }
+          layer->emplaceNode(id, std::move(attrs));
+        });
+  }
+
+  for (const auto& edge : record.at("edges")) {
+    read_edge_from_json(
+        edge, [&layer](NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs) {
+          layer->insertEdge(source, target, std::move(attrs));
+        });
+  }
+
+  return layer;
+}
+
+LayerPtr IsolatedSceneGraphLayer::readFromJson(const std::string& contents) {
+  auto record = json::parse(contents);
+  return layerFromJson(record);
+}
+
+LayerPtr IsolatedSceneGraphLayer::fromBson(const std::string& contents) {
+  auto record = json::from_bson(contents);
+  return layerFromJson(record);
 }
 
 EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
@@ -177,7 +233,7 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
   record["layer_ids"] = layer_ids;
   record["mesh_layer_id"] = mesh_layer_id;
 
-  for (const auto& id_layer_pair : layers_){
+  for (const auto& id_layer_pair : layers_) {
     for (const auto& id_node_pair : id_layer_pair.second->nodes_) {
       record["nodes"].push_back(*id_node_pair.second);
     }

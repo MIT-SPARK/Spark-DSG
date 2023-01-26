@@ -35,6 +35,7 @@
 """Test that networkx conversion works as expected."""
 import spark_dsg as dsg
 import spark_dsg.networkx as dsg_nx
+import numpy as np
 
 
 def _check_attribute_validity(G_nx):
@@ -50,7 +51,7 @@ def _check_attribute_validity(G_nx):
 
 def test_static_graph_conversion(resource_dir):
     """Test that graph conversion is exact."""
-    dsg_path = resource_dir / "apartment_igx_dsg.json"
+    dsg_path = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(dsg_path))
     G_nx = dsg_nx.graph_to_networkx(G, include_dynamic=False)
 
@@ -63,15 +64,13 @@ def test_static_graph_conversion(resource_dir):
 
 def test_full_graph_conversion(resource_dir):
     """Test that graph conversion is exact."""
-    dsg_path = resource_dir / "apartment_igx_dsg.json"
+    dsg_path = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(dsg_path))
 
-    # add a dynamic interlayer edge because the graph doesn't contain them
+    # check that we have edges between static and dynamic layers
     agents = G.get_dynamic_layer(dsg.DsgLayers.AGENTS, "a")
-    first_agent = next(agents.nodes).id.value
-    places = G.get_layer(dsg.DsgLayers.PLACES)
-    first_place = next(places.nodes).id.value
-    assert G.insert_edge(first_agent, first_place)
+    has_parents = np.array([x.has_parent() for x in agents.nodes])
+    assert has_parents.any()
 
     G_nx = dsg_nx.graph_to_networkx(G, include_dynamic=True)
 
@@ -84,7 +83,7 @@ def test_full_graph_conversion(resource_dir):
 
 def test_layer_conversion(resource_dir):
     """Test that layer conversion is exact."""
-    dsg_path = resource_dir / "apartment_igx_dsg.json"
+    dsg_path = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(dsg_path))
     places = G.get_layer(dsg.DsgLayers.PLACES)
     G_nx = dsg_nx.layer_to_networkx(places)

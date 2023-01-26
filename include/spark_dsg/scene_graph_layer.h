@@ -310,6 +310,7 @@ class SceneGraphLayer : public BaseLayer {
 class IsolatedSceneGraphLayer : public SceneGraphLayer {
  public:
   using Ptr = std::unique_ptr<IsolatedSceneGraphLayer>;
+  using SPtr = std::shared_ptr<IsolatedSceneGraphLayer>;
 
   /**
    * @brief Makes an empty layer with the specified layer id
@@ -328,6 +329,12 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
   using SceneGraphLayer::removeNode;
 
   using SceneGraphLayer::mergeNodes;
+
+  std::string toBson() const;
+
+  static SPtr fromBson(const std::string& contents);
+
+  static SPtr readFromJson(const std::string& contents);
 };
 
 namespace graph_utilities {
