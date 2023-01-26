@@ -36,7 +36,7 @@
 
 namespace spark_dsg {
 
-NodeAttributes::NodeAttributes() : position(Eigen::Vector3d::Zero()) {}
+NodeAttributes::NodeAttributes() : NodeAttributes(Eigen::Vector3d::Zero()) {}
 
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)
     : position(pos), last_update_time_ns(0) {}

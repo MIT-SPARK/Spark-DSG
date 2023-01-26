@@ -52,7 +52,8 @@ def test_implicit_prefix():
 
 
 def test_layer_ids(resource_dir):
-    mp3d_dsg = resource_dir / "mp3d_example_dsg.json"
+    """Test that layer ids show up correctly."""
+    mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
     layer_ids = [layer.id for layer in G.layers]
@@ -69,7 +70,7 @@ def test_layer_ids(resource_dir):
 
 def test_add_remove(resource_dir):
     """Test that adding and removing nodes works as expected."""
-    mp3d_dsg = resource_dir / "mp3d_example_dsg.json"
+    mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
     G_new = dsg.DynamicSceneGraph()
@@ -154,7 +155,7 @@ def _check_semantic_attributes(attrs, node_id=None, bbox_valid=False):
 
 
 def test_agent_attributes(resource_dir):
-    mp3d_dsg = resource_dir / "mp3d_example_dsg.json"
+    mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
     agents = G.get_dynamic_layer(dsg.DsgLayers.AGENTS, "a")
@@ -172,7 +173,7 @@ def test_agent_attributes(resource_dir):
 
 
 def test_object_attributes(resource_dir):
-    mp3d_dsg = resource_dir / "mp3d_example_dsg.json"
+    mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
     objects = G.get_layer(dsg.DsgLayers.OBJECTS)
@@ -190,7 +191,7 @@ def test_object_attributes(resource_dir):
 
 
 def test_place_attributes(resource_dir):
-    mp3d_dsg = resource_dir / "mp3d_example_dsg.json"
+    mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
     places = G.get_layer(dsg.DsgLayers.PLACES)
@@ -215,7 +216,7 @@ def test_place_attributes(resource_dir):
 
 
 def test_room_attributes(resource_dir):
-    mp3d_dsg = resource_dir / "mp3d_example_dsg.json"
+    mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
     rooms = G.get_layer(dsg.DsgLayers.ROOMS)
@@ -238,7 +239,7 @@ def test_room_attributes(resource_dir):
 
 
 def test_building_attributes(resource_dir):
-    uh2_dsg = resource_dir / "apartment_igx_dsg.json"
+    uh2_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
 
     buildings = G.get_layer(dsg.DsgLayers.BUILDINGS)
@@ -270,7 +271,7 @@ def _check_layer_edges(G, layer_id):
 
 
 def test_intralayer_edges(resource_dir):
-    uh2_dsg = resource_dir / "apartment_igx_dsg.json"
+    uh2_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
 
     _check_layer_edges(G, dsg.DsgLayers.PLACES)
@@ -278,7 +279,7 @@ def test_intralayer_edges(resource_dir):
 
 
 def test_node_counts(resource_dir):
-    uh2_dsg = resource_dir / "apartment_igx_dsg.json"
+    uh2_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
 
     node_type_counts = {}
