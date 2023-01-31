@@ -236,6 +236,8 @@ class SceneGraphLayer : public BaseLayer {
 
   std::unique_ptr<Edges> deserializeLayer(const std::string& info);
 
+  std::string toBson() const;
+
  protected:
   void reset();
 
@@ -329,8 +331,6 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
   using SceneGraphLayer::removeNode;
 
   using SceneGraphLayer::mergeNodes;
-
-  std::string toBson() const;
 
   static SPtr fromBson(const std::string& contents);
 

@@ -136,7 +136,7 @@ std::string SceneGraphLayer::serializeLayer(const NodeSet& nodes) const {
   return record.dump();
 }
 
-std::string IsolatedSceneGraphLayer::toBson() const {
+std::string SceneGraphLayer::toBson() const {
   json record;
   record["id"] = id;
   record["nodes"] = json::array();
