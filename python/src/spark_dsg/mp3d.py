@@ -8,6 +8,7 @@ import seaborn as sns
 import numpy as np
 import shapely.geometry
 import shapely.ops
+import heapq
 
 
 def _filter_line(line):
@@ -136,8 +137,8 @@ class Mp3dRoom:
             ]
         )
 
-        self._min_z = region['bbox_min'][2]
-        self._max_z = region['bbox_max'][2]
+        self._min_z = region["bbox_min"][2]
+        self._max_z = region["bbox_max"][2]
 
         # house files are rotated 90 degreees from Hydra convention
         xy_polygon = shapely.geometry.Polygon([x[:2].tolist() for x in vertices])
@@ -150,7 +151,7 @@ class Mp3dRoom:
             (R @ np.array(x)).tolist() for x in xy_polygon.exterior.coords
         ]
         self._polygon_xy = shapely.geometry.Polygon(rotated_vertices)
-        while not self._polygon_xy.is_valid:    # a few rooms have invalid xy-polygon
+        while not self._polygon_xy.is_valid:  # a few rooms have invalid xy-polygon
             rotated_vertices = rotated_vertices[:-1]
             self._polygon_xy = shapely.geometry.Polygon(rotated_vertices)
 
@@ -268,6 +269,74 @@ def get_rooms_from_mp3d_info(mp3d_info, angle_deg=0.0):
     return rooms
 
 
+def _expand_node(frontier, G, node, parent):
+    for sibling in node.siblings():
+        sibling_node = G.get_node(sibling)
+        if sibling_node.has_parent():
+            continue
+
+        edge = G.get_edge(node.id.value, sibling)
+        # we want to prioritize expansion by the maximum distance to an obstacle and
+        # heapq is smallest first, so we invert the distance
+        heapq.heappush(frontier, (-edge.info.weight, sibling, parent))
+
+
+def expand_rooms(G_old, verbose=False):
+    """
+    Attempts to label any unassigned place nodes.
+
+    Assigns place nodes to rooms via floodfill with a frontier initialized from places
+    nodes already assigned by rooms, prioritizing expansion by distance to the nearest
+    obstacle. Also attempts to add more room-to-room edges.
+
+    Args:
+        G_old (DynamicSceneGraph): Input graph
+        verbose (bool): Whether or not to print resulting statistics
+
+    Returns:
+        DynamicSceneGraph: A copy of G_old wih more place nodes assigned to rooms
+    """
+    G = G_old.clone()
+    places = G.get_layer(DsgLayers.PLACES)
+
+    unlabeled = set([])
+    frontier = []
+    for node in places.nodes:
+        parent = node.get_parent()
+        if parent is None:
+            unlabeled.add(node.id.value)
+            continue
+
+        _expand_node(frontier, G, node, parent)
+
+    visited = set([])
+    while len(frontier) > 0:
+        _, node_id, room = heapq.heappop(frontier)
+        if node_id in visited:
+            continue
+
+        G.insert_edge(node_id, room)
+        visited.add(node_id)
+
+        node = G.get_node(node_id)
+        _expand_node(frontier, G, node, room)
+
+    prev_edges = G.get_layer(DsgLayers.ROOMS).num_edges()
+    _assign_room_edges(G)
+    new_edges = G.get_layer(DsgLayers.ROOMS).num_edges()
+
+    if verbose:
+        remaining = unlabeled - visited
+        verbose_str = ""
+        verbose_str += f"Places: {places.num_nodes()}"
+        verbose_str += f" (Prev Unassigned: {len(unlabeled)}"
+        verbose_str += f", Assigned: {len(visited)}, Unassigned: {len(remaining)})"
+        verbose_str += f", Room edges: {prev_edges} (prev) -> {new_edges} (expanded)"
+        print(verbose_str)
+
+    return G
+
+
 def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=False):
     """
     Create a copy of the DSG with ground-truth room nodes.
@@ -347,7 +416,7 @@ def add_gt_room_label(
     Args:
         G (DynamicSceneGraph): Graph to add labels to
         mp3d_info (Dict[str, List[Dict[Str, Any]]]): Parsed house file information
-        min_iou_threshold (float): Minimum intersection over union for rooms to be overlap
+        min_iou_threshold (float): Minimum intersection over union for rooms to overlap
         angle_deg (float): Angle to rotate mp3d rooms by
         verbose (bool): Print information about labeling process
     """
@@ -376,9 +445,11 @@ def add_gt_room_label(
                 continue
             intersection_area = xy_polygon.intersection(bounding_box_xy).area
             union_area = xy_polygon.union(bounding_box_xy).area
-            intersection_over_union.append((idx, intersection_area/union_area))
+            intersection_over_union.append((idx, intersection_area / union_area))
             if verbose:
-                print(f"  {mp3d_room.get_id()} - ({intersection_over_union[-1][1]:.2f} {intersection_area:.2f} / {union_area:.2f})")
+                curr_iou = intersection_over_union[-1][1]
+                iou_str = f"({curr_iou:.2f} {intersection_area:.2f} / {union_area:.2f})"
+                print(f"  {mp3d_room.get_id()} - {iou_str}")
 
         max_index, max_iou = max(intersection_over_union, key=lambda x: x[1])
         if max_iou < min_iou_threshold:
