@@ -2,7 +2,6 @@
 from spark_dsg._dsg_bindings import SceneGraphLayer
 from dataclasses import dataclass
 from typing import Union, Dict
-import contextlib
 import functools
 import pathlib
 import mmap
@@ -116,9 +115,7 @@ class LayerCollection:
             self._mmap.close()
             self._mmap = None
 
-    @requires_open
-    def __getitem__(self, index):
-        """Get a specific graph."""
+    def _get_graph(self, index):
         info = self._index.get(index, None)
         if not info:
             raise IndexError(f"no graph with index {index} in collection")
@@ -126,6 +123,27 @@ class LayerCollection:
         start_byte = info.offset
         end_byte = info.offset + info.size
         return SceneGraphLayer.from_bson(self._mmap[start_byte:end_byte])
+
+    @requires_open
+    def __getitem__(self, index):
+        """
+        Get graphs from the collection.
+
+        Args:
+            index (Union[int, slice]): Graph indices to retrieve
+
+        Returns:
+            Union[SceneGraphLayer, List[SceneGraphLayer]]: Requested graph
+        """
+        if isinstance(index, slice):
+            indices = [x for x in range(len(self))]
+            indices = indices[index]
+            return [self._get_graph(x) for x in indices]
+
+        if index < 0:
+            index = len(self) + index
+
+        return self._get_graph(index)
 
     @property
     @requires_open
