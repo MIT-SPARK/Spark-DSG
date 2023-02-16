@@ -281,6 +281,14 @@ def _expand_node(frontier, G, node, parent):
         heapq.heappush(frontier, (-edge.info.weight, sibling, parent))
 
 
+def _get_combined_polygon(nodes, tolerance=0.05):
+    points = []
+    for node in nodes:
+        points.append(shapely.geometry.Point(node.attributes.position[0], node.attributes.position[1]).\
+            buffer(node.attributes.distance))
+    return shapely.ops.unary_union(points).simplify(tolerance, preserve_topology=False)
+
+
 def expand_rooms(G_old, verbose=False):
     """
     Attempts to label any unassigned place nodes.
@@ -337,7 +345,9 @@ def expand_rooms(G_old, verbose=False):
     return G
 
 
-def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=False):
+def repartition_rooms(
+    G_prev, mp3d_info, angle_deg=-90.0, min_iou_threshold=0.0, colors=None, verbose=False
+):
     """
     Create a copy of the DSG with ground-truth room nodes.
 
@@ -345,6 +355,7 @@ def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=F
         G_prev (DynamicSceneGraph): Graph to repartition
         mp3d_info (Dict[str, List[Dict[Str, Any]]]): Parsed house file information
         angle_deg (float): Degrees to rotate the parsed rooms
+        min_iou_threshold (float): Minimum intersection over union for valid rooms
         colors (Optional[List[Iterable[float]]]): Optional colormap to assign to rooms
         verbose (bool): Print information about repartition process
 
@@ -366,6 +377,8 @@ def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=F
     buildings = [node.id.value for node in G.get_layer(DsgLayers.BUILDINGS).nodes]
     assert len(buildings) == 1
 
+    # add new room nodes and connect them to building node
+    room_id_to_gt_index = dict()  # map room node id in dsg to index in new_rooms
     for index, room in enumerate(new_rooms):
         color = np.array([int(255 * c) for c in colors[index % len(colors)]][:3])
         attrs = room.get_attrs(color)
@@ -373,7 +386,9 @@ def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=F
         room_id = room.get_id()
         G.add_node(DsgLayers.ROOMS, room_id.value, attrs)
         G.insert_edge(room_id.value, buildings[0])
+        room_id_to_gt_index[room_id.value] = index
 
+    # connect new room nodes to places nodes
     missing_nodes = []
     for place in G.get_layer(DsgLayers.PLACES).nodes:
         pos = G.get_position(place.id.value)
@@ -387,17 +402,30 @@ def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=F
             break  # avoid labeling node as missing
         else:
             missing_nodes.append(place)
-
-    _assign_room_edges(G)
-
     if verbose:
         print(f"Found {len(missing_nodes)} places node outside of room segmentations.")
 
-    invalid_rooms = [
-        room.id.value
-        for room in G.get_layer(DsgLayers.ROOMS).nodes
-        if not room.has_children()
-    ]
+    # add room to room edges
+    _assign_room_edges(G)
+
+    # filter out rooms that have no children or less than specified IoU with ground truth
+    invalid_rooms = []
+    for room in G.get_layer(DsgLayers.ROOMS).nodes:
+        places_nodes = [G.get_node(i) for i in room.children()]
+        if len(places_nodes) == 0:
+            invalid_rooms.append(room.id.value)
+            continue
+
+        if min_iou_threshold > 0:
+            explored_polygon = _get_combined_polygon(places_nodes)
+            xy_polygon = new_rooms[room_id_to_gt_index[room.id.value]].get_polygon_xy()
+            intersection_area = xy_polygon.intersection(explored_polygon).area
+            union_area = xy_polygon.union(explored_polygon).area
+            if verbose:
+                print(f"explore area: {explored_polygon.area}, gt area: {xy_polygon.area}, intersection_area: {intersection_area}, union_area: {union_area}")
+            if intersection_area / union_area < min_iou_threshold:
+                invalid_rooms.append(room.id.value)
+
     for node_id in invalid_rooms:
         G.remove_node(node_id)
 
@@ -408,7 +436,7 @@ def repartition_rooms(G_prev, mp3d_info, angle_deg=-90.0, colors=None, verbose=F
 
 
 def add_gt_room_label(
-    G, mp3d_info, min_iou_threshold=0.01, angle_deg=-90.0, verbose=False
+    G, mp3d_info, min_iou_threshold=0.01, angle_deg=-90.0, use_hydra_polygon=False, verbose=False
 ):
     """
     Add ground-truth room label to DSG based on maximum area of intersection.
@@ -417,6 +445,7 @@ def add_gt_room_label(
         G (DynamicSceneGraph): Graph to add labels to
         mp3d_info (Dict[str, List[Dict[Str, Any]]]): Parsed house file information
         min_iou_threshold (float): Minimum intersection over union for rooms to overlap
+        use_hydra_polygon (bool): Use places node polygon instead of rectangle as hydra room on x-y plane
         angle_deg (float): Angle to rotate mp3d rooms by
         verbose (bool): Print information about labeling process
     """
@@ -426,15 +455,20 @@ def add_gt_room_label(
         if verbose:
             print("DSG", room.id, "to ground-truth room - area of intersection")
 
-        bbox = room.attributes.bounding_box
-        bounding_box_xy = shapely.geometry.Polygon(
-            [
-                [bbox.min[0], bbox.min[1]],
-                [bbox.min[0], bbox.max[1]],
-                [bbox.max[0], bbox.max[1]],
-                [bbox.max[0], bbox.min[1]],
-            ]
-        )
+        if use_hydra_polygon:
+            places_nodes = [G.get_node(i) for i in room.children()]
+            hydra_polygon = _get_combined_polygon(places_nodes)
+        else:
+            bbox = room.attributes.bounding_box
+            hydra_polygon = shapely.geometry.Polygon(
+                [
+                    [bbox.min[0], bbox.min[1]],
+                    [bbox.min[0], bbox.max[1]],
+                    [bbox.max[0], bbox.max[1]],
+                    [bbox.max[0], bbox.min[1]],
+                ]
+            )
+        
 
         # Find the ground-truth room area of intersection
         intersection_over_union = []
@@ -443,8 +477,8 @@ def add_gt_room_label(
             # check whether hydra room position is inside the ground-truth room
             if not mp3d_room.pos_on_same_floor(room.attributes.position):
                 continue
-            intersection_area = xy_polygon.intersection(bounding_box_xy).area
-            union_area = xy_polygon.union(bounding_box_xy).area
+            intersection_area = xy_polygon.intersection(hydra_polygon).area
+            union_area = xy_polygon.union(hydra_polygon).area
             intersection_over_union.append((idx, intersection_area / union_area))
             if verbose:
                 curr_iou = intersection_over_union[-1][1]
