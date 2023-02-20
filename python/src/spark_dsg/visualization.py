@@ -33,11 +33,12 @@
 #
 #
 """Visualization for a DSG."""
+from spark_dsg._dsg_bindings import NodeSymbol
 import numpy as np
 import logging
 
 # DSG plot style
-NODE_TYPE_OFFSET = {"B": 50, "R": 25, "p": 15, "O": 0}
+NODE_TYPE_OFFSET = {"B": 30, "R": 25, "p": 10, "O": 0}
 
 NODE_TYPE_TO_COLOR = {"B": "#636EFA", "R": "#EF553B", "p": "#AB63FA", "O": "#00CC96"}
 
@@ -49,49 +50,68 @@ def z_offset(node) -> np.ndarray:
     return offset
 
 
-def plot_scene_graph(
-    G,
+def _draw_layer_nodes(
+    fig,
+    layer,
     marker_size=12,
     annotation_size=18,
-    title=None,
-    figure_path=None,
     include_text=False,
+    text_func=None,
+    color_func=None,
 ):
+    import plotly.graph_objects as go
+
+    pos, colors, text = [], [], []
+
+    for node in layer.nodes:
+        pos.append(np.squeeze(z_offset(node)))
+        if color_func is None:
+            colors.append(NODE_TYPE_TO_COLOR[node.id.category])
+        else:
+            colors.append(color_func(node))
+
+        if text_func is None:
+            text.append(str(node.id))
+        else:
+            text.append(text_func(node))
+
+    pos = np.array(pos)
+    fig.add_trace(
+        go.Scatter3d(
+            x=pos[:, 0],
+            y=pos[:, 1],
+            z=pos[:, 2],
+            text=text if include_text else "",
+            mode="markers",
+            marker=dict(color=colors, size=marker_size, opacity=0.8),
+            # textfont=dict(size=annotation_size),
+            # hoverinfo="none",
+        )
+    )
+
+
+def plot_scene_graph(G, title=None, figure_path=None, layer_settings=None):
     """Constructs and returns a 3D scattter plot of a DSG."""
     try:
         import plotly.graph_objects as go
-        import plotly.express as px
     except ImportError:
         logging.warning(
             "plotly not found. Install spark_dsg with the viz extra to for plotting!"
         )
         return None
 
-    # nodes
-    pos, colors, text = [], [], []
-
-    pos = np.zeros((G.num_static_nodes(), 3))
-    for index, node in enumerate(G.nodes):
-        pos[index, :] = z_offset(node)
-        colors.append(NODE_TYPE_TO_COLOR[node.id.category])
-        text.append(str(node.id))
-
-    if not include_text:
-        fig = px.scatter_3d(x=pos[:, 0], y=pos[:, 1], z=pos[:, 2])
-    else:
-        fig = px.scatter_3d(x=pos[:, 0], y=pos[:, 1], z=pos[:, 2], text=text)
-
-    fig.update_traces(
-        marker=dict(size=marker_size, opacity=0.8, color=colors),
-        textfont=dict(size=annotation_size),
-    )
+    fig = go.Figure()
+    for layer in G.layers:
+        has_settings = layer_settings is not None and layer.id in layer_settings
+        settings = {} if not has_settings else layer_settings[layer.id]
+        print(settings)
+        _draw_layer_nodes(fig, layer, **settings)
 
     # edges
     x_lines, y_lines, z_lines = [], [], []
     x_lines_dark, y_lines_dark, z_lines_dark = [], [], []
 
     for edge in G.edges:
-
         source = G.get_node(edge.source)
         target = G.get_node(edge.target)
 
