@@ -94,7 +94,7 @@ class SceneGraphNode {
 
   SceneGraphNode(SceneGraphNode&& other) = default;
 
-  SceneGraphNode& operator=(SceneGraphNode&& other) = default;
+  SceneGraphNode& operator=(SceneGraphNode&& other) = delete;
 
   virtual ~SceneGraphNode();
 

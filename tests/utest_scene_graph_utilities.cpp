@@ -32,11 +32,10 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg_tests/type_comparisons.h"
-
+#include <gtest/gtest.h>
 #include <spark_dsg/scene_graph_utilities.h>
 
-#include <gtest/gtest.h>
+#include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
 
@@ -120,9 +119,9 @@ const AncestorTestConfig ancestor_test_cases[] = {
     {3, 2, {6, 7}},
 };
 
-INSTANTIATE_TEST_CASE_P(GetAncestors,
-                        AncestorTestFixture,
-                        testing::ValuesIn(ancestor_test_cases));
+INSTANTIATE_TEST_SUITE_P(GetAncestors,
+                         AncestorTestFixture,
+                         testing::ValuesIn(ancestor_test_cases));
 
 TEST_P(BoundingBoxTestFixture, BoundingBoxCorrect) {
   const BoundingBoxTestConfig config = GetParam();
@@ -139,8 +138,8 @@ const BoundingBoxTestConfig bbox_test_cases[] = {
     {1, 2, {{3, 3, 3}, {4, 4, 4}}},
 };
 
-INSTANTIATE_TEST_CASE_P(GetChildBoundingBox,
-                        BoundingBoxTestFixture,
-                        testing::ValuesIn(bbox_test_cases));
+INSTANTIATE_TEST_SUITE_P(GetChildBoundingBox,
+                         BoundingBoxTestFixture,
+                         testing::ValuesIn(bbox_test_cases));
 
 }  // namespace spark_dsg

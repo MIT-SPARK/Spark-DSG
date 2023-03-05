@@ -32,9 +32,8 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <spark_dsg/adjacency_matrix.h>
-
 #include <gtest/gtest.h>
+#include <spark_dsg/adjacency_matrix.h>
 
 namespace spark_dsg {
 
@@ -184,8 +183,8 @@ const AdjacencyMatrixTestConfig adjacency_test_cases[] = {
      {0.3, 0.1, 0.8, 0.2, 0.3, 0.5, 0.0, 0.4, 0.0, 0.4}},
 };
 
-INSTANTIATE_TEST_CASE_P(MatrixMethodsMatchExpected,
-                        AdjacencyMatrixFixture,
-                        testing::ValuesIn(adjacency_test_cases));
+INSTANTIATE_TEST_SUITE_P(MatrixMethodsMatchExpected,
+                         AdjacencyMatrixFixture,
+                         testing::ValuesIn(adjacency_test_cases));
 
 }  // namespace spark_dsg

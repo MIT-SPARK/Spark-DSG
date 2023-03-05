@@ -32,10 +32,9 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+#include <gtest/gtest.h>
 #include <spark_dsg/graph_utilities.h>
 #include <spark_dsg/scene_graph_layer.h>
-
-#include <gtest/gtest.h>
 
 namespace spark_dsg {
 
@@ -127,9 +126,9 @@ const ConnectedComponentTestConfig cc_test_cases[] = {
     {NodeSet{0, 1, 2, 3, 4, 5}, ResultSet{{0, 1, 2, 3, 4, 5}}, true, true},
 };
 
-INSTANTIATE_TEST_CASE_P(GetConnectedComponent,
-                        ConnectedComponentFixture,
-                        testing::ValuesIn(cc_test_cases));
+INSTANTIATE_TEST_SUITE_P(GetConnectedComponent,
+                         ConnectedComponentFixture,
+                         testing::ValuesIn(cc_test_cases));
 
 struct GraphConfig {
   size_t num_nodes;
@@ -215,9 +214,9 @@ const DepthLimitedCCTestConfig dl_test_cases[] = {
      dl_graphs[2]},
 };
 
-INSTANTIATE_TEST_CASE_P(GetDepthLimitedConnectedComponent,
-                        DepthLimitedCCFixture,
-                        testing::ValuesIn(dl_test_cases));
+INSTANTIATE_TEST_SUITE_P(GetDepthLimitedConnectedComponent,
+                         DepthLimitedCCFixture,
+                         testing::ValuesIn(dl_test_cases));
 
 struct FilteredCCTestConfig {
   ResultSet expected;
@@ -269,9 +268,9 @@ const FilteredCCTestConfig filtered_cc_test_cases[] = {
     {ResultSet{{0}, {1}, {2}, {3}, {4}, {5}}, {}, {0, 1, 2, 3, 4, 5}, dl_graphs[0]},
 };
 
-INSTANTIATE_TEST_CASE_P(GetConnectedComponentWithFilters,
-                        FilteredCCFixture,
-                        testing::ValuesIn(filtered_cc_test_cases));
+INSTANTIATE_TEST_SUITE_P(GetConnectedComponentWithFilters,
+                         FilteredCCFixture,
+                         testing::ValuesIn(filtered_cc_test_cases));
 
 TEST(ConnectedComponentTests, NormalEmptyCorrect) {
   IsolatedSceneGraphLayer layer(1);
