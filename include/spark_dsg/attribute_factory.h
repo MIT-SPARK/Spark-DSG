@@ -33,12 +33,12 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/attribute_serialization.h"
-
 #include <map>
 #include <sstream>
 #include <typeindex>
 #include <typeinfo>
+
+#include "spark_dsg/attribute_serialization.h"
 
 namespace spark_dsg {
 
@@ -183,6 +183,10 @@ class AttributeFactory {
 
   static std::unique_ptr<AttributeFactory> s_instance_;
 };
+
+// TODO(nathan) figure out how to make clang happy about this not being present
+//template <typename T, typename C>
+//std::unique_ptr<AttributeFactory<T, C>> AttributeFactory<T, C>::s_instance_ = nullptr;
 
 #define REGISTER_ATTR(factory, type, Converter)                            \
   factory::instance().template add<type>(                                  \
