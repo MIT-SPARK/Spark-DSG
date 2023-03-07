@@ -135,7 +135,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   SemanticLabel semantic_label;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 /**
@@ -176,7 +176,7 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   Eigen::Quaterniond world_R_object;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 /**
@@ -208,7 +208,7 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   }
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 /**
@@ -263,7 +263,7 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   std::vector<size_t> deformation_connections;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 struct AgentNodeAttributes : public NodeAttributes {
@@ -292,7 +292,7 @@ struct AgentNodeAttributes : public NodeAttributes {
   Eigen::VectorXf dbow_values;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 }  // namespace spark_dsg
