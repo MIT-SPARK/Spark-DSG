@@ -237,7 +237,7 @@ def scene_graph_to_torch_homogeneous(
     node_features = torch.tensor(np.array(node_features), dtype=dtype_float)
     node_labels = torch.tensor(np.array(node_labels), dtype=dtype_int)
 
-    edge_index = torch.zeros((2, G.num_static_edges()))
+    edge_index = torch.zeros((2, G.num_static_edges()), dtype=torch.int64)
     edge_features = []
     for idx, edge in enumerate(G.edges):
         edge_index[:, idx] = torch.tensor(
