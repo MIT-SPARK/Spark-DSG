@@ -192,11 +192,7 @@ class Mp3dRoom:
         return NodeSymbol("R", self._index)
 
     def get_attrs(self, color):
-        """
-        Get suitable room node attributes for inclusion in a scene graph.
-
-        Args:
-        """
+        """Get suitable room node attributes for inclusion in a scene graph."""
         attrs = RoomNodeAttributes()
         attrs.color = color
         attrs.name = str(NodeSymbol("R", self._index))
@@ -208,7 +204,7 @@ class Mp3dRoom:
     @property
     def semantic_label(self):
         """
-        Get the semantic label as a uint8_t
+        Get the semantic label as a uint8_t.
 
         The returned semantic label is the ascii value of the original character used to
         represent the mp3d category, i.e., that 'a' (bathroom) maps to 97.
@@ -284,14 +280,17 @@ def _expand_node(frontier, G, node, parent):
 def _get_combined_polygon(nodes, tolerance=0.05):
     points = []
     for node in nodes:
-        points.append(shapely.geometry.Point(node.attributes.position[0], node.attributes.position[1]).\
-            buffer(node.attributes.distance))
+        points.append(
+            shapely.geometry.Point(
+                node.attributes.position[0], node.attributes.position[1]
+            ).buffer(node.attributes.distance)
+        )
     return shapely.ops.unary_union(points).simplify(tolerance, preserve_topology=False)
 
 
 def expand_rooms(G_old, verbose=False):
     """
-    Attempts to label any unassigned place nodes.
+    Attempt to label any unassigned place nodes.
 
     Assigns place nodes to rooms via floodfill with a frontier initialized from places
     nodes already assigned by rooms, prioritizing expansion by distance to the nearest
@@ -346,7 +345,12 @@ def expand_rooms(G_old, verbose=False):
 
 
 def repartition_rooms(
-    G_prev, mp3d_info, angle_deg=-90.0, min_iou_threshold=0.0, colors=None, verbose=False
+    G_prev,
+    mp3d_info,
+    angle_deg=-90.0,
+    min_iou_threshold=0.0,
+    colors=None,
+    verbose=False,
 ):
     """
     Create a copy of the DSG with ground-truth room nodes.
@@ -422,7 +426,9 @@ def repartition_rooms(
             intersection_area = xy_polygon.intersection(explored_polygon).area
             union_area = xy_polygon.union(explored_polygon).area
             if verbose:
-                print(f"explore area: {explored_polygon.area}, gt area: {xy_polygon.area}, intersection_area: {intersection_area}, union_area: {union_area}")
+                print(
+                    f"explore area: {explored_polygon.area}, gt area: {xy_polygon.area}, intersection_area: {intersection_area}, union_area: {union_area}"
+                )
             if intersection_area / union_area < min_iou_threshold:
                 invalid_rooms.append(room.id.value)
 
@@ -436,7 +442,12 @@ def repartition_rooms(
 
 
 def add_gt_room_label(
-    G, mp3d_info, min_iou_threshold=0.01, angle_deg=-90.0, use_hydra_polygon=False, verbose=False
+    G,
+    mp3d_info,
+    min_iou_threshold=0.01,
+    angle_deg=-90.0,
+    use_hydra_polygon=False,
+    verbose=False,
 ):
     """
     Add ground-truth room label to DSG based on maximum area of intersection.
@@ -468,7 +479,6 @@ def add_gt_room_label(
                     [bbox.max[0], bbox.min[1]],
                 ]
             )
-        
 
         # Find the ground-truth room area of intersection
         intersection_over_union = []
