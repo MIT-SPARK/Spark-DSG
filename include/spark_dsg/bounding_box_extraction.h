@@ -96,6 +96,7 @@ BoundingBox extractRAABBBox(const pcl::MomentOfInertiaEstimation<PointT>& estima
   }
 
   pcl::MomentOfInertiaEstimation<PointT> new_estimator;
+  new_estimator.setAngleStep(estimator.getAngleStep());
   new_estimator.setInputCloud(rotated_cloud);
   new_estimator.compute();
   new_estimator.getAABB(pcl_min, pcl_max);
@@ -111,7 +112,8 @@ BoundingBox extractRAABBBox(const pcl::MomentOfInertiaEstimation<PointT>& estima
 template <typename PclPtr>
 BoundingBox extract(const PclPtr& cloud,
                     BoundingBox::Type type = BoundingBox::Type::AABB,
-                    const pcl::IndicesPtr& active_indices = nullptr) {
+                    const pcl::IndicesPtr& active_indices = nullptr,
+                    float angle_step = 10.0f) {
   if (!cloud) {
     throw std::runtime_error("invalid pointcloud pointer");
   }
@@ -122,6 +124,7 @@ BoundingBox extract(const PclPtr& cloud,
 
   using PointT = typename PclPtr::element_type::PointType;
   pcl::MomentOfInertiaEstimation<PointT> estimator;
+  estimator.setAngleStep(angle_step);
   estimator.setInputCloud(cloud);
   if (active_indices) {
     estimator.setIndices(active_indices);
