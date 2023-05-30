@@ -202,6 +202,11 @@ class Mp3dRoom:
         return attrs
 
     @property
+    def centroid(self):
+        """Get room centroid."""
+        return self._pos
+
+    @property
     def semantic_label(self):
         """
         Get the semantic label as a uint8_t.
@@ -235,7 +240,7 @@ def load_mp3d_info(house_path):
     return info
 
 
-def get_rooms_from_mp3d_info(mp3d_info, angle_deg=0.0):
+def get_rooms_from_mp3d_info(mp3d_info, angle_deg=-90.0):
     """
     Generate a list of Mp3dRoom objects from ground-truth segmentation.
 

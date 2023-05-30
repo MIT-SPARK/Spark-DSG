@@ -1,3 +1,4 @@
+"""Scene Graph visualizer using open3d."""
 from spark_dsg._dsg_bindings import DsgLayers, NodeSymbol, DynamicSceneGraph
 import multiprocessing as mp
 import numpy as np
@@ -53,6 +54,8 @@ class RemoteVisualizer:
         include_dynamic=True,
         num_dynamic_to_skip=3,
         dynamic_axes_size=0.2,
+        layers_to_skip=[],
+        collapse_layers=False,
     ):
         """Make the visualizer geometries."""
         self._context = zmq.Context()
@@ -68,6 +71,8 @@ class RemoteVisualizer:
         self._include_dynamic = include_dynamic
         self._num_dynamic_to_skip = num_dynamic_to_skip
         self._dynamic_axes_size = dynamic_axes_size
+        self._layers_to_skip = layers_to_skip
+        self._collapse_layers = collapse_layers
 
         self._palette = sns.color_palette("Paired")
         self._num_colors = len(self._palette)
@@ -95,6 +100,9 @@ class RemoteVisualizer:
         offset = 0
         for layer in G.layers:
             if layer.id not in LAYER_IDS:
+                continue
+
+            if self._layers_to_skip and layer.id in self._layers_to_skip:
                 continue
 
             self._update_layer_geometries(layer, offset)
@@ -146,6 +154,9 @@ class RemoteVisualizer:
         colors = []
         num_place_edges = 0
         for index, edge in enumerate(G.interlayer_edges):
+            if edge.source not in self._id_map or edge.target not in self._id_map:
+                continue
+
             layers = _get_edge_layers(edge)
             should_skip = DsgLayers.PLACES in layers and DsgLayers.ROOMS in layers
             if should_skip and num_place_edges % self._num_place_edges_to_skip != 0:
@@ -174,7 +185,8 @@ class RemoteVisualizer:
             index = layer_idx + offset
             self._id_map[node.id.value] = index
             self._points[index, :] = node.attributes.position
-            self._points[index, 2] += LAYER_OFFSETS[layer.id]
+            if not self._collapse_layers:
+                self._points[index, 2] += LAYER_OFFSETS[layer.id]
             self._colors[index, :] = self._get_node_color(node)
 
         start_idx = offset
@@ -257,6 +269,7 @@ class RemoteVisualizer:
         self._new_geometries = []
 
     def run(self):
+        """Open a visualizer window and spin."""
         self._viz = o3d.visualization.Visualizer()
         self._viz.create_window()
         opts = self._viz.get_render_option()
@@ -320,6 +333,7 @@ class DsgVisualizer:
             self._proc = None
 
     def update_graph(self, G, force=False):
+        """Set graph for remote visualizer."""
         should_update = self._num_update_calls % self._num_calls_per_update == 0
         if should_update or force:
             self._socket.send(G.to_binary(include_mesh=self._use_mesh))
@@ -327,6 +341,7 @@ class DsgVisualizer:
         self._num_update_calls += 1
 
     def stop(self):
+        """Send signal to remote visualizer server."""
         self._socket.send_string("shutdown")
         if self._proc is None:
             return
@@ -344,15 +359,14 @@ class DsgVisualizer:
         self._proc.join()
 
 
-def render_to_open3d(
-    G, use_mesh=True, include_dynamic=False, url="tcp://127.0.0.1:8001"
-):
+def render_to_open3d(G, block=True, url="tcp://127.0.0.1:8001", **kwargs):
     """Render graph to opend3d."""
     if not OPEN3D_VISUALIZER_ENABLED:
         logging.error("open3d is not enabled!")
         return
 
-    viz = DsgVisualizer(url=url)
+    viz = DsgVisualizer(url=url, **kwargs)
     time.sleep(0.5)
     viz.update_graph(G, force=True)
-    viz.wait()
+    if block:
+        viz.wait()
