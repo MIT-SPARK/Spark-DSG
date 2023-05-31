@@ -33,13 +33,13 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/node_symbol.h"
-#include "spark_dsg/scene_graph_types.h"
-
 #include <deque>
 #include <functional>
 #include <list>
 #include <unordered_set>
+
+#include "spark_dsg/node_symbol.h"
+#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
 namespace graph_utilities {

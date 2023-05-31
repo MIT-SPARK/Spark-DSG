@@ -185,8 +185,9 @@ class AttributeFactory {
 };
 
 // TODO(nathan) figure out how to make clang happy about this not being present
-//template <typename T, typename C>
-//std::unique_ptr<AttributeFactory<T, C>> AttributeFactory<T, C>::s_instance_ = nullptr;
+// template <typename T, typename C>
+// std::unique_ptr<AttributeFactory<T, C>> AttributeFactory<T, C>::s_instance_ =
+// nullptr;
 
 #define REGISTER_ATTR(factory, type, Converter)                            \
   factory::instance().template add<type>(                                  \

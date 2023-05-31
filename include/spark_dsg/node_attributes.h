@@ -33,14 +33,14 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/bounding_box.h"
-#include "spark_dsg/scene_graph_types.h"
-
 #include <chrono>
 #include <list>
 #include <memory>
 #include <ostream>
 #include <string>
+
+#include "spark_dsg/bounding_box.h"
+#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
 

@@ -155,6 +155,7 @@ def _check_semantic_attributes(attrs, node_id=None, bbox_valid=False):
 
 
 def test_agent_attributes(resource_dir):
+    """Test that agent attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
@@ -173,6 +174,7 @@ def test_agent_attributes(resource_dir):
 
 
 def test_object_attributes(resource_dir):
+    """Test that object attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
@@ -191,6 +193,7 @@ def test_object_attributes(resource_dir):
 
 
 def test_place_attributes(resource_dir):
+    """Test that place attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
@@ -216,6 +219,7 @@ def test_place_attributes(resource_dir):
 
 
 def test_room_attributes(resource_dir):
+    """Test that room attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
@@ -239,6 +243,7 @@ def test_room_attributes(resource_dir):
 
 
 def test_building_attributes(resource_dir):
+    """Test that building attributes work correctly."""
     uh2_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
 
@@ -271,6 +276,7 @@ def _check_layer_edges(G, layer_id):
 
 
 def test_intralayer_edges(resource_dir):
+    """Test that edges are present in layers that we expect."""
     uh2_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
 
@@ -279,6 +285,7 @@ def test_intralayer_edges(resource_dir):
 
 
 def test_node_counts(resource_dir):
+    """Test that nodes are present in layers that we expect."""
     uh2_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
 

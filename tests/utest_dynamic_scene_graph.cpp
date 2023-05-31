@@ -32,10 +32,9 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <spark_dsg/dynamic_scene_graph.h>
-
 #include <gtest/gtest.h>
 #include <pcl/conversions.h>
+#include <spark_dsg/dynamic_scene_graph.h>
 
 namespace spark_dsg {
 

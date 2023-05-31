@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/dynamic_scene_graph_layer.h"
+
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
 

@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/graph_binary_serialization.h"
+
 #include "spark_dsg/binary_serializer.h"
 
 namespace spark_dsg {

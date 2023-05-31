@@ -33,10 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/scene_graph_layer.h"
-
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
+
+#include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg {
 
@@ -72,8 +72,7 @@ SparseMatrixXd getSparseLaplacian(
     const std::function<double(NodeId, NodeId)>& weight_func);
 
 inline SparseMatrixXd getSparseAdjacencyMatrix(
-    const SceneGraphLayer& layer,
-    const std::map<NodeId, size_t>& ordering) {
+    const SceneGraphLayer& layer, const std::map<NodeId, size_t>& ordering) {
   return getSparseAdjacencyMatrix(layer, ordering, [](NodeId, NodeId) { return 1.0; });
 }
 

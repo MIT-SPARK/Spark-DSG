@@ -32,15 +32,13 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg_tests/type_comparisons.h"
-
+#include <gtest/gtest.h>
 #include <spark_dsg/binary_serializer.h>
 #include <spark_dsg/graph_binary_serialization.h>
-
-#include <gtest/gtest.h>
-
 #include <stdlib.h>
 #include <unistd.h>
+
+#include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
 namespace serialization {

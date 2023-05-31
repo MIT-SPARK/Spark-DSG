@@ -33,11 +33,12 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/scene_graph_layer.h"
-#include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/logging.h"
 
 #include <queue>
 #include <sstream>
+
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/logging.h"
 
 namespace spark_dsg {
 

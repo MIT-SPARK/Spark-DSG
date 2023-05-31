@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/scene_graph_utilities.h"
+
 #include "spark_dsg/bounding_box_extraction.h"
 
 namespace spark_dsg {

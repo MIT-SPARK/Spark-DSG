@@ -33,9 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/binary_serializer.h"
-#include "spark_dsg/logging.h"
 
 #include <iomanip>
+
+#include "spark_dsg/logging.h"
 
 namespace spark_dsg {
 namespace serialization {

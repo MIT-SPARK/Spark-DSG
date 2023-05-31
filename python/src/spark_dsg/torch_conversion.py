@@ -139,10 +139,8 @@ def scene_graph_layer_to_torch(
 
     # output torch tensor data types
     if double_precision:
-        dtype_int = torch.int64
         dtype_float = torch.float64
     else:
-        dtype_int = torch.int32
         dtype_float = torch.float32
 
     N = G.num_nodes()

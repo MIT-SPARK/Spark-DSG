@@ -33,12 +33,13 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/graph_json_serialization.h"
+
+#include <fstream>
+
 #include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/scene_graph_layer.h"
 #include "spark_dsg/serialization_helpers.h"
-
-#include <fstream>
 
 namespace spark_dsg {
 
@@ -55,8 +56,8 @@ using nlohmann::json;
 using EdgesPtr = std::unique_ptr<SceneGraphLayer::Edges>;
 using NodeSet = std::unordered_set<NodeId>;
 using NodeCallback = std::function<void(NodeId, LayerId, NodeAttributes::Ptr&&)>;
-using DynamicNodeCallback = std::function<
-    void(LayerId, NodeId, std::chrono::nanoseconds, NodeAttributes::Ptr&&)>;
+using DynamicNodeCallback = std::function<void(
+    LayerId, NodeId, std::chrono::nanoseconds, NodeAttributes::Ptr&&)>;
 using EdgeCallback = std::function<void(NodeId, NodeId, EdgeAttributes::Ptr&&)>;
 
 void to_json(json& record, const MeshEdge& edge) {

@@ -33,10 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/node_attributes.h"
-
 #include <Eigen/Dense>
-
 #include <cassert>
 #include <cstdint>
 #include <limits>
@@ -44,6 +41,8 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+
+#include "spark_dsg/node_attributes.h"
 
 // endian swap adapted from:
 // https://github.com/fraillt/bitsery/blob/master/include/bitsery/details/adapter_common.h

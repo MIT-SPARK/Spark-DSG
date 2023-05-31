@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/scene_graph_node.h"
+
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
 
@@ -55,7 +56,8 @@ std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
 }
 
 std::ostream& DynamicSceneGraphNode::fill_ostream(std::ostream& out) const {
-  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer << ", time=" << timestamp.count() << "[ns]>";
+  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer
+      << ", time=" << timestamp.count() << "[ns]>";
   return out;
 }
 

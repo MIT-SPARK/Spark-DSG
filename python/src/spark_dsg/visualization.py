@@ -33,7 +33,6 @@
 #
 #
 """Visualization for a DSG."""
-from spark_dsg._dsg_bindings import NodeSymbol
 import numpy as np
 import logging
 
@@ -44,7 +43,7 @@ NODE_TYPE_TO_COLOR = {"B": "#636EFA", "R": "#EF553B", "p": "#AB63FA", "O": "#00C
 
 
 def z_offset(node) -> np.ndarray:
-    """Takes a node and returns an offset in the z direction according to node type."""
+    """Take a node and returns an offset in the z direction according to node type."""
     offset = node.attributes.position.copy()
     offset[2] += NODE_TYPE_OFFSET[node.id.category]
     return offset
@@ -91,7 +90,7 @@ def _draw_layer_nodes(
 
 
 def plot_scene_graph(G, title=None, figure_path=None, layer_settings=None):
-    """Constructs and returns a 3D scattter plot of a DSG."""
+    """Construct and returns a 3D scattter plot of a DSG."""
     try:
         import plotly.graph_objects as go
     except ImportError:

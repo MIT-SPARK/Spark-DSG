@@ -33,11 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <optional>
+
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/edge_container.h"
 #include "spark_dsg/scene_graph_node.h"
-
-#include <optional>
 
 namespace spark_dsg {
 

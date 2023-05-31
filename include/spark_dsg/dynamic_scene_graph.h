@@ -33,9 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/dynamic_scene_graph_layer.h"
-#include "spark_dsg/scene_graph_layer.h"
-
 #include <pcl/PolygonMesh.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -43,6 +40,9 @@
 #include <map>
 #include <memory>
 #include <type_traits>
+
+#include "spark_dsg/dynamic_scene_graph_layer.h"
+#include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg {
 

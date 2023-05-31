@@ -32,22 +32,21 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "scene_graph_iterators.h"
-#include "zmq_bindings.h"
-
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/graph_binary_serialization.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_utilities.h>
 
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
-
 #include <iostream>
 #include <sstream>
 #include <string>
+
+#include "scene_graph_iterators.h"
+#include "zmq_bindings.h"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -179,37 +178,40 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                                                            "ObjectNodeAttributes")
       .def(py::init<>())
       .def_readwrite("registered", &ObjectNodeAttributes::registered)
-      .def_property("world_R_object",
-                    [](const ObjectNodeAttributes& attrs) {
-                      return Quaternion<double>(attrs.world_R_object);
-                    },
-                    [](ObjectNodeAttributes& attrs, const Quaternion<double>& rot) {
-                      attrs.world_R_object = rot;
-                    });
+      .def_property(
+          "world_R_object",
+          [](const ObjectNodeAttributes& attrs) {
+            return Quaternion<double>(attrs.world_R_object);
+          },
+          [](ObjectNodeAttributes& attrs, const Quaternion<double>& rot) {
+            attrs.world_R_object = rot;
+          });
 
   py::class_<RoomNodeAttributes, SemanticNodeAttributes>(module, "RoomNodeAttributes")
       .def(py::init<>());
 
   py::class_<NearestVertexInfo>(module, "NearestVertexInfo")
       .def(py::init<>())
-      .def_property("block",
-                    [](const NearestVertexInfo& info) -> std::array<int32_t, 3> {
-                      return {info.block[0], info.block[1], info.block[2]};
-                    },
-                    [](NearestVertexInfo& info, const std::array<int32_t, 3>& array) {
-                      info.block[0] = array[0];
-                      info.block[1] = array[1];
-                      info.block[2] = array[2];
-                    })
-      .def_property("voxel_pos",
-                    [](const NearestVertexInfo& info) -> std::array<double, 3> {
-                      return {info.voxel_pos[0], info.voxel_pos[1], info.voxel_pos[2]};
-                    },
-                    [](NearestVertexInfo& info, const std::array<double, 3>& array) {
-                      info.voxel_pos[0] = array[0];
-                      info.voxel_pos[1] = array[1];
-                      info.voxel_pos[2] = array[2];
-                    })
+      .def_property(
+          "block",
+          [](const NearestVertexInfo& info) -> std::array<int32_t, 3> {
+            return {info.block[0], info.block[1], info.block[2]};
+          },
+          [](NearestVertexInfo& info, const std::array<int32_t, 3>& array) {
+            info.block[0] = array[0];
+            info.block[1] = array[1];
+            info.block[2] = array[2];
+          })
+      .def_property(
+          "voxel_pos",
+          [](const NearestVertexInfo& info) -> std::array<double, 3> {
+            return {info.voxel_pos[0], info.voxel_pos[1], info.voxel_pos[2]};
+          },
+          [](NearestVertexInfo& info, const std::array<double, 3>& array) {
+            info.voxel_pos[0] = array[0];
+            info.voxel_pos[1] = array[1];
+            info.voxel_pos[2] = array[2];
+          })
       .def_readwrite("vertex", &NearestVertexInfo::vertex);
 
   py::class_<PlaceNodeAttributes, SemanticNodeAttributes>(module, "PlaceNodeAttributes")
@@ -226,13 +228,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
 
   py::class_<AgentNodeAttributes, NodeAttributes>(module, "AgentNodeAttributes")
       .def(py::init<>())
-      .def_property("world_R_body",
-                    [](const AgentNodeAttributes& attrs) {
-                      return Quaternion<double>(attrs.world_R_body);
-                    },
-                    [](AgentNodeAttributes& attrs, const Quaternion<double>& rot) {
-                      attrs.world_R_body = rot;
-                    })
+      .def_property(
+          "world_R_body",
+          [](const AgentNodeAttributes& attrs) {
+            return Quaternion<double>(attrs.world_R_body);
+          },
+          [](AgentNodeAttributes& attrs, const Quaternion<double>& rot) {
+            attrs.world_R_body = rot;
+          })
       .def_readwrite("external_key", &AgentNodeAttributes::external_key)
       .def_readwrite("dbow_ids", &AgentNodeAttributes::dbow_ids)
       .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values);
@@ -349,18 +352,20 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     return IsolatedSceneGraphLayer::fromBson(contents);
                   })
       .def_readonly("id", &IsolatedSceneGraphLayer::id)
-      .def_property("nodes",
-                    [](const IsolatedSceneGraphLayer& view) {
-                      return py::make_iterator(NodeIter(view.nodes()), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("edges",
-                    [](const IsolatedSceneGraphLayer& view) {
-                      return py::make_iterator(EdgeIter(view.edges()), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal);
+      .def_property(
+          "nodes",
+          [](const IsolatedSceneGraphLayer& view) {
+            return py::make_iterator(NodeIter(view.nodes()), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "edges",
+          [](const IsolatedSceneGraphLayer& view) {
+            return py::make_iterator(EdgeIter(view.edges()), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal);
 
   py::class_<LayerView>(module, "LayerView")
       .def("has_node", &LayerView::hasNode)
@@ -371,36 +376,40 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("num_edges", &LayerView::numEdges)
       .def("get_position", &LayerView::getPosition)
       .def_readonly("id", &LayerView::id)
-      .def_property("nodes",
-                    [](const LayerView& view) {
-                      return py::make_iterator(view.nodes(), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("edges",
-                    [](const LayerView& view) {
-                      return py::make_iterator(view.edges(), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal);
+      .def_property(
+          "nodes",
+          [](const LayerView& view) {
+            return py::make_iterator(view.nodes(), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "edges",
+          [](const LayerView& view) {
+            return py::make_iterator(view.edges(), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal);
 
   py::class_<DynamicLayerView>(module, "DynamicLayerView")
       .def_readonly("id", &DynamicLayerView::id)
       .def_readonly("prefix", &DynamicLayerView::prefix)
       .def("num_nodes", &DynamicLayerView::numNodes)
       .def("num_edges", &DynamicLayerView::numEdges)
-      .def_property("nodes",
-                    [](const DynamicLayerView& view) {
-                      return py::make_iterator(view.nodes(), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("edges",
-                    [](const DynamicLayerView& view) {
-                      return py::make_iterator(view.edges(), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal);
+      .def_property(
+          "nodes",
+          [](const DynamicLayerView& view) {
+            return py::make_iterator(view.nodes(), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "edges",
+          [](const DynamicLayerView& view) {
+            return py::make_iterator(view.edges(), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal);
 
   py::class_<MeshEdge>(module, "MeshEdge")
       .def_property_readonly(
@@ -420,21 +429,22 @@ PYBIND11_MODULE(_dsg_bindings, module) {
               const NodeAttributes& attrs) {
              graph.emplaceNode(layer_id, node_id, attrs.clone());
            })
-      .def("add_node",
-           [](DynamicSceneGraph& graph,
-              LayerId layer_id,
-              LayerPrefix prefix,
-              std::chrono::nanoseconds timestamp,
-              const NodeAttributes& attrs,
-              bool add_edge_to_previous) {
-             graph.emplaceNode(
-                 layer_id, prefix, timestamp, attrs.clone(), add_edge_to_previous);
-           },
-           "layer_id"_a,
-           "prefix"_a,
-           "timestamp"_a,
-           "attrs"_a,
-           "add_edge_to_previous"_a = true)
+      .def(
+          "add_node",
+          [](DynamicSceneGraph& graph,
+             LayerId layer_id,
+             LayerPrefix prefix,
+             std::chrono::nanoseconds timestamp,
+             const NodeAttributes& attrs,
+             bool add_edge_to_previous) {
+            graph.emplaceNode(
+                layer_id, prefix, timestamp, attrs.clone(), add_edge_to_previous);
+          },
+          "layer_id"_a,
+          "prefix"_a,
+          "timestamp"_a,
+          "attrs"_a,
+          "add_edge_to_previous"_a = true)
       .def("insert_edge",
            [](DynamicSceneGraph& graph, NodeId source, NodeId target) {
              return graph.insertEdge(source, target);
@@ -455,22 +465,24 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("has_node", &DynamicSceneGraph::hasNode)
       .def("has_edge",
            py::overload_cast<NodeId, NodeId>(&DynamicSceneGraph::hasEdge, py::const_))
-      .def("get_layer",
-           [](const DynamicSceneGraph& graph, LayerId layer_id) {
-             if (!graph.hasLayer(layer_id)) {
-               throw std::out_of_range("layer doesn't exist");
-             }
-             return LayerView(graph.getLayer(layer_id));
-           },
-           py::return_value_policy::reference_internal)
-      .def("get_dynamic_layer",
-           [](const DynamicSceneGraph& graph, LayerId layer_id, LayerPrefix prefix) {
-             if (!graph.hasLayer(layer_id, prefix)) {
-               throw std::out_of_range("layer doesn't exist");
-             }
-             return DynamicLayerView(graph.getLayer(layer_id, prefix));
-           },
-           py::return_value_policy::reference_internal)
+      .def(
+          "get_layer",
+          [](const DynamicSceneGraph& graph, LayerId layer_id) {
+            if (!graph.hasLayer(layer_id)) {
+              throw std::out_of_range("layer doesn't exist");
+            }
+            return LayerView(graph.getLayer(layer_id));
+          },
+          py::return_value_policy::reference_internal)
+      .def(
+          "get_dynamic_layer",
+          [](const DynamicSceneGraph& graph, LayerId layer_id, LayerPrefix prefix) {
+            if (!graph.hasLayer(layer_id, prefix)) {
+              throw std::out_of_range("layer doesn't exist");
+            }
+            return DynamicLayerView(graph.getLayer(layer_id, prefix));
+          },
+          py::return_value_policy::reference_internal)
       .def("get_node", &DynamicSceneGraph::getNode)
       .def("get_dynamic_node", &DynamicSceneGraph::getDynamicNode)
       .def("get_edge", &DynamicSceneGraph::getEdge)
@@ -488,53 +500,59 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("num_static_edges", &DynamicSceneGraph::numStaticEdges)
       .def("num_dynamic_edges", &DynamicSceneGraph::numDynamicEdges)
       .def("get_position", &DynamicSceneGraph::getPosition)
-      .def("save",
-           [](const DynamicSceneGraph& graph,
-              const std::string& filepath,
-              bool include_mesh) { graph.save(filepath, include_mesh); },
-           "filepath"_a,
-           "include_mesh"_a = true)
+      .def(
+          "save",
+          [](const DynamicSceneGraph& graph,
+             const std::string& filepath,
+             bool include_mesh) { graph.save(filepath, include_mesh); },
+          "filepath"_a,
+          "include_mesh"_a = true)
       .def_static("load", &DynamicSceneGraph::load)
-      .def_property("layers",
-                    [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(LayerIter(graph.layers()),
-                                               IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("dynamic_layers",
-                    [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(DynamicLayerIter(graph.dynamicLayers()),
-                                               IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("nodes",
-                    [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(GlobalNodeIter(graph), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("edges",
-                    [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(GlobalEdgeIter(graph), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("interlayer_edges",
-                    [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(EdgeIter(graph.interlayer_edges()),
-                                               IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
-      .def_property("dynamic_interlayer_edges",
-                    [](const DynamicSceneGraph& graph) {
-                      return py::make_iterator(
-                          EdgeIter(graph.dynamic_interlayer_edges()), IterSentinel());
-                    },
-                    nullptr,
-                    py::return_value_policy::reference_internal)
+      .def_property(
+          "layers",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(LayerIter(graph.layers()), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "dynamic_layers",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(DynamicLayerIter(graph.dynamicLayers()),
+                                     IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "nodes",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(GlobalNodeIter(graph), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "edges",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(GlobalEdgeIter(graph), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "interlayer_edges",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(EdgeIter(graph.interlayer_edges()),
+                                     IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "dynamic_interlayer_edges",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(EdgeIter(graph.dynamic_interlayer_edges()),
+                                     IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
       .def("clone", &DynamicSceneGraph::clone)
       .def("__deepcopy__",
            [](const DynamicSceneGraph& G, py::object) { return G.clone(); })
@@ -625,13 +643,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("invalidate_mesh_vertex", &DynamicSceneGraph::invalidateMeshVertex)
       .def("get_mesh_connections", &DynamicSceneGraph::getMeshConnectionIndices)
       .def_property_readonly("mesh_edges", &DynamicSceneGraph::getMeshEdges)
-      .def("to_binary",
-           [](const DynamicSceneGraph& graph, bool include_mesh) {
-             std::vector<uint8_t> buffer;
-             writeGraph(graph, buffer, include_mesh);
-             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
-           },
-           "include_mesh"_a = false)
+      .def(
+          "to_binary",
+          [](const DynamicSceneGraph& graph, bool include_mesh) {
+            std::vector<uint8_t> buffer;
+            writeGraph(graph, buffer, include_mesh);
+            return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
+          },
+          "include_mesh"_a = false)
       .def_static("from_binary", [](const py::bytes& contents) {
         const auto& view = static_cast<const std::string_view&>(contents);
         return readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());

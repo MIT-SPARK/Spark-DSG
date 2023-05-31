@@ -33,12 +33,12 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/base_layer.h"
-#include "spark_dsg/graph_utilities.h"
-
 #include <map>
 #include <unordered_set>
 #include <vector>
+
+#include "spark_dsg/base_layer.h"
+#include "spark_dsg/graph_utilities.h"
 
 namespace spark_dsg {
 

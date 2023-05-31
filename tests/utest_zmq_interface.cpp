@@ -32,9 +32,8 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <spark_dsg/zmq_interface.h>
-
 #include <gtest/gtest.h>
+#include <spark_dsg/zmq_interface.h>
 
 namespace spark_dsg {
 

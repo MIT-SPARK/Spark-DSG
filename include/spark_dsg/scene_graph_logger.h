@@ -34,9 +34,9 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include "spark_dsg/dynamic_scene_graph.h"
-
 #include <string>
+
+#include "spark_dsg/dynamic_scene_graph.h"
 
 namespace spark_dsg {
 

@@ -33,10 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/zmq_interface.h"
-#include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/graph_binary_serialization.h"
 
 #include <zmq.hpp>
+
+#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/graph_binary_serialization.h"
 
 namespace spark_dsg {
 

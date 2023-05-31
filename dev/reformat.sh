@@ -1,0 +1,11 @@
+#!/bin/bash
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+pushd $(dirname $SCRIPT_DIR)
+
+find . -iname *.h -o -iname *.cpp | xargs clang-format -i
+python3 -m black .
+python3 -m cmakelang.format -i CMakeLists.txt cmake/json.CMakeLists.txt.in cmake/spark_dsgConfig.cmake.in python/CMakeLists.txt python/pybind11.CMakeLists.txt.in
+
+popd

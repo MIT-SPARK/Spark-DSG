@@ -33,12 +33,13 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/logging.h"
 
 #include <pcl/conversions.h>
 
 #include <list>
+
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/logging.h"
 
 namespace spark_dsg {
 
@@ -617,8 +618,7 @@ std::shared_ptr<MeshFaces> DynamicSceneGraph::getMeshFaces() const {
 }
 
 std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(
-    size_t idx,
-    bool check_invalid) const {
+    size_t idx, bool check_invalid) const {
   if (!mesh_vertices_) {
     return std::nullopt;
   }

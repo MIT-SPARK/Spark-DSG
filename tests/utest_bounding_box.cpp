@@ -33,11 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-
-#include <Eigen/Geometry>
-
 #include <spark_dsg/bounding_box.h>
 #include <spark_dsg/bounding_box_extraction.h>
+
+#include <Eigen/Geometry>
 
 using pcl::PointXYZ;
 

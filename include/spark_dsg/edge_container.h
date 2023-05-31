@@ -33,12 +33,12 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <map>
+#include <vector>
+
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/scene_graph_types.h"
-
-#include <map>
-#include <vector>
 
 namespace spark_dsg {
 

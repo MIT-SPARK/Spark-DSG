@@ -33,15 +33,15 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/bounding_box.h"
-#include "spark_dsg/node_attributes.h"
-
 #include <pcl/PolygonMesh.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
+
+#include "spark_dsg/bounding_box.h"
+#include "spark_dsg/node_attributes.h"
 
 namespace nlohmann {
 
