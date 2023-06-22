@@ -177,6 +177,15 @@ class DynamicSceneGraph {
   bool insertNode(SceneGraphNode::Ptr&& node);
 
   /**
+   * @brief add a node to the graph or update an existing node
+   *
+   * @param layer_id layer to add to
+   * @param node_id node to add
+   * @param attrs attributes to add
+   */
+  bool addOrUpdateNode(LayerId layer_id, NodeId node_id, NodeAttributes::Ptr&& attrs);
+
+  /**
    * @brief Add an edge to the graph
    *
    * Checks that the edge doesn't already exist and
@@ -194,6 +203,15 @@ class DynamicSceneGraph {
                   NodeId target,
                   EdgeAttributes::Ptr&& edge_info = nullptr,
                   bool force_insert = false);
+
+  /**
+   * @brief Add an edge to the graph or update an existing edge
+   *
+   * @param source edge source id
+   * @param target edge target id
+   * @param edge_info edge attributes
+   */
+  bool addOrUpdateEdge(NodeId source, NodeId target, EdgeAttributes::Ptr&& edge_info);
 
   /**
    * @brief Set the attributes of an existing node

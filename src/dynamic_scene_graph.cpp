@@ -216,6 +216,28 @@ bool DynamicSceneGraph::insertNode(Node::Ptr&& node) {
   return successful;
 }
 
+bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
+                                        NodeId node_id,
+                                        NodeAttributes::Ptr&& attrs) {
+  if (!layers_.count(layer_id)) {
+    SG_LOG(WARNING) << "Invalid layer: " << layer_id << std::endl;
+    return false;
+  }
+
+  auto iter = node_lookup_.find(node_id);
+  if (iter != node_lookup_.end()) {
+    getNodePtr(node_id, iter->second)->attributes_ = std::move(attrs);
+    return true;
+  }
+
+  const bool successful = layers_[layer_id]->emplaceNode(node_id, std::move(attrs));
+  if (successful) {
+    node_lookup_[node_id] = layer_id;
+  }
+
+  return successful;
+}
+
 bool DynamicSceneGraph::insertEdge(NodeId source,
                                    NodeId target,
                                    EdgeAttributes::Ptr&& edge_info,
@@ -251,6 +273,16 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
   }
 
   return true;
+}
+
+bool DynamicSceneGraph::addOrUpdateEdge(NodeId source,
+                                        NodeId target,
+                                        EdgeAttributes::Ptr&& edge_info) {
+  if (hasEdge(source, target)) {
+    return setEdgeAttributes(source, target, std::move(edge_info));
+  } else {
+    return insertEdge(source, target, std::move(edge_info));
+  }
 }
 
 bool DynamicSceneGraph::setNodeAttributes(NodeId node, NodeAttributes::Ptr&& attrs) {

@@ -141,6 +141,49 @@ TEST(DynamicSceneGraphTests, EmplaceNodeInvariants) {
 
   // we already have this node, so we should fail
   EXPECT_FALSE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
+
+  // we can still update the node however
+  EXPECT_TRUE(graph.addOrUpdateNode(2, 0, std::make_unique<NodeAttributes>()));
+}
+
+TEST(DynamicSceneGraphTests, AddAndUpdateNode) {
+  DynamicSceneGraph graph({1, 2}, 0);
+  EXPECT_EQ(0u, graph.numNodes());
+
+  Eigen::Vector3d pos1(1.0, 2.0, 3.0);
+  Eigen::Vector3d pos2(2.0, 3.0, 4.0);
+
+  {  // add first node and test invariants
+    auto attrs = std::make_unique<NodeAttributes>();
+    attrs->position = pos1;
+    EXPECT_TRUE(graph.addOrUpdateNode(1, 0, std::move(attrs)));
+
+    EXPECT_EQ(1u, graph.numNodes());
+    EXPECT_TRUE(graph.hasNode(0));
+
+    auto node_opt = graph.getNode(0);
+    ASSERT_TRUE(node_opt);
+    const Node& node = *node_opt;
+    EXPECT_EQ(1u, node.layer);
+    EXPECT_EQ(0u, node.id);
+    EXPECT_NEAR((node.attributes().position - pos1).norm(), 0.0, 1.0e-9);
+  }
+
+  {  // add updated node attributes and test invariants
+    auto attrs = std::make_unique<NodeAttributes>();
+    attrs->position = pos2;
+    EXPECT_TRUE(graph.addOrUpdateNode(1, 0, std::move(attrs)));
+
+    EXPECT_EQ(1u, graph.numNodes());
+    EXPECT_TRUE(graph.hasNode(0));
+
+    auto node_opt = graph.getNode(0);
+    ASSERT_TRUE(node_opt);
+    const Node& node = *node_opt;
+    EXPECT_EQ(1u, node.layer);
+    EXPECT_EQ(0u, node.id);
+    EXPECT_NEAR((node.attributes().position - pos2).norm(), 0.0, 1.0e-9);
+  }
 }
 
 // Test that we only have nodes that we add, and we can't add the same node
@@ -209,7 +252,7 @@ TEST(DynamicSceneGraphTests, InsertEdgeInvariants) {
   EXPECT_FALSE(graph.insertEdge(1, 0));
   EXPECT_EQ(1u, graph.numEdges());
 
-  // add an intralayer edge
+  // add an interlayer edge
   EXPECT_TRUE(graph.insertEdge(0, 2));
   EXPECT_EQ(2u, graph.numEdges());
   EXPECT_EQ(1u, layer1.numEdges());
@@ -224,6 +267,32 @@ TEST(DynamicSceneGraphTests, InsertEdgeInvariants) {
   // add an edge between non-existant nodes
   EXPECT_FALSE(graph.insertEdge(0, 5));
   EXPECT_FALSE(graph.insertEdge(7, 0));
+}
+
+// Test that adding and updating edges works as expected
+TEST(DynamicSceneGraphTests, AddOrUpdateEdge) {
+  DynamicSceneGraph graph({1, 2, 3}, 0);
+  EXPECT_EQ(0u, graph.numEdges());
+
+  EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, 2, std::make_unique<NodeAttributes>()));
+
+  // add and update an intralayer edge
+  EXPECT_TRUE(graph.addOrUpdateEdge(0, 1, std::make_unique<EdgeAttributes>(1.0)));
+  EXPECT_EQ(1u, graph.numEdges());
+  ASSERT_TRUE(graph.hasEdge(0, 1));
+  EXPECT_EQ(graph.getEdge(0, 1)->get().info->weight, 1.0);
+  EXPECT_TRUE(graph.addOrUpdateEdge(0, 1, std::make_unique<EdgeAttributes>(2.0)));
+  EXPECT_EQ(graph.getEdge(0, 1)->get().info->weight, 2.0);
+
+  // add and update an interlayer edge
+  EXPECT_TRUE(graph.addOrUpdateEdge(0, 2, std::make_unique<EdgeAttributes>(1.0)));
+  EXPECT_EQ(2u, graph.numEdges());
+  ASSERT_TRUE(graph.hasEdge(0, 2));
+  EXPECT_EQ(graph.getEdge(0, 2)->get().info->weight, 1.0);
+  EXPECT_TRUE(graph.addOrUpdateEdge(0, 2, std::make_unique<EdgeAttributes>(2.0)));
+  EXPECT_EQ(graph.getEdge(0, 2)->get().info->weight, 2.0);
 }
 
 // Test that we can force switching a parent edge
