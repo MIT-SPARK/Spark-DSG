@@ -47,22 +47,6 @@
 namespace spark_dsg {
 
 /**
- * @brief Structure capturing node-edge relationship
- */
-struct MeshEdge {
-  NodeId source_node;
-  size_t mesh_vertex;
-
-  /**
-   * @brief initialize a mesh edge
-   * @param source_node Node in the scene graph
-   * @param mesh_vertex Mesh vertex that the edge points to
-   */
-  MeshEdge(NodeId source_node, size_t mesh_vertex)
-      : source_node(source_node), mesh_vertex(mesh_vertex) {}
-};
-
-/**
  * @brief Dynamic Scene Graph class
  *
  * Contains an explicit mesh layer
@@ -89,8 +73,6 @@ class DynamicSceneGraph {
   using MeshVertices = pcl::PointCloud<pcl::PointXYZRGBA>;
   //! Underlying mesh triangle type
   using MeshFaces = std::vector<pcl::Vertices>;
-  //! Mesh edge container type
-  using MeshEdges = std::map<size_t, MeshEdge>;
   //! Callback type
   using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
 
@@ -388,9 +370,8 @@ class DynamicSceneGraph {
 
   /**
    * @brief Get number of edges in the graph
-   * @return number of edges in the graph
    */
-  size_t numEdges(bool include_mesh = true) const;
+  size_t numEdges() const;
 
   /**
    * @brief Get number of static edges in the graph
@@ -432,8 +413,7 @@ class DynamicSceneGraph {
    * @param invalidate_all_edges Clear all existing mesh edges
    */
   void setMesh(const MeshVertices::Ptr& vertices,
-               const std::shared_ptr<MeshFaces>& faces,
-               bool invalidate_all_edges = false);
+               const std::shared_ptr<MeshFaces>& faces);
 
   /**
    * @brief Set mesh components directly from a polygon mesh
@@ -481,58 +461,6 @@ class DynamicSceneGraph {
                                                  bool check_invalid = true) const;
 
   /**
-   * @brief Add an edge from another node to the mesh
-   * @param source Source node id in the scene graph
-   * @param mesh_vertex Target mesh vertex index
-   * @param allow_invalid_mesh Allow edge insertion even if the edge points to an
-   * invalid vertice
-   * @return Returns true if edge would be valid and was added
-   */
-  bool insertMeshEdge(NodeId source,
-                      size_t mesh_vertex,
-                      bool allow_invalid_mesh = false);
-
-  /**
-   * @brief check if an edge between a source node and a target mesh vertex exists
-   * @param source Source node to check
-   * @param mesh_vertex Target mesh vertex to check
-   * @returns True if the specified edge exists
-   */
-  bool hasMeshEdge(NodeId source, size_t mesh_vertex) const;
-
-  /**
-   * @brief Get all mesh edges
-   * @returns Mesh edges
-   */
-  const MeshEdges& getMeshEdges() const;
-
-  /**
-   * @brief Get mesh vertex indices for a specific node
-   * @param node Node to get mesh edges for
-   * @returns All mesh vertices the node is connected to
-   */
-  std::vector<size_t> getMeshConnectionIndices(NodeId node) const;
-
-  /**
-   * @brief Remove an edge from another node to the mesh
-   * @param source Source node id in the scene graph
-   * @param mesh_vertex Target mesh vertex index
-   * @returns Returns true if edge was removed
-   */
-  bool removeMeshEdge(NodeId source, size_t mesh_vertex);
-
-  /**
-   * @brief Delete all edges associated with a mesh vertex
-   * @param index vertex index to delete
-   */
-  void invalidateMeshVertex(size_t index);
-
-  /**
-   * @brief Delete all mesh edges
-   */
-  void clearMeshEdges();
-
-  /**
    * @brief merge two nodes
    * @param node_from node to remove
    * @param node_to node to merge to
@@ -555,9 +483,6 @@ class DynamicSceneGraph {
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
    * @param previous_merges Prevously merged nodes in current graph
-   * @param merge_mesh_edges Allow combining mesh edges
-   * @param allow_invalid_mesh Add mesh edges for mesh vertices that don't exist
-   * @param clear_mesh_edges Delete all previous mesh edges
    * @param attribute_update_map flags per layer to enable merging attributes
    * @param update_dynamic_attributes update dynamic node attributes from other
    * @param clear_removed Delete any removed nodes in other
@@ -565,9 +490,6 @@ class DynamicSceneGraph {
    */
   bool mergeGraph(const DynamicSceneGraph& other,
                   const std::map<NodeId, NodeId>& previous_merges,
-                  bool merge_mesh_edges = true,
-                  bool allow_invalid_mesh = false,
-                  bool clear_mesh_edges = true,
                   std::map<LayerId, bool>* attribute_update_map = nullptr,
                   bool update_dynamic_attributes = true,
                   bool clear_removed = false);
@@ -576,18 +498,12 @@ class DynamicSceneGraph {
    * @brief Update graph from another graph
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
-   * @param merge_mesh_edges Allow combining mesh edges
-   * @param allow_invalid_mesh Add mesh edges for mesh vertices that don't exist
-   * @param clear_mesh_edges Delete all previous mesh edges
    * @param attribute_update_map flags per layer to enable merging attributes
    * @param update_dynamic_attributes update dynamic node attributes from other
    * @param clear_removed Delete any removed nodes in other
    * @returns true if merge was successful
    */
   bool mergeGraph(const DynamicSceneGraph& other,
-                  bool merge_mesh_edges = true,
-                  bool allow_invalid_mesh = false,
-                  bool clear_mesh_edges = true,
                   std::map<LayerId, bool>* attribute_update_map = nullptr,
                   bool update_dynamic_attributes = true,
                   bool clear_removed = false);
@@ -708,8 +624,6 @@ class DynamicSceneGraph {
 
   void removeStaleEdges(EdgeContainer& edges);
 
-  void clearMeshEdgesForNode(NodeId node_id);
-
   void visitLayers(const LayerVisitor& cb);
 
  protected:
@@ -723,11 +637,6 @@ class DynamicSceneGraph {
 
   MeshVertices::Ptr mesh_vertices_;
   std::shared_ptr<MeshFaces> mesh_faces_;
-
-  size_t next_mesh_edge_idx_;
-  MeshEdges mesh_edges_;
-  std::map<NodeId, std::map<size_t, size_t>> mesh_edges_node_lookup_;
-  std::map<size_t, std::map<NodeId, size_t>> mesh_edges_vertex_lookup_;
 
  public:
   /**
