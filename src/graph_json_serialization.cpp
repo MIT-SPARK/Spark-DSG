@@ -60,15 +60,6 @@ using DynamicNodeCallback = std::function<void(
     LayerId, NodeId, std::chrono::nanoseconds, NodeAttributes::Ptr&&)>;
 using EdgeCallback = std::function<void(NodeId, NodeId, EdgeAttributes::Ptr&&)>;
 
-void to_json(json& record, const MeshEdge& edge) {
-  record = {{"source", edge.source_node}, {"target", edge.mesh_vertex}};
-}
-
-void from_json(const json& record, MeshEdge& edge) {
-  edge.source_node = record.at("source").get<NodeId>();
-  edge.mesh_vertex = record.at("target").get<size_t>();
-}
-
 void to_json(json& record, const SceneGraphNode& node) {
   record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
 }
@@ -274,11 +265,6 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
     }
   }
 
-  record["mesh_edges"] = json::array();
-  for (const auto& id_edge_pair : mesh_edges_) {
-    record.at("mesh_edges").push_back(id_edge_pair.second);
-  }
-
   if (!mesh_vertices_ || !mesh_faces_ || !include_mesh) {
     return record.dump();
   }
@@ -351,18 +337,7 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& content
     auto new_faces = std::make_shared<MeshFaces>(faces.begin(), faces.end());
 
     // clear all previous edges
-    graph->setMesh(new_vertices, new_faces, true);
-  }
-
-  if (record.contains("mesh_edges")) {
-    size_t num_inserted = 0;
-    for (const auto& edge : record.at("mesh_edges")) {
-      auto source = edge.at("source").get<NodeId>();
-      auto target = edge.at("target").get<size_t>();
-      num_inserted += graph->insertMeshEdge(source, target, true) ? 1 : 0;
-    }
-
-    SG_LOG(INFO) << "Loaded " << num_inserted << " mesh edges" << std::endl;
+    graph->setMesh(new_vertices, new_faces);
   }
 
   return graph;

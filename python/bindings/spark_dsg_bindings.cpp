@@ -53,8 +53,6 @@ using namespace py::literals;
 
 using namespace spark_dsg;
 
-PYBIND11_MAKE_OPAQUE(std::map<size_t, MeshEdge>);
-
 template <typename Scalar>
 struct Quaternion {
   Quaternion() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) {}
@@ -411,11 +409,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           nullptr,
           py::return_value_policy::reference_internal);
 
-  py::class_<MeshEdge>(module, "MeshEdge")
-      .def_property_readonly(
-          "node_id", [](const MeshEdge& edge) { return NodeSymbol(edge.source_node); })
-      .def_readonly("mesh_vertex", &MeshEdge::mesh_vertex);
-
   py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(
       module, "DynamicSceneGraph", py::dynamic_attr())
       .def(py::init<>())
@@ -496,7 +489,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("num_static_nodes", &DynamicSceneGraph::numStaticNodes)
       .def("num_dynamic_nodes", &DynamicSceneGraph::numDynamicNodes)
       .def("empty", &DynamicSceneGraph::empty)
-      .def("num_edges", &DynamicSceneGraph::numEdges, "include_mesh"_a = false)
+      .def("num_edges", &DynamicSceneGraph::numEdges)
       .def("num_static_edges", &DynamicSceneGraph::numStaticEdges)
       .def("num_dynamic_edges", &DynamicSceneGraph::numDynamicEdges)
       .def("get_position", &DynamicSceneGraph::getPosition)
@@ -612,7 +605,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                point.a = 255;
                vertices->push_back(point);
              }
-             G.setMesh(vertices, G.getMeshFaces(), false);
+             G.setMesh(vertices, G.getMeshFaces());
            })
       .def("set_mesh_faces",
            [](DynamicSceneGraph& G, const Eigen::MatrixXd& indices) {
@@ -631,26 +624,15 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                face.vertices.push_back(indices(2, i));
                faces->push_back(face);
              }
-             G.setMesh(G.getMeshVertices(), faces, false);
+             G.setMesh(G.getMeshVertices(), faces);
            })
-      .def("insert_mesh_edge",
-           &DynamicSceneGraph::insertMeshEdge,
-           "source"_a,
-           "mesh_vertex"_a,
-           "allow_invalid_mesh"_a = true)
-      .def("remove_mesh_edge", &DynamicSceneGraph::removeMeshEdge)
-      .def("clear_mesh_edges", &DynamicSceneGraph::clearMeshEdges)
-      .def("invalidate_mesh_vertex", &DynamicSceneGraph::invalidateMeshVertex)
-      .def("get_mesh_connections", &DynamicSceneGraph::getMeshConnectionIndices)
-      .def_property_readonly("mesh_edges", &DynamicSceneGraph::getMeshEdges)
-      .def(
-          "to_binary",
-          [](const DynamicSceneGraph& graph, bool include_mesh) {
-            std::vector<uint8_t> buffer;
-            writeGraph(graph, buffer, include_mesh);
-            return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
-          },
-          "include_mesh"_a = false)
+      .def("to_binary",
+           [](const DynamicSceneGraph& graph, bool include_mesh) {
+             std::vector<uint8_t> buffer;
+             writeGraph(graph, buffer, include_mesh);
+             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
+           },
+           "include_mesh"_a = false)
       .def_static("from_binary", [](const py::bytes& contents) {
         const auto& view = static_cast<const std::string_view&>(contents);
         return readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());

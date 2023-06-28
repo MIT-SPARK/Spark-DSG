@@ -166,9 +166,6 @@ template <>
 void BinarySerializer::write<SceneGraphEdge>(const SceneGraphEdge& edge);
 
 template <>
-void BinarySerializer::write<MeshEdge>(const MeshEdge& edge);
-
-template <>
 void BinarySerializer::write<MeshVertices>(const MeshVertices& vertices);
 
 template <>

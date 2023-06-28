@@ -50,7 +50,6 @@ using DynamicNodeRef = DynamicSceneGraph::DynamicNodeRef;
 using EdgeRef = DynamicSceneGraph::EdgeRef;
 using MeshVertices = DynamicSceneGraph::MeshVertices;
 using MeshFaces = DynamicSceneGraph::MeshFaces;
-using MeshEdges = DynamicSceneGraph::MeshEdges;
 
 namespace {
 
@@ -70,7 +69,7 @@ DynamicSceneGraph::DynamicSceneGraph(LayerId mesh_layer_id)
     : DynamicSceneGraph(getDefaultLayerIds(), mesh_layer_id) {}
 
 DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids, LayerId mesh_layer_id)
-    : mesh_layer_id(mesh_layer_id), layer_ids(layer_ids), next_mesh_edge_idx_(0) {
+    : mesh_layer_id(mesh_layer_id), layer_ids(layer_ids) {
   if (layer_ids.empty()) {
     throw std::domain_error("scene graph cannot be initialized without layers");
   }
@@ -93,8 +92,6 @@ void DynamicSceneGraph::clear() {
 
   mesh_vertices_.reset();
   mesh_faces_.reset();
-
-  clearMeshEdges();
 
   for (const auto& id : layer_ids) {
     layers_[id] = std::make_unique<SceneGraphLayer>(id);
@@ -431,8 +428,6 @@ bool DynamicSceneGraph::removeNode(NodeId node_id) {
   }
 
   const auto info = node_lookup_.at(node_id);
-  clearMeshEdgesForNode(node_id);
-
   auto node = getNodePtr(node_id, info);
   if (node->hasParent()) {
     removeInterlayerEdge(node_id, node->parent_);
@@ -530,8 +525,8 @@ size_t DynamicSceneGraph::numDynamicNodes() const {
   return total_nodes;
 }
 
-size_t DynamicSceneGraph::numEdges(bool include_mesh) const {
-  return numStaticEdges() + numDynamicEdges() + (include_mesh ? mesh_edges_.size() : 0);
+size_t DynamicSceneGraph::numEdges() const {
+  return numStaticEdges() + numDynamicEdges();
 }
 
 size_t DynamicSceneGraph::numStaticEdges() const {
@@ -581,40 +576,9 @@ void DynamicSceneGraph::initMesh() {
 }
 
 void DynamicSceneGraph::setMesh(const MeshVertices::Ptr& vertices,
-                                const std::shared_ptr<MeshFaces>& faces,
-                                bool invalidate_all_edges) {
-  if (!vertices) {
-    SG_LOG(INFO) << "received empty mesh. resetting all mesh edges" << std::endl;
-    mesh_vertices_.reset();
-    mesh_faces_.reset();
-    clearMeshEdges();
-    return;
-  }
-
+                                const std::shared_ptr<MeshFaces>& faces) {
   mesh_faces_ = faces;
   mesh_vertices_ = vertices;
-
-  if (invalidate_all_edges) {
-    clearMeshEdges();
-    return;
-  }
-
-  size_t max_vertex = mesh_vertices_->size();
-  std::list<MeshEdge> invalid_edges;
-  for (const auto& vertex_map_pair : mesh_edges_vertex_lookup_) {
-    const size_t vertex_id = vertex_map_pair.first;
-    if (vertex_id < max_vertex) {
-      continue;
-    }
-
-    for (const auto& node_edge_pair : mesh_edges_vertex_lookup_.at(vertex_id)) {
-      invalid_edges.push_back(mesh_edges_.at(node_edge_pair.second));
-    }
-  }
-
-  for (const auto edge : invalid_edges) {
-    removeMeshEdge(edge.source_node, edge.mesh_vertex);
-  }
 }
 
 void DynamicSceneGraph::setMeshDirectly(const pcl::PolygonMesh& mesh) {
@@ -670,101 +634,6 @@ std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(
   return pos;
 }
 
-bool DynamicSceneGraph::insertMeshEdge(NodeId source,
-                                       size_t mesh_vertex,
-                                       bool allow_invalid_mesh) {
-  if (!hasNode(source)) {
-    return false;
-  }
-
-  if (!allow_invalid_mesh) {
-    if (!mesh_vertices_ || mesh_vertex >= mesh_vertices_->size()) {
-      return false;
-    }
-  }
-
-  if (hasMeshEdge(source, mesh_vertex)) {
-    return false;
-  }
-
-  mesh_edges_.emplace(std::piecewise_construct,
-                      std::forward_as_tuple(next_mesh_edge_idx_),
-                      std::forward_as_tuple(source, mesh_vertex));
-  mesh_edges_node_lookup_[source][mesh_vertex] = next_mesh_edge_idx_;
-  mesh_edges_vertex_lookup_[mesh_vertex][source] = next_mesh_edge_idx_;
-  next_mesh_edge_idx_++;
-  return true;
-}
-
-bool DynamicSceneGraph::hasMeshEdge(NodeId source, size_t mesh_vertex) const {
-  if (!mesh_edges_node_lookup_.count(source)) {
-    return false;
-  }
-
-  if (!mesh_edges_node_lookup_.at(source).count(mesh_vertex)) {
-    return false;
-  }
-
-  return true;
-}
-
-const MeshEdges& DynamicSceneGraph::getMeshEdges() const { return mesh_edges_; }
-
-std::vector<size_t> DynamicSceneGraph::getMeshConnectionIndices(NodeId node) const {
-  std::vector<size_t> to_return;
-  if (!mesh_edges_node_lookup_.count(node)) {
-    return to_return;
-  }
-
-  for (const auto& id_edge_pair : mesh_edges_node_lookup_.at(node)) {
-    to_return.push_back(id_edge_pair.first);
-  }
-
-  return to_return;
-}
-
-bool DynamicSceneGraph::removeMeshEdge(NodeId source, size_t mesh_vertex) {
-  if (!hasMeshEdge(source, mesh_vertex)) {
-    return false;
-  }
-
-  mesh_edges_.erase(mesh_edges_node_lookup_.at(source).at(mesh_vertex));
-
-  mesh_edges_node_lookup_.at(source).erase(mesh_vertex);
-  if (mesh_edges_node_lookup_.at(source).empty()) {
-    mesh_edges_node_lookup_.erase(source);
-  }
-
-  mesh_edges_vertex_lookup_.at(mesh_vertex).erase(source);
-  if (mesh_edges_vertex_lookup_.at(mesh_vertex).empty()) {
-    mesh_edges_vertex_lookup_.erase(mesh_vertex);
-  }
-
-  next_mesh_edge_idx_++;
-  return true;
-}
-
-void DynamicSceneGraph::invalidateMeshVertex(size_t index) {
-  if (!mesh_edges_vertex_lookup_.count(index)) {
-    return;
-  }
-
-  std::list<NodeId> nodes;
-  for (const auto& node_edge_pair : mesh_edges_vertex_lookup_[index]) {
-    nodes.push_back(node_edge_pair.first);
-  }
-
-  for (const auto& node : nodes) {
-    removeMeshEdge(node, index);
-  }
-}
-
-void DynamicSceneGraph::clearMeshEdges() {
-  mesh_edges_.clear();
-  mesh_edges_node_lookup_.clear();
-  mesh_edges_vertex_lookup_.clear();
-}
-
 bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
   if (!hasNode(node_from) || !hasNode(node_to)) {
     return false;
@@ -792,16 +661,6 @@ bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
   for (const auto& target : targets_to_rewire) {
     rewireInterlayerEdge(node_from, node_to, target);
   }
-
-  auto edge_iter = mesh_edges_node_lookup_.find(node_from);
-  if (edge_iter != mesh_edges_node_lookup_.end()) {
-    for (const auto& id_edge_pair : edge_iter->second) {
-      // we always assume that a mesh edge can be invalid (as it was alread added)
-      insertMeshEdge(node_to, id_edge_pair.first, true);
-    }
-  }
-
-  clearMeshEdgesForNode(node_from);
 
   // TODO(nathan) dynamic merge
   layers_[info.layer]->mergeNodes(node_from, node_to);
@@ -855,9 +714,6 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const std::map<NodeId, NodeId>& previous_merges,
-                                   bool merge_mesh_edges,
-                                   bool allow_invalid_mesh,
-                                   bool clear_mesh_edges,
                                    std::map<LayerId, bool>* update_map,
                                    bool update_dynamic,
                                    bool clear_removed) {
@@ -921,37 +777,16 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
     insertEdge(new_source, new_target, edge.info->clone());
   }
 
-  if (!merge_mesh_edges) {
-    return true;
-  }
-
-  if (clear_mesh_edges) {
-    clearMeshEdges();
-  }
-
-  // TODO(nathan) this doesn't handle merges
-  for (const auto& id_mesh_edge : other.mesh_edges_) {
-    insertMeshEdge(id_mesh_edge.second.source_node,
-                   id_mesh_edge.second.mesh_vertex,
-                   allow_invalid_mesh);
-  }
-
   // TODO(Yun) check the other mesh info (faces, vertices etc. )
   return true;
 }
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
-                                   bool merge_mesh_edges,
-                                   bool allow_invalid_mesh,
-                                   bool clear_mesh_edges,
                                    std::map<LayerId, bool>* attribute_update_map,
                                    bool update_dynamic_attributes,
                                    bool clear_removed) {
   return mergeGraph(other,
                     {},
-                    merge_mesh_edges,
-                    allow_invalid_mesh,
-                    clear_mesh_edges,
                     attribute_update_map,
                     update_dynamic_attributes,
                     clear_removed);
@@ -1072,13 +907,9 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
   if (mesh_vertices_) {
     to_return->mesh_vertices_.reset(new MeshVertices(*mesh_vertices_));
   }
+
   if (mesh_faces_) {
     to_return->mesh_faces_ = std::make_shared<MeshFaces>(*mesh_faces_);
-  }
-
-  for (const auto& id_edge_pair : mesh_edges_) {
-    const auto& edge = id_edge_pair.second;
-    to_return->insertMeshEdge(edge.source_node, edge.mesh_vertex, true);
   }
 
   return to_return;
@@ -1268,19 +1099,6 @@ void DynamicSceneGraph::removeStaleEdges(EdgeContainer& edges) {
   for (const auto& edge_key_pair : edges.stale_edges) {
     if (edge_key_pair.second) {
       removeEdge(edge_key_pair.first.k1, edge_key_pair.first.k2);
-    }
-  }
-}
-
-void DynamicSceneGraph::clearMeshEdgesForNode(NodeId node_id) {
-  if (mesh_edges_node_lookup_.count(node_id)) {
-    std::list<size_t> mesh_edge_targets_to_remove;
-    for (const auto& vertex_edge_pair : mesh_edges_node_lookup_.at(node_id)) {
-      mesh_edge_targets_to_remove.push_back(vertex_edge_pair.first);
-    }
-
-    for (const auto& vertex : mesh_edge_targets_to_remove) {
-      removeMeshEdge(node_id, vertex);
     }
   }
 }

@@ -223,13 +223,6 @@ void BinarySerializer::write<SceneGraphEdge>(const SceneGraphEdge& edge) {
 }
 
 template <>
-void BinarySerializer::write<MeshEdge>(const MeshEdge& edge) {
-  startFixedArray(2);
-  write(edge.source_node);
-  write(edge.mesh_vertex);
-}
-
-template <>
 void BinarySerializer::write<MeshVertices>(const MeshVertices& vertices) {
   startFixedArray(6 * vertices.size());
   for (const auto& point : vertices) {

@@ -155,15 +155,6 @@ void updateEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
   conv.finalize();
 }
 
-void insertMeshEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
-  deserializer.checkFixedArrayLength(2);
-  NodeId source;
-  deserializer.read(source);
-  size_t target;
-  deserializer.read(target);
-  graph.insertMeshEdge(source, target, true);
-}
-
 void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
   size_t num_vertices = deserializer.readFixedArrayLength() / 6;
   MeshVertices::Ptr vertices(new MeshVertices());
@@ -195,7 +186,7 @@ void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
     deserializer.read(face.vertices[2]);
   }
 
-  graph.setMesh(vertices, faces, false);
+  graph.setMesh(vertices, faces);
 }
 
 void writeGraph(const DynamicSceneGraph& graph,
@@ -247,12 +238,6 @@ void writeGraph(const DynamicSceneGraph& graph,
   }
   serializer.writeArrayEnd();
 
-  serializer.writeArrayStart();
-  for (const auto& edge : graph.getMeshEdges()) {
-    serializer.write(edge.second);
-  }
-  serializer.writeArrayEnd();
-
   if (!include_mesh || !graph.hasMesh()) {
     serializer.write(false);
     return;
@@ -286,11 +271,6 @@ DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
     insertEdge(deserializer, *graph);
-  }
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    insertMeshEdge(deserializer, *graph);
   }
 
   serialization::PackType type;
@@ -341,14 +321,6 @@ bool updateGraphNormal(DynamicSceneGraph& graph,
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
     updateEdge(deserializer, graph);
-  }
-
-  // TODO(nathan) we might want to not do this
-  graph.clearMeshEdges();
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    // okay to directly insert, internal checks will prevent duplicates
-    insertMeshEdge(deserializer, graph);
   }
 
   return true;
@@ -402,14 +374,6 @@ bool updateGraphRemoveStale(DynamicSceneGraph& graph,
     updateEdge(deserializer, graph);
   }
   graph.removeAllStaleEdges();
-
-  // TODO(nathan) we might want to not do this
-  graph.clearMeshEdges();
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    // okay to directly insert, internal checks will prevent duplicates
-    insertMeshEdge(deserializer, graph);
-  }
 
   return true;
 }
