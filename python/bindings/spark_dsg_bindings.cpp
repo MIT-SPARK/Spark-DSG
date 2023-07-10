@@ -210,7 +210,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
             info.voxel_pos[1] = array[1];
             info.voxel_pos[2] = array[2];
           })
-      .def_readwrite("vertex", &NearestVertexInfo::vertex);
+      .def_readwrite("vertex", &NearestVertexInfo::vertex)
+      .def_readwrite("label", &NearestVertexInfo::label);
 
   py::class_<PlaceNodeAttributes, SemanticNodeAttributes>(module, "PlaceNodeAttributes")
       .def(py::init<>())
@@ -626,13 +627,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              }
              G.setMesh(G.getMeshVertices(), faces);
            })
-      .def("to_binary",
-           [](const DynamicSceneGraph& graph, bool include_mesh) {
-             std::vector<uint8_t> buffer;
-             writeGraph(graph, buffer, include_mesh);
-             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
-           },
-           "include_mesh"_a = false)
+      .def(
+          "to_binary",
+          [](const DynamicSceneGraph& graph, bool include_mesh) {
+            std::vector<uint8_t> buffer;
+            writeGraph(graph, buffer, include_mesh);
+            return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
+          },
+          "include_mesh"_a = false)
       .def_static("from_binary", [](const py::bytes& contents) {
         const auto& view = static_cast<const std::string_view&>(contents);
         return readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());

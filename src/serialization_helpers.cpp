@@ -124,6 +124,12 @@ void from_json(const json& j, BoundingBox& b) {
 void to_json(json& j, const NearestVertexInfo& info) {
   j = json{
       {"block", info.block}, {"voxel_pos", info.voxel_pos}, {"vertex", info.vertex}};
+
+  if (info.label) {
+    j["label"] = info.label.value();
+  } else {
+    j["label"] = nullptr;
+  }
 }
 
 void from_json(const json& j, NearestVertexInfo& info) {
@@ -134,6 +140,10 @@ void from_json(const json& j, NearestVertexInfo& info) {
   info.voxel_pos[1] = j.at("voxel_pos").at(1).get<double>();
   info.voxel_pos[2] = j.at("voxel_pos").at(2).get<double>();
   info.vertex = j.at("vertex");
+
+  if (j.contains("label") && !j.at("label").is_null()) {
+    info.label = j.at("label").get<uint32_t>();
+  }
 }
 
 }  // namespace spark_dsg

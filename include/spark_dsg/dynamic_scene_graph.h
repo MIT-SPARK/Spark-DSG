@@ -400,7 +400,7 @@ class DynamicSceneGraph {
   /**
    * @brief Initialize an empty mesh
    */
-  void initMesh();
+  void initMesh(bool use_semantics = true);
 
   /**
    * @brief Set mesh components individually
@@ -413,7 +413,8 @@ class DynamicSceneGraph {
    * @param invalidate_all_edges Clear all existing mesh edges
    */
   void setMesh(const MeshVertices::Ptr& vertices,
-               const std::shared_ptr<MeshFaces>& faces);
+               const std::shared_ptr<MeshFaces>& faces,
+               const std::shared_ptr<std::vector<uint32_t>>& labels = nullptr);
 
   /**
    * @brief Set mesh components directly from a polygon mesh
@@ -450,6 +451,12 @@ class DynamicSceneGraph {
    * @returns Pointer to mesh faces
    */
   std::shared_ptr<MeshFaces> getMeshFaces() const;
+
+  /**
+   * @brief Get pointer to mesh labels (may be invalid)
+   * @returns Pointer to mesh labels
+   */
+  std::shared_ptr<std::vector<uint32_t>> getMeshLabels() const;
 
   /**
    * @brief Get the mesh vertex position (if vaild)
@@ -637,6 +644,7 @@ class DynamicSceneGraph {
 
   MeshVertices::Ptr mesh_vertices_;
   std::shared_ptr<MeshFaces> mesh_faces_;
+  std::shared_ptr<std::vector<uint32_t>> mesh_labels_;
 
  public:
   /**

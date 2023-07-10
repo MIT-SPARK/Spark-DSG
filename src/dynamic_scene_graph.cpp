@@ -567,18 +567,18 @@ Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node) const {
   return layers_.at(info.layer)->getPosition(node);
 }
 
-void DynamicSceneGraph::initMesh() {
-  DynamicSceneGraph::MeshVertices fake_vertices;
-  pcl::PolygonMesh fake_mesh;
-  pcl::toPCLPointCloud2(fake_vertices, fake_mesh.cloud);
-
-  setMeshDirectly(fake_mesh);
+void DynamicSceneGraph::initMesh(bool use_semantics) {
+  setMesh(MeshVertices::Ptr(new MeshVertices()),
+          std::make_shared<MeshFaces>(),
+          use_semantics ? std::make_shared<std::vector<uint32_t>>() : nullptr);
 }
 
 void DynamicSceneGraph::setMesh(const MeshVertices::Ptr& vertices,
-                                const std::shared_ptr<MeshFaces>& faces) {
+                                const std::shared_ptr<MeshFaces>& faces,
+                                const std::shared_ptr<std::vector<uint32_t>>& labels) {
   mesh_faces_ = faces;
   mesh_vertices_ = vertices;
+  mesh_labels_ = labels;
 }
 
 void DynamicSceneGraph::setMeshDirectly(const pcl::PolygonMesh& mesh) {
@@ -611,6 +611,10 @@ MeshVertices::Ptr DynamicSceneGraph::getMeshVertices() const { return mesh_verti
 
 std::shared_ptr<MeshFaces> DynamicSceneGraph::getMeshFaces() const {
   return mesh_faces_;
+}
+
+std::shared_ptr<std::vector<uint32_t>> DynamicSceneGraph::getMeshLabels() const {
+  return mesh_labels_;
 }
 
 std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(
@@ -785,11 +789,8 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    std::map<LayerId, bool>* attribute_update_map,
                                    bool update_dynamic_attributes,
                                    bool clear_removed) {
-  return mergeGraph(other,
-                    {},
-                    attribute_update_map,
-                    update_dynamic_attributes,
-                    clear_removed);
+  return mergeGraph(
+      other, {}, attribute_update_map, update_dynamic_attributes, clear_removed);
 }
 
 std::vector<NodeId> DynamicSceneGraph::getRemovedNodes(bool clear_removed) {

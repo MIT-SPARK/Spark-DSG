@@ -451,7 +451,7 @@ void write_binary(Serializer& s, const BoundingBox& box) {
 
 template <typename Serializer>
 void write_binary(Serializer& s, const NearestVertexInfo& info) {
-  s.startFixedArray(3);
+  s.startFixedArray(4);
   s.startFixedArray(3);
   s.write(info.block[0]);
   s.write(info.block[1]);
@@ -461,6 +461,11 @@ void write_binary(Serializer& s, const NearestVertexInfo& info) {
   s.write(info.voxel_pos[1]);
   s.write(info.voxel_pos[2]);
   s.write(info.vertex);
+  if (info.label) {
+    s.write(info.label.value());
+  } else {
+    s.write_type(serialization::PackType::NIL);
+  }
 }
 
 template <typename Deserializer>
@@ -480,7 +485,7 @@ size_t read_binary(const Deserializer& s, BoundingBox& box) {
 
 template <typename Deserializer>
 size_t read_binary(const Deserializer& s, NearestVertexInfo& info) {
-  s.checkFixedArrayLength(3);
+  s.checkFixedArrayLength(4);
   s.checkFixedArrayLength(3);
   s.read(info.block[0]);
   s.read(info.block[1]);
@@ -490,6 +495,12 @@ size_t read_binary(const Deserializer& s, NearestVertexInfo& info) {
   s.read(info.voxel_pos[1]);
   s.read(info.voxel_pos[2]);
   s.read(info.vertex);
+  const auto label_type = s.getCurrType();
+  if (label_type == serialization::PackType::NIL) {
+    s.checkType(serialization::PackType::NIL);
+  } else {
+    s.read(*info.label);
+  }
   return 0;
 }
 
