@@ -44,11 +44,11 @@
 
 namespace spark_dsg {
 
-// TODO(nathan) handle this better (kimera semantics is uint8, but...)
+// TODO(nathan) handle this better
 /**
  * @brief Typedef representing the semantic class of an object or other node
  */
-using SemanticLabel = uint8_t;
+using SemanticLabel = uint32_t;
 
 /**
  * @brief Base node attributes.
