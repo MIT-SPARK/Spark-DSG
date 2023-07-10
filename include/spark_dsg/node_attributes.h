@@ -218,6 +218,7 @@ struct NearestVertexInfo {
   int32_t block[3];
   double voxel_pos[3];
   size_t vertex;
+  std::optional<uint32_t> label;
 };
 
 /**
