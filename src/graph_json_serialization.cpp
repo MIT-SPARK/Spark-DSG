@@ -278,6 +278,10 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::load(const std::string& filepath) {
   std::stringstream ss;
 
   std::ifstream infile(filepath);
+  if (!infile) {
+    throw std::runtime_error("graph file does not exist: " + filepath);
+  }
+
   ss << infile.rdbuf();
 
   return deserialize(ss.str());
