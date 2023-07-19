@@ -271,6 +271,9 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
 
   record["mesh"]["vertices"] = *mesh_vertices_;
   record["mesh"]["faces"] = *mesh_faces_;
+  if (mesh_labels_) {
+    record["mesh"]["labels"] = *mesh_labels_;
+  }
   return record.dump();
 }
 
@@ -340,8 +343,13 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& content
     auto faces = record.at("mesh").at("faces").get<MeshFaces>();
     auto new_faces = std::make_shared<MeshFaces>(faces.begin(), faces.end());
 
+    auto labels = std::make_shared<std::vector<uint32_t>>();
+    if (record.at("mesh").contains("labels")) {
+      *labels = record.at("mesh").at("labels").get<std::vector<uint32_t>>();
+    }
+
     // clear all previous edges
-    graph->setMesh(new_vertices, new_faces);
+    graph->setMesh(new_vertices, new_faces, labels);
   }
 
   return graph;
