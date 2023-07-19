@@ -41,6 +41,7 @@
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_utilities.h>
 
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -211,7 +212,20 @@ PYBIND11_MODULE(_dsg_bindings, module) {
             info.voxel_pos[2] = array[2];
           })
       .def_readwrite("vertex", &NearestVertexInfo::vertex)
-      .def_readwrite("label", &NearestVertexInfo::label);
+      .def_readwrite("label", &NearestVertexInfo::label)
+      .def("__repr__", [](const NearestVertexInfo& info) {
+        std::stringstream ss;
+        ss << std::setprecision(6) << "VertexInfo<block=[" << info.block[0] << ", "
+           << info.block[1] << ", " << info.block[2] << "], pos=[" << info.voxel_pos[0]
+           << ", " << info.voxel_pos[1] << ", " << info.voxel_pos[2] << "], label=";
+        if (info.label) {
+          ss << info.label.value();
+        } else {
+          ss << "n/a";
+        }
+        ss << ">";
+        return ss.str();
+      });
 
   py::class_<PlaceNodeAttributes, SemanticNodeAttributes>(module, "PlaceNodeAttributes")
       .def(py::init<>())
@@ -584,6 +598,15 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                to_return(2, i) = face.vertices.at(2);
              }
              return to_return;
+           })
+      .def("get_mesh_labels",
+           [](const DynamicSceneGraph& G) {
+             auto labels = G.getMeshLabels();
+             if (!labels) {
+               return std::vector<uint32_t>();
+             } else {
+               return *labels;
+             }
            })
       .def("set_mesh_vertices",
            [](DynamicSceneGraph& G, const Eigen::MatrixXd& points) {
