@@ -497,7 +497,7 @@ class DynamicSceneGraph {
    */
   bool mergeGraph(const DynamicSceneGraph& other,
                   const std::map<NodeId, NodeId>& previous_merges,
-                  std::map<LayerId, bool>* attribute_update_map = nullptr,
+                  const std::map<LayerId, bool>* attribute_update_map = nullptr,
                   bool update_dynamic_attributes = true,
                   bool clear_removed = false);
 
@@ -511,7 +511,7 @@ class DynamicSceneGraph {
    * @returns true if merge was successful
    */
   bool mergeGraph(const DynamicSceneGraph& other,
-                  std::map<LayerId, bool>* attribute_update_map = nullptr,
+                  const std::map<LayerId, bool>* attribute_update_map = nullptr,
                   bool update_dynamic_attributes = true,
                   bool clear_removed = false);
 

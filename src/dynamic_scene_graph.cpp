@@ -718,7 +718,7 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const std::map<NodeId, NodeId>& previous_merges,
-                                   std::map<LayerId, bool>* update_map,
+                                   const std::map<LayerId, bool>* update_map,
                                    bool update_dynamic,
                                    bool clear_removed) {
   for (const auto& id_layers : other.dynamicLayers()) {
@@ -786,7 +786,7 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 }
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
-                                   std::map<LayerId, bool>* attribute_update_map,
+                                   const std::map<LayerId, bool>* attribute_update_map,
                                    bool update_dynamic_attributes,
                                    bool clear_removed) {
   return mergeGraph(
