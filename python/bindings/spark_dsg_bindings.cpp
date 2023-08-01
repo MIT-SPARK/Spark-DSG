@@ -658,6 +658,17 @@ PYBIND11_MODULE(_dsg_bindings, module) {
             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
           },
           "include_mesh"_a = false)
+      .def(
+          "update_from_binary",
+          [](DynamicSceneGraph& graph, const py::bytes& contents, bool remove_stale) {
+            const auto& view = static_cast<const std::string_view&>(contents);
+            return updateGraph(graph,
+                               reinterpret_cast<const uint8_t*>(view.data()),
+                               view.size(),
+                               remove_stale);
+          },
+          "contents"_a,
+          "remove_stale"_a = true)
       .def_static("from_binary", [](const py::bytes& contents) {
         const auto& view = static_cast<const std::string_view&>(contents);
         return readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());
