@@ -155,6 +155,18 @@ void updateEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
   conv.finalize();
 }
 
+bool checkIfTrue(const BinaryDeserializer& deserializer) {
+  serialization::PackType type;
+  try {
+    type = deserializer.getCurrType();
+    deserializer.checkType(type);
+  } catch (...) {
+    return false;
+  }
+
+  return type == serialization::PackType::TRUE;
+}
+
 void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
   size_t num_vertices = deserializer.readFixedArrayLength() / 6;
   MeshVertices::Ptr vertices(new MeshVertices());
@@ -186,7 +198,16 @@ void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
     deserializer.read(face.vertices[2]);
   }
 
-  graph.setMesh(vertices, faces);
+  std::shared_ptr<std::vector<uint32_t>> labels;
+  if (checkIfTrue(deserializer)) {
+    size_t num_labels = deserializer.readFixedArrayLength();
+    labels.reset(new std::vector<uint32_t>(num_labels));
+    for (size_t i = 0; i < num_labels; ++i) {
+      deserializer.read(labels->at(i));
+    }
+  }
+
+  graph.setMesh(vertices, faces, labels);
 }
 
 void writeGraph(const DynamicSceneGraph& graph,
@@ -246,6 +267,13 @@ void writeGraph(const DynamicSceneGraph& graph,
   serializer.write(true);
   serializer.write(*graph.getMeshVertices());
   serializer.write(*graph.getMeshFaces());
+  const auto labels = graph.getMeshLabels();
+  if (labels) {
+    serializer.write(true);
+    serializer.write(*labels);
+  } else {
+    serializer.write(false);
+  }
 }
 
 DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
@@ -273,17 +301,7 @@ DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
     insertEdge(deserializer, *graph);
   }
 
-  serialization::PackType type;
-  try {
-    // TODO(nathan) this is ugly
-    type = deserializer.getCurrType();
-    deserializer.checkType(type);
-  } catch (const std::out_of_range&) {
-    std::cerr << "serialized data does not contain mesh flag!" << std::endl;
-    return graph;
-  }
-
-  if (type != serialization::PackType::TRUE) {
+  if (!checkIfTrue(deserializer)) {
     return graph;
   }
 
@@ -323,6 +341,11 @@ bool updateGraphNormal(DynamicSceneGraph& graph,
     updateEdge(deserializer, graph);
   }
 
+  if (!checkIfTrue(deserializer)) {
+    return true;
+  }
+
+  insertMesh(deserializer, graph);
   return true;
 }
 
@@ -375,6 +398,11 @@ bool updateGraphRemoveStale(DynamicSceneGraph& graph,
   }
   graph.removeAllStaleEdges();
 
+  if (!checkIfTrue(deserializer)) {
+    return true;
+  }
+
+  insertMesh(deserializer, graph);
   return true;
 }
 
