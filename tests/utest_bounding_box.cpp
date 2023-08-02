@@ -57,10 +57,8 @@ inline float getRotationError(const Eigen::Quaternionf& rotation,
 }
 
 TEST(BoundingBoxTests, AABBConstructor) {
-  Eigen::Vector3f min;
-  min << 1.0f, 2.0f, 3.0f;
-  Eigen::Vector3f max;
-  max << 3.0f, 4.0f, 5.0f;
+  Eigen::Vector3f min{1.0f, 2.0f, 3.0f};
+  Eigen::Vector3f max{3.0f, 4.0f, 5.0f};
   BoundingBox box(min, max);
   EXPECT_EQ(BoundingBox::Type::AABB, box.type);
   EXPECT_EQ(min, box.min);
@@ -485,6 +483,35 @@ TEST(BoundingBoxTests, RAABBVolumeChecksCorrectWithRotation) {
     EXPECT_TRUE(box.isInside(test_point1));
     EXPECT_TRUE(box.isInside(test_point2));
   }
+}
+
+TEST(BoundingBoxTests, DimensionsCorrect) {
+  {  // test invalid
+    BoundingBox box;
+    EXPECT_NEAR(box.dimensions().norm(), 0.0f, 1.0e-9f);
+  }  // test invalid
+
+  {  // test AABB
+    Eigen::Vector3f min{1.0f, 2.0f, 3.0f};
+    Eigen::Vector3f max{3.0f, 4.0f, 5.0f};
+    BoundingBox box(min, max);
+    const Eigen::Vector3f expected{2, 2, 2};
+    EXPECT_NEAR((expected - box.dimensions()).norm(), 0.0f, 1.0e-8f);
+  }
+
+  {  // test RAABB
+    BoundingBox box(
+        BoundingBox::Type::RAABB,
+        Eigen::Vector3f(-1.0, -2.0, -3.0),
+        Eigen::Vector3f(0.0, 1.0, 2.0),
+        Eigen::Vector3f::Zero(),
+        Eigen::Quaternionf(std::cos(M_PI / 12.0), 0.0, 0.0, std::sin(M_PI / 12.0))
+            .toRotationMatrix());
+
+    const Eigen::Vector3f expected{1, 3, 5};
+    EXPECT_NEAR((expected - box.dimensions()).norm(), 0.0f, 1.0e-8f)
+        << "got " << box.dimensions() << " (expected " << expected << ")";
+  }  // test RAABB
 }
 
 }  // namespace spark_dsg
