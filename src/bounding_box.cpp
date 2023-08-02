@@ -135,4 +135,15 @@ float BoundingBox::volume() const {
   }
 }
 
+Eigen::Vector3f BoundingBox::dimensions() const {
+  switch (type) {
+    case Type::AABB:
+    case Type::OBB:
+    case Type::RAABB:
+      return (max - min).array().abs();
+    case Type::INVALID:
+      return Eigen::Vector3f::Zero();
+  }
+}
+
 }  // namespace spark_dsg

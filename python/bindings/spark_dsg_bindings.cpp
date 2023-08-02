@@ -150,6 +150,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("is_inside",
            static_cast<bool (BoundingBox::*)(const Eigen::Vector3f&) const>(
                &BoundingBox::isInside))
+      .def("volume", &BoundingBox::volume)
+      .def("dimensions", &BoundingBox::dimensions)
       .def("__repr__", [](const BoundingBox& box) {
         std::stringstream ss;
         ss << box;

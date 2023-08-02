@@ -92,6 +92,8 @@ struct BoundingBox {
 
   float volume() const;
 
+  Eigen::Vector3f dimensions() const;
+
   //! minimum corner extent
   Eigen::Vector3f min;
   //! maximum corner extent
