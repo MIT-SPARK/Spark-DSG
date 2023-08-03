@@ -142,6 +142,7 @@ Eigen::Vector3f BoundingBox::dimensions() const {
     case Type::RAABB:
       return (max - min).array().abs();
     case Type::INVALID:
+    default:
       return Eigen::Vector3f::Zero();
   }
 }
