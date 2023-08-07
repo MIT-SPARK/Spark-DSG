@@ -33,6 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <pcl/PolygonMesh.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <chrono>
 #include <list>
 #include <memory>
@@ -295,6 +299,43 @@ struct AgentNodeAttributes : public NodeAttributes {
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const override;
+};
+
+/**
+ * @brief Attributes for object nodes.
+ * TODO(lschmid): This code is WIP for khronos integration.
+ */
+struct KhronosObjectAttributes : public SemanticNodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  /**
+   * @brief desired pointer type of node
+   */
+  using Ptr = std::shared_ptr<KhronosObjectAttributes>;
+
+  // NOTE(lschmid): These are copied from dynamic_scene_graph.h to not have to depend on
+  // it. Needs updates accordingly.
+  using Mesh = pcl::PolygonMesh;
+  using MeshVertices = pcl::PointCloud<pcl::PointXYZRGBA>;
+  using MeshFaces = std::vector<pcl::Vertices>;
+
+  /**
+   * @brief Make a default set of attributes
+   */
+  KhronosObjectAttributes();
+
+  virtual ~KhronosObjectAttributes() = default;
+
+  NodeAttributes::Ptr clone() const override {
+    return std::make_unique<KhronosObjectAttributes>(*this);
+  }
+
+  // Attributes.
+  uint64_t first_observed_ns;
+  Mesh mesh;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 }  // namespace spark_dsg

@@ -88,6 +88,22 @@ void deserialize(const Converter& converter, ObjectNodeAttributes& attrs) {
 }
 
 template <typename Converter>
+void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("first_observed_ns", attrs.first_observed_ns);
+  // converter.write("vertices", attrs.mesh.cloud);
+  // converter.write("faces", attrs.mesh.polygons);
+}
+
+template <typename Converter>
+void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("first_observed_ns", attrs.first_observed_ns);
+  // converter.read("vertices", attrs.mesh.cloud);
+  // converter.read("faces", attrs.mesh.polygons);
+}
+
+template <typename Converter>
 void serialize(Converter& converter, const RoomNodeAttributes& attrs) {
   serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
 }

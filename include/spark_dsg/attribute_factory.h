@@ -219,13 +219,15 @@ class NodeAttributeFactory : public AttributeFactory<NodeAttributes, C> {
     REGISTER_ATTR(NodeAttributeFactory, RoomNodeAttributes, C);
     REGISTER_ATTR(NodeAttributeFactory, PlaceNodeAttributes, C);
     REGISTER_ATTR(NodeAttributeFactory, AgentNodeAttributes, C);
+    REGISTER_ATTR(NodeAttributeFactory, KhronosObjectAttributes, C);
 
     factory.setTypeIndexMap({{"NodeAttributes", 0},
                              {"SemanticNodeAttributes", 1},
                              {"ObjectNodeAttributes", 2},
                              {"RoomNodeAttributes", 3},
                              {"PlaceNodeAttributes", 4},
-                             {"AgentNodeAttributes", 5}});
+                             {"AgentNodeAttributes", 5},
+                             {"KhronosObjectAttributes", 6}});
 
     factory.default_set = true;
     return factory;

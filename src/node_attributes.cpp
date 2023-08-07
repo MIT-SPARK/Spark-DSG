@@ -121,4 +121,14 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
+KhronosObjectAttributes::KhronosObjectAttributes() : first_observed_ns(0) {}
+
+std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
+  SemanticNodeAttributes::fill_ostream(out);
+  out << "  - first_observed_ns: " << first_observed_ns << std::endl;
+  out << "  - mesh: " << (mesh.cloud.height * mesh.cloud.width) << " vertices, "
+      << mesh.polygons.size() << " faces" << std::endl;
+  return out;
+}
+
 }  // namespace spark_dsg
