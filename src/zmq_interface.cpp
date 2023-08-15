@@ -73,9 +73,9 @@ struct ZmqSender::Detail {
 
   ~Detail() = default;
 
-  void send(const DynamicSceneGraph& graph) {
+  void send(const DynamicSceneGraph& graph, bool include_mesh) {
     std::vector<uint8_t> buffer;
-    writeGraph(graph, buffer);
+    writeGraph(graph, buffer, include_mesh);
 
     // TODO(nathan) it'd be nice if we could avoid the memcpy
     zmq::message_t msg(buffer.data(), buffer.size());
@@ -94,7 +94,9 @@ ZmqSender::ZmqSender(const std::string& url, size_t num_threads)
 
 ZmqSender::~ZmqSender() {}
 
-void ZmqSender::send(const DynamicSceneGraph& graph) { internals_->send(graph); }
+void ZmqSender::send(const DynamicSceneGraph& graph, bool include_mesh) {
+  internals_->send(graph, include_mesh);
+}
 
 struct ZmqReceiver::Detail {
   Detail(const std::string& url, size_t) {
@@ -145,7 +147,17 @@ ZmqReceiver::ZmqReceiver(const std::string& url, size_t num_threads)
 
 ZmqReceiver::~ZmqReceiver() {}
 
-bool ZmqReceiver::recv(size_t timeout_ms) { return internals_->recv(timeout_ms); }
+bool ZmqReceiver::recv(size_t timeout_ms, bool recv_all) {
+  const auto have_data = internals_->recv(timeout_ms);
+  if (!have_data || !recv_all) {
+    return have_data;
+  }
+
+  // spin while we still have messages
+  while (internals_->recv(1)) {
+  }
+  return true;
+}
 
 DynamicSceneGraph::Ptr ZmqReceiver::graph() const { return internals_->graph; }
 

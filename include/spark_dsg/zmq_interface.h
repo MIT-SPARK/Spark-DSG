@@ -43,7 +43,7 @@ class ZmqSender {
 
   ~ZmqSender();
 
-  void send(const DynamicSceneGraph& graph);
+  void send(const DynamicSceneGraph& graph, bool include_mesh = false);
 
  private:
   struct Detail;
@@ -57,7 +57,7 @@ class ZmqReceiver {
 
   ~ZmqReceiver();
 
-  bool recv(size_t timeout_ms);
+  bool recv(size_t timeout_ms, bool recv_all = false);
 
   DynamicSceneGraph::Ptr graph() const;
 
