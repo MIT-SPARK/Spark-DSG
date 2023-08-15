@@ -121,8 +121,6 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-KhronosObjectAttributes::KhronosObjectAttributes() {}
-
 std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
   out << "  - first_observed_ns: ";

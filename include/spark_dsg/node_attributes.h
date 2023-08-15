@@ -305,13 +305,13 @@ struct AgentNodeAttributes : public NodeAttributes {
  * @brief Attributes for object nodes.
  * TODO(lschmid): This code is WIP for khronos integration.
  */
-struct KhronosObjectAttributes : public SemanticNodeAttributes {
+struct KhronosObjectAttributes : public ObjectNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /**
    * @brief desired pointer type of node
    */
-  using Ptr = std::shared_ptr<KhronosObjectAttributes>;
+  using Ptr = std::unique_ptr<KhronosObjectAttributes>;
 
   // NOTE(lschmid): These are copied from dynamic_scene_graph.h to not have to depend on
   // it. Needs updates accordingly.
@@ -320,11 +320,7 @@ struct KhronosObjectAttributes : public SemanticNodeAttributes {
   using MeshFace = Eigen::Matrix<uint32_t, 3, 1>;  // Triangular meshes.
   using MeshFaces = std::vector<MeshFace>;
 
-  /**
-   * @brief Make a default set of attributes
-   */
-  KhronosObjectAttributes();
-
+  KhronosObjectAttributes() = default;
   virtual ~KhronosObjectAttributes() = default;
 
   NodeAttributes::Ptr clone() const override {
@@ -337,7 +333,7 @@ struct KhronosObjectAttributes : public SemanticNodeAttributes {
   std::vector<uint64_t> last_observed_ns;
 
   // Mesh of the object as triangular mesh where each face holds 3 indices of their
-  // vertices.
+  // vertices. Positions of vertices are relative to the object bounding box origin.
   MeshVertices vertices;
   MeshFaces faces;
 
