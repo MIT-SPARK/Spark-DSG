@@ -121,13 +121,21 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-KhronosObjectAttributes::KhronosObjectAttributes() : first_observed_ns(0) {}
+KhronosObjectAttributes::KhronosObjectAttributes() {}
 
 std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
-  out << "  - first_observed_ns: " << first_observed_ns << std::endl;
-  out << "  - mesh: " << vertices.size() << " vertices, "
-      << faces.size() << " faces" << std::endl;
+  out << "  - first_observed_ns: ";
+  for (uint64_t t : first_observed_ns) {
+    out << t << " ";
+  }
+  out << std::endl << "  - last_observed_ns: ";
+  for (uint64_t t : last_observed_ns) {
+    out << t << " ";
+  }
+  out << std::endl
+      << "  - mesh: " << vertices.size() << " vertices, " << faces.size() << " faces"
+      << std::endl;
   return out;
 }
 

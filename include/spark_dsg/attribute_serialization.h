@@ -91,6 +91,7 @@ template <typename Converter>
 void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
   serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
   converter.write("first_observed_ns", attrs.first_observed_ns);
+  converter.write("last_observed_ns", attrs.last_observed_ns);
 
   // Work around for mesh for now: Pack vertices and faces into vectors.
   std::vector<float> xyz;
@@ -122,6 +123,7 @@ template <typename Converter>
 void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
   deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
   converter.read("first_observed_ns", attrs.first_observed_ns);
+  converter.read("last_observed_ns", attrs.last_observed_ns);
 
   // Undo work around for mesh.
   // NOTE(lschmid): Could also check for validity here but unless someone messes with

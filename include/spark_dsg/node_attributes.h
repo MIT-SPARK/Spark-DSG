@@ -332,7 +332,12 @@ struct KhronosObjectAttributes : public SemanticNodeAttributes {
   }
 
   // Attributes.
-  uint64_t first_observed_ns;
+  // Sequence of observation starts and ends.
+  std::vector<uint64_t> first_observed_ns;
+  std::vector<uint64_t> last_observed_ns;
+
+  // Mesh of the object as triangular mesh where each face holds 3 indices of their
+  // vertices.
   MeshVertices vertices;
   MeshFaces faces;
 
