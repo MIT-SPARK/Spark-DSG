@@ -93,13 +93,16 @@ void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
   converter.write("first_observed_ns", attrs.first_observed_ns);
   converter.write("last_observed_ns", attrs.last_observed_ns);
 
-  // Work around for mesh for now: Pack vertices and faces into vectors.
+  // Work around for mesh and trajectories for now: Pack vertices and faces into
+  // vectors.
   std::vector<float> xyz;
+  std::vector<float> trajectory;
   std::vector<uint8_t> rgba;
   std::vector<uint32_t> faces;
   xyz.reserve(3 * attrs.vertices.size());
   rgba.reserve(4 * attrs.vertices.size());
   faces.reserve(3 * attrs.faces.size());
+  trajectory.reserve(3 * attrs.trajectory_positions.size());
   for (const auto& vertex : attrs.vertices) {
     xyz.emplace_back(vertex.x);
     xyz.emplace_back(vertex.y);
@@ -114,9 +117,16 @@ void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
       faces.emplace_back(face[i]);
     }
   }
+  for (const auto& pos : attrs.trajectory_positions) {
+    trajectory.emplace_back(pos.x());
+    trajectory.emplace_back(pos.y());
+    trajectory.emplace_back(pos.z());
+  }
   converter.write("vertices", xyz);
   converter.write("colors", rgba);
   converter.write("faces", faces);
+  converter.write("trajectory_positions", trajectory);
+  converter.write("trajectory_timestamps", attrs.trajectory_timestamps);
 }
 
 template <typename Converter>
@@ -125,19 +135,24 @@ void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
   converter.read("first_observed_ns", attrs.first_observed_ns);
   converter.read("last_observed_ns", attrs.last_observed_ns);
 
-  // Undo work around for mesh.
+  // Undo work around for mesh and trajectory.
   // NOTE(lschmid): Could also check for validity here but unless someone messes with
   // the data it will be valid as constructed above.
   std::vector<float> xyz;
+  std::vector<float> trajectory;
   std::vector<uint8_t> rgba;
   std::vector<uint32_t> faces;
   converter.read("vertices", xyz);
   converter.read("colors", rgba);
   converter.read("faces", faces);
+  converter.read("trajectory_positions", trajectory);
+  converter.read("trajectory_timestamps", attrs.trajectory_timestamps);
   const size_t num_vertices = xyz.size() / 3;
   const size_t num_faces = faces.size() / 3;
+  const size_t num_trajectory_points = trajectory.size() / 3;
   attrs.vertices.resize(num_vertices);
   attrs.faces.resize(num_faces);
+  attrs.trajectory_positions.resize(num_trajectory_points);
   for (size_t i = 0; i < num_vertices; ++i) {
     pcl::PointXYZRGBA& vertex = attrs.vertices[i];
     vertex.x = xyz[3 * i];
@@ -153,6 +168,12 @@ void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
     for (size_t j = 0; j < 3; ++j) {
       face[j] = faces[3 * i + j];
     }
+  }
+  for (size_t i = 0; i < num_trajectory_points; ++i) {
+    Eigen::Vector3f& pos = attrs.trajectory_positions[i];
+    pos.x() = trajectory[3 * i];
+    pos.y() = trajectory[3 * i + 1];
+    pos.z() = trajectory[3 * i + 2];
   }
 }
 

@@ -337,6 +337,12 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
   MeshVertices vertices;
   MeshFaces faces;
 
+  // If the object is considered dynamic, store the trajectory of the object.
+  // NOTE(lschmid): Currently dynamic and static objects just have the
+  // khronos-attributes. Could change in the future.
+  std::vector<uint64_t> trajectory_timestamps;
+  std::vector<Eigen::Vector3f> trajectory_positions;
+
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
 };
