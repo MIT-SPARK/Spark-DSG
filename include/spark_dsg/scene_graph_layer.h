@@ -65,8 +65,10 @@ class SceneGraphLayer : public BaseLayer {
   using Edge = SceneGraphEdge;
   //! edge container type for the layer
   using Edges = EdgeContainer::Edges;
+  //! callback function for filtering nodes
+  using NodeChecker = std::function<bool(const Node&)>;
 
-  friend class DynamicSceneGraph;
+      friend class DynamicSceneGraph;
   friend class SceneGraphLogger;
 
   /**
@@ -212,7 +214,7 @@ class SceneGraphLayer : public BaseLayer {
   /**
    * @brief Get copy of the layer
    */
-  virtual SceneGraphLayer::Ptr clone() const;
+  virtual SceneGraphLayer::Ptr clone(const NodeChecker& is_valid = {}) const;
 
   //! ID of the layer
   const LayerId id;
@@ -282,7 +284,7 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool mergeNodes(NodeId node_from, NodeId node_to);
 
-  virtual void cloneImpl(SceneGraphLayer& other) const;
+  virtual void cloneImpl(SceneGraphLayer& other, const NodeChecker& is_valid) const;
 
   //! internal node container
   Nodes nodes_;
@@ -322,7 +324,7 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
 
   virtual ~IsolatedSceneGraphLayer() = default;
 
-  virtual SceneGraphLayer::Ptr clone() const override;
+  virtual SceneGraphLayer::Ptr clone(const NodeChecker& is_valid = {}) const override;
 
   using SceneGraphLayer::emplaceNode;
 
