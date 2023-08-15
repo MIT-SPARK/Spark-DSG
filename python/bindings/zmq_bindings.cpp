@@ -45,11 +45,11 @@ namespace py = pybind11;
 void add_zmq_bindings(pybind11::module_& module) {
   py::class_<ZmqSender>(module, "DsgSender")
       .def(py::init<const std::string&, size_t>(), "url"_a, "num_threads"_a = 1)
-      .def("send", &ZmqSender::send);
+      .def("send", &ZmqSender::send, "graph"_a, "include_mesh"_a = false);
 
   py::class_<ZmqReceiver>(module, "DsgReceiver")
       .def(py::init<const std::string&, size_t>(), "url"_a, "num_threads"_a = 1)
-      .def("recv", &ZmqReceiver::recv)
+      .def("recv", &ZmqReceiver::recv, "timeout_ms"_a, "recv_all"_a = false)
       .def_property_readonly("graph", [](const ZmqReceiver& receiver) {
         if (!receiver.graph()) {
           throw pybind11::value_error("no graph received yet");
