@@ -267,6 +267,49 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
+////////////////////////////////////////////////
+/**
+ * @brief Additional node attributes for a 2d (outdoor) place
+ * In addition to the normal semantic properties, a 2d place has ...
+*/
+struct Place2dNodeAttributes : public SemanticNodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! desired pointer type of node
+  using Ptr = std::unique_ptr<Place2dNodeAttributes>;
+  //! color type for node
+  using ColorVector = SemanticNodeAttributes::ColorVector;
+
+  Place2dNodeAttributes();
+
+  /**
+   * @brief make places node attributes
+   * @param boundary Boundary points surrounding place
+   */
+  Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary);
+
+  virtual ~Place2dNodeAttributes() = default;
+
+  virtual NodeAttributes::Ptr clone() const override {
+    return std::make_unique<Place2dNodeAttributes>(*this);
+  }
+
+  //! points on boundary of place region
+  std::vector<Eigen::Vector3d> boundary;
+  //! voxblox mesh vertices that are closest to this place
+  std::vector<NearestVertexInfo> voxblox_mesh_connections;
+  //! pcl mesh vertices that are closest to this place
+  std::vector<size_t> pcl_mesh_connections;
+  //! semantic labels of parents
+  std::vector<uint8_t> mesh_vertex_labels;
+  //! deformation vertices that are closest to this place
+  std::vector<size_t> deformation_connections;
+
+ protected:
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
+};
+
+////////////////////////////////////////////////
 struct AgentNodeAttributes : public NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

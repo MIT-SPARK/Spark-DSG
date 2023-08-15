@@ -118,6 +118,27 @@ void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
   converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
   converter.read("deformation_connections", attrs.deformation_connections);
 }
+//////////////////////////////////////////////
+template <typename Converter>
+void serialize(Converter& converter, const Place2dNodeAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("boundary", attrs.boundary);
+  converter.write("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
+  converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.write("mesh_vertex_labels", attrs.mesh_vertex_labels);
+  converter.write("deformation_connections", attrs.deformation_connections);
+}
+
+template <typename Converter>
+void deserialize(const Converter& converter, Place2dNodeAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("boundary", attrs.boundary);
+  converter.read("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
+  converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
+  converter.read("deformation_connections", attrs.deformation_connections);
+}
+//////////////////////////////////////////////////
 
 template <typename Converter>
 void serialize(Converter& converter, const AgentNodeAttributes& attrs) {
