@@ -315,9 +315,10 @@ struct KhronosObjectAttributes : public SemanticNodeAttributes {
 
   // NOTE(lschmid): These are copied from dynamic_scene_graph.h to not have to depend on
   // it. Needs updates accordingly.
-  using Mesh = pcl::PolygonMesh;
+  // using Mesh = pcl::PolygonMesh;
   using MeshVertices = pcl::PointCloud<pcl::PointXYZRGBA>;
-  using MeshFaces = std::vector<pcl::Vertices>;
+  using MeshFace = Eigen::Matrix<uint32_t, 3, 1>;  // Triangular meshes.
+  using MeshFaces = std::vector<MeshFace>;
 
   /**
    * @brief Make a default set of attributes
@@ -332,7 +333,8 @@ struct KhronosObjectAttributes : public SemanticNodeAttributes {
 
   // Attributes.
   uint64_t first_observed_ns;
-  Mesh mesh;
+  MeshVertices vertices;
+  MeshFaces faces;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;

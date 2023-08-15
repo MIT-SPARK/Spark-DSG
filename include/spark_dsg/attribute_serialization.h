@@ -91,16 +91,67 @@ template <typename Converter>
 void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
   serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
   converter.write("first_observed_ns", attrs.first_observed_ns);
-  // converter.write("vertices", attrs.mesh.cloud);
-  // converter.write("faces", attrs.mesh.polygons);
+
+  // Work around for mesh for now: Pack vertices and faces into vectors.
+  std::vector<float> xyz;
+  std::vector<uint8_t> rgba;
+  std::vector<uint32_t> faces;
+  xyz.reserve(3 * attrs.vertices.size());
+  rgba.reserve(4 * attrs.vertices.size());
+  faces.reserve(3 * attrs.faces.size());
+  for (const auto& vertex : attrs.vertices) {
+    xyz.emplace_back(vertex.x);
+    xyz.emplace_back(vertex.y);
+    xyz.emplace_back(vertex.z);
+    rgba.emplace_back(vertex.r);
+    rgba.emplace_back(vertex.g);
+    rgba.emplace_back(vertex.b);
+    rgba.emplace_back(vertex.a);
+  }
+  for (const auto& face : attrs.faces) {
+    for (size_t i = 0; i < 3; ++i) {
+      faces.emplace_back(face[i]);
+    }
+  }
+  converter.write("vertices", xyz);
+  converter.write("colors", rgba);
+  converter.write("faces", faces);
 }
 
 template <typename Converter>
 void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
   deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
   converter.read("first_observed_ns", attrs.first_observed_ns);
-  // converter.read("vertices", attrs.mesh.cloud);
-  // converter.read("faces", attrs.mesh.polygons);
+
+  // Undo work around for mesh.
+  // NOTE(lschmid): Could also check for validity here but unless someone messes with
+  // the data it will be valid as constructed above.
+  std::vector<float> xyz;
+  std::vector<uint8_t> rgba;
+  std::vector<uint32_t> faces;
+  converter.read("vertices", xyz);
+  converter.read("colors", rgba);
+  converter.read("faces", faces);
+  const size_t num_vertices = xyz.size() / 3;
+  const size_t num_faces = faces.size() / 3;
+  attrs.vertices.resize(num_vertices);
+  attrs.faces.resize(num_faces);
+  for (size_t i = 0; i < num_vertices; ++i) {
+    pcl::PointXYZRGBA& vertex = attrs.vertices[i];
+    vertex.x = xyz[3 * i];
+    vertex.y = xyz[3 * i + 1];
+    vertex.z = xyz[3 * i + 2];
+    vertex.r = rgba[4 * i];
+    vertex.g = rgba[4 * i + 1];
+    vertex.b = rgba[4 * i + 2];
+    vertex.a = rgba[4 * i + 3];
+  }
+  for (size_t i = 0; i < num_faces; ++i) {
+    KhronosObjectAttributes::MeshFace& face = attrs.faces[i];
+    for (size_t j = 0; j < 3; ++j) {
+      face[j] = faces[3 * i + j];
+    }
+  }
 }
 
 template <typename Converter>
