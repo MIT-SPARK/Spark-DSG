@@ -326,7 +326,16 @@ std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
     return record.dump();
   }
 
+<<<<<<< HEAD
   record["mesh"] = *mesh_;
+=======
+  record["mesh"]["vertices"] = *mesh_vertices_;
+  record["mesh"]["faces"] = *mesh_faces_;
+  record["mesh"]["time_stamps"] = mesh_timestamps_;
+  if (mesh_labels_) {
+    record["mesh"]["labels"] = *mesh_labels_;
+  }
+>>>>>>> add timestamps to mesh json serialization
   return record.dump();
 }
 
@@ -377,8 +386,27 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
         });
   }
 
+<<<<<<< HEAD
   if (!record.contains("mesh")) {
     return graph;
+=======
+  if (record.contains("mesh")) {
+    MeshVertices::Ptr new_vertices(new MeshVertices());
+    *new_vertices = record.at("mesh").at("vertices").get<MeshVertices>();
+
+    auto faces = record.at("mesh").at("faces").get<MeshFaces>();
+    auto new_faces = std::make_shared<MeshFaces>(faces.begin(), faces.end());
+
+    auto labels = std::make_shared<std::vector<uint32_t>>();
+    if (record.at("mesh").contains("labels")) {
+      *labels = record.at("mesh").at("labels").get<std::vector<uint32_t>>();
+    }
+    auto mesh_timestamps =
+        record.at("mesh").at("time_stamps").get<std::vector<uint64_t>>();
+
+    // clear all previous edges
+    graph->setMesh(new_vertices, new_faces, labels, mesh_timestamps);
+>>>>>>> add timestamps to mesh json serialization
   }
 
   auto mesh = std::make_shared<Mesh>(record.at("mesh").get<Mesh>());
