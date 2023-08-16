@@ -803,6 +803,8 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
     to_return->mesh_ = mesh_->clone();
   }
 
+  to_return->mesh_timestamps_ = mesh_timestamps_;
+
   return to_return;
 }
 
