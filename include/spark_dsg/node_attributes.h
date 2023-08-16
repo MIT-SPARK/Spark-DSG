@@ -267,7 +267,6 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
-////////////////////////////////////////////////
 /**
  * @brief Additional node attributes for a 2d (outdoor) place
  * In addition to the normal semantic properties, a 2d place has ...
@@ -309,7 +308,6 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
-////////////////////////////////////////////////
 struct AgentNodeAttributes : public NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

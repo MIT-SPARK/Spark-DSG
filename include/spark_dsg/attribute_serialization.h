@@ -118,7 +118,7 @@ void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
   converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
   converter.read("deformation_connections", attrs.deformation_connections);
 }
-//////////////////////////////////////////////
+
 template <typename Converter>
 void serialize(Converter& converter, const Place2dNodeAttributes& attrs) {
   serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
@@ -138,7 +138,6 @@ void deserialize(const Converter& converter, Place2dNodeAttributes& attrs) {
   converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
   converter.read("deformation_connections", attrs.deformation_connections);
 }
-//////////////////////////////////////////////////
 
 template <typename Converter>
 void serialize(Converter& converter, const AgentNodeAttributes& attrs) {
