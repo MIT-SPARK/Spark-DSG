@@ -295,6 +295,8 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
 
   //! points on boundary of place region
   std::vector<Eigen::Vector3d> boundary;
+  //! pcl mesh vertices corresponding to boundary points
+  std::vector<size_t> pcl_boundary_connections;
   //! voxblox mesh vertices that are closest to this place
   std::vector<NearestVertexInfo> voxblox_mesh_connections;
   //! pcl mesh vertices that are closest to this place

@@ -244,6 +244,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<Place2dNodeAttributes, SemanticNodeAttributes>(module, "Place2dNodeAttributes")
       .def(py::init<>())
       .def_readwrite("boundary", &Place2dNodeAttributes::boundary)
+      .def_readwrite("pcl_boundary_connections", &Place2dNodeAttributes::pcl_boundary_connections)
       .def_readwrite("voxblox_mesh_connections",
                      &Place2dNodeAttributes::voxblox_mesh_connections)
       .def_readwrite("pcl_mesh_connections", &Place2dNodeAttributes::pcl_mesh_connections)
