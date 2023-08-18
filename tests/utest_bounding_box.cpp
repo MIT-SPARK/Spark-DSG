@@ -263,19 +263,8 @@ TEST(BoundingBoxTests, InvalidVolumeChecksCorrect) {
 
   BoundingBox box;
   EXPECT_FALSE(std::isfinite(box.volume()));
-  try {
-    box.isInside(test_point1);
-    FAIL();
-  } catch (const std::runtime_error&) {
-    SUCCEED();
-  }
-
-  try {
-    box.isInside(test_point2);
-    FAIL();
-  } catch (const std::runtime_error&) {
-    SUCCEED();
-  }
+  EXPECT_FALSE(box.isInside(Eigen::Vector3f(1.0f, 2.0f, 3.0f)));
+  EXPECT_FALSE(box.isInside(Eigen::Vector3f(1.0, 2.0, 3.0)));
 }
 
 TEST(BoundingBoxTests, AABBVolumeChecksCorrect) {

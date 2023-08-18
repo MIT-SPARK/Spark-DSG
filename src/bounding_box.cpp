@@ -119,7 +119,7 @@ bool BoundingBox::isInside(const Eigen::Vector3f& point) const {
       return isInsideOBB(point);
     case Type::INVALID:
     default:
-      throw std::runtime_error("not implemented for current bounding box type");
+      return false;
   }
 }
 
