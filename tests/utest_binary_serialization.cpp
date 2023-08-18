@@ -190,6 +190,33 @@ TEST(BinarySerializationTests, SerializeEigenVector) {
   }
 }
 
+TEST(BinarySerializationTests, SerializeEigenMatrix) {
+  {  // double fixed-size matrix
+    Eigen::Matrix2d expected;
+    expected << 1.0, 2.0, 3.0, 4.0;
+
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // mixed matrix size
+    Eigen::Matrix<float, 3, Eigen::Dynamic> expected(3, 4);
+    expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f,
+        12.0f;
+
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // dynamic matrix
+    Eigen::MatrixXd expected(2, 3);
+    expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
+
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+}
+
 TEST(BinarySerializationTests, SerializeEigenQuaternion) {
   std::stringstream ss;
 

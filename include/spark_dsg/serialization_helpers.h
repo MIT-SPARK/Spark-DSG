@@ -45,33 +45,51 @@
 
 namespace nlohmann {
 
-template <typename Scalar>
-struct adl_serializer<Eigen::Matrix<Scalar, 3, 1>> {
-  static void to_json(json& j, const Eigen::Matrix<Scalar, 3, 1>& vector) {
-    j = json{vector.x(), vector.y(), vector.z()};
-  }
-
-  static void from_json(const json& j, Eigen::Matrix<Scalar, 3, 1>& vector) {
-    for (size_t i = 0; i < 3; ++i) {
-      vector(i) = j.at(i).is_null() ? std::numeric_limits<Scalar>::quiet_NaN()
-                                    : j.at(i).get<Scalar>();
+template <typename Scalar, int Rows, int Cols>
+struct adl_serializer<Eigen::Matrix<Scalar, Rows, Cols>> {
+  static void to_json(json& j, const Eigen::Matrix<Scalar, Rows, Cols>& mat) {
+    json* vec = &j;
+    if (Rows == Eigen::Dynamic && Cols == Eigen::Dynamic) {
+      j["rows"] = mat.rows();
+      j["cols"] = mat.cols();
+      vec = &j["data"];
     }
-  }
-};
 
-template <typename Scalar>
-struct adl_serializer<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>> {
-  static void to_json(json& j, const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& vector) {
-    for (int r = 0; r < vector.rows(); ++r) {
-      j.push_back(vector(r, 0));
+    for (int r = 0; r < mat.rows(); ++r) {
+      for (int c = 0; c < mat.cols(); ++c) {
+        vec->push_back(mat(r, c));
+      }
     }
   }
 
-  static void from_json(const json& j,
-                        Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& vector) {
-    vector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>(j.size(), 1);
-    for (size_t r = 0; r < j.size(); ++r) {
-      vector(r, 0) = j.at(r).get<Scalar>();
+  static void from_json(const json& j, Eigen::Matrix<Scalar, Rows, Cols>& mat) {
+    const auto* vec = &j;
+    int rows = Rows;
+    int cols = Cols;
+    if (Rows == Eigen::Dynamic && Cols == Eigen::Dynamic) {
+      rows = j.at("rows").get<int>();
+      cols = j.at("cols").get<int>();
+      vec = &(j.at("data"));
+    } else if (Rows == Eigen::Dynamic) {
+      rows = j.size() / Cols;
+    } else if (Cols == Eigen::Dynamic) {
+      cols = j.size() / Rows;
+    }
+
+    if (vec->size() != static_cast<size_t>(rows * cols)) {
+      std::stringstream ss;
+      ss << "cannot decode matrix: [" << rows << ", " << cols << "] from " << vec->size()
+         << " values";
+      throw std::runtime_error(ss.str());
+    }
+
+    mat = Eigen::Matrix<Scalar, Rows, Cols>(rows, cols);
+    for (size_t i = 0; i < vec->size(); ++i) {
+      int r = i / cols;
+      int c = i % cols;
+      const auto& value = vec->at(i);
+      mat(r, c) = value.is_null() ? std::numeric_limits<Scalar>::quiet_NaN()
+                                  : value.get<Scalar>();
     }
   }
 };

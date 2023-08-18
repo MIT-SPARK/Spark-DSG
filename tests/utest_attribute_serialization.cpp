@@ -85,6 +85,39 @@ TEST(AttributeSerializationTests, SerializeEigenVector) {
   }
 }
 
+TEST(AttributeSerializationTests, SerializeEigenMatrix) {
+  {  // double fixed-size matrix
+    Eigen::Matrix2d expected;
+    expected << 1.0, 2.0, 3.0, 4.0;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::Matrix2d>();
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // mixed matrix size
+    Eigen::Matrix<float, 3, Eigen::Dynamic> expected(3, 4);
+    expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f,
+        12.0f;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::Matrix<float, 3, Eigen::Dynamic>>();
+    EXPECT_EQ(expected, result);
+  }
+
+  { // dynamic matrix
+    Eigen::MatrixXd expected(2, 3);
+    expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::MatrixXd>();
+    EXPECT_EQ(expected, result);
+  }
+}
+
 TEST(AttributeSerializationTests, SerializeEigenQuaternion) {
   std::stringstream ss;
 
