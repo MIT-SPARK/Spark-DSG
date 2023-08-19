@@ -107,7 +107,7 @@ TEST(AttributeSerializationTests, SerializeEigenMatrix) {
     EXPECT_EQ(expected, result);
   }
 
-  { // dynamic matrix
+  {  // dynamic matrix
     Eigen::MatrixXd expected(2, 3);
     expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
 

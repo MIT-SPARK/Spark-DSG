@@ -78,8 +78,8 @@ struct adl_serializer<Eigen::Matrix<Scalar, Rows, Cols>> {
 
     if (vec->size() != static_cast<size_t>(rows * cols)) {
       std::stringstream ss;
-      ss << "cannot decode matrix: [" << rows << ", " << cols << "] from " << vec->size()
-         << " values";
+      ss << "cannot decode matrix: [" << rows << ", " << cols << "] from "
+         << vec->size() << " values";
       throw std::runtime_error(ss.str());
     }
 
