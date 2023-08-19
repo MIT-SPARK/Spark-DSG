@@ -245,11 +245,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                                                             "Place2dNodeAttributes")
       .def(py::init<>())
       .def_readwrite("boundary", &Place2dNodeAttributes::boundary)
-      .def_readwrite("ellipse_centroid_compress",
+      .def_readwrite("ellipse_matrix_compress",
                      &Place2dNodeAttributes::ellipse_centroid_compress)
-      .def_readwrite("ellipse_centroid_expand",
+      .def_readwrite("ellipse_matrix_expand",
                      &Place2dNodeAttributes::ellipse_centroid_expand)
-      .def_readwrite("ellipse_matrix", &Place2dNodeAttributes::ellipse_matrix)
+      .def_readwrite("ellipse_centroid", &Place2dNodeAttributes::ellipse_matrix)
       .def_readwrite("pcl_boundary_connections",
                      &Place2dNodeAttributes::pcl_boundary_connections)
       .def_readwrite("voxblox_mesh_connections",
