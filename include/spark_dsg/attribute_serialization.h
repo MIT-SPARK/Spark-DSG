@@ -123,6 +123,9 @@ template <typename Converter>
 void serialize(Converter& converter, const Place2dNodeAttributes& attrs) {
   serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
   converter.write("boundary", attrs.boundary);
+  converter.write("ellipse_centroid", attrs.ellipse_centroid);
+  converter.write("ellipse_matrix_compress", attrs.ellipse_matrix_compress);
+  converter.write("ellipse_matrix_expand", attrs.ellipse_matrix_expand);
   converter.write("pcl_boundary_connections", attrs.pcl_boundary_connections);
   converter.write("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
   converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
@@ -134,6 +137,9 @@ template <typename Converter>
 void deserialize(const Converter& converter, Place2dNodeAttributes& attrs) {
   deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
   converter.read("boundary", attrs.boundary);
+  converter.read("ellipse_centroid", attrs.ellipse_centroid);
+  converter.read("ellipse_matrix_compress", attrs.ellipse_matrix_compress);
+  converter.read("ellipse_matrix_expand", attrs.ellipse_matrix_expand);
   converter.read("pcl_boundary_connections", attrs.pcl_boundary_connections);
   converter.read("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
   converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);

@@ -100,19 +100,16 @@ std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-Place2dNodeAttributes::Place2dNodeAttributes()
-    : SemanticNodeAttributes() {}
+Place2dNodeAttributes::Place2dNodeAttributes() : SemanticNodeAttributes() {}
 
 Place2dNodeAttributes::Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary)
-    : SemanticNodeAttributes(),
-      boundary(boundary) {}
+    : SemanticNodeAttributes(), boundary(boundary) {}
 
 std::ostream& Place2dNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
   out << "  - boundary.size(): " << boundary.size() << std::endl;
   return out;
 }
-
 
 std::ostream& operator<<(std::ostream& out, const Eigen::Quaterniond& q) {
   return out << q.w() << " + " << q.x() << "i + " << q.y() << "j + " << q.z() << "k";

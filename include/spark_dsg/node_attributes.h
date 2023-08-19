@@ -270,7 +270,7 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
 /**
  * @brief Additional node attributes for a 2d (outdoor) place
  * In addition to the normal semantic properties, a 2d place has ...
-*/
+ */
 struct Place2dNodeAttributes : public SemanticNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -295,6 +295,12 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
 
   //! points on boundary of place region
   std::vector<Eigen::Vector3d> boundary;
+  //! center of intersection checking ellipsoid
+  Eigen::Vector3f ellipse_centroid;
+  //! shape matrix for intersection checking ellipsoid
+  Eigen::Matrix<float, 2, 2> ellipse_matrix_compress;
+  //! shape matrix for plotting ellipsoid
+  Eigen::Matrix<float, 2, 2> ellipse_matrix_expand;
   //! pcl mesh vertices corresponding to boundary points
   std::vector<size_t> pcl_boundary_connections;
   //! voxblox mesh vertices that are closest to this place

@@ -241,13 +241,21 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                      &PlaceNodeAttributes::deformation_connections)
       .def_readwrite("is_active", &PlaceNodeAttributes::is_active);
 
-  py::class_<Place2dNodeAttributes, SemanticNodeAttributes>(module, "Place2dNodeAttributes")
+  py::class_<Place2dNodeAttributes, SemanticNodeAttributes>(module,
+                                                            "Place2dNodeAttributes")
       .def(py::init<>())
       .def_readwrite("boundary", &Place2dNodeAttributes::boundary)
-      .def_readwrite("pcl_boundary_connections", &Place2dNodeAttributes::pcl_boundary_connections)
+      .def_readwrite("ellipse_centroid_compress",
+                     &Place2dNodeAttributes::ellipse_centroid_compress)
+      .def_readwrite("ellipse_centroid_expand",
+                     &Place2dNodeAttributes::ellipse_centroid_expand)
+      .def_readwrite("ellipse_matrix", &Place2dNodeAttributes::ellipse_matrix)
+      .def_readwrite("pcl_boundary_connections",
+                     &Place2dNodeAttributes::pcl_boundary_connections)
       .def_readwrite("voxblox_mesh_connections",
                      &Place2dNodeAttributes::voxblox_mesh_connections)
-      .def_readwrite("pcl_mesh_connections", &Place2dNodeAttributes::pcl_mesh_connections)
+      .def_readwrite("pcl_mesh_connections",
+                     &Place2dNodeAttributes::pcl_mesh_connections)
       .def_readwrite("mesh_vertex_labels", &Place2dNodeAttributes::mesh_vertex_labels)
       .def_readwrite("deformation_connections",
                      &Place2dNodeAttributes::deformation_connections)
