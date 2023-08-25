@@ -307,6 +307,10 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   std::vector<NearestVertexInfo> voxblox_mesh_connections;
   //! pcl mesh vertices that are closest to this place
   std::vector<size_t> pcl_mesh_connections;
+  //! min vertex index of associated mesh vertices
+  size_t pcl_min_index;
+  //! max vertex index of associated mesh vertices
+  size_t pcl_max_index;
   //! semantic labels of parents
   std::vector<uint8_t> mesh_vertex_labels;
   //! deformation vertices that are closest to this place
