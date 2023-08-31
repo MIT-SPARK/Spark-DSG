@@ -4,7 +4,7 @@ include(CMakeFindDependencyMacro)
 find_dependency(Boost REQUIRED)
 
 set(PCL_FIND_QUIETLY TRUE)
-find_dependency(PCL REQUIRED COMPONENTS)
+find_dependency(PCL REQUIRED)
 find_dependency(Eigen3 REQUIRED)
 
 if(NOT TARGET spark_dsg::spark_dsg)

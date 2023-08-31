@@ -38,6 +38,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <optional>
 
 #include "spark_dsg/bounding_box.h"
 #include "spark_dsg/scene_graph_types.h"
