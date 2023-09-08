@@ -913,6 +913,10 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
     to_return->mesh_faces_ = std::make_shared<MeshFaces>(*mesh_faces_);
   }
 
+  if (mesh_labels_) {
+    to_return->mesh_labels_ = std::make_shared<std::vector<uint32_t>>(*mesh_labels_);
+  }
+
   return to_return;
 }
 
