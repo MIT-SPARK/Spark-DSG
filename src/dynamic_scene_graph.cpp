@@ -51,15 +51,6 @@ using EdgeRef = DynamicSceneGraph::EdgeRef;
 using MeshVertices = DynamicSceneGraph::MeshVertices;
 using MeshFaces = DynamicSceneGraph::MeshFaces;
 
-namespace {
-
-inline NodeId getMergedId(NodeId original,
-                          const std::map<NodeId, NodeId>& previous_merges) {
-  return previous_merges.count(original) ? previous_merges.at(original) : original;
-}
-
-}  // namespace
-
 DynamicSceneGraph::LayerIds getDefaultLayerIds() {
   return {
       DsgLayers::OBJECTS, DsgLayers::PLACES, DsgLayers::ROOMS, DsgLayers::BUILDINGS};
@@ -717,52 +708,41 @@ bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
 }
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
-                                   const std::map<NodeId, NodeId>& previous_merges,
-                                   const std::map<LayerId, bool>* update_map,
-                                   bool update_dynamic,
-                                   bool clear_removed) {
-  for (const auto& id_layers : other.dynamicLayers()) {
-    const LayerId layer = id_layers.first;
-
-    for (const auto& prefix_layer : id_layers.second) {
-      const auto prefix = prefix_layer.first;
-      if (!hasLayer(layer, prefix)) {
-        createDynamicLayer(layer, prefix);
+                                   const GraphMergeConfig& config) {
+  for (auto&& [l_id, other_layers] : other.dynamicLayers()) {
+    for (auto&& [prefix, other_layer] : other_layers) {
+      if (!hasLayer(l_id, prefix)) {
+        createDynamicLayer(l_id, prefix);
       }
 
-      dynamic_layers_[layer][prefix]->mergeLayer(
-          *prefix_layer.second, &node_lookup_, update_dynamic);
+      dynamic_layers_[l_id][prefix]->mergeLayer(*other_layer, config, &node_lookup_);
     }
   }
 
-  for (const auto& id_layer : other.layers()) {
-    const LayerId layer = id_layer.first;
-    if (!hasLayer(layer)) {
+  for (auto&& [l_id, other_layer] : other.layers()) {
+    if (!hasLayer(l_id)) {
       continue;
     }
 
     std::vector<NodeId> removed_nodes;
-    id_layer.second->getRemovedNodes(removed_nodes, clear_removed);
+    other_layer->getRemovedNodes(removed_nodes, config.clear_removed);
     for (const auto& removed_id : removed_nodes) {
       removeNode(removed_id);
     }
 
     std::vector<EdgeKey> removed_edges;
-    id_layer.second->edges_.getRemoved(removed_edges, clear_removed);
+    other_layer->edges_.getRemoved(removed_edges, config.clear_removed);
     for (const auto& removed_edge : removed_edges) {
-      layers_[layer]->removeEdge(removed_edge.k1, removed_edge.k2);
+      layers_[l_id]->removeEdge(removed_edge.k1, removed_edge.k2);
     }
 
-    const bool update =
-        (update_map && update_map->count(layer)) ? update_map->at(layer) : true;
-    layers_[layer]->mergeLayer(
-        *id_layer.second, previous_merges, &node_lookup_, update);
+    layers_[l_id]->mergeLayer(*other_layer, config, &node_lookup_);
   }
 
   for (const auto& id_edge_pair : other.interlayer_edges()) {
     const auto& edge = id_edge_pair.second;
-    NodeId new_source = getMergedId(edge.source, previous_merges);
-    NodeId new_target = getMergedId(edge.target, previous_merges);
+    NodeId new_source = config.getMergedId(edge.source);
+    NodeId new_target = config.getMergedId(edge.target);
     if (new_source == new_target) {
       continue;
     }
@@ -772,8 +752,8 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 
   for (const auto& id_edge_pair : other.dynamic_interlayer_edges()) {
     const auto& edge = id_edge_pair.second;
-    NodeId new_source = getMergedId(edge.source, previous_merges);
-    NodeId new_target = getMergedId(edge.target, previous_merges);
+    NodeId new_source = config.getMergedId(edge.source);
+    NodeId new_target = config.getMergedId(edge.target);
     if (new_source == new_target) {
       continue;
     }
@@ -783,14 +763,6 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
 
   // TODO(Yun) check the other mesh info (faces, vertices etc. )
   return true;
-}
-
-bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
-                                   const std::map<LayerId, bool>* attribute_update_map,
-                                   bool update_dynamic_attributes,
-                                   bool clear_removed) {
-  return mergeGraph(
-      other, {}, attribute_update_map, update_dynamic_attributes, clear_removed);
 }
 
 std::vector<NodeId> DynamicSceneGraph::getRemovedNodes(bool clear_removed) {

@@ -343,6 +343,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
     Eigen::Vector3d node_pos;
     node_pos << static_cast<double>(i), 0.0, 0.0;
     EXPECT_TRUE(layer_1.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
+    layer_1.getNode(i)->get().attributes().is_active = true;
   }
   for (size_t i = 1; i < 3; ++i) {
     EXPECT_TRUE(layer_1.insertEdge(i - 1, i));

@@ -101,9 +101,9 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   const LayerPrefix prefix;
 
-  bool mergeLayer(const DynamicSceneGraphLayer& graph_layer,
-                  std::map<NodeId, LayerKey>* layer_lookup = nullptr,
-                  bool update_attributes = true);
+  bool mergeLayer(const DynamicSceneGraphLayer& other,
+                  const GraphMergeConfig& config,
+                  std::map<NodeId, LayerKey>* layer_lookup = nullptr);
 
   void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) override;
 

@@ -285,8 +285,9 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
                                     std::make_unique<NodeAttributes>(node_pos)));
   }
 
+  GraphMergeConfig config;
   std::map<NodeId, LayerKey> node_to_layer;
-  layer_1.mergeLayer(layer_2, &node_to_layer);
+  layer_1.mergeLayer(layer_2, config, &node_to_layer);
 
   EXPECT_EQ(2u, node_to_layer.size());
   EXPECT_EQ(5u, layer_1.numNodes());

@@ -489,31 +489,11 @@ class DynamicSceneGraph {
    * @brief Update graph from another graph
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
-   * @param previous_merges Prevously merged nodes in current graph
-   * @param attribute_update_map flags per layer to enable merging attributes
-   * @param update_dynamic_attributes update dynamic node attributes from other
-   * @param clear_removed Delete any removed nodes in other
+   * @param config Configuration controlling merge behavior
    * @returns true if merge was successful
    */
   bool mergeGraph(const DynamicSceneGraph& other,
-                  const std::map<NodeId, NodeId>& previous_merges,
-                  const std::map<LayerId, bool>* attribute_update_map = nullptr,
-                  bool update_dynamic_attributes = true,
-                  bool clear_removed = false);
-
-  /**
-   * @brief Update graph from another graph
-   * @note Will add the nodes and edges not previously added in current graph
-   * @param other other graph to update from
-   * @param attribute_update_map flags per layer to enable merging attributes
-   * @param update_dynamic_attributes update dynamic node attributes from other
-   * @param clear_removed Delete any removed nodes in other
-   * @returns true if merge was successful
-   */
-  bool mergeGraph(const DynamicSceneGraph& other,
-                  const std::map<LayerId, bool>* attribute_update_map = nullptr,
-                  bool update_dynamic_attributes = true,
-                  bool clear_removed = false);
+                  const GraphMergeConfig& config = {});
 
   /**
    * @brief Get all removed nodes from the graph

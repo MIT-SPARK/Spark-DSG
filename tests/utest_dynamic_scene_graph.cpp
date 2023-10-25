@@ -719,7 +719,9 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrect) {
   EXPECT_EQ(9u, graph_2.numNodes());
   EXPECT_EQ(4u, graph_2.numEdges());
 
-  graph_1.mergeGraph(graph_2);
+  GraphMergeConfig config;
+  config.update_archived_attributes = true;
+  graph_1.mergeGraph(graph_2, config);
 
   EXPECT_EQ(10u, graph_1.numNodes());
   EXPECT_EQ(6u, graph_1.numEdges());
@@ -1032,7 +1034,9 @@ TEST(DynamicSceneGraphTests, MergeGraphCorrectWithPrevMerges) {
   EXPECT_EQ(1u, graph_2.numEdges());
   EXPECT_FALSE(graph_1.hasEdge(0, 1));
 
-  graph_1.mergeGraph(graph_2, prev_merges);
+  GraphMergeConfig config;
+  config.previous_merges = &prev_merges;
+  graph_1.mergeGraph(graph_2, config);
 
   EXPECT_EQ(2u, graph_1.numNodes());
   EXPECT_EQ(1u, graph_1.numEdges());

@@ -218,15 +218,14 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
   return true;
 }
 
-inline NodeId getMergedId(NodeId original,
-                          const std::map<NodeId, NodeId>& previous_merges) {
-  return previous_merges.count(original) ? previous_merges.at(original) : original;
-}
-
 bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
-                                 const std::map<NodeId, NodeId>& previous_merges,
-                                 std::map<NodeId, LayerKey>* layer_lookup,
-                                 bool update_attributes) {
+                                 const GraphMergeConfig& config,
+                                 std::map<NodeId, LayerKey>* layer_lookup) {
+  const bool update_attributes =
+      (config.update_layer_attributes && config.update_layer_attributes->count(id))
+          ? config.update_layer_attributes->at(id)
+          : true;
+
   for (const auto& id_node_pair : other_layer.nodes_) {
     const auto siter = nodes_status_.find(id_node_pair.first);
     if (siter != nodes_status_.end() && siter->second == NodeStatus::MERGED) {
@@ -237,6 +236,10 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
     auto iter = nodes_.find(id_node_pair.first);
     if (iter != nodes_.end()) {
       if (!update_attributes) {
+        continue;
+      }
+
+      if (!config.update_archived_attributes && !iter->second->attributes_->is_active) {
         continue;
       }
 
@@ -260,8 +263,8 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
       continue;
     }
 
-    NodeId new_source = getMergedId(edge.source, previous_merges);
-    NodeId new_target = getMergedId(edge.target, previous_merges);
+    NodeId new_source = config.getMergedId(edge.source);
+    NodeId new_target = config.getMergedId(edge.target);
     if (new_source == new_target) {
       continue;
     }

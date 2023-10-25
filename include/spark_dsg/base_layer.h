@@ -41,6 +41,23 @@
 
 namespace spark_dsg {
 
+struct GraphMergeConfig {
+  const std::map<NodeId, NodeId>* previous_merges = nullptr;
+  const std::map<LayerId, bool>* update_layer_attributes = nullptr;
+  bool update_dynamic_attributes = true;
+  bool update_archived_attributes = false;
+  bool clear_removed = false;
+
+  NodeId getMergedId(NodeId original) const {
+    if (!previous_merges) {
+      return original;
+    }
+
+    auto iter = previous_merges->find(original);
+    return iter == previous_merges->end() ? original : iter->second;
+  }
+};
+
 class BaseLayer {
  public:
   //! Static node reference
