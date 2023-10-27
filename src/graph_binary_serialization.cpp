@@ -198,6 +198,15 @@ void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
     deserializer.read(face.vertices[2]);
   }
 
+  std::shared_ptr<std::vector<uint64_t>> stamps;
+  if (checkIfTrue(deserializer)) {
+    size_t num_stamps = deserializer.readFixedArrayLength();
+    stamps.reset(new std::vector<uint64_t>(num_stamps));
+    for (size_t i = 0; i < num_stamps; ++i) {
+      deserializer.read(stamps->at(i));
+    }
+  }
+
   std::shared_ptr<std::vector<uint32_t>> labels;
   if (checkIfTrue(deserializer)) {
     size_t num_labels = deserializer.readFixedArrayLength();
@@ -207,7 +216,7 @@ void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
     }
   }
 
-  graph.setMesh(vertices, faces, labels);
+  graph.setMesh(vertices, faces, stamps, labels);
 }
 
 void writeGraph(const DynamicSceneGraph& graph,
@@ -267,6 +276,15 @@ void writeGraph(const DynamicSceneGraph& graph,
   serializer.write(true);
   serializer.write(*graph.getMeshVertices());
   serializer.write(*graph.getMeshFaces());
+
+  const auto stamps = graph.getMeshStamps();
+  if (stamps) {
+    serializer.write(true);
+    serializer.write(*stamps);
+  } else {
+    serializer.write(false);
+  }
+
   const auto labels = graph.getMeshLabels();
   if (labels) {
     serializer.write(true);

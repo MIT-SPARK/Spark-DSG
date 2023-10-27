@@ -414,6 +414,7 @@ class DynamicSceneGraph {
    */
   void setMesh(const MeshVertices::Ptr& vertices,
                const std::shared_ptr<MeshFaces>& faces,
+               const std::shared_ptr<std::vector<uint64_t>>& stamps = nullptr,
                const std::shared_ptr<std::vector<uint32_t>>& labels = nullptr);
 
   /**
@@ -451,6 +452,12 @@ class DynamicSceneGraph {
    * @returns Pointer to mesh faces
    */
   std::shared_ptr<MeshFaces> getMeshFaces() const;
+
+  /**
+   * @brief Get pointer to mesh stamps (may be invalid)
+   * @returns Pointer to mesh stamps
+   */
+  std::shared_ptr<std::vector<uint64_t>> getMeshStamps() const;
 
   /**
    * @brief Get pointer to mesh labels (may be invalid)
@@ -624,6 +631,7 @@ class DynamicSceneGraph {
 
   MeshVertices::Ptr mesh_vertices_;
   std::shared_ptr<MeshFaces> mesh_faces_;
+  std::shared_ptr<std::vector<uint64_t>> mesh_stamps_;
   std::shared_ptr<std::vector<uint32_t>> mesh_labels_;
 
  public:

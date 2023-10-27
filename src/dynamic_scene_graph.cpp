@@ -561,14 +561,17 @@ Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node) const {
 void DynamicSceneGraph::initMesh(bool use_semantics) {
   setMesh(MeshVertices::Ptr(new MeshVertices()),
           std::make_shared<MeshFaces>(),
+          std::make_shared<std::vector<uint64_t>>(),
           use_semantics ? std::make_shared<std::vector<uint32_t>>() : nullptr);
 }
 
 void DynamicSceneGraph::setMesh(const MeshVertices::Ptr& vertices,
                                 const std::shared_ptr<MeshFaces>& faces,
+                                const std::shared_ptr<std::vector<uint64_t>>& stamps,
                                 const std::shared_ptr<std::vector<uint32_t>>& labels) {
   mesh_faces_ = faces;
   mesh_vertices_ = vertices;
+  mesh_stamps_ = stamps;
   mesh_labels_ = labels;
 }
 
@@ -602,6 +605,10 @@ MeshVertices::Ptr DynamicSceneGraph::getMeshVertices() const { return mesh_verti
 
 std::shared_ptr<MeshFaces> DynamicSceneGraph::getMeshFaces() const {
   return mesh_faces_;
+}
+
+std::shared_ptr<std::vector<uint64_t>> DynamicSceneGraph::getMeshStamps() const {
+  return mesh_stamps_;
 }
 
 std::shared_ptr<std::vector<uint32_t>> DynamicSceneGraph::getMeshLabels() const {
