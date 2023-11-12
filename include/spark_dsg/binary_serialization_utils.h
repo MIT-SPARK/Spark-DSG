@@ -337,6 +337,7 @@ size_t read_binary(const Deserializer& s, std::vector<T>& values) {
 
 template <typename Deserializer, typename T>
 size_t read_binary(const Deserializer& s, std::list<T>& values) {
+  values.clear();
   const size_t length = s.readFixedArrayLength();
   for (size_t i = 0; i < length; ++i) {
     T temp;
