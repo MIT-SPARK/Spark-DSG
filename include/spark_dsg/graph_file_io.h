@@ -45,7 +45,7 @@ namespace io {
 
 // Define the current project and version when serializing data with this
 // implementation.
-inline const std::string CURRENT_PROJECT_NAME = "main";
+inline const std::string CURRENT_PROJECT_NAME = "khronos";
 
 // Define file extensions and types.
 inline const std::string JSON_EXTENSION = ".json";
