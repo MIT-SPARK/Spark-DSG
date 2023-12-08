@@ -14,6 +14,8 @@ option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
+configure_file(cmake/spark_dsg_version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/spark_dsg_version.h)
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(zmq IMPORTED_TARGET libzmq)
 
@@ -42,20 +44,21 @@ add_library(
   src/adjacency_matrix.cpp
   src/binary_serializer.cpp
   src/bounding_box.cpp
-  src/dynamic_scene_graph.cpp
   src/dynamic_scene_graph_layer.cpp
+  src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
   src/graph_binary_serialization.cpp
+  src/graph_file_io.cpp
   src/graph_json_serialization.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
-  src/scene_graph_node.cpp
   src/scene_graph_layer.cpp
+  src/scene_graph_logger.cpp
+  src/scene_graph_node.cpp
   src/scene_graph_types.cpp
   src/scene_graph_utilities.cpp
   src/serialization_helpers.cpp
-  src/scene_graph_logger.cpp
 )
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
 target_include_directories(

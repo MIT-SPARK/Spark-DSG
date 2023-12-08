@@ -33,10 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <pcl/conversions.h>
 #include <spark_dsg/dynamic_scene_graph.h>
-
-#include "spark_dsg_tests/temp_file.h"
 
 namespace spark_dsg {
 
@@ -49,9 +46,9 @@ TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
   expected.insertEdge(0, 1);
   expected.insertEdge(1, 2);
 
-  const auto output = expected.serialize();
+  const auto output = expected.serializeToJson();
 
-  auto result = DynamicSceneGraph::deserialize(output);
+  auto result = DynamicSceneGraph::deserializeFromJson(output);
 
   EXPECT_EQ(expected.numNodes(), result->numNodes()) << output;
   EXPECT_EQ(expected.numEdges(), result->numEdges());
@@ -81,9 +78,9 @@ TEST(SceneGraphSerializationTests, SerializeDsgWithNaNs) {
   expected.insertEdge(1, 2);
   expected.insertEdge(2, 3);
 
-  const std::string output_str = expected.serialize();
+  const std::string output_str = expected.serializeToJson();
 
-  auto result = DynamicSceneGraph::deserialize(output_str);
+  auto result = DynamicSceneGraph::deserializeFromJson(output_str);
 
   EXPECT_EQ(expected.numNodes(), result->numNodes());
   EXPECT_EQ(expected.numEdges(), result->numEdges());
@@ -110,9 +107,9 @@ TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
   expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
   expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
 
-  const auto output = expected.serialize();
+  const auto output = expected.serializeToJson();
 
-  auto result = DynamicSceneGraph::deserialize(output);
+  auto result = DynamicSceneGraph::deserializeFromJson(output);
 
   EXPECT_EQ(expected.numNodes(), result->numNodes()) << output;
   EXPECT_EQ(expected.numEdges(), result->numEdges());
@@ -129,28 +126,6 @@ TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
   EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
 
   EXPECT_TRUE(result->hasLayer(2, 'a'));
-}
-
-TEST(SceneGraphSerializationTests, SaveAndLoadGraph) {
-  TempFile tmp_file;
-
-  DynamicSceneGraph graph;
-  graph.emplaceNode(DsgLayers::PLACES,
-                    NodeSymbol('p', 0),
-                    std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
-
-  DynamicSceneGraph::MeshVertices fake_vertices;
-  pcl::PolygonMesh fake_mesh;
-  pcl::toPCLPointCloud2(fake_vertices, fake_mesh.cloud);
-  graph.setMeshDirectly(fake_mesh);
-
-  graph.save(tmp_file.path);
-
-  auto other = DynamicSceneGraph::load(tmp_file.path);
-
-  EXPECT_EQ(graph.numNodes(), other->numNodes());
-  EXPECT_EQ(graph.numLayers(), other->numLayers());
-  EXPECT_EQ(graph.hasMesh(), other->hasMesh());
 }
 
 }  // namespace spark_dsg

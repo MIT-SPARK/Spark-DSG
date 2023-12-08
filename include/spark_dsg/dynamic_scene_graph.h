@@ -499,8 +499,7 @@ class DynamicSceneGraph {
    * @param config Configuration controlling merge behavior
    * @returns true if merge was successful
    */
-  bool mergeGraph(const DynamicSceneGraph& other,
-                  const GraphMergeConfig& config = {});
+  bool mergeGraph(const DynamicSceneGraph& other, const GraphMergeConfig& config = {});
 
   /**
    * @brief Get all removed nodes from the graph
@@ -547,32 +546,33 @@ class DynamicSceneGraph {
   DynamicSceneGraph::Ptr clone() const;
 
   /**
-   * @brief Save JSON graph representation to file
-   * @param filepath Filepath to save graph to
+   * @brief Save the DSG to file. By default, this will save a binary version of the
+   * graph. To save as JSON, specify the filepath with a .json extension.
+   * @param filepath Filepath to save graph to.
    * @param include_mesh Optionally encode mesh (defaults to true)
    */
-  void save(const std::string& filepath, bool include_mesh = true) const;
+  void save(std::string filepath, bool include_mesh = true) const;
 
   /**
    * @brief Get JSON string representing graph
    * @param include_mesh Optionally encode mesh (defaults to false)
    * @returns JSON string representing graph
    */
-  std::string serialize(bool include_mesh = false) const;
+  std::string serializeToJson(bool include_mesh = false) const;
 
   /**
-   * @brief parse graph from JSON file
-   * @param filepath Path to JSON file to read
+   * @brief parse graph from binary or JSON file
+   * @param filepath Complete path to file to read, including extension.
    * @returns Resulting parsed scene graph
    */
-  static Ptr load(const std::string& filepath);
+  static Ptr load(std::string filepath);
 
   /**
    * @brief parse graph from JSON string
    * @param contents JSON string to parse
    * @returns Resulting parsed scene graph
    */
-  static Ptr deserialize(const std::string& contents);
+  static Ptr deserializeFromJson(const std::string& contents);
 
   //! mesh layer id
   const LayerId mesh_layer_id;

@@ -34,35 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/graph_file_io.h"
-
-namespace spark_dsg {
-
-void writeGraph(const DynamicSceneGraph& graph,
-                std::vector<uint8_t>& buffer,
-                bool include_mesh = false);
-
-DynamicSceneGraph::Ptr readGraph(
-    const uint8_t* const buffer,
-    size_t length,
-    const io::FileHeader& header = io::FileHeader::current());
-
-inline DynamicSceneGraph::Ptr readGraph(
-    const std::vector<uint8_t>& buffer,
-    const io::FileHeader& header = io::FileHeader::current()) {
-  return readGraph(buffer.data(), buffer.size(), header);
-}
-
-bool updateGraph(DynamicSceneGraph& graph,
-                 const uint8_t* const buffer,
-                 size_t length,
-                 bool remove_stale = false);
-
-inline bool updateGraph(DynamicSceneGraph& graph,
-                        const std::vector<uint8_t>& buffer,
-                        bool remove_stale = false) {
-  return updateGraph(graph, buffer.data(), buffer.size(), remove_stale);
-}
-
-}  // namespace spark_dsg
+// Define variables through CMake.
+#define SPARK_DSG_VERSION_MAJOR 1
+#define SPARK_DSG_VERSION_MINOR 0
+#define SPARK_DSG_VERSION_PATCH 0

@@ -26,16 +26,17 @@ add_executable(
   utest_main.cpp
   utest_adjacency_matrix.cpp
   utest_attribute_serialization.cpp
-  utest_bounding_box.cpp
-  utest_dynamic_scene_graph.cpp
-  utest_dynamic_scene_graph_layer.cpp
-  utest_edge_container.cpp
-  utest_graph_utilities_layer.cpp
   utest_binary_serialization.cpp
+  utest_bounding_box.cpp
+  utest_dynamic_scene_graph_layer.cpp
+  utest_dynamic_scene_graph.cpp
+  utest_edge_container.cpp
+  utest_file_io.cpp
+  utest_graph_utilities_layer.cpp
   utest_json_serialization.cpp
   utest_node_symbol.cpp
-  utest_scene_graph_node.cpp
   utest_scene_graph_layer.cpp
+  utest_scene_graph_node.cpp
   utest_scene_graph_types.cpp
   utest_scene_graph_utilities.cpp
 )

@@ -211,12 +211,7 @@ EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
   return new_edges;
 }
 
-void DynamicSceneGraph::save(const std::string& filepath, bool include_mesh) const {
-  std::ofstream outfile(filepath);
-  outfile << this->serialize(include_mesh);
-}
-
-std::string DynamicSceneGraph::serialize(bool include_mesh) const {
+std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
   json record;
   record["directed"] = false;
   record["multigraph"] = false;
@@ -280,20 +275,7 @@ std::string DynamicSceneGraph::serialize(bool include_mesh) const {
   return record.dump();
 }
 
-DynamicSceneGraph::Ptr DynamicSceneGraph::load(const std::string& filepath) {
-  std::stringstream ss;
-
-  std::ifstream infile(filepath);
-  if (!infile) {
-    throw std::runtime_error("graph file does not exist: " + filepath);
-  }
-
-  ss << infile.rdbuf();
-
-  return deserialize(ss.str());
-}
-
-DynamicSceneGraph::Ptr DynamicSceneGraph::deserialize(const std::string& contents) {
+DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(const std::string& contents) {
   const auto record = json::parse(contents);
   const auto mesh_layer_id = record.at("mesh_layer_id").get<LayerId>();
   const auto layer_ids = record.at("layer_ids").get<LayerIds>();

@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+
 #include <nlohmann/json.hpp>
 
 #include "spark_dsg/attribute_factory.h"
@@ -79,12 +80,12 @@ struct JsonConverter {
 using JsonNodeFactory = NodeAttributeFactory<JsonConverter>;
 using JsonEdgeFactory = EdgeAttributeFactory<JsonConverter>;
 
-void to_json(nlohmann::json& record, const NodeAttributes& attributes) {
+inline void to_json(nlohmann::json& record, const NodeAttributes& attributes) {
   JsonConverter converter(&record);
   JsonNodeFactory::get_default().save(converter, attributes);
 }
 
-void to_json(nlohmann::json& record, const EdgeAttributes& attributes) {
+inline void to_json(nlohmann::json& record, const EdgeAttributes& attributes) {
   JsonConverter converter(&record);
   JsonEdgeFactory::get_default().save(converter, attributes);
 }
