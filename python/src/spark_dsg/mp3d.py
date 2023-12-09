@@ -418,7 +418,6 @@ def repartition_rooms(
         colors = sns.color_palette("husl", len(new_rooms))
 
     buildings = [node.id.value for node in G.get_layer(DsgLayers.BUILDINGS).nodes]
-    assert len(buildings) == 1
 
     # add new room nodes and connect them to building node
     room_id_to_gt_index = dict()  # map room node id in dsg to index in new_rooms
@@ -428,7 +427,9 @@ def repartition_rooms(
 
         room_id = room.get_id()
         G.add_node(DsgLayers.ROOMS, room_id.value, attrs)
-        G.insert_edge(room_id.value, buildings[0])
+        if len(buildings) > 0:
+            G.insert_edge(room_id.value, buildings[0])
+
         room_id_to_gt_index[room_id.value] = index
 
     # connect new room nodes to places nodes
