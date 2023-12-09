@@ -1,20 +1,15 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.16)
 project(spark_dsg_python)
 
-# TODO(nathan) fetch content when possible on 20.04
-configure_file(pybind11.CMakeLists.txt.in pybind11-download/CMakeLists.txt)
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" OUTPUT_QUIET
-)
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" --build .
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" OUTPUT_QUIET
-)
+include(FetchContent)
+FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git)
 
-add_subdirectory(
-  ${CMAKE_CURRENT_BINARY_DIR}/pybind11-src ${CMAKE_CURRENT_BINARY_DIR}/pybind11-build
-)
+FetchContent_GetProperties(pybind11)
+if(NOT googletest_POPULATED)
+  FetchContent_Populate(pybind11)
+endif()
+
+add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR} EXCLUDE_FROM_ALL)
 
 set(ZMQ_INTERFACE_ENABLED 0)
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)

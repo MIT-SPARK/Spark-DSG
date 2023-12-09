@@ -32,7 +32,7 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/serialization_helpers.h"
+#include "serialization_helpers.h"
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>

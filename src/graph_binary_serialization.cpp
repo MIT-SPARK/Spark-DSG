@@ -296,7 +296,7 @@ void writeGraph(const DynamicSceneGraph& graph,
 
 DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer,
                                  size_t length,
-                                 const io::FileHeader& header) {
+                                 const io::FileHeader&) {
   BinaryDeserializer deserializer(buffer, length);
 
   std::vector<LayerId> layer_ids;

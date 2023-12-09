@@ -34,9 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 #include <spark_dsg/attribute_factory.h>
-#include <spark_dsg/graph_json_serialization.h>
-#include <spark_dsg/serialization_helpers.h>
 
+#include "graph_json_serialization.h"
+#include "serialization_helpers.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
@@ -107,7 +107,7 @@ TEST(AttributeSerializationTests, SerializeEigenMatrix) {
     EXPECT_EQ(expected, result);
   }
 
-  { // dynamic matrix
+  {  // dynamic matrix
     Eigen::MatrixXd expected(2, 3);
     expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
 

@@ -110,8 +110,8 @@ setup(
             sourcedir=".",
             extra_cmake_flags=[
                 "-DSPARK_DSG_BUILD_TESTS=OFF",
+                "-DSPARK_DSG_BUILD_EXAMPLES=OFF",
                 "-DSPARK_DSG_BUILD_PYTHON=ON",
-                "-DSPARK_DSG_INSTALL=OFF",
                 "-DBUILD_SHARED_LIBS=OFF",
             ],
         )

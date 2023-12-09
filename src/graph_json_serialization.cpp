@@ -32,14 +32,14 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/graph_json_serialization.h"
+#include "graph_json_serialization.h"
 
 #include <fstream>
 
+#include "serialization_helpers.h"
 #include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/scene_graph_layer.h"
-#include "spark_dsg/serialization_helpers.h"
 
 namespace spark_dsg {
 
@@ -275,7 +275,8 @@ std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
   return record.dump();
 }
 
-DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(const std::string& contents) {
+DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
+    const std::string& contents) {
   const auto record = json::parse(contents);
   const auto mesh_layer_id = record.at("mesh_layer_id").get<LayerId>();
   const auto layer_ids = record.at("layer_ids").get<LayerIds>();
