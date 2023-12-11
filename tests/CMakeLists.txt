@@ -43,8 +43,7 @@ target_link_libraries(
   utest_${PROJECT_NAME} PRIVATE ${PROJECT_NAME} GTest::gtest_main
                                 nlohmann_json::nlohmann_json
 )
-
-gtest_discover_tests(utest_${PROJECT_NAME} DISCOVERY_MODE PRE_TEST)
+gtest_add_tests(TARGET utest_${PROJECT_NAME})
 
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
   target_sources(
