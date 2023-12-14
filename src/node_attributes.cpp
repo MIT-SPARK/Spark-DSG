@@ -39,7 +39,7 @@ namespace spark_dsg {
 NodeAttributes::NodeAttributes() : NodeAttributes(Eigen::Vector3d::Zero()) {}
 
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)
-    : position(pos), last_update_time_ns(0) {}
+    : position(pos), last_update_time_ns(0), is_active(false) {}
 
 std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
   auto format = getDefaultVectorFormat();
@@ -69,7 +69,9 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
 }
 
 ObjectNodeAttributes::ObjectNodeAttributes()
-    : SemanticNodeAttributes(), world_R_object(Eigen::Quaterniond::Identity()) {}
+    : SemanticNodeAttributes(),
+      world_R_object(Eigen::Quaterniond::Identity()),
+      registered(false) {}
 
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   // TODO(nathan) think about printing out rotation here

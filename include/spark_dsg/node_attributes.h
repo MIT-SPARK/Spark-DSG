@@ -88,7 +88,7 @@ struct NodeAttributes {
   //! last time the place was updated (while active)
   uint64_t last_update_time_ns;
   //! whether or not the node is in the active window
-  bool is_active = false;
+  bool is_active;
 
  protected:
   //! actually output information to the std::ostream
@@ -126,7 +126,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   }
 
   //! Name of the node
-  std::string name = "";
+  std::string name;
   //! Color of the node (if it exists)
   ColorVector color;
   //! Extents of the node (if they exists)
