@@ -39,7 +39,7 @@ namespace spark_dsg {
 NodeAttributes::NodeAttributes() : NodeAttributes(Eigen::Vector3d::Zero()) {}
 
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)
-    : position(pos), last_update_time_ns(0) {}
+    : position(pos), last_update_time_ns(0), is_active(false) {}
 
 std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
   auto format = getDefaultVectorFormat();
