@@ -70,8 +70,8 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
 
 ObjectNodeAttributes::ObjectNodeAttributes()
     : SemanticNodeAttributes(),
-      world_R_object(Eigen::Quaterniond::Identity()),
-      registered(false) {}
+      registered(false),
+      world_R_object(Eigen::Quaterniond::Identity()) {}
 
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   // TODO(nathan) think about printing out rotation here
