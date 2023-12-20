@@ -47,6 +47,10 @@ namespace io {
 // implementation.
 inline const std::string CURRENT_PROJECT_NAME = "khronos";
 
+// Which project names are compatible. <current, {compatible, ...}>
+inline const std::unordered_map<std::string, std::unordered_set<std::string>>
+    PROJECT_COMPATIBILITY = {{"khronos", {"main"}}};
+
 // Define file extensions and types.
 inline const std::string JSON_EXTENSION = ".json";
 inline const std::string BSON_EXTENSION = ".bson";
@@ -140,6 +144,9 @@ struct FileHeader {
  */
 void checkCompatibility(const FileHeader& loaded,
                         const FileHeader& current = FileHeader::current());
+
+void checkProjectCompatibility(const FileHeader& loaded,
+                               const FileHeader& current = FileHeader::current());
 
 }  // namespace io
 
