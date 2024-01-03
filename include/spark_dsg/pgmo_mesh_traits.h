@@ -32,61 +32,41 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "serialization_helpers.h"
-
-using nlohmann::json;
+#pragma once
+#include "spark_dsg/mesh.h"
 
 namespace spark_dsg {
 
-void to_json(json& j, const BoundingBox& b) {
-  j = json{{"type", b.type},
-           {"min", b.min},
-           {"max", b.max},
-           {"world_P_center", b.world_P_center},
-           {"world_R_center", Eigen::Quaternionf(b.world_R_center)}};
-}
+using PgmoFace = std::array<size_t, 3>;
+using PgmoColor = std::array<uint8_t, 3>;
 
-void from_json(const json& j, BoundingBox& b) {
-  if (j.at("type").is_null()) {
-    b.type = BoundingBox::Type::RAABB;
-  } else {
-    b.type = j.at("type").get<BoundingBox::Type>();
-  }
+size_t pgmoNumVertices(const Mesh& mesh);
 
-  if (b.type == BoundingBox::Type::INVALID) {
-    return;
-  }
+void pgmoResizeVertices(Mesh& mesh, size_t size);
 
-  b.min = j.at("min").get<Eigen::Vector3f>();
-  b.max = j.at("max").get<Eigen::Vector3f>();
-  b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
-  auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
-  b.world_R_center = world_q_center.toRotationMatrix();
-}
+Eigen::Vector3f pgmoGetVertex(const Mesh& mesh,
+                              size_t i,
+                              std::optional<PgmoColor>* color,
+                              std::optional<uint8_t>* alpha,
+                              std::optional<uint64_t>* timestamp,
+                              std::optional<uint32_t>* label);
 
-void to_json(json& j, const NearestVertexInfo& info) {
-  j = json{
-      {"block", info.block}, {"voxel_pos", info.voxel_pos}, {"vertex", info.vertex}};
+void pgmoSetVertex(Mesh& mesh,
+                   size_t i,
+                   const Eigen::Vector3f& pos,
+                   const std::optional<PgmoColor>& color,
+                   const std::optional<uint8_t>& alpha,
+                   const std::optional<uint64_t>& timestamp,
+                   const std::optional<uint32_t>& label);
 
-  if (info.label) {
-    j["label"] = info.label.value();
-  } else {
-    j["label"] = nullptr;
-  }
-}
+uint64_t pgmoGetVertexStamp(const Mesh& mesh, size_t i);
 
-void from_json(const json& j, NearestVertexInfo& info) {
-  info.block[0] = j.at("block").at(0).get<int32_t>();
-  info.block[1] = j.at("block").at(1).get<int32_t>();
-  info.block[2] = j.at("block").at(2).get<int32_t>();
-  info.voxel_pos[0] = j.at("voxel_pos").at(0).get<double>();
-  info.voxel_pos[1] = j.at("voxel_pos").at(1).get<double>();
-  info.voxel_pos[2] = j.at("voxel_pos").at(2).get<double>();
-  info.vertex = j.at("vertex");
+size_t pgmoNumFaces(const Mesh& mesh);
 
-  if (j.contains("label") && !j.at("label").is_null()) {
-    info.label = j.at("label").get<uint32_t>();
-  }
-}
+void pgmoResizeFaces(Mesh& mesh, size_t size);
+
+PgmoFace pgmoGetFace(const Mesh& mesh, size_t i);
+
+void pgmoSetFace(Mesh& mesh, size_t i, const PgmoFace& face);
 
 }  // namespace spark_dsg

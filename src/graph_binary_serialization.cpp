@@ -155,68 +155,10 @@ void updateEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph
   conv.finalize();
 }
 
-bool checkIfTrue(const BinaryDeserializer& deserializer) {
-  serialization::PackType type;
-  try {
-    type = deserializer.getCurrType();
-    deserializer.checkType(type);
-  } catch (...) {
-    return false;
-  }
-
-  return type == serialization::PackType::TRUE;
-}
-
 void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
-  size_t num_vertices = deserializer.readFixedArrayLength() / 6;
-  MeshVertices::Ptr vertices(new MeshVertices());
-  vertices->resize(num_vertices);
-  for (size_t i = 0; i < num_vertices; ++i) {
-    auto& point = vertices->at(i);
-    deserializer.read(point.x);
-    deserializer.read(point.y);
-    deserializer.read(point.z);
-    float r;
-    deserializer.read(r);
-    float g;
-    deserializer.read(g);
-    float b;
-    deserializer.read(b);
-
-    point.r = static_cast<uint8_t>(255.0f * r);
-    point.g = static_cast<uint8_t>(255.0f * g);
-    point.b = static_cast<uint8_t>(255.0f * b);
-  }
-
-  size_t num_faces = deserializer.readFixedArrayLength() / 3;
-  std::shared_ptr<MeshFaces> faces(new MeshFaces(num_faces));
-  for (size_t i = 0; i < num_faces; ++i) {
-    auto& face = faces->at(i);
-    face.vertices.resize(3);
-    deserializer.read(face.vertices[0]);
-    deserializer.read(face.vertices[1]);
-    deserializer.read(face.vertices[2]);
-  }
-
-  std::shared_ptr<std::vector<uint64_t>> stamps;
-  if (checkIfTrue(deserializer)) {
-    size_t num_stamps = deserializer.readFixedArrayLength();
-    stamps.reset(new std::vector<uint64_t>(num_stamps));
-    for (size_t i = 0; i < num_stamps; ++i) {
-      deserializer.read(stamps->at(i));
-    }
-  }
-
-  std::shared_ptr<std::vector<uint32_t>> labels;
-  if (checkIfTrue(deserializer)) {
-    size_t num_labels = deserializer.readFixedArrayLength();
-    labels.reset(new std::vector<uint32_t>(num_labels));
-    for (size_t i = 0; i < num_labels; ++i) {
-      deserializer.read(labels->at(i));
-    }
-  }
-
-  graph.setMesh(vertices, faces, stamps, labels);
+  const auto mesh_ref = deserializer.ref + deserializer.pos;
+  auto mesh = Mesh::deserializeFromBinary(mesh_ref, deserializer.buffer_length);
+  graph.setMesh(mesh);
 }
 
 void writeGraph(const DynamicSceneGraph& graph,
@@ -268,30 +210,14 @@ void writeGraph(const DynamicSceneGraph& graph,
   }
   serializer.writeArrayEnd();
 
-  if (!include_mesh || !graph.hasMesh()) {
+  auto mesh = graph.mesh();
+  if (!include_mesh || !mesh) {
     serializer.write(false);
     return;
   }
 
   serializer.write(true);
-  serializer.write(*graph.getMeshVertices());
-  serializer.write(*graph.getMeshFaces());
-
-  const auto stamps = graph.getMeshStamps();
-  if (stamps) {
-    serializer.write(true);
-    serializer.write(*stamps);
-  } else {
-    serializer.write(false);
-  }
-
-  const auto labels = graph.getMeshLabels();
-  if (labels) {
-    serializer.write(true);
-    serializer.write(*labels);
-  } else {
-    serializer.write(false);
-  }
+  mesh->serializeToBinary(buffer);
 }
 
 DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer,
@@ -321,7 +247,7 @@ DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer,
     insertEdge(deserializer, *graph);
   }
 
-  if (!checkIfTrue(deserializer)) {
+  if (!deserializer.checkIfTrue()) {
     return graph;
   }
 
@@ -361,7 +287,7 @@ bool updateGraphNormal(DynamicSceneGraph& graph,
     updateEdge(deserializer, graph);
   }
 
-  if (!checkIfTrue(deserializer)) {
+  if (!deserializer.checkIfTrue()) {
     return true;
   }
 
@@ -418,7 +344,7 @@ bool updateGraphRemoveStale(DynamicSceneGraph& graph,
   }
   graph.removeAllStaleEdges();
 
-  if (!checkIfTrue(deserializer)) {
+  if (!deserializer.checkIfTrue()) {
     return true;
   }
 

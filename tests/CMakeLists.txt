@@ -24,6 +24,7 @@ add_executable(
   utest_attribute_serialization.cpp
   utest_binary_serialization.cpp
   utest_bounding_box.cpp
+  utest_bounding_box_extraction.cpp
   utest_dynamic_scene_graph_layer.cpp
   utest_dynamic_scene_graph.cpp
   utest_edge_container.cpp

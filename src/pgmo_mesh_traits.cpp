@@ -32,61 +32,80 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "serialization_helpers.h"
-
-using nlohmann::json;
+#include "spark_dsg/pgmo_mesh_traits.h"
 
 namespace spark_dsg {
 
-void to_json(json& j, const BoundingBox& b) {
-  j = json{{"type", b.type},
-           {"min", b.min},
-           {"max", b.max},
-           {"world_P_center", b.world_P_center},
-           {"world_R_center", Eigen::Quaternionf(b.world_R_center)}};
-}
+size_t pgmoNumVertices(const Mesh& mesh) { return mesh.numVertices(); }
 
-void from_json(const json& j, BoundingBox& b) {
-  if (j.at("type").is_null()) {
-    b.type = BoundingBox::Type::RAABB;
-  } else {
-    b.type = j.at("type").get<BoundingBox::Type>();
+void pgmoResizeVertices(Mesh& mesh, size_t size) { mesh.resizeVertices(size); }
+
+Eigen::Vector3f pgmoGetVertex(const Mesh& mesh,
+                              size_t i,
+                              std::optional<PgmoColor>* color,
+                              std::optional<uint8_t>* alpha,
+                              std::optional<uint64_t>* timestamp,
+                              std::optional<uint32_t>* label) {
+  if (mesh.has_colors && color) {
+    const auto c = mesh.color(i);
+    *color = {{c.r, c.g, c.b}};
+    if (alpha) {
+      *alpha = c.a;
+    }
   }
 
-  if (b.type == BoundingBox::Type::INVALID) {
-    return;
+  if (mesh.has_timestamps && timestamp) {
+    *timestamp = mesh.timestamp(i);
   }
 
-  b.min = j.at("min").get<Eigen::Vector3f>();
-  b.max = j.at("max").get<Eigen::Vector3f>();
-  b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
-  auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
-  b.world_R_center = world_q_center.toRotationMatrix();
+  if (mesh.has_labels && label) {
+    *label = mesh.label(i);
+  }
+
+  return mesh.pos(i);
 }
 
-void to_json(json& j, const NearestVertexInfo& info) {
-  j = json{
-      {"block", info.block}, {"voxel_pos", info.voxel_pos}, {"vertex", info.vertex}};
+void pgmoSetVertex(Mesh& mesh,
+                   size_t i,
+                   const Eigen::Vector3f& pos,
+                   const std::optional<PgmoColor>& color,
+                   const std::optional<uint8_t>& alpha,
+                   const std::optional<uint64_t>& timestamp,
+                   const std::optional<uint32_t>& label) {
+  mesh.setPos(i, pos);
+  if (color && mesh.has_colors) {
+    const auto& pgmo_color = *color;
+    Color c;
+    c.r = pgmo_color[0];
+    c.g = pgmo_color[1];
+    c.b = pgmo_color[2];
+    c.a = alpha.value_or(255);
+    mesh.setColor(i, c);
+  }
 
-  if (info.label) {
-    j["label"] = info.label.value();
-  } else {
-    j["label"] = nullptr;
+  if (timestamp && mesh.has_timestamps) {
+    mesh.setTimestamp(i, *timestamp);
+  }
+
+  if (label && mesh.has_labels) {
+    mesh.setLabel(i, *label);
   }
 }
 
-void from_json(const json& j, NearestVertexInfo& info) {
-  info.block[0] = j.at("block").at(0).get<int32_t>();
-  info.block[1] = j.at("block").at(1).get<int32_t>();
-  info.block[2] = j.at("block").at(2).get<int32_t>();
-  info.voxel_pos[0] = j.at("voxel_pos").at(0).get<double>();
-  info.voxel_pos[1] = j.at("voxel_pos").at(1).get<double>();
-  info.voxel_pos[2] = j.at("voxel_pos").at(2).get<double>();
-  info.vertex = j.at("vertex");
-
-  if (j.contains("label") && !j.at("label").is_null()) {
-    info.label = j.at("label").get<uint32_t>();
+uint64_t pgmoGetVertexStamp(const Mesh& mesh, size_t i) {
+  if (!mesh.has_timestamps) {
+    throw std::runtime_error("mesh has no timestamps");
   }
+
+  return mesh.stamps.at(i);
 }
+
+size_t pgmoNumFaces(const Mesh& mesh) { return mesh.numFaces(); }
+
+void pgmoResizeFaces(Mesh& mesh, size_t size) { mesh.resizeFaces(size); }
+
+PgmoFace pgmoGetFace(const Mesh& mesh, size_t i) { return mesh.face(i); }
+
+void pgmoSetFace(Mesh& mesh, size_t i, const PgmoFace& face) { mesh.face(i) = face; }
 
 }  // namespace spark_dsg

@@ -33,15 +33,12 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <pcl/PolygonMesh.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-
 #include <map>
 #include <memory>
 #include <type_traits>
 
 #include "spark_dsg/dynamic_scene_graph_layer.h"
+#include "spark_dsg/mesh.h"
 #include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg {
@@ -67,12 +64,6 @@ class DynamicSceneGraph {
   using Layers = std::map<LayerId, SceneGraphLayer::Ptr>;
   //! Dynamic layer container
   using DynamicLayers = std::map<uint32_t, DynamicSceneGraphLayer::Ptr>;
-  //! Underlying mesh type for lowest layer
-  using Mesh = pcl::PolygonMesh;
-  //! Underlying mesh vertex type
-  using MeshVertices = pcl::PointCloud<pcl::PointXYZRGBA>;
-  //! Underlying mesh triangle type
-  using MeshFaces = std::vector<pcl::Vertices>;
   //! Callback type
   using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
 
@@ -393,86 +384,11 @@ class DynamicSceneGraph {
   bool empty() const;
 
   /**
-   * @brief Get the position of a node in the layer with bounds checking
+   * @brief Get the 3D position of a node
+   * @param node Node ID to retrieve position for
+   * @return Position of node
    */
   Eigen::Vector3d getPosition(NodeId node) const;
-
-  /**
-   * @brief Initialize an empty mesh
-   */
-  void initMesh(bool use_semantics = true);
-
-  /**
-   * @brief Set mesh components individually
-   *
-   * This removes any edges that point to vertices that no longer
-   * exist (i.e. if the new mesh is smaller than the old mesh)
-   *
-   * @param vertices Mesh vertices
-   * @param faces Mesh triangles
-   * @param invalidate_all_edges Clear all existing mesh edges
-   */
-  void setMesh(const MeshVertices::Ptr& vertices,
-               const std::shared_ptr<MeshFaces>& faces,
-               const std::shared_ptr<std::vector<uint64_t>>& stamps = nullptr,
-               const std::shared_ptr<std::vector<uint32_t>>& labels = nullptr);
-
-  /**
-   * @brief Set mesh components directly from a polygon mesh
-   * @note doesn't invalidate any edges
-   */
-  void setMeshDirectly(const pcl::PolygonMesh& mesh);
-
-  /**
-   * @brief Check whether the mesh exists and is valid
-   * @returns Returns true if the mesh exists and is valid
-   */
-  bool hasMesh() const;
-
-  /**
-   * @brief Check whether the scene graph contains a mesh with actual data
-   * @returns Returns true if the mesh has vertices and faces
-   */
-  bool isMeshEmpty() const;
-
-  /**
-   * @brief mesh getter
-   * @returns Return scene graph mesh
-   */
-  pcl::PolygonMesh getMesh() const;
-
-  /**
-   * @brief Get mesh vertices pointer (may be invalid)
-   * @return Pointer to mesh vertices
-   */
-  MeshVertices::Ptr getMeshVertices() const;
-
-  /**
-   * @brief Get pointer to mesh faces (may be invalid)
-   * @returns Pointer to mesh faces
-   */
-  std::shared_ptr<MeshFaces> getMeshFaces() const;
-
-  /**
-   * @brief Get pointer to mesh stamps (may be invalid)
-   * @returns Pointer to mesh stamps
-   */
-  std::shared_ptr<std::vector<uint64_t>> getMeshStamps() const;
-
-  /**
-   * @brief Get pointer to mesh labels (may be invalid)
-   * @returns Pointer to mesh labels
-   */
-  std::shared_ptr<std::vector<uint32_t>> getMeshLabels() const;
-
-  /**
-   * @brief Get the mesh vertex position (if vaild)
-   * @param vertex_id Mesh vertex index
-   * @param check_invalid Do bounds checking when getting vertex
-   * @returns Potentially valid mesh vertex position
-   */
-  std::optional<Eigen::Vector3d> getMeshPosition(size_t vertex_id,
-                                                 bool check_invalid = true) const;
 
   /**
    * @brief merge two nodes
@@ -580,6 +496,12 @@ class DynamicSceneGraph {
   //! current static layer ids in the graph
   const LayerIds layer_ids;
 
+  void setMesh(const std::shared_ptr<Mesh>& mesh);
+
+  bool hasMesh() const;
+
+  Mesh::Ptr mesh() const;
+
  protected:
   BaseLayer& layerFromKey(const LayerKey& key);
 
@@ -629,10 +551,7 @@ class DynamicSceneGraph {
   EdgeContainer interlayer_edges_;
   EdgeContainer dynamic_interlayer_edges_;
 
-  MeshVertices::Ptr mesh_vertices_;
-  std::shared_ptr<MeshFaces> mesh_faces_;
-  std::shared_ptr<std::vector<uint64_t>> mesh_stamps_;
-  std::shared_ptr<std::vector<uint32_t>> mesh_labels_;
+  std::shared_ptr<Mesh> mesh_;
 
  public:
   /**

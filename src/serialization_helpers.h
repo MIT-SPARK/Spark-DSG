@@ -33,10 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <pcl/PolygonMesh.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
 
@@ -109,22 +105,6 @@ struct adl_serializer<Eigen::Quaternion<Scalar>> {
 };
 
 }  // namespace nlohmann
-
-namespace pcl {
-
-void to_json(nlohmann::json& j, const pcl::PointCloud<pcl::PointXYZRGBA>& vertices);
-
-void to_json(nlohmann::json& j, const std::vector<pcl::Vertices>& faces);
-
-void to_json(nlohmann::json& j, const pcl::PointXYZRGBA& point);
-
-void from_json(const nlohmann::json& j, pcl::PointCloud<pcl::PointXYZRGBA>& vertices);
-
-void from_json(const nlohmann::json& j, std::vector<pcl::Vertices>& faces);
-
-void from_json(const nlohmann::json& j, pcl::PointXYZRGBA& point);
-
-}  // namespace pcl
 
 namespace spark_dsg {
 

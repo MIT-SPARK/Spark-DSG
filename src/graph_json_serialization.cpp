@@ -76,6 +76,68 @@ void to_json(json& record, const SceneGraphEdge& edge) {
   record = {{"source", edge.source}, {"target", edge.target}, {"info", *edge.info}};
 }
 
+void to_json(json& record, const Color& c) {
+  record["r"] = c.r;
+  record["g"] = c.g;
+  record["b"] = c.b;
+  record["a"] = c.a;
+}
+
+void from_json(const json& record, Color& c) {
+  c.r = record.at("r").get<uint8_t>();
+  c.g = record.at("g").get<uint8_t>();
+  c.b = record.at("b").get<uint8_t>();
+  if (record.contains("a")) {
+    c.a = record.at("a").get<uint8_t>();
+  }
+}
+
+void to_json(json& record, const Mesh& mesh) {
+  record["points"] = mesh.points;
+  record["faces"] = mesh.faces;
+  record["colors"] = mesh.colors;
+  record["stamps"] = mesh.stamps;
+  record["labels"] = mesh.labels;
+}
+
+void from_json(const json& record, Mesh& mesh) {
+  // TODO(nathan) set mesh bool flags
+  if (record.contains("vertices")) {
+    for (const auto& vertex : record.at("vertices")) {
+      Eigen::Vector3f pos(vertex.at("x").get<float>(),
+                          vertex.at("y").get<float>(),
+                          vertex.at("z").get<float>());
+      mesh.points.push_back(pos);
+
+      Color color{vertex.at("r").get<uint8_t>(),
+                  vertex.at("g").get<uint8_t>(),
+                  vertex.at("b").get<uint8_t>(),
+                  255};
+      mesh.colors.push_back(color);
+    }
+
+    for (const auto& face : record.at("faces")) {
+      mesh.faces.push_back({{face.at(0).get<size_t>(),
+                             face.at(1).get<size_t>(),
+                             face.at(2).get<size_t>()}});
+    }
+  } else {
+    mesh.points = record.at("points").get<decltype(mesh.points)>();
+    mesh.faces = record.at("faces").get<decltype(mesh.faces)>();
+    if (record.contains("colors")) {
+      mesh.colors = record.at("colors").get<decltype(mesh.colors)>();
+    }
+  }
+
+  if (record.contains("stamps")) {
+    mesh.stamps = record.at("stamps").get<decltype(mesh.stamps)>();
+  }
+
+  if (record.contains("labels")) {
+    mesh.labels = record.at("labels").get<decltype(mesh.labels)>();
+  }
+}
+
 void read_node_from_json(const json& record, NodeCallback callback) {
   auto node_id = record.at("id").get<NodeId>();
   auto layer = record.at("layer").get<LayerId>();
@@ -260,18 +322,11 @@ std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
     }
   }
 
-  if (!mesh_vertices_ || !mesh_faces_ || !include_mesh) {
+  if (!mesh_ || !include_mesh) {
     return record.dump();
   }
 
-  record["mesh"]["vertices"] = *mesh_vertices_;
-  record["mesh"]["faces"] = *mesh_faces_;
-  if (mesh_stamps_) {
-    record["mesh"]["stamps"] = *mesh_stamps_;
-  }
-  if (mesh_labels_) {
-    record["mesh"]["labels"] = *mesh_labels_;
-  }
+  record["mesh"] = *mesh_;
   return record.dump();
 }
 
@@ -322,28 +377,24 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
         });
   }
 
-  if (record.contains("mesh")) {
-    MeshVertices::Ptr new_vertices(new MeshVertices());
-    *new_vertices = record.at("mesh").at("vertices").get<MeshVertices>();
-
-    auto faces = record.at("mesh").at("faces").get<MeshFaces>();
-    auto new_faces = std::make_shared<MeshFaces>(faces.begin(), faces.end());
-
-    auto stamps = std::make_shared<std::vector<uint64_t>>();
-    if (record.at("mesh").contains("stamps")) {
-      *stamps = record.at("mesh").at("stamps").get<std::vector<uint64_t>>();
-    }
-
-    auto labels = std::make_shared<std::vector<uint32_t>>();
-    if (record.at("mesh").contains("labels")) {
-      *labels = record.at("mesh").at("labels").get<std::vector<uint32_t>>();
-    }
-
-    // clear all previous edges
-    graph->setMesh(new_vertices, new_faces, stamps, labels);
+  if (!record.contains("mesh")) {
+    return graph;
   }
 
+  auto mesh = std::make_shared<Mesh>(record.at("mesh").get<Mesh>());
+  graph->setMesh(mesh);
   return graph;
+}
+
+std::string Mesh::serializeToJson() const {
+  json record = *this;
+  return record.dump();
+}
+
+Mesh::Ptr Mesh::deserializeFromJson(const std::string& contents) {
+  const auto record = json::parse(contents);
+  auto mesh = std::make_shared<Mesh>(record.at("mesh").get<Mesh>());
+  return mesh;
 }
 
 }  // namespace spark_dsg

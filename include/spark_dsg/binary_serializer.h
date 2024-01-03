@@ -37,12 +37,7 @@
 #include "spark_dsg/binary_serialization_utils.h"
 #include "spark_dsg/dynamic_scene_graph.h"
 
-namespace spark_dsg {
-
-using MeshVertices = DynamicSceneGraph::MeshVertices;
-using MeshFaces = DynamicSceneGraph::MeshFaces;
-
-namespace serialization {
+namespace spark_dsg::serialization {
 
 #define THROW_SERIALIZATION_ERROR(msg)                     \
   std::stringstream ss;                                    \
@@ -106,6 +101,8 @@ struct BinaryDeserializer {
     return reinterpret_cast<const T*>(ref + pos);
   }
 
+  bool checkIfTrue() const;
+
   const uint8_t* const ref;
   const size_t buffer_length;
   mutable size_t pos;
@@ -165,11 +162,4 @@ void BinarySerializer::write<DynamicSceneGraphNode>(const DynamicSceneGraphNode&
 template <>
 void BinarySerializer::write<SceneGraphEdge>(const SceneGraphEdge& edge);
 
-template <>
-void BinarySerializer::write<MeshVertices>(const MeshVertices& vertices);
-
-template <>
-void BinarySerializer::write<MeshFaces>(const MeshFaces& vertices);
-
-}  // namespace serialization
-}  // namespace spark_dsg
+}  // namespace spark_dsg::serialization

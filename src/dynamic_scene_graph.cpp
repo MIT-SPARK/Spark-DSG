@@ -34,10 +34,6 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/dynamic_scene_graph.h"
 
-#include <pcl/conversions.h>
-
-#include <list>
-
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
 
@@ -48,8 +44,6 @@ using Edge = SceneGraphEdge;
 using NodeRef = DynamicSceneGraph::NodeRef;
 using DynamicNodeRef = DynamicSceneGraph::DynamicNodeRef;
 using EdgeRef = DynamicSceneGraph::EdgeRef;
-using MeshVertices = DynamicSceneGraph::MeshVertices;
-using MeshFaces = DynamicSceneGraph::MeshFaces;
 
 DynamicSceneGraph::LayerIds getDefaultLayerIds() {
   return {
@@ -81,8 +75,7 @@ void DynamicSceneGraph::clear() {
   interlayer_edges_.reset();
   dynamic_interlayer_edges_.reset();
 
-  mesh_vertices_.reset();
-  mesh_faces_.reset();
+  mesh_.reset();
 
   for (const auto& id : layer_ids) {
     layers_[id] = std::make_unique<SceneGraphLayer>(id);
@@ -309,11 +302,11 @@ bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
 }
 
 bool DynamicSceneGraph::hasLayer(LayerId layer_id) const {
-  if (layer_id != mesh_layer_id) {
-    return layers_.count(layer_id) != 0;
+  if (layer_id == mesh_layer_id) {
+    return mesh_ != nullptr;
   }
 
-  return hasMesh();
+  return layers_.count(layer_id) != 0;
 }
 
 bool DynamicSceneGraph::hasLayer(LayerId layer, LayerPrefix layer_prefix) const {
@@ -493,7 +486,7 @@ size_t DynamicSceneGraph::numDynamicLayers() const {
 
 size_t DynamicSceneGraph::numNodes(bool include_mesh) const {
   return numStaticNodes() + numDynamicNodes() +
-         ((mesh_vertices_ == nullptr || !include_mesh) ? 0 : mesh_vertices_->size());
+         ((mesh_ == nullptr || !include_mesh) ? 0 : mesh_->numVertices());
 }
 
 size_t DynamicSceneGraph::numStaticNodes() const {
@@ -556,84 +549,6 @@ Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node) const {
   }
 
   return layers_.at(info.layer)->getPosition(node);
-}
-
-void DynamicSceneGraph::initMesh(bool use_semantics) {
-  setMesh(MeshVertices::Ptr(new MeshVertices()),
-          std::make_shared<MeshFaces>(),
-          std::make_shared<std::vector<uint64_t>>(),
-          use_semantics ? std::make_shared<std::vector<uint32_t>>() : nullptr);
-}
-
-void DynamicSceneGraph::setMesh(const MeshVertices::Ptr& vertices,
-                                const std::shared_ptr<MeshFaces>& faces,
-                                const std::shared_ptr<std::vector<uint64_t>>& stamps,
-                                const std::shared_ptr<std::vector<uint32_t>>& labels) {
-  mesh_faces_ = faces;
-  mesh_vertices_ = vertices;
-  mesh_stamps_ = stamps;
-  mesh_labels_ = labels;
-}
-
-void DynamicSceneGraph::setMeshDirectly(const pcl::PolygonMesh& mesh) {
-  mesh_vertices_.reset(new MeshVertices());
-  pcl::fromPCLPointCloud2(mesh.cloud, *mesh_vertices_);
-
-  mesh_faces_.reset(new MeshFaces(mesh.polygons.begin(), mesh.polygons.end()));
-}
-
-bool DynamicSceneGraph::hasMesh() const {
-  return mesh_vertices_ != nullptr && mesh_faces_ != nullptr;
-}
-
-bool DynamicSceneGraph::isMeshEmpty() const {
-  if (!hasMesh()) {
-    return true;
-  }
-
-  return mesh_vertices_->empty() && mesh_faces_->empty();
-}
-
-pcl::PolygonMesh DynamicSceneGraph::getMesh() const {
-  pcl::PolygonMesh mesh;
-  pcl::toPCLPointCloud2(*mesh_vertices_, mesh.cloud);
-  mesh.polygons = *mesh_faces_;
-  return mesh;
-};
-
-MeshVertices::Ptr DynamicSceneGraph::getMeshVertices() const { return mesh_vertices_; }
-
-std::shared_ptr<MeshFaces> DynamicSceneGraph::getMeshFaces() const {
-  return mesh_faces_;
-}
-
-std::shared_ptr<std::vector<uint64_t>> DynamicSceneGraph::getMeshStamps() const {
-  return mesh_stamps_;
-}
-
-std::shared_ptr<std::vector<uint32_t>> DynamicSceneGraph::getMeshLabels() const {
-  return mesh_labels_;
-}
-
-std::optional<Eigen::Vector3d> DynamicSceneGraph::getMeshPosition(
-    size_t idx, bool check_invalid) const {
-  if (!mesh_vertices_) {
-    return std::nullopt;
-  }
-
-  if (idx >= mesh_vertices_->size()) {
-    return std::nullopt;
-  }
-
-  const pcl::PointXYZRGBA& point = mesh_vertices_->at(idx);
-
-  // TODO(nathan) this is awkward, but probably fine in the short term
-  if (check_invalid && point.x == 0.0f && point.y == 0.0f && point.z == 0.0f) {
-    return std::nullopt;
-  }
-
-  Eigen::Vector3d pos(point.x, point.y, point.z);
-  return pos;
 }
 
 bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
@@ -884,16 +799,8 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
     to_return->insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
-  if (mesh_vertices_) {
-    to_return->mesh_vertices_.reset(new MeshVertices(*mesh_vertices_));
-  }
-
-  if (mesh_faces_) {
-    to_return->mesh_faces_ = std::make_shared<MeshFaces>(*mesh_faces_);
-  }
-
-  if (mesh_labels_) {
-    to_return->mesh_labels_ = std::make_shared<std::vector<uint32_t>>(*mesh_labels_);
+  if (mesh_) {
+    to_return->mesh_ = mesh_->clone();
   }
 
   return to_return;
@@ -1099,5 +1006,11 @@ void DynamicSceneGraph::visitLayers(const LayerVisitor& cb) {
     }
   }
 }
+
+void DynamicSceneGraph::setMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
+
+bool DynamicSceneGraph::hasMesh() const { return mesh_ != nullptr; }
+
+Mesh::Ptr DynamicSceneGraph::mesh() const { return mesh_; }
 
 }  // namespace spark_dsg

@@ -54,6 +54,77 @@ using namespace py::literals;
 
 using namespace spark_dsg;
 
+Eigen::MatrixXd getEigenVertices(const Mesh& mesh) {
+  const auto num_vertices = mesh.numVertices();
+  Eigen::MatrixXd to_return(6, num_vertices);
+  for (size_t i = 0; i < num_vertices; ++i) {
+    const auto& pos = mesh.pos(i);
+    to_return(0, i) = pos.x();
+    to_return(1, i) = pos.y();
+    to_return(2, i) = pos.z();
+    if (i < mesh.colors.size()) {
+      const auto c = mesh.color(i);
+      to_return(3, i) = c.r / 255.0;
+      to_return(4, i) = c.g / 255.0;
+      to_return(5, i) = c.b / 255.0;
+    } else {
+      to_return(3, i) = 0.0;
+      to_return(4, i) = 0.0;
+      to_return(5, i) = 0.0;
+    }
+  }
+  return to_return;
+}
+
+void setEigenVertices(Mesh& mesh, const Eigen::MatrixXd& points) {
+  if (points.rows() != 6) {
+    std::stringstream ss;
+    ss << "point rows do not match expected: " << points.rows() << " != 6";
+    throw std::invalid_argument(ss.str());
+  }
+
+  mesh.resizeVertices(points.cols());
+  for (int i = 0; i < points.cols(); ++i) {
+    Eigen::Vector3f pos = points.col(i).head<3>().cast<float>();
+    mesh.setPos(i, pos);
+    if (mesh.has_colors) {
+      Color color{static_cast<uint8_t>(points(3, i) * 255),
+                  static_cast<uint8_t>(points(4, i) * 255),
+                  static_cast<uint8_t>(points(5, i) * 255),
+                  255};
+      mesh.setColor(i, color);
+    }
+  }
+}
+
+Eigen::MatrixXi getEigenFaces(const Mesh& mesh) {
+  const auto num_faces = mesh.numFaces();
+  Eigen::MatrixXi to_return(3, num_faces);
+  for (size_t i = 0; i < num_faces; ++i) {
+    const auto& face = mesh.face(i);
+    to_return(0, i) = face[0];
+    to_return(1, i) = face[1];
+    to_return(2, i) = face[2];
+  }
+  return to_return;
+}
+
+void setEigenFaces(Mesh& mesh, const Eigen::MatrixXi& indices) {
+  if (indices.rows() != 3) {
+    std::stringstream ss;
+    ss << "index rows do not match expected: " << indices.rows() << " != 3";
+    throw std::invalid_argument(ss.str());
+  }
+
+  mesh.resizeFaces(indices.cols());
+  for (int i = 0; i < indices.cols(); ++i) {
+    Mesh::Face face{{static_cast<size_t>(indices(0, i)),
+                     static_cast<size_t>(indices(1, i)),
+                     static_cast<size_t>(indices(2, i))}};
+    mesh.face(i) = face;
+  }
+}
+
 template <typename Scalar>
 struct Quaternion {
   Quaternion() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) {}
@@ -426,6 +497,63 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           nullptr,
           py::return_value_policy::reference_internal);
 
+  py::class_<Color>(module, "Color")
+      .def_readwrite("r", &Color::r)
+      .def_readwrite("g", &Color::g)
+      .def_readwrite("b", &Color::b)
+      .def_readwrite("a", &Color::a);
+
+  py::class_<Mesh, std::shared_ptr<Mesh>>(module, "Mesh")
+      .def(py::init<bool, bool, bool>(),
+           "has_colors"_a = true,
+           "has_timestamps"_a = true,
+           "has_labels"_a = "true")
+      .def("empty", &Mesh::empty)
+      .def("num_vertices", &Mesh::numVertices)
+      .def("num_faces", &Mesh::numFaces)
+      .def("resize_vertices", &Mesh::resizeVertices)
+      .def("resize_faces", &Mesh::resizeFaces)
+      .def("clone", &Mesh::clone)
+      .def("pos", &Mesh::pos)
+      .def("set_pos", &Mesh::setPos)
+      .def("color", &Mesh::color)
+      .def("set_color", &Mesh::setColor)
+      .def("timestamp", &Mesh::timestamp)
+      .def("set_timestamp", &Mesh::setTimestamp)
+      .def("label", &Mesh::label)
+      .def("set_label", &Mesh::setLabel)
+      .def("face", py::overload_cast<size_t>(&Mesh::face, py::const_))
+      .def("set_face",
+           [](Mesh& mesh, size_t index, const Mesh::Face& face) {
+             mesh.face(index) = face;
+           })
+      .def("to_json", &Mesh::serializeToJson)
+      .def("to_binary",
+           [](const Mesh& mesh) {
+             std::vector<uint8_t> buffer;
+             mesh.serializeToBinary(buffer);
+             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
+           })
+      .def("save", &Mesh::save)
+      .def_static("from_json", &Mesh::deserializeFromJson)
+      .def_static("from_binary",
+                  [](const py::bytes& contents) {
+                    const auto& view = static_cast<const std::string_view&>(contents);
+                    return Mesh::deserializeFromBinary(
+                        reinterpret_cast<const uint8_t*>(view.data()), view.size());
+                  })
+      .def_static("load", &Mesh::load)
+      .def("get_vertices", [](const Mesh& mesh) { return getEigenVertices(mesh); })
+      .def("get_faces", [](const Mesh& mesh) { return getEigenFaces(mesh); })
+      .def("get_labels", [](const Mesh& mesh) { return mesh.labels; })
+      .def("set_vertices",
+           [](Mesh& mesh, const Eigen::MatrixXd& points) {
+             setEigenVertices(mesh, points);
+           })
+      .def("set_faces", [](Mesh& mesh, const Eigen::MatrixXi& faces) {
+        setEigenFaces(mesh, faces);
+      });
+
   py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(
       module, "DynamicSceneGraph", py::dynamic_attr())
       .def(py::init<>())
@@ -563,95 +691,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           },
           nullptr,
           py::return_value_policy::reference_internal)
+      .def_property(
+          "mesh",
+          [](const DynamicSceneGraph& graph) { return graph.mesh(); },
+          [](DynamicSceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
       .def("clone", &DynamicSceneGraph::clone)
       .def("__deepcopy__",
            [](const DynamicSceneGraph& G, py::object) { return G.clone(); })
-      .def("get_mesh_vertices",
-           [](const DynamicSceneGraph& G) {
-             auto vertices = G.getMeshVertices();
-             if (!vertices) {
-               return Eigen::MatrixXd();
-             }
-
-             Eigen::MatrixXd to_return(6, vertices->size());
-             for (size_t i = 0; i < vertices->size(); ++i) {
-               const auto& point = vertices->at(i);
-               to_return(0, i) = point.x;
-               to_return(1, i) = point.y;
-               to_return(2, i) = point.z;
-               to_return(3, i) = point.r / 255.0;
-               to_return(4, i) = point.g / 255.0;
-               to_return(5, i) = point.b / 255.0;
-             }
-             return to_return;
-           })
-      .def("get_mesh_faces",
-           [](const DynamicSceneGraph& G) {
-             auto faces = G.getMeshFaces();
-             if (!faces) {
-               return Eigen::MatrixXi();
-             }
-
-             Eigen::MatrixXi to_return(3, faces->size());
-             for (size_t i = 0; i < faces->size(); ++i) {
-               const auto& face = faces->at(i);
-               to_return(0, i) = face.vertices.at(0);
-               to_return(1, i) = face.vertices.at(1);
-               to_return(2, i) = face.vertices.at(2);
-             }
-             return to_return;
-           })
-      .def("get_mesh_labels",
-           [](const DynamicSceneGraph& G) {
-             auto labels = G.getMeshLabels();
-             if (!labels) {
-               return std::vector<uint32_t>();
-             } else {
-               return *labels;
-             }
-           })
-      .def("set_mesh_vertices",
-           [](DynamicSceneGraph& G, const Eigen::MatrixXd& points) {
-             if (points.rows() != 6) {
-               std::stringstream ss;
-               ss << "point rows do not match expected: " << points.rows() << " != 6";
-               throw std::invalid_argument(ss.str());
-             }
-
-             DynamicSceneGraph::MeshVertices::Ptr vertices(
-                 new DynamicSceneGraph::MeshVertices());
-             for (int i = 0; i < points.cols(); ++i) {
-               pcl::PointXYZRGBA point;
-               point.x = points(0, i);
-               point.y = points(1, i);
-               point.z = points(2, i);
-               point.r = static_cast<uint8_t>(points(3, i) * 255);
-               point.g = static_cast<uint8_t>(points(4, i) * 255);
-               point.b = static_cast<uint8_t>(points(5, i) * 255);
-               point.a = 255;
-               vertices->push_back(point);
-             }
-             G.setMesh(vertices, G.getMeshFaces());
-           })
-      .def("set_mesh_faces",
-           [](DynamicSceneGraph& G, const Eigen::MatrixXd& indices) {
-             if (indices.rows() != 3) {
-               std::stringstream ss;
-               ss << "index rows do not match expected: " << indices.rows() << " != 3";
-               throw std::invalid_argument(ss.str());
-             }
-
-             std::shared_ptr<DynamicSceneGraph::MeshFaces> faces(
-                 new DynamicSceneGraph::MeshFaces());
-             for (int i = 0; i < indices.cols(); ++i) {
-               pcl::Vertices face;
-               face.vertices.push_back(indices(0, i));
-               face.vertices.push_back(indices(1, i));
-               face.vertices.push_back(indices(2, i));
-               faces->push_back(face);
-             }
-             G.setMesh(G.getMeshVertices(), faces);
-           })
       .def(
           "to_binary",
           [](const DynamicSceneGraph& graph, bool include_mesh) {

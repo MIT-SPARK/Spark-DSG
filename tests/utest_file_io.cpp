@@ -33,7 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <pcl/conversions.h>
 #include <spark_dsg/graph_file_io.h>
 
 #include "spark_dsg_tests/temp_file.h"
@@ -81,10 +80,7 @@ void testSaveLoad(const std::string& file_name) {
   graph.emplaceNode(DsgLayers::PLACES,
                     NodeSymbol('p', 0),
                     std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
-  DynamicSceneGraph::MeshVertices fake_vertices;
-  pcl::PolygonMesh fake_mesh;
-  pcl::toPCLPointCloud2(fake_vertices, fake_mesh.cloud);
-  graph.setMeshDirectly(fake_mesh);
+  graph.setMesh(std::make_shared<Mesh>());
 
   graph.save(file_name);
   auto other = DynamicSceneGraph::load(file_name);

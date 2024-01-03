@@ -32,61 +32,60 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "serialization_helpers.h"
-
-using nlohmann::json;
+#include "spark_dsg/mesh.h"
 
 namespace spark_dsg {
 
-void to_json(json& j, const BoundingBox& b) {
-  j = json{{"type", b.type},
-           {"min", b.min},
-           {"max", b.max},
-           {"world_P_center", b.world_P_center},
-           {"world_R_center", Eigen::Quaternionf(b.world_R_center)}};
-}
+Mesh::Mesh(bool has_colors, bool has_timestamps, bool has_labels)
+    : has_colors(has_colors), has_timestamps(has_timestamps), has_labels(has_labels) {}
 
-void from_json(const json& j, BoundingBox& b) {
-  if (j.at("type").is_null()) {
-    b.type = BoundingBox::Type::RAABB;
-  } else {
-    b.type = j.at("type").get<BoundingBox::Type>();
+Mesh::~Mesh() {}
+
+bool Mesh::empty() const { return points.empty() && faces.empty(); }
+
+size_t Mesh::numVertices() const { return points.size(); }
+
+size_t Mesh::numFaces() const { return faces.size(); }
+
+void Mesh::resizeVertices(size_t size) {
+  points.resize(size);
+  if (has_colors) {
+    colors.resize(size);
   }
-
-  if (b.type == BoundingBox::Type::INVALID) {
-    return;
+  if (has_timestamps) {
+    stamps.resize(size);
   }
-
-  b.min = j.at("min").get<Eigen::Vector3f>();
-  b.max = j.at("max").get<Eigen::Vector3f>();
-  b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
-  auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
-  b.world_R_center = world_q_center.toRotationMatrix();
-}
-
-void to_json(json& j, const NearestVertexInfo& info) {
-  j = json{
-      {"block", info.block}, {"voxel_pos", info.voxel_pos}, {"vertex", info.vertex}};
-
-  if (info.label) {
-    j["label"] = info.label.value();
-  } else {
-    j["label"] = nullptr;
+  if (has_labels) {
+    labels.resize(size);
   }
 }
 
-void from_json(const json& j, NearestVertexInfo& info) {
-  info.block[0] = j.at("block").at(0).get<int32_t>();
-  info.block[1] = j.at("block").at(1).get<int32_t>();
-  info.block[2] = j.at("block").at(2).get<int32_t>();
-  info.voxel_pos[0] = j.at("voxel_pos").at(0).get<double>();
-  info.voxel_pos[1] = j.at("voxel_pos").at(1).get<double>();
-  info.voxel_pos[2] = j.at("voxel_pos").at(2).get<double>();
-  info.vertex = j.at("vertex");
+void Mesh::resizeFaces(size_t size) { faces.resize(size); }
 
-  if (j.contains("label") && !j.at("label").is_null()) {
-    info.label = j.at("label").get<uint32_t>();
-  }
+Mesh::Ptr Mesh::clone() const { return std::make_shared<Mesh>(*this); }
+
+Mesh::Pos Mesh::pos(size_t index) const { return points.at(index); }
+
+void Mesh::setPos(size_t index, const Mesh::Pos& pos) { points.at(index) = pos; }
+
+Color Mesh::color(size_t index) const { return colors.at(index); }
+
+void Mesh::setColor(size_t index, const Color& color) {
+  colors.at(index) = color;
 }
+
+Mesh::Timestamp Mesh::timestamp(size_t index) const { return stamps.at(index); }
+
+void Mesh::setTimestamp(size_t index, Mesh::Timestamp timestamp) {
+  stamps.at(index) = timestamp;
+}
+
+Mesh::Label Mesh::label(size_t index) const { return labels.at(index); }
+
+void Mesh::setLabel(size_t index, Mesh::Label label) { labels.at(index) = label; }
+
+const Mesh::Face& Mesh::face(size_t index) const { return faces.at(index); }
+
+Mesh::Face& Mesh::face(size_t index) { return faces.at(index); }
 
 }  // namespace spark_dsg

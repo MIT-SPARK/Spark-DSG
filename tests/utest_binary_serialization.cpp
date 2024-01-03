@@ -444,6 +444,58 @@ TEST(BinarySerializationTests, SerializeDsgDynamic) {
   EXPECT_TRUE(result->hasLayer(2, 'a'));
 }
 
+TEST(BinarySerializationTests, SerializeDsgMesh) {
+  using namespace std::chrono_literals;
+  DynamicSceneGraph expected;
+  expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
+
+  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
+  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
+  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
+  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+
+  auto mesh = std::make_shared<Mesh>();
+  mesh->points.push_back(Eigen::Vector3f::Zero());
+  mesh->points.push_back(Eigen::Vector3f::Zero());
+  mesh->points.push_back(Eigen::Vector3f::Zero());
+  mesh->colors.push_back({10, 20, 30, 255});
+  mesh->labels.push_back(2);
+  mesh->labels.push_back(8);
+  mesh->stamps.push_back(0);
+  mesh->stamps.push_back(10);
+  mesh->stamps.push_back(20);
+  mesh->stamps.push_back(30);
+  mesh->faces.push_back({{1, 2, 3}});
+  expected.setMesh(mesh);
+
+  std::vector<uint8_t> buffer;
+  writeGraph(expected, buffer, true);
+  auto result = readGraph(buffer);
+
+  EXPECT_EQ(expected.numNodes(), result->numNodes());
+  EXPECT_EQ(expected.numEdges(), result->numEdges());
+  EXPECT_EQ(expected.numLayers(), result->numLayers());
+  EXPECT_EQ(expected.layer_ids, result->layer_ids);
+
+  EXPECT_TRUE(result->hasNode(0));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 0)));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 1)));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 2)));
+  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 3)));
+  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
+  EXPECT_FALSE(result->hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
+  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
+
+  EXPECT_TRUE(result->hasLayer(2, 'a'));
+  auto result_mesh = result->mesh();
+  ASSERT_TRUE(result_mesh);
+  EXPECT_EQ(result_mesh->points.size(), 3u);
+  EXPECT_EQ(result_mesh->colors.size(), 3u);
+  EXPECT_EQ(result_mesh->labels.size(), 2u);
+  EXPECT_EQ(result_mesh->stamps.size(), 4u);
+  EXPECT_EQ(result_mesh->faces.size(), 1u);
+}
+
 TEST(BinarySerializationTests, UpdateDsgFromBinaryWithCorrection) {
   using namespace std::chrono_literals;
   DynamicSceneGraph original;

@@ -33,7 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <pcl/conversions.h>
 #include <spark_dsg/dynamic_scene_graph.h>
 
 namespace spark_dsg {
@@ -44,23 +43,11 @@ using Edges = DynamicSceneGraph::Edges;
 using NodeRef = DynamicSceneGraph::NodeRef;
 using EdgeRef = DynamicSceneGraph::EdgeRef;
 
-struct TestMesh {
-  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr vertices;
-  std::shared_ptr<std::vector<pcl::Vertices>> faces;
-
-  void reset() {
-    vertices.reset();
-    faces.reset();
-  }
-};
-
-TestMesh makeMesh(size_t num_points) {
-  TestMesh mesh;
-  mesh.vertices.reset(new pcl::PointCloud<pcl::PointXYZRGBA>());
-  mesh.faces.reset(new std::vector<pcl::Vertices>());
+std::shared_ptr<Mesh> makeMesh(size_t num_points) {
+  auto mesh = std::make_shared<Mesh>();
 
   for (size_t i = 0; i < num_points; ++i) {
-    mesh.vertices->push_back(pcl::PointXYZRGBA());
+    mesh->points.push_back(Eigen::Vector3f());
   }
 
   return mesh;
@@ -104,11 +91,11 @@ TEST(DynamicSceneGraphTests, NumNodesAndEdges) {
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.insertEdge(0, 1));
 
-  TestMesh mesh = makeMesh(5);
+  auto mesh = makeMesh(5);
 
   EXPECT_EQ(2u, graph.numNodes());
   EXPECT_EQ(1u, graph.numEdges());
-  graph.setMesh(mesh.vertices, mesh.faces);
+  graph.setMesh(mesh);
   EXPECT_EQ(7u, graph.numNodes());
   EXPECT_EQ(1u, graph.numEdges());
 }

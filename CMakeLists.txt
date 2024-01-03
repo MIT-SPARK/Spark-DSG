@@ -29,9 +29,6 @@ endif()
 
 add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-# TODO(nathan) consider removing pcl
-set(PCL_FIND_QUIETLY TRUE)
-find_package(PCL REQUIRED COMPONENTS common)
 find_package(Eigen3 REQUIRED)
 
 add_library(
@@ -39,6 +36,7 @@ add_library(
   src/adjacency_matrix.cpp
   src/binary_serializer.cpp
   src/bounding_box.cpp
+  src/bounding_box_extraction.cpp
   src/dynamic_scene_graph_layer.cpp
   src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
@@ -46,8 +44,11 @@ add_library(
   src/graph_binary_serialization.cpp
   src/graph_file_io.cpp
   src/graph_json_serialization.cpp
+  src/mesh.cpp
+  src/mesh_io.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
+  src/pgmo_mesh_traits.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_logger.cpp
   src/scene_graph_node.cpp
