@@ -107,11 +107,11 @@ void Mesh::resizeFaces(size_t size) { faces.resize(size); }
 
 Mesh::Ptr Mesh::clone() const { return std::make_shared<Mesh>(*this); }
 
-Mesh::Pos Mesh::pos(size_t index) const { return points.at(index); }
+const Mesh::Pos& Mesh::pos(size_t index) const { return points.at(index); }
 
 void Mesh::setPos(size_t index, const Mesh::Pos& pos) { points.at(index) = pos; }
 
-Color Mesh::color(size_t index) const { return colors.at(index); }
+const Color& Mesh::color(size_t index) const { return colors.at(index); }
 
 void Mesh::setColor(size_t index, const Color& color) { colors.at(index) = color; }
 
