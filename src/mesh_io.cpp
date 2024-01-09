@@ -108,7 +108,7 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
   deserializer.read(has_timestamps);
   deserializer.read(has_labels);
 
-  auto mesh = std::make_shared<Mesh>();
+  auto mesh = std::make_shared<Mesh>(has_colors, has_timestamps, has_labels);
   size_t num_vertices = deserializer.readFixedArrayLength() / 6;
   for (size_t i = 0; i < num_vertices; ++i) {
     Mesh::Pos pos;
@@ -137,20 +137,16 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
     deserializer.read(face[2]);
   }
 
-  if (deserializer.checkIfTrue()) {
-    size_t num_stamps = deserializer.readFixedArrayLength();
-    mesh->stamps.resize(num_stamps);
-    for (size_t i = 0; i < num_stamps; ++i) {
-      deserializer.read(mesh->stamps.at(i));
-    }
+  size_t num_stamps = deserializer.readFixedArrayLength();
+  mesh->stamps.resize(num_stamps);
+  for (size_t i = 0; i < num_stamps; ++i) {
+    deserializer.read(mesh->stamps.at(i));
   }
 
-  if (deserializer.checkIfTrue()) {
-    size_t num_labels = deserializer.readFixedArrayLength();
-    mesh->labels.resize(num_labels);
-    for (size_t i = 0; i < num_labels; ++i) {
-      deserializer.read(mesh->labels.at(i));
-    }
+  size_t num_labels = deserializer.readFixedArrayLength();
+  mesh->labels.resize(num_labels);
+  for (size_t i = 0; i < num_labels; ++i) {
+    deserializer.read(mesh->labels.at(i));
   }
 
   return mesh;
