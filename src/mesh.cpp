@@ -41,6 +41,48 @@ Mesh::Mesh(bool has_colors, bool has_timestamps, bool has_labels)
 
 Mesh::~Mesh() {}
 
+Mesh& Mesh::operator=(const Mesh& other) {
+  *this = Mesh(other.has_colors, other.has_timestamps, other.has_labels);
+  points = other.points;
+  faces = other.faces;
+  colors = other.colors;
+  stamps = other.stamps;
+  labels = other.labels;
+  last_seen_stamps = other.last_seen_stamps;
+  return *this;
+}
+
+Mesh& Mesh::operator=(Mesh&& other) noexcept {
+  *this = Mesh(other.has_colors, other.has_timestamps, other.has_labels);
+  points = std::move(other.points);
+  faces = std::move(other.faces);
+  colors = std::move(other.colors);
+  stamps = std::move(other.stamps);
+  labels = std::move(other.labels);
+  last_seen_stamps = std::move(other.last_seen_stamps);
+  return *this;
+}
+
+Mesh::Mesh(const Mesh& other)
+    : Mesh(other.has_colors, other.has_timestamps, other.has_labels) {
+  points = other.points;
+  faces = other.faces;
+  colors = other.colors;
+  stamps = other.stamps;
+  labels = other.labels;
+  last_seen_stamps = other.last_seen_stamps;
+}
+
+Mesh::Mesh(Mesh&& other) noexcept
+    : Mesh(other.has_colors, other.has_timestamps, other.has_labels) {
+  points = std::move(other.points);
+  faces = std::move(other.faces);
+  colors = std::move(other.colors);
+  stamps = std::move(other.stamps);
+  labels = std::move(other.labels);
+  last_seen_stamps = std::move(other.last_seen_stamps);
+}
+
 bool Mesh::empty() const { return points.empty() && faces.empty(); }
 
 size_t Mesh::numVertices() const { return points.size(); }
@@ -54,6 +96,7 @@ void Mesh::resizeVertices(size_t size) {
   }
   if (has_timestamps) {
     stamps.resize(size);
+    last_seen_stamps.resize(size);
   }
   if (has_labels) {
     labels.resize(size);
@@ -70,14 +113,20 @@ void Mesh::setPos(size_t index, const Mesh::Pos& pos) { points.at(index) = pos; 
 
 Color Mesh::color(size_t index) const { return colors.at(index); }
 
-void Mesh::setColor(size_t index, const Color& color) {
-  colors.at(index) = color;
-}
+void Mesh::setColor(size_t index, const Color& color) { colors.at(index) = color; }
 
 Mesh::Timestamp Mesh::timestamp(size_t index) const { return stamps.at(index); }
 
 void Mesh::setTimestamp(size_t index, Mesh::Timestamp timestamp) {
   stamps.at(index) = timestamp;
+}
+
+Mesh::Timestamp Mesh::lastSeenTimestamp(size_t index) const {
+  return last_seen_stamps.at(index);
+}
+
+void Mesh::setLastSeenTimestamp(size_t index, Mesh::Timestamp timestamp) {
+  last_seen_stamps.at(index) = timestamp;
 }
 
 Mesh::Label Mesh::label(size_t index) const { return labels.at(index); }

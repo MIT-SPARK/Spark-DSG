@@ -33,9 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <pcl/PolygonMesh.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 
 #include <chrono>
 #include <list>
@@ -47,6 +44,7 @@
 
 #include "spark_dsg/bounding_box.h"
 #include "spark_dsg/scene_graph_types.h"
+#include "spark_dsg/mesh.h"
 
 namespace spark_dsg {
 
@@ -303,8 +301,7 @@ struct AgentNodeAttributes : public NodeAttributes {
 };
 
 /**
- * @brief Attributes for object nodes.
- * TODO(lschmid): This code is WIP for khronos integration.
+ * @brief Attributes for khronos object nodes.
  */
 struct KhronosObjectAttributes : public ObjectNodeAttributes {
  public:
@@ -313,13 +310,6 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
    * @brief desired pointer type of node
    */
   using Ptr = std::unique_ptr<KhronosObjectAttributes>;
-
-  // NOTE(lschmid): These are copied from dynamic_scene_graph.h to not have to depend on
-  // it. Needs updates accordingly.
-  // using Mesh = pcl::PolygonMesh;
-  using MeshVertices = pcl::PointCloud<pcl::PointXYZRGBA>;
-  using MeshFace = Eigen::Matrix<uint32_t, 3, 1>;  // Triangular meshes.
-  using MeshFaces = std::vector<MeshFace>;
 
   KhronosObjectAttributes() = default;
   virtual ~KhronosObjectAttributes() = default;
@@ -333,10 +323,8 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
   std::vector<uint64_t> first_observed_ns;
   std::vector<uint64_t> last_observed_ns;
 
-  // Mesh of the object as triangular mesh where each face holds 3 indices of their
-  // vertices. Positions of vertices are relative to the object bounding box origin.
-  MeshVertices vertices;
-  MeshFaces faces;
+  // Mesh of the object. Positions of vertices are relative to the object bounding box origin.
+  Mesh mesh;
 
   // If the object is considered dynamic, store the trajectory of the object.
   // NOTE(lschmid): Currently dynamic and static objects just have the

@@ -803,12 +803,6 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
     to_return->mesh_ = mesh_->clone();
   }
 
-  to_return->mesh_first_seen_stamps_ = mesh_first_seen_stamps_;
-  to_return->mesh_last_seen_stamps_ = mesh_last_seen_stamps_;
-  if (mesh_labels_) {
-    to_return->mesh_labels_ = std::make_shared<std::vector<uint32_t>>(*mesh_labels_);
-  }
-
   return to_return;
 }
 

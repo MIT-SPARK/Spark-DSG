@@ -44,6 +44,11 @@ namespace spark_dsg {
 void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
   serialization::BinarySerializer serializer(&buffer);
 
+  // Write stats
+  serializer.write(has_colors);
+  serializer.write(has_timestamps);
+  serializer.write(has_labels);
+
   // write vertices
   serializer.startFixedArray(6 * points.size());
   for (size_t i = 0; i < points.size(); ++i) {
@@ -63,6 +68,7 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
     }
   }
 
+  // write faces
   serializer.startFixedArray(3 * faces.size());
   for (const auto& face : faces) {
     serializer.write(face[0]);
@@ -70,10 +76,10 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
     serializer.write(face[2]);
   }
 
-  serializer.write(true);
+  // write vertex attributes
   serializer.write(stamps);
-  serializer.write(true);
   serializer.write(labels);
+  serializer.write(last_seen_stamps);
 }
 
 void Mesh::save(std::string filepath) const {
@@ -96,6 +102,11 @@ void Mesh::save(std::string filepath) const {
 
 Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length) {
   serialization::BinaryDeserializer deserializer(buffer, length);
+
+  bool has_colors, has_timestamps, has_labels;
+  deserializer.read(has_colors);
+  deserializer.read(has_timestamps);
+  deserializer.read(has_labels);
 
   auto mesh = std::make_shared<Mesh>();
   size_t num_vertices = deserializer.readFixedArrayLength() / 6;

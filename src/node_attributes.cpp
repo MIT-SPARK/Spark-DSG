@@ -132,7 +132,7 @@ std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
     out << t << " ";
   }
   out << std::endl
-      << "  - mesh: " << vertices.size() << " vertices, " << faces.size() << " faces"
+      << "  - mesh: " << mesh.numVertices() << " vertices, " << mesh.numFaces() << " faces"
       << std::endl;
   return out;
 }

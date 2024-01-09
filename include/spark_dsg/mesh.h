@@ -56,9 +56,16 @@ class Mesh {
   using Timestamp = uint64_t;
   using Label = uint32_t;
 
+  // Constructors.
   Mesh(bool has_colors = true, bool has_timestamps = true, bool has_labels = true);
 
   virtual ~Mesh();
+
+  // Assignment operators and constructors
+  Mesh& operator=(const Mesh& other);
+  Mesh& operator=(Mesh&& other) noexcept;
+  Mesh(const Mesh& other);
+  Mesh(Mesh&& other) noexcept;
 
   /**
    * @brief Check whether the mesh is empty
@@ -123,6 +130,16 @@ class Mesh {
   void setTimestamp(size_t index, Timestamp label);
 
   /**
+   * @brief Get last seen timestamp.
+   */
+  Timestamp lastSeenTimestamp(size_t index) const;
+
+  /**
+   * @brief Set last seen timestamp.
+   */
+  void setLastSeenTimestamp(size_t index, Timestamp timestamp);
+
+  /**
    * @brief Get current label
    */
   Label label(size_t index) const;
@@ -171,8 +188,9 @@ class Mesh {
   static Ptr deserializeFromJson(const std::string& contents);
 
   /**
-   * @brief parse graph from JSON string
-   * @param contents JSON string to parse
+   * @brief parse graph from binary data
+   * @param buffer start position of binary data to parse
+   * @param length length of binary data to parse
    * @returns Resulting parsed scene graph
    */
   static Ptr deserializeFromBinary(const uint8_t* const buffer, size_t length);
@@ -193,6 +211,10 @@ class Mesh {
   std::vector<Timestamp> stamps;
   std::vector<Label> labels;
   std::vector<Face> faces;
+
+  // Additional last seen timestamps for khronos, where 'stamps' denotes the first seen
+  // stamps.
+  std::vector<Timestamp> last_seen_stamps;
 };
 
 }  // namespace spark_dsg

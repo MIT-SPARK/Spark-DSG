@@ -13,7 +13,7 @@ This is the core c++ library that contains the dynamic scene graph data-structur
   1. Install requirements and make a virtual environment:
 
 ```bash
-sudo apt install libpcl-dev python3-venv
+sudo apt install python3-venv
 mkdir /path/to/environment
 cd /path/to/environment
 python3 -m venv dsg  # or some other environment name
