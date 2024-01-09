@@ -105,7 +105,7 @@ class Mesh {
   /**
    * @brief Get current position of vertex
    */
-  Pos pos(size_t index) const;
+  const Pos& pos(size_t index) const;
 
   /**
    * @brief Set position of vertex
@@ -115,7 +115,7 @@ class Mesh {
   /**
    * @brief Get current color of vertex
    */
-  Color color(size_t index) const;
+  const Color& color(size_t index) const;
 
   /**
    * @brief Set current color of vertex
