@@ -54,11 +54,12 @@ void Mesh::resizeVertices(size_t size) {
   }
   if (has_timestamps) {
     stamps.resize(size);
-    last_seen_stamps.resize(size);
   }
   if (has_labels) {
     labels.resize(size);
   }
+
+  first_seen_stamps.resize(size);
 }
 
 void Mesh::resizeFaces(size_t size) { faces.resize(size); }
@@ -79,12 +80,12 @@ void Mesh::setTimestamp(size_t index, Mesh::Timestamp timestamp) {
   stamps.at(index) = timestamp;
 }
 
-Mesh::Timestamp Mesh::lastSeenTimestamp(size_t index) const {
-  return last_seen_stamps.at(index);
+Mesh::Timestamp Mesh::firstSeenTimestamp(size_t index) const {
+  return first_seen_stamps.at(index);
 }
 
-void Mesh::setLastSeenTimestamp(size_t index, Mesh::Timestamp timestamp) {
-  last_seen_stamps.at(index) = timestamp;
+void Mesh::setFirstSeenTimestamp(size_t index, Mesh::Timestamp timestamp) {
+  first_seen_stamps.at(index) = timestamp;
 }
 
 Mesh::Label Mesh::label(size_t index) const { return labels.at(index); }

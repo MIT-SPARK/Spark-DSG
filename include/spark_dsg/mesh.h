@@ -133,12 +133,12 @@ class Mesh {
   /**
    * @brief Get last seen timestamp.
    */
-  Timestamp lastSeenTimestamp(size_t index) const;
+  Timestamp firstSeenTimestamp(size_t index) const;
 
   /**
    * @brief Set last seen timestamp.
    */
-  void setLastSeenTimestamp(size_t index, Timestamp timestamp);
+  void setFirstSeenTimestamp(size_t index, Timestamp timestamp);
 
   /**
    * @brief Get current label
@@ -213,9 +213,9 @@ class Mesh {
   std::vector<Label> labels;
   std::vector<Face> faces;
 
-  // Additional last seen timestamps for khronos, where 'stamps' denotes the first seen
+  // Additional first seen timestamps for khronos, where 'stamps' denotes the last seen
   // stamps.
-  std::vector<Timestamp> last_seen_stamps;
+  std::vector<Timestamp> first_seen_stamps;
 };
 
 }  // namespace spark_dsg

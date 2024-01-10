@@ -70,6 +70,10 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
     serializer.write(face[2]);
   }
 
+  // Stamps in old khronos format for compatibility.
+  serializer.write(first_seen_stamps);
+  serializer.write(std::vector<uint64_t>());
+
   serializer.write(true);
   serializer.write(stamps);
   serializer.write(true);
@@ -126,6 +130,11 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
     deserializer.read(face[2]);
   }
 
+  // Stamps in old khronos format for compatibility.
+  deserializer.read(mesh->first_seen_stamps);
+  std::vector<uint64_t> stamps;
+  deserializer.read(stamps);
+
   if (deserializer.checkIfTrue()) {
     size_t num_stamps = deserializer.readFixedArrayLength();
     mesh->stamps.resize(num_stamps);
@@ -140,6 +149,11 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
     for (size_t i = 0; i < num_labels; ++i) {
       deserializer.read(mesh->labels.at(i));
     }
+  }
+
+  // Overwrite stamps w/ khronos last seenn stamps for now.
+  if (!stamps.empty()) {
+    mesh->stamps = stamps;
   }
 
   return mesh;
