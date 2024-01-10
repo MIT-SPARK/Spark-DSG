@@ -249,6 +249,18 @@ void deserialize(const Converter& converter, AgentNodeAttributes& attrs) {
 }
 
 template <typename Converter>
+void serialize(Converter& converter, const RegionNodeAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("score", attrs.score);
+}
+
+template <typename Converter>
+void deserialize(const Converter& converter, RegionNodeAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("score", attrs.score);
+}
+
+template <typename Converter>
 void serialize(Converter& converter, const EdgeAttributes& attrs) {
   converter.write("weighted", attrs.weighted);
   converter.write("weight", attrs.weight);

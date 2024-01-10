@@ -244,7 +244,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("name", &SemanticNodeAttributes::name)
       .def_readwrite("color", &SemanticNodeAttributes::color)
       .def_readwrite("bounding_box", &SemanticNodeAttributes::bounding_box)
-      .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label);
+      .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label)
+      .def_readwrite("semantic_feature", &SemanticNodeAttributes::semantic_feature);
 
   py::class_<ObjectNodeAttributes, SemanticNodeAttributes>(module,
                                                            "ObjectNodeAttributes")
@@ -311,6 +312,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("deformation_connections",
                      &PlaceNodeAttributes::deformation_connections)
       .def_readwrite("is_active", &PlaceNodeAttributes::is_active);
+
+  py::class_<RegionNodeAttributes, SemanticNodeAttributes>(module,
+                                                           "RegionNodeAttributes")
+      .def(py::init<>())
+      .def_readwrite("score", &RegionNodeAttributes::score);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(module, "AgentNodeAttributes")
       .def(py::init<>())

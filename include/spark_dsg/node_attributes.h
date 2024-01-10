@@ -333,6 +333,16 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
   // khronos-attributes. Could change in the future.
   std::vector<uint64_t> trajectory_timestamps;
   std::vector<Eigen::Vector3f> trajectory_positions;
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+};
+
+struct RegionNodeAttributes : public SemanticNodeAttributes {
+  double score;
+
+  NodeAttributes::Ptr clone() const override {
+    return std::make_unique<RegionNodeAttributes>(*this);
+  }
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;

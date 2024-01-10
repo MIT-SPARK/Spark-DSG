@@ -184,6 +184,7 @@ class AttributeFactory {
   static std::unique_ptr<AttributeFactory> s_instance_;
 };
 
+// TODO(nathan) figure out how to invert conversion struct issue
 // TODO(nathan) figure out how to make clang happy about this not being present
 // template <typename T, typename C>
 // std::unique_ptr<AttributeFactory<T, C>> AttributeFactory<T, C>::s_instance_ =
@@ -220,6 +221,7 @@ class NodeAttributeFactory : public AttributeFactory<NodeAttributes, C> {
     REGISTER_ATTR(NodeAttributeFactory, PlaceNodeAttributes, C);
     REGISTER_ATTR(NodeAttributeFactory, AgentNodeAttributes, C);
     REGISTER_ATTR(NodeAttributeFactory, KhronosObjectAttributes, C);
+    REGISTER_ATTR(NodeAttributeFactory, RegionNodeAttributes, C);
 
     factory.setTypeIndexMap({{"NodeAttributes", 0},
                              {"SemanticNodeAttributes", 1},
@@ -227,7 +229,8 @@ class NodeAttributeFactory : public AttributeFactory<NodeAttributes, C> {
                              {"RoomNodeAttributes", 3},
                              {"PlaceNodeAttributes", 4},
                              {"AgentNodeAttributes", 5},
-                             {"KhronosObjectAttributes", 6}});
+                             {"KhronosObjectAttributes", 6},
+                             {"RegionNodeAttributes", 7}});
 
     factory.default_set = true;
     return factory;

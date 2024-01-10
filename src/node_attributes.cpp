@@ -137,4 +137,10 @@ std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
+std::ostream& RegionNodeAttributes::fill_ostream(std::ostream& out) const {
+  auto& new_out = SemanticNodeAttributes::fill_ostream(out);
+  new_out << "  - score: " << score << "\n";
+  return out;
+}
+
 }  // namespace spark_dsg
