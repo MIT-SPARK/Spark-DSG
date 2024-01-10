@@ -96,9 +96,38 @@ void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
   converter.write("last_observed_ns", attrs.last_observed_ns);
 
   // Save mesh.
-  std::vector<uint8_t> buffer;
-  attrs.mesh.serializeToBinary(buffer);
-  converter.write("mesh", buffer);
+  constexpr bool use_khronos_old = true;
+  if (use_khronos_old) {
+    // Work around for mesh and trajectories for now: Pack vertices and faces into
+    // vectors.
+    std::vector<float> xyz;
+    std::vector<uint8_t> rgba;
+    std::vector<uint32_t> faces;
+    xyz.reserve(3 * attrs.mesh.numVertices());
+    rgba.reserve(4 * attrs.mesh.numVertices());
+    faces.reserve(3 * attrs.mesh.numFaces());
+    for (size_t i = 0; i < attrs.mesh.numVertices(); ++i) {
+      xyz.emplace_back(attrs.mesh.pos(i).x());
+      xyz.emplace_back(attrs.mesh.pos(i).y());
+      xyz.emplace_back(attrs.mesh.pos(i).z());
+      rgba.emplace_back(attrs.mesh.color(i).r);
+      rgba.emplace_back(attrs.mesh.color(i).g);
+      rgba.emplace_back(attrs.mesh.color(i).b);
+      rgba.emplace_back(attrs.mesh.color(i).a);
+    }
+    for (const auto& face : attrs.mesh.faces) {
+      for (size_t i = 0; i < 3; ++i) {
+        faces.emplace_back(face[i]);
+      }
+    }
+    converter.write("vertices", xyz);
+    converter.write("colors", rgba);
+    converter.write("faces", faces);
+  } else {
+    std::vector<uint8_t> buffer;
+    attrs.mesh.serializeToBinary(buffer);
+    converter.write("mesh", buffer);
+  }
 
   // Save the trajectory by packing the positions into a single vector.
   std::vector<float> trajectory;
@@ -121,12 +150,37 @@ void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
   converter.read("last_observed_ns", attrs.last_observed_ns);
 
   // Load mesh.
-  std::vector<uint8_t> buffer;
-  converter.read("mesh", buffer);
-  auto mesh = Mesh::deserializeFromBinary(buffer.data(), buffer.size());
-  attrs.mesh.colors = mesh->colors;
-  attrs.mesh.faces = mesh->faces;
-  attrs.mesh.points = mesh->points;
+  constexpr bool use_khronos_old = true;
+  if (use_khronos_old) {
+    std::vector<float> xyz;
+    std::vector<uint8_t> rgba;
+    std::vector<uint32_t> faces;
+    converter.read("vertices", xyz);
+    converter.read("colors", rgba);
+    converter.read("faces", faces);
+    const size_t num_vertices = xyz.size() / 3;
+    const size_t num_faces = faces.size() / 3;
+    attrs.mesh.resizeVertices(num_vertices);
+    attrs.mesh.resizeFaces(num_faces);
+    for (size_t i = 0; i < num_vertices; ++i) {
+      attrs.mesh.setPos(i, {xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]});
+      attrs.mesh.setColor(
+          i, {rgba[4 * i], rgba[4 * i + 1], rgba[4 * i + 2], rgba[4 * i + 3]});
+    }
+    for (size_t i = 0; i < num_faces; ++i) {
+      auto& face = attrs.mesh.face(i);
+      for (size_t j = 0; j < 3; ++j) {
+        face[j] = faces[3 * i + j];
+      }
+    }
+  } else {
+    std::vector<uint8_t> buffer;
+    converter.read("mesh", buffer);
+    auto mesh = Mesh::deserializeFromBinary(buffer.data(), buffer.size());
+    attrs.mesh.colors = mesh->colors;
+    attrs.mesh.faces = mesh->faces;
+    attrs.mesh.points = mesh->points;
+  }
 
   // Load trajectory by unraveling the packed positions.
   std::vector<float> trajectory;
