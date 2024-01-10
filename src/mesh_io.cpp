@@ -137,16 +137,22 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
     deserializer.read(face[2]);
   }
 
-  size_t num_stamps = deserializer.readFixedArrayLength();
+  const size_t num_stamps = deserializer.readFixedArrayLength();
   mesh->stamps.resize(num_stamps);
   for (size_t i = 0; i < num_stamps; ++i) {
     deserializer.read(mesh->stamps.at(i));
   }
 
-  size_t num_labels = deserializer.readFixedArrayLength();
+  const size_t num_labels = deserializer.readFixedArrayLength();
   mesh->labels.resize(num_labels);
   for (size_t i = 0; i < num_labels; ++i) {
     deserializer.read(mesh->labels.at(i));
+  }
+
+  const size_t num_last_seen = deserializer.readFixedArrayLength();
+  mesh->last_seen_stamps.resize(num_last_seen);
+  for (size_t i = 0; i < num_last_seen; ++i) {
+    deserializer.read(mesh->last_seen_stamps.at(i));
   }
 
   return mesh;
