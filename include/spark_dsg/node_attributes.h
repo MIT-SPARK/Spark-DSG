@@ -40,11 +40,10 @@
 #include <optional>
 #include <ostream>
 #include <string>
-#include <optional>
 
 #include "spark_dsg/bounding_box.h"
-#include "spark_dsg/scene_graph_types.h"
 #include "spark_dsg/mesh.h"
+#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
 
@@ -137,6 +136,8 @@ struct SemanticNodeAttributes : public NodeAttributes {
   BoundingBox bounding_box;
   //! semantic label of object
   SemanticLabel semantic_label;
+  //! semantic (e.g. CLIP) feature of object
+  Eigen::VectorXd semantic_feature;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const override;
@@ -323,7 +324,8 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
   std::vector<uint64_t> first_observed_ns;
   std::vector<uint64_t> last_observed_ns;
 
-  // Mesh of the object. Positions of vertices are relative to the object bounding box origin.
+  // Mesh of the object. Positions of vertices are relative to the object bounding box
+  // origin.
   Mesh mesh;
 
   // If the object is considered dynamic, store the trajectory of the object.
