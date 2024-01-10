@@ -44,11 +44,6 @@ namespace spark_dsg {
 void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
   serialization::BinarySerializer serializer(&buffer);
 
-  // Write stats
-  serializer.write(has_colors);
-  serializer.write(has_timestamps);
-  serializer.write(has_labels);
-
   // write vertices
   serializer.startFixedArray(6 * points.size());
   for (size_t i = 0; i < points.size(); ++i) {
@@ -68,7 +63,6 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
     }
   }
 
-  // write faces
   serializer.startFixedArray(3 * faces.size());
   for (const auto& face : faces) {
     serializer.write(face[0]);
@@ -76,10 +70,10 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
     serializer.write(face[2]);
   }
 
-  // write vertex attributes
+  serializer.write(true);
   serializer.write(stamps);
+  serializer.write(true);
   serializer.write(labels);
-  serializer.write(last_seen_stamps);
 }
 
 void Mesh::save(std::string filepath) const {
@@ -103,12 +97,7 @@ void Mesh::save(std::string filepath) const {
 Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length) {
   serialization::BinaryDeserializer deserializer(buffer, length);
 
-  bool has_colors, has_timestamps, has_labels;
-  deserializer.read(has_colors);
-  deserializer.read(has_timestamps);
-  deserializer.read(has_labels);
-
-  auto mesh = std::make_shared<Mesh>(has_colors, has_timestamps, has_labels);
+  auto mesh = std::make_shared<Mesh>();
   size_t num_vertices = deserializer.readFixedArrayLength() / 6;
   for (size_t i = 0; i < num_vertices; ++i) {
     Mesh::Pos pos;
@@ -137,22 +126,20 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
     deserializer.read(face[2]);
   }
 
-  const size_t num_stamps = deserializer.readFixedArrayLength();
-  mesh->stamps.resize(num_stamps);
-  for (size_t i = 0; i < num_stamps; ++i) {
-    deserializer.read(mesh->stamps.at(i));
+  if (deserializer.checkIfTrue()) {
+    size_t num_stamps = deserializer.readFixedArrayLength();
+    mesh->stamps.resize(num_stamps);
+    for (size_t i = 0; i < num_stamps; ++i) {
+      deserializer.read(mesh->stamps.at(i));
+    }
   }
 
-  const size_t num_labels = deserializer.readFixedArrayLength();
-  mesh->labels.resize(num_labels);
-  for (size_t i = 0; i < num_labels; ++i) {
-    deserializer.read(mesh->labels.at(i));
-  }
-
-  const size_t num_last_seen = deserializer.readFixedArrayLength();
-  mesh->last_seen_stamps.resize(num_last_seen);
-  for (size_t i = 0; i < num_last_seen; ++i) {
-    deserializer.read(mesh->last_seen_stamps.at(i));
+  if (deserializer.checkIfTrue()) {
+    size_t num_labels = deserializer.readFixedArrayLength();
+    mesh->labels.resize(num_labels);
+    for (size_t i = 0; i < num_labels; ++i) {
+      deserializer.read(mesh->labels.at(i));
+    }
   }
 
   return mesh;
