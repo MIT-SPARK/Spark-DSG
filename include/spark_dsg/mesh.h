@@ -64,16 +64,9 @@ class Mesh {
   using Timestamp = uint64_t;
   using Label = uint32_t;
 
-  // Constructors.
   Mesh(bool has_colors = true, bool has_timestamps = true, bool has_labels = true);
 
   virtual ~Mesh();
-
-  // Assignment operators and constructors
-  Mesh& operator=(const Mesh& other);
-  Mesh& operator=(Mesh&& other) noexcept;
-  Mesh(const Mesh& other);
-  Mesh(Mesh&& other) noexcept;
 
   /**
    * @brief Check whether the mesh is empty

@@ -123,7 +123,10 @@ void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
   // Load mesh.
   std::vector<uint8_t> buffer;
   converter.read("mesh", buffer);
-  attrs.mesh = *Mesh::deserializeFromBinary(buffer.data(), buffer.size());
+  auto mesh = Mesh::deserializeFromBinary(buffer.data(), buffer.size());
+  attrs.mesh.colors = mesh->colors;
+  attrs.mesh.faces = mesh->faces;
+  attrs.mesh.points = mesh->points;
 
   // Load trajectory by unraveling the packed positions.
   std::vector<float> trajectory;
