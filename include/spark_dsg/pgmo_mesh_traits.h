@@ -33,6 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <optional>
+
 #include "spark_dsg/mesh.h"
 
 namespace spark_dsg {

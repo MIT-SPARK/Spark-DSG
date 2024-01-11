@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/bounding_box_extraction.h"
 
+#include <optional>
+
 namespace spark_dsg {
 namespace bounding_box {
 
