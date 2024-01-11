@@ -313,6 +313,20 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                      &PlaceNodeAttributes::deformation_connections)
       .def_readwrite("is_active", &PlaceNodeAttributes::is_active);
 
+  py::class_<KhronosObjectAttributes, ObjectNodeAttributes>(module,
+                                                            "KhronosObjectAttributes")
+      .def(py::init<>())
+      .def_readwrite("first_observed_ns", &KhronosObjectAttributes::first_observed_ns)
+      .def_readwrite("last_observed_ns", &KhronosObjectAttributes::last_observed_ns)
+      .def(
+          "mesh",
+          [](const KhronosObjectAttributes& attrs) { return &attrs.mesh; },
+          py::return_value_policy::reference_internal)
+      .def_readwrite("trajectory_timestamps",
+                     &KhronosObjectAttributes::trajectory_timestamps)
+      .def_readwrite("trajectory_positions",
+                     &KhronosObjectAttributes::trajectory_positions);
+
   py::class_<RegionNodeAttributes, SemanticNodeAttributes>(module,
                                                            "RegionNodeAttributes")
       .def(py::init<>())
