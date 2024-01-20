@@ -33,28 +33,45 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+
 #include <Eigen/Dense>
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <unordered_set>
 
 namespace spark_dsg {
 
 struct Color {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-  uint8_t a;
+  uint8_t r = 0;
+  uint8_t g = 0;
+  uint8_t b = 0;
+  uint8_t a = 255;
+
+  Color() = default;
+  Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {}
+  virtual ~Color() = default;
+
+  bool operator==(const Color& other) const {
+    return r == other.r && g == other.g && b == other.b && a == other.a;
+  }
+  bool operator!=(const Color& other) const { return !(*this == other); }
 };
 
 class Mesh {
  public:
   using Ptr = std::shared_ptr<Mesh>;
+  using ConstPtr = std::shared_ptr<const Mesh>;
   using Pos = Eigen::Vector3f;
   using Face = std::array<size_t, 3>;
   using Timestamp = uint64_t;
   using Label = uint32_t;
+  using Positions = std::vector<Pos>;
+  using Colors = std::vector<Color>;
+  using Timestamps = std::vector<Timestamp>;
+  using Labels = std::vector<Label>;
+  using Faces = std::vector<Face>;
 
   Mesh(bool has_colors = true, bool has_timestamps = true, bool has_labels = true);
 
@@ -95,7 +112,7 @@ class Mesh {
   /**
    * @brief Get current position of vertex
    */
-  Pos pos(size_t index) const;
+  const Pos& pos(size_t index) const;
 
   /**
    * @brief Set position of vertex
@@ -105,7 +122,7 @@ class Mesh {
   /**
    * @brief Get current color of vertex
    */
-  Color color(size_t index) const;
+  const Color& color(size_t index) const;
 
   /**
    * @brief Set current color of vertex
@@ -184,15 +201,34 @@ class Mesh {
    */
   static Ptr load(std::string filepath);
 
+  /**
+   * @brief Erase the vertices with index in the given vector from the mesh. This will
+   * re-index the faces and prune faces that are no longer valid.
+   * @param indices The indices of the vertices to erase.
+   */
+  void eraseVertices(const std::unordered_set<size_t>& indices);
+
+  /**
+   * @brief Erase the faces with index in the given vector from the mesh. If
+   * update_vertices is true, this will also remove any vertices that are no longer
+   * referenced by any faces and update the face indices to reflect the new vertex
+   * indices.
+   * @param indices The indices of the faces to erase.
+   * @param update_vertices Whether to remove vertices that are no longer referenced by
+   * any faces.
+   */
+  void eraseFaces(const std::unordered_set<size_t>& indices,
+                  const bool update_vertices = true);
+
  public:
   const bool has_colors;
   const bool has_timestamps;
   const bool has_labels;
-  std::vector<Pos> points;
-  std::vector<Color> colors;
-  std::vector<Timestamp> stamps;
-  std::vector<Label> labels;
-  std::vector<Face> faces;
+  Positions points;
+  Colors colors;
+  Timestamps stamps;
+  Labels labels;
+  Faces faces;
 };
 
 }  // namespace spark_dsg

@@ -184,7 +184,8 @@ dmypy.json
 # IDEs
 .vscode/
 
-# End of https://www.toptal.com/developers/gitignore/api/python,c++
-#
 compile_commands.json
 install
+
+# Catkin test outputs
+Testing/

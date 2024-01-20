@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/mesh.h"
 
+#include <unordered_map>
+
 namespace spark_dsg {
 
 Mesh::Mesh(bool has_colors, bool has_timestamps, bool has_labels)
@@ -64,15 +66,13 @@ void Mesh::resizeFaces(size_t size) { faces.resize(size); }
 
 Mesh::Ptr Mesh::clone() const { return std::make_shared<Mesh>(*this); }
 
-Mesh::Pos Mesh::pos(size_t index) const { return points.at(index); }
+const Mesh::Pos& Mesh::pos(size_t index) const { return points.at(index); }
 
 void Mesh::setPos(size_t index, const Mesh::Pos& pos) { points.at(index) = pos; }
 
-Color Mesh::color(size_t index) const { return colors.at(index); }
+const Color& Mesh::color(size_t index) const { return colors.at(index); }
 
-void Mesh::setColor(size_t index, const Color& color) {
-  colors.at(index) = color;
-}
+void Mesh::setColor(size_t index, const Color& color) { colors.at(index) = color; }
 
 Mesh::Timestamp Mesh::timestamp(size_t index) const { return stamps.at(index); }
 
@@ -87,5 +87,99 @@ void Mesh::setLabel(size_t index, Mesh::Label label) { labels.at(index) = label;
 const Mesh::Face& Mesh::face(size_t index) const { return faces.at(index); }
 
 Mesh::Face& Mesh::face(size_t index) { return faces.at(index); }
+
+void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
+  // Map old indices to new indices.
+  std::unordered_map<size_t, size_t> old_to_new;
+
+  // Allocating new storage is faster than erasing from all old storages.
+  Positions new_points;
+  Colors new_colors;
+  Timestamps new_stamps;
+  Labels new_labels;
+
+  const size_t num_new_vertices = numVertices() - indices.size();
+  new_points.reserve(num_new_vertices);
+  if (has_colors) {
+    new_colors.reserve(num_new_vertices);
+  }
+  if (has_timestamps) {
+    new_stamps.reserve(num_new_vertices);
+  }
+  if (has_labels) {
+    new_labels.reserve(num_new_vertices);
+  }
+
+  // Copy over the vertices that are not being removed.
+  size_t new_index = 0;
+  for (size_t old_index = 0; old_index < numVertices(); ++old_index) {
+    if (indices.count(old_index)) {
+      continue;
+    }
+    old_to_new[old_index] = new_index++;
+    new_points.push_back(points[old_index]);
+    if (has_colors) {
+      new_colors.push_back(colors[old_index]);
+    }
+    if (has_timestamps) {
+      new_stamps.push_back(stamps[old_index]);
+    }
+    if (has_labels) {
+      new_labels.push_back(labels[old_index]);
+    }
+  }
+
+  points = std::move(new_points);
+  colors = std::move(new_colors);
+  stamps = std::move(new_stamps);
+  labels = std::move(new_labels);
+
+  // Update the faces.
+  auto face_it = faces.begin();
+  while (face_it != faces.end()) {
+    bool erase_face = false;
+    for (size_t& index : *face_it) {
+      const auto new_index = old_to_new.find(index);
+      if (new_index == old_to_new.end()) {
+        erase_face = true;
+        break;
+      }
+      index = new_index->second;
+    }
+    if (erase_face) {
+      face_it = faces.erase(face_it);
+    } else {
+      ++face_it;
+    }
+  }
+}
+
+void Mesh::eraseFaces(const std::unordered_set<size_t>& indices,
+                      const bool update_vertices) {
+  Faces new_faces;
+  new_faces.reserve(numFaces() - indices.size());
+  for (size_t old_index = 0; old_index < numFaces(); ++old_index) {
+    if (!indices.count(old_index)) {
+      new_faces.push_back(faces[old_index]);
+    }
+  }
+  faces = std::move(new_faces);
+
+  if (!update_vertices) {
+    return;
+  }
+
+  std::unordered_set<size_t> unused_vertices;
+  unused_vertices.reserve(numVertices());
+  for (size_t i = 0; i < numVertices(); ++i) {
+    unused_vertices.insert(i);
+  }
+  for (const auto& face : faces) {
+    for (const auto index : face) {
+      unused_vertices.erase(index);
+    }
+  }
+  eraseVertices(unused_vertices);
+}
 
 }  // namespace spark_dsg
