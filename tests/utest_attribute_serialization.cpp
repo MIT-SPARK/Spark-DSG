@@ -260,6 +260,25 @@ TEST(AttributeSerializationTests, SerializeNodeAttributes) {
     ASSERT_TRUE(result != nullptr);
     EXPECT_EQ(expected, *result) << output;
   }
+
+  {  // khronos attributes
+    // TODO(lschmid): Support json serialization in the future, doesn't seem to work out
+    // of the box. KhronosObjectAttributes expected; expected.first_observed_ns = {0, 1,
+    // 2}; expected.last_observed_ns = {3, 4, 5}; expected.mesh.resizeVertices(6);
+    // expected.mesh.resizeFaces(7);
+    // expected.trajectory_timestamps = {8, 9, 10};
+    // expected.trajectory_positions.resize(11, Eigen::Vector3f::UnitX());
+    // expected.dynamic_object_points.emplace_back(12, Eigen::Vector3f::UnitY());
+    // expected.dynamic_object_points.emplace_back(13, Eigen::Vector3f::UnitZ());
+    // expected.details["test"] = {14, 15, 16};
+    // expected.details["test2"] = {17, 18, 19};
+
+    // const json output = expected;
+    // auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
+
+    // ASSERT_TRUE(result != nullptr);
+    // EXPECT_EQ(expected, *result) << output;
+  }
 }
 
 TEST(AttributeSerializationTests, SerializeEdgeInfo) {

@@ -43,6 +43,7 @@ namespace spark_dsg {
 
 void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
   serialization::BinarySerializer serializer(&buffer);
+  const auto header = io::FileHeader::current();
 
   // Write the mesh configuration.
   serializer.write(has_colors);
@@ -79,6 +80,13 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
     serializer.write(label);
   }
 
+  if (header.project_name == "khronos") {
+    serializer.startFixedArray(first_seen_stamps.size());
+    for (const auto& stamp : first_seen_stamps) {
+      serializer.write(stamp);
+    }
+  }
+
   // Faces.
   serializer.startFixedArray(3 * faces.size());
   for (const auto& face : faces) {
@@ -109,6 +117,7 @@ void Mesh::save(std::string filepath) const {
 Mesh::Ptr deserializeLegacyMesh(const serialization::BinaryDeserializer& deserializer) {
   // NOTE(lschmid): Since the new serialization is completely different all of this is
   // factored out.
+  const auto header = io::GlobalInfo::loadedHeader();
   auto mesh = std::make_shared<Mesh>();
   size_t num_vertices = deserializer.readFixedArrayLength() / 6;
   for (size_t i = 0; i < num_vertices; ++i) {
@@ -138,6 +147,13 @@ Mesh::Ptr deserializeLegacyMesh(const serialization::BinaryDeserializer& deseria
     deserializer.read(face[2]);
   }
 
+  // Stamps in old khronos format for compatibility.
+  std::vector<uint64_t> stamps;
+  if (header.project_name == "khronos") {
+    deserializer.read(mesh->first_seen_stamps);
+    deserializer.read(stamps);
+  }
+
   if (deserializer.checkIfTrue()) {
     size_t num_stamps = deserializer.readFixedArrayLength();
     mesh->stamps.resize(num_stamps);
@@ -152,6 +168,11 @@ Mesh::Ptr deserializeLegacyMesh(const serialization::BinaryDeserializer& deseria
     for (size_t i = 0; i < num_labels; ++i) {
       deserializer.read(mesh->labels.at(i));
     }
+  }
+
+  // Overwrite stamps w/ khronos last seenn stamps for now.
+  if (!stamps.empty()) {
+    mesh->stamps = stamps;
   }
 
   return mesh;
@@ -203,6 +224,14 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
   mesh->labels.resize(num_labels);
   for (size_t i = 0; i < num_labels; ++i) {
     deserializer.read(mesh->labels.at(i));
+  }
+
+  if (header.project_name == "khronos") {
+    const size_t num_first_seen_stamps = deserializer.readFixedArrayLength();
+    mesh->first_seen_stamps.resize(num_first_seen_stamps);
+    for (size_t i = 0; i < num_first_seen_stamps; ++i) {
+      deserializer.read(mesh->first_seen_stamps.at(i));
+    }
   }
 
   // Faces.

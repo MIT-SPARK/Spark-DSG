@@ -151,19 +151,41 @@ DynamicSceneGraph::Ptr loadDsgBinary(const std::string& filepath) {
 
 void checkCompatibility(const FileHeader& loaded, const FileHeader& current) {
   // Check the project name.
-  if (loaded.project_name != current.project_name) {
+  checkProjectCompatibility(loaded, current);
+
+  // TODO(lschmid): Add version compatibility checks if needed and once once there.
+}
+
+void checkProjectCompatibility(const FileHeader& loaded, const FileHeader& current) {
+  // Check for identical projects.
+  if (loaded.project_name == current.project_name) {
+    return;
+  }
+
+  // Check for known projects.
+  // NOTE(lschmid): Modifications for external projects will always be breaking
+  // changes that are unknown to, so we employ a hard check here. Alternatively, this
+  // distinction could also be more fine graind for known projects.
+  const auto it = PROJECT_COMPATIBILITY.find(current.project_name);
+  if (it == PROJECT_COMPATIBILITY.end()) {
     std::stringstream msg;
     msg << "Attempted to load invalid binary file: the loaded file was created with a "
            "different project name ("
         << loaded.project_name << ") than the current project name ("
         << current.project_name << ").";
     throw(std::runtime_error(msg.str()));
-    // NOTE(lschmid): Modifications for external projects will always be breaking
-    // changes that are unknown to, so we employ a hard check here. Alternatively, this
-    // distinction could also be more fine graind for known projects.
   }
+  const auto& compatible_projects = it->second;
 
-  // TODO(lschmid): Add version compatibility checks if needed and once once there.
+  const auto it2 = compatible_projects.find(loaded.project_name);
+  if (it2 == compatible_projects.end()) {
+    std::stringstream msg;
+    msg << "Attempted to load invalid binary file: the loaded file was created with a "
+           "different project name ("
+        << loaded.project_name << ") than the current project name ("
+        << current.project_name << ").";
+    throw(std::runtime_error(msg.str()));
+  }
 }
 
 FileHeader FileHeader::current() {

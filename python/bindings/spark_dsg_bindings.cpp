@@ -603,6 +603,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("has_node", &DynamicSceneGraph::hasNode)
       .def("has_edge",
            py::overload_cast<NodeId, NodeId>(&DynamicSceneGraph::hasEdge, py::const_))
+      .def("has_mesh", &DynamicSceneGraph::hasMesh)
       .def(
           "get_layer",
           [](const DynamicSceneGraph& graph, LayerId layer_id) {

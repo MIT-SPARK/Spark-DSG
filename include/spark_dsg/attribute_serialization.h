@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/graph_file_io.h"
 #include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
@@ -85,6 +86,85 @@ void deserialize(const Converter& converter, ObjectNodeAttributes& attrs) {
   converter.read("mesh_connections", attrs.mesh_connections);
   converter.read("registered", attrs.registered);
   converter.read("world_R_object", attrs.world_R_object);
+}
+
+template <typename Converter>
+void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+
+  // Save time information.
+  converter.write("first_observed_ns", attrs.first_observed_ns);
+  converter.write("last_observed_ns", attrs.last_observed_ns);
+
+  // Save mesh in binary form.
+  std::vector<uint8_t> buffer;
+  attrs.mesh.serializeToBinary(buffer);
+  converter.write("mesh", buffer);
+
+  // Store all other attributes.
+  converter.write("trajectory_positions", attrs.trajectory_positions);
+  converter.write("trajectory_timestamps", attrs.trajectory_timestamps);
+  converter.write("dynamic_object_points", attrs.dynamic_object_points);
+  // NOTE(lschmid): It may well be that json serialization does not support this.
+  converter.write("details", attrs.details);
+}
+
+template <typename Converter>
+void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  const auto header = io::GlobalInfo::loadedHeader();
+
+  // Load time information.
+  converter.read("first_observed_ns", attrs.first_observed_ns);
+  converter.read("last_observed_ns", attrs.last_observed_ns);
+
+  // Load mesh.
+  if (header.version < io::FileHeader::Version(1, 0, 1)) {
+    // Support Legacy Meshes.
+    std::vector<float> xyz;
+    std::vector<uint8_t> rgba;
+    std::vector<uint32_t> faces;
+    converter.read("vertices", xyz);
+    converter.read("colors", rgba);
+    converter.read("faces", faces);
+    const size_t num_vertices = xyz.size() / 3;
+    const size_t num_faces = faces.size() / 3;
+    attrs.mesh.resizeVertices(num_vertices);
+    attrs.mesh.resizeFaces(num_faces);
+    for (size_t i = 0; i < num_vertices; ++i) {
+      attrs.mesh.setPos(i, {xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]});
+      attrs.mesh.setColor(
+          i, {rgba[4 * i], rgba[4 * i + 1], rgba[4 * i + 2], rgba[4 * i + 3]});
+    }
+    for (size_t i = 0; i < num_faces; ++i) {
+      auto& face = attrs.mesh.face(i);
+      for (size_t j = 0; j < 3; ++j) {
+        face[j] = faces[3 * i + j];
+      }
+    }
+    // Load trajectory by unraveling the packed positions.
+    std::vector<float> trajectory;
+    converter.read("trajectory_positions", trajectory);
+    converter.read("trajectory_timestamps", attrs.trajectory_timestamps);
+    const size_t num_trajectory_points = trajectory.size() / 3;
+    attrs.trajectory_positions.resize(num_trajectory_points);
+    for (size_t i = 0; i < num_trajectory_points; ++i) {
+      Eigen::Vector3f& pos = attrs.trajectory_positions[i];
+      pos.x() = trajectory[3 * i];
+      pos.y() = trajectory[3 * i + 1];
+      pos.z() = trajectory[3 * i + 2];
+    }
+    return;
+  }
+
+  std::vector<uint8_t> buffer;
+  converter.read("mesh", buffer);
+  attrs.mesh = *Mesh::deserializeFromBinary(buffer.data(), buffer.size());
+
+  converter.read("trajectory_positions", attrs.trajectory_positions);
+  converter.read("trajectory_timestamps", attrs.trajectory_timestamps);
+  converter.read("dynamic_object_points", attrs.dynamic_object_points);
+  converter.read("details", attrs.details);
 }
 
 template <typename Converter>

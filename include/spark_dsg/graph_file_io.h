@@ -36,6 +36,7 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 
 #include "spark_dsg/dynamic_scene_graph.h"
 
@@ -45,7 +46,12 @@ namespace io {
 
 // Define the current project and version when serializing data with this
 // implementation.
-inline const std::string CURRENT_PROJECT_NAME = "main";
+inline const std::string CURRENT_PROJECT_NAME = "khronos";
+
+// Which project names are compatible to load given the current project. <current,
+// {compatible, ...}>. Projects are always assumed to be compatible with themselves.
+inline const std::unordered_map<std::string, std::unordered_set<std::string>>
+    PROJECT_COMPATIBILITY = {{"khronos", {"main"}}};
 
 // Define file extensions and types.
 inline const std::string JSON_EXTENSION = ".json";
@@ -142,6 +148,8 @@ struct FileHeader {
 void checkCompatibility(const FileHeader& loaded,
                         const FileHeader& current = FileHeader::current());
 
+void checkProjectCompatibility(const FileHeader& loaded,
+                               const FileHeader& current = FileHeader::current());
 /**
  * @brief Global access to the header currently used for de-serialization.
  * TODO(lschmid): This should probably be cleaned up once attribute serialization is

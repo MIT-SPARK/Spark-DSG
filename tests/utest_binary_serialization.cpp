@@ -233,6 +233,26 @@ TEST(BinarySerializationTests, SerializeEigenQuaternion) {
   }
 }
 
+TEST(BinarySerializationTests, SerializeMap) {
+  {  // simple type
+    std::map<uint32_t, uint32_t> expected;
+    expected[1] = 2;
+    expected[3] = 4;
+    expected[5] = 6;
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+
+  { // more complex type
+    std::map<std::string, std::vector<size_t>> expected;
+    expected["a"] = {1, 2, 3};
+    expected["b"] = {4, 5, 6};
+    expected["c"] = {7, 8, 9};
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+}
+
 TEST(BinarySerializationTests, SerializeBoundingBox) {
   {  // invalid type
     BoundingBox expected;

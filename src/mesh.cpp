@@ -65,10 +65,11 @@ void Mesh::resizeVertices(size_t size) {
     colors.resize(size);
   }
   if (has_timestamps) {
-    stamps.resize(size);
+    stamps.resize(size, 0);
+    first_seen_stamps.resize(size, 0);
   }
   if (has_labels) {
-    labels.resize(size);
+    labels.resize(size, 0);
   }
 }
 
@@ -90,6 +91,14 @@ void Mesh::setTimestamp(size_t index, Mesh::Timestamp timestamp) {
   stamps.at(index) = timestamp;
 }
 
+Mesh::Timestamp Mesh::firstSeenTimestamp(size_t index) const {
+  return first_seen_stamps.at(index);
+}
+
+void Mesh::setFirstSeenTimestamp(size_t index, Mesh::Timestamp timestamp) {
+  first_seen_stamps.at(index) = timestamp;
+}
+
 Mesh::Label Mesh::label(size_t index) const { return labels.at(index); }
 
 void Mesh::setLabel(size_t index, Mesh::Label label) { labels.at(index) = label; }
@@ -106,6 +115,7 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
   Positions new_points;
   Colors new_colors;
   Timestamps new_stamps;
+  Timestamps new_first_seen_stamps;
   Labels new_labels;
 
   const size_t num_new_vertices = numVertices() - indices.size();
@@ -115,6 +125,7 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
   }
   if (has_timestamps) {
     new_stamps.reserve(num_new_vertices);
+    new_first_seen_stamps.reserve(num_new_vertices);
   }
   if (has_labels) {
     new_labels.reserve(num_new_vertices);
@@ -133,6 +144,7 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
     }
     if (has_timestamps) {
       new_stamps.push_back(stamps[old_index]);
+      new_first_seen_stamps.push_back(first_seen_stamps[old_index]);
     }
     if (has_labels) {
       new_labels.push_back(labels[old_index]);

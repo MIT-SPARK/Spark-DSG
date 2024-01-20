@@ -41,6 +41,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <map>
 
 #include "spark_dsg/node_attributes.h"
 
@@ -232,6 +233,15 @@ void write_binary(Serializer& s, const std::list<T>& values) {
   }
 }
 
+template <typename Serializer, typename K, typename V>
+void write_binary(Serializer& s, const std::map<K,V>& values) {
+  s.startFixedArray(values.size());
+  for (const auto& value : values) {
+    s.write(value.first);
+    s.write(value.second);
+  }
+}
+
 template <typename Deserializer>
 size_t read_binary(const Deserializer& s, bool& value) {
   PackType ref_type = s.getCurrType();
@@ -343,6 +353,19 @@ size_t read_binary(const Deserializer& s, std::list<T>& values) {
     T temp;
     s.read(temp);
     values.push_back(temp);
+  }
+  return 0;
+}
+
+template <typename Deserializer, typename K, typename V>
+size_t read_binary(const Deserializer& s, std::map<K, V>& values) {
+  values.clear();
+  const size_t length = s.readFixedArrayLength();
+  for (size_t i = 0; i < length; ++i) {
+    K temp;
+    s.read(temp);
+    auto& value = values[temp];
+    s.read(value);
   }
   return 0;
 }

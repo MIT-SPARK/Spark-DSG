@@ -33,14 +33,17 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+
 #include <chrono>
 #include <list>
+#include <map>
 #include <memory>
 #include <optional>
 #include <ostream>
 #include <string>
 
 #include "spark_dsg/bounding_box.h"
+#include "spark_dsg/mesh.h"
 #include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
@@ -295,6 +298,48 @@ struct AgentNodeAttributes : public NodeAttributes {
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const override;
+};
+
+/**
+ * @brief Attributes for khronos object nodes.
+ */
+struct KhronosObjectAttributes : public ObjectNodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  /**
+   * @brief desired pointer type of node
+   */
+  using Ptr = std::unique_ptr<KhronosObjectAttributes>;
+
+  KhronosObjectAttributes() : mesh(true, false, false){};
+  virtual ~KhronosObjectAttributes() = default;
+
+  NodeAttributes::Ptr clone() const override {
+    return std::make_unique<KhronosObjectAttributes>(*this);
+  }
+
+  // Attributes.
+  // Sequence of observation starts and ends.
+  std::vector<uint64_t> first_observed_ns;
+  std::vector<uint64_t> last_observed_ns;
+
+  // Mesh of the object. Positions of vertices are relative to the object bounding box
+  // origin.
+  Mesh mesh;
+
+  // If the object is considered dynamic, store the trajectory of the object.
+  // NOTE(lschmid): Currently dynamic and static objects just have the
+  // khronos-attributes. Could change in the future.
+  std::vector<uint64_t> trajectory_timestamps;
+  std::vector<Eigen::Vector3f> trajectory_positions;
+  // Store per frame the 3D dynamic points of the object in world frame.
+  std::vector<std::vector<Eigen::Vector3f>> dynamic_object_points;
+
+  // Optionally store additional detailed infos if needed.
+  std::map<std::string, std::vector<size_t>> details;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 }  // namespace spark_dsg
