@@ -45,13 +45,11 @@ void writeGraph(const DynamicSceneGraph& graph,
 
 DynamicSceneGraph::Ptr readGraph(
     const uint8_t* const buffer,
-    size_t length,
-    const io::FileHeader& header = io::FileHeader::current());
+    size_t length);
 
 inline DynamicSceneGraph::Ptr readGraph(
-    const std::vector<uint8_t>& buffer,
-    const io::FileHeader& header = io::FileHeader::current()) {
-  return readGraph(buffer.data(), buffer.size(), header);
+    const std::vector<uint8_t>& buffer) {
+  return readGraph(buffer.data(), buffer.size());
 }
 
 bool updateGraph(DynamicSceneGraph& graph,

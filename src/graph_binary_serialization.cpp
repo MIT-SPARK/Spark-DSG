@@ -220,9 +220,7 @@ void writeGraph(const DynamicSceneGraph& graph,
   mesh->serializeToBinary(buffer);
 }
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer,
-                                 size_t length,
-                                 const io::FileHeader&) {
+DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
 
   std::vector<LayerId> layer_ids;

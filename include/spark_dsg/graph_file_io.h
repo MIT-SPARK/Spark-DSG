@@ -127,6 +127,7 @@ struct FileHeader {
 
   // Serilization.
   static FileHeader current();
+  static FileHeader legacy();
   std::vector<uint8_t> serialize() const;
   static std::optional<FileHeader> deserialize(const std::vector<uint8_t>& buffer,
                                                size_t* offset = nullptr);
@@ -140,6 +141,31 @@ struct FileHeader {
  */
 void checkCompatibility(const FileHeader& loaded,
                         const FileHeader& current = FileHeader::current());
+
+/**
+ * @brief Global access to the header currently used for de-serialization.
+ * TODO(lschmid): This should probably be cleaned up once attribute serialization is
+ * refactored but this should work till we're there.
+ */
+struct GlobalInfo {
+ public:
+  /**
+   * @brief Get the current header used for de-serialization.
+   */
+  static const FileHeader& loadedHeader() { return loaded_header_; };
+
+  /**
+   * @brief Set the current header used for de-serialization.
+   */
+  struct ScopedInfo {
+    ScopedInfo(const FileHeader& header) { loaded_header_ = header; }
+    ~ScopedInfo() { loaded_header_ = FileHeader::current(); }
+  };
+
+ private:
+  GlobalInfo() = default;
+  thread_local inline static FileHeader loaded_header_ = FileHeader::current();
+};
 
 }  // namespace io
 

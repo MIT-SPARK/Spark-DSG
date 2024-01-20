@@ -41,7 +41,17 @@ namespace spark_dsg {
 Mesh::Mesh(bool has_colors, bool has_timestamps, bool has_labels)
     : has_colors(has_colors), has_timestamps(has_timestamps), has_labels(has_labels) {}
 
-Mesh::~Mesh() {}
+Mesh& Mesh::operator=(const Mesh& other) {
+  // NOTE(lschmid): The const cast only allows changing the 'has_*' flags. This should
+  // be intuitive behavior if we assign entire meshes and is only allowed here.
+  const_cast<Mesh&>(*this) = other;
+  return *this;
+}
+
+Mesh& Mesh::operator=(Mesh&& other) {
+  const_cast<Mesh&>(*this) = std::move(other);
+  return *this;
+}
 
 bool Mesh::empty() const { return points.empty() && faces.empty(); }
 

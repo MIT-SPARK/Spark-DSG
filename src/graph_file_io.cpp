@@ -136,18 +136,17 @@ DynamicSceneGraph::Ptr loadDsgBinary(const std::string& filepath) {
 
   // Deserialize the header.
   size_t offset;
-  const std::optional<FileHeader> header = FileHeader::deserialize(buffer, &offset);
-  if (!header) {
-    throw std::runtime_error(
-        "invalid file: attempted to load a binary file that is not a "
-        "spark-dsg");
-  }
+  const auto read_header = FileHeader::deserialize(buffer, &offset);
+  // NOTE(lschmid) If there's no header saved, assume the file is legacy. This can
+  // probably be replaced with a strict check in the future.
+  const FileHeader header = read_header.value_or(FileHeader::legacy());
 
   // Check for compatibility issues.
-  checkCompatibility(*header);
+  checkCompatibility(header);
 
   // Deserialize the graph.
-  return readGraph(buffer.data() + offset, buffer.size() - offset, *header);
+  GlobalInfo::ScopedInfo info(header);
+  return readGraph(buffer.data() + offset, buffer.size() - offset);
 }
 
 void checkCompatibility(const FileHeader& loaded, const FileHeader& current) {
@@ -173,6 +172,13 @@ FileHeader FileHeader::current() {
   header.version.major = SPARK_DSG_VERSION_MAJOR;
   header.version.minor = SPARK_DSG_VERSION_MINOR;
   header.version.patch = SPARK_DSG_VERSION_PATCH;
+  return header;
+}
+
+FileHeader FileHeader::legacy() {
+  FileHeader header;
+  header.project_name = "main";
+  header.version = Version(1, 0, 0);
   return header;
 }
 

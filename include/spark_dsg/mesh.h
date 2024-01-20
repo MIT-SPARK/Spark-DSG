@@ -75,7 +75,12 @@ class Mesh {
 
   Mesh(bool has_colors = true, bool has_timestamps = true, bool has_labels = true);
 
-  virtual ~Mesh();
+  Mesh(const Mesh& other) = default;
+  Mesh(Mesh&& other) = default;
+  virtual ~Mesh() = default;
+
+  Mesh& operator=(const Mesh& other);
+  Mesh& operator=(Mesh&& other);
 
   /**
    * @brief Check whether the mesh is empty

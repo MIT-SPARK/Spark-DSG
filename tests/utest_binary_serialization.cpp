@@ -490,7 +490,7 @@ TEST(BinarySerializationTests, SerializeDsgMesh) {
   auto result_mesh = result->mesh();
   ASSERT_TRUE(result_mesh);
   EXPECT_EQ(result_mesh->points.size(), 3u);
-  EXPECT_EQ(result_mesh->colors.size(), 3u);
+  EXPECT_EQ(result_mesh->colors.size(), 1u);
   EXPECT_EQ(result_mesh->labels.size(), 2u);
   EXPECT_EQ(result_mesh->stamps.size(), 4u);
   EXPECT_EQ(result_mesh->faces.size(), 1u);

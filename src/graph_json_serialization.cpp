@@ -38,6 +38,7 @@
 
 #include "serialization_helpers.h"
 #include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/graph_file_io.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/scene_graph_layer.h"
 
@@ -59,6 +60,25 @@ using NodeCallback = std::function<void(NodeId, LayerId, NodeAttributes::Ptr&&)>
 using DynamicNodeCallback = std::function<void(
     LayerId, NodeId, std::chrono::nanoseconds, NodeAttributes::Ptr&&)>;
 using EdgeCallback = std::function<void(NodeId, NodeId, EdgeAttributes::Ptr&&)>;
+
+namespace io {
+  
+void to_json(json& record, const FileHeader& header) {
+  record = {{"project_name", header.project_name},
+            {"version",
+             {{"major", header.version.major},
+              {"minor", header.version.minor},
+              {"patch", header.version.patch}}}};
+}
+
+void from_json(const json& record, FileHeader& header) {
+  header.project_name = record.at("project_name").get<std::string>();
+  header.version.major = record.at("version").at("major").get<uint8_t>();
+  header.version.minor = record.at("version").at("minor").get<uint8_t>();
+  header.version.patch = record.at("version").at("patch").get<uint8_t>();
+}
+
+}  // namespace io
 
 void to_json(json& record, const SceneGraphNode& node) {
   record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
@@ -275,6 +295,7 @@ EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
 
 std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
   json record;
+  record[io::FileHeader::IDENTIFIER_STRING + "_header"] = io::FileHeader::current();
   record["directed"] = false;
   record["multigraph"] = false;
   record["nodes"] = json::array();
@@ -333,6 +354,16 @@ std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
 DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
     const std::string& contents) {
   const auto record = json::parse(contents);
+  const std::string header_field_name = io::FileHeader::IDENTIFIER_STRING + "_header";
+  io::FileHeader header;
+  if (record.contains(header_field_name)) {
+    header = record.at(header_field_name).get<io::FileHeader>();
+  } else {
+    // NOTE(lschmid): If no header is stored we just assume it's a legacy file. This can
+    // probably be changed to a proper check of file type in the future.
+    header = io::FileHeader::legacy();
+  }
+  io::GlobalInfo::ScopedInfo info(header);
   const auto mesh_layer_id = record.at("mesh_layer_id").get<LayerId>();
   const auto layer_ids = record.at("layer_ids").get<LayerIds>();
 
@@ -387,12 +418,16 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
 }
 
 std::string Mesh::serializeToJson() const {
-  json record = *this;
+  json record;
+  record["header"] = io::FileHeader::current();
+  record["mesh"] = *this;
   return record.dump();
 }
 
 Mesh::Ptr Mesh::deserializeFromJson(const std::string& contents) {
   const auto record = json::parse(contents);
+  const auto header = record.at("header").get<io::FileHeader>();
+  io::GlobalInfo::ScopedInfo info(header);
   auto mesh = std::make_shared<Mesh>(record.at("mesh").get<Mesh>());
   return mesh;
 }
