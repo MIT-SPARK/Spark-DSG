@@ -55,6 +55,15 @@ Mesh& Mesh::operator=(Mesh&& other) {
 
 bool Mesh::empty() const { return points.empty() && faces.empty(); }
 
+void Mesh::clear() {
+  points.clear();
+  colors.clear();
+  stamps.clear();
+  first_seen_stamps.clear();
+  labels.clear();
+  faces.clear();
+}
+
 size_t Mesh::numVertices() const { return points.size(); }
 
 size_t Mesh::numFaces() const { return faces.size(); }
