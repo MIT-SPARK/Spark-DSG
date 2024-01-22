@@ -38,8 +38,8 @@
 #include <array>
 #include <cstdint>
 #include <memory>
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 namespace spark_dsg {
 
@@ -87,6 +87,11 @@ class Mesh {
    * @returns Returns true if the mesh has vertices and faces
    */
   bool empty() const;
+
+  /**
+   * @brief Remove all vertices and faces from the mesh.
+   */
+  void clear();
 
   /**
    * @brief Get total number of vertices

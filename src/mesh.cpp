@@ -42,18 +42,38 @@ Mesh::Mesh(bool has_colors, bool has_timestamps, bool has_labels)
     : has_colors(has_colors), has_timestamps(has_timestamps), has_labels(has_labels) {}
 
 Mesh& Mesh::operator=(const Mesh& other) {
-  // NOTE(lschmid): The const cast only allows changing the 'has_*' flags. This should
-  // be intuitive behavior if we assign entire meshes and is only allowed here.
-  const_cast<Mesh&>(*this) = other;
+  const_cast<bool&>(has_colors) = other.has_colors;
+  const_cast<bool&>(has_timestamps) = other.has_timestamps;
+  const_cast<bool&>(has_labels) = other.has_labels;
+  points = other.points;
+  colors = other.colors;
+  stamps = other.stamps;
+  labels = other.labels;
+  faces = other.faces;
   return *this;
 }
 
 Mesh& Mesh::operator=(Mesh&& other) {
-  const_cast<Mesh&>(*this) = std::move(other);
+  const_cast<bool&>(has_colors) = other.has_colors;
+  const_cast<bool&>(has_timestamps) = other.has_timestamps;
+  const_cast<bool&>(has_labels) = other.has_labels;
+  points = std::move(other.points);
+  colors = std::move(other.colors);
+  stamps = std::move(other.stamps);
+  labels = std::move(other.labels);
+  faces = std::move(other.faces);
   return *this;
 }
 
 bool Mesh::empty() const { return points.empty() && faces.empty(); }
+
+void Mesh::clear() {
+  points.clear();
+  colors.clear();
+  stamps.clear();
+  labels.clear();
+  faces.clear();
+}
 
 size_t Mesh::numVertices() const { return points.size(); }
 
