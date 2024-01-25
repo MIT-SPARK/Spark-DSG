@@ -178,6 +178,7 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
   colors = std::move(new_colors);
   stamps = std::move(new_stamps);
   labels = std::move(new_labels);
+  first_seen_stamps = std::move(new_first_seen_stamps);
 
   // Update the faces.
   auto face_it = faces.begin();
