@@ -51,6 +51,12 @@ namespace spark_dsg {
  */
 using SemanticLabel = uint32_t;
 
+struct MeshIndex {
+  size_t robot_id;
+  size_t idx;
+  bool operator<(const MeshIndex& other) const;
+};
+
 /**
  * @brief Base node attributes.
  *
@@ -263,6 +269,68 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   std::vector<uint8_t> mesh_vertex_labels;
   //! deformation vertices that are closest to this place
   std::vector<size_t> deformation_connections;
+
+ protected:
+  virtual std::ostream& fill_ostream(std::ostream& out) const override;
+};
+
+/**
+ * @brief Additional node attributes for a 2d (outdoor) place
+ * In addition to the normal semantic properties, a 2d place has ...
+ */
+struct Place2dNodeAttributes : public SemanticNodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! desired pointer type of node
+  using Ptr = std::unique_ptr<Place2dNodeAttributes>;
+  //! color type for node
+  using ColorVector = SemanticNodeAttributes::ColorVector;
+
+  Place2dNodeAttributes();
+
+  /**
+   * @brief make places node attributes
+   * @param boundary Boundary points surrounding place
+   */
+  Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary);
+
+  virtual ~Place2dNodeAttributes() = default;
+
+  virtual NodeAttributes::Ptr clone() const override {
+    return std::make_unique<Place2dNodeAttributes>(*this);
+  }
+
+  //! points on boundary of place region
+  std::vector<Eigen::Vector3d> boundary;
+  //! center of intersection checking ellipsoid
+  Eigen::Vector3d ellipse_centroid;
+  //! shape matrix for intersection checking ellipsoid
+  Eigen::Matrix<double, 2, 2> ellipse_matrix_compress;
+  //! shape matrix for plotting ellipsoid
+  Eigen::Matrix<double, 2, 2> ellipse_matrix_expand;
+  //! pcl mesh vertices corresponding to boundary points
+  std::vector<MeshIndex> pcl_boundary_connections;
+  // TODO(Yun) this is a bit confusing, for all places other than hydra-multi, usually
+  // only use the idx attribute of the MeshIndex. In hydra-multi, the robot-id is only
+  // used when rewiring the mesh and not when updating
+  //! voxblox mesh vertices that are closest to this place
+  std::vector<NearestVertexInfo> voxblox_mesh_connections;
+  //! pcl mesh vertices that are closest to this place
+  std::vector<MeshIndex> pcl_mesh_connections;
+  //! min vertex index of associated mesh vertices
+  size_t pcl_min_index;
+  //! max vertex index of associated mesh vertices
+  size_t pcl_max_index;
+  //! semantic labels of parents
+  std::vector<uint8_t> mesh_vertex_labels;
+  //! deformation vertices that are closest to this place
+  std::vector<MeshIndex> deformation_connections;
+  //! tracks whether the node still needs to be cleaned up during merging
+  bool need_finish_merge;
+  //! whether this node has been merged to while in current active window
+  bool need_cleanup_splitting;
+  //! whether this node has mesh vertices in active window
+  bool has_active_mesh_indices;
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const override;

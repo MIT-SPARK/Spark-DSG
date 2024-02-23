@@ -120,6 +120,38 @@ void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
 }
 
 template <typename Converter>
+void serialize(Converter& converter, const Place2dNodeAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("boundary", attrs.boundary);
+  converter.write("ellipse_centroid", attrs.ellipse_centroid);
+  converter.write("ellipse_matrix_compress", attrs.ellipse_matrix_compress);
+  converter.write("ellipse_matrix_expand", attrs.ellipse_matrix_expand);
+  converter.write("pcl_boundary_connections", attrs.pcl_boundary_connections);
+  converter.write("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
+  converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.write("mesh_vertex_labels", attrs.mesh_vertex_labels);
+  converter.write("deformation_connections", attrs.deformation_connections);
+  converter.write("need_cleanup_splitting", attrs.need_cleanup_splitting);
+  converter.write("has_active_mesh_indices", attrs.has_active_mesh_indices);
+}
+
+template <typename Converter>
+void deserialize(const Converter& converter, Place2dNodeAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("boundary", attrs.boundary);
+  converter.read("ellipse_centroid", attrs.ellipse_centroid);
+  converter.read("ellipse_matrix_compress", attrs.ellipse_matrix_compress);
+  converter.read("ellipse_matrix_expand", attrs.ellipse_matrix_expand);
+  converter.read("pcl_boundary_connections", attrs.pcl_boundary_connections);
+  converter.read("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
+  converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
+  converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
+  converter.read("deformation_connections", attrs.deformation_connections);
+  converter.read("need_cleanup_splitting", attrs.need_cleanup_splitting);
+  converter.read("has_active_mesh_indices", attrs.has_active_mesh_indices);
+}
+
+template <typename Converter>
 void serialize(Converter& converter, const AgentNodeAttributes& attrs) {
   serialize(converter, static_cast<const NodeAttributes&>(attrs));
   converter.write("world_R_body", attrs.world_R_body);

@@ -124,4 +124,8 @@ void to_json(nlohmann::json& j, const NearestVertexInfo& b);
 
 void from_json(const nlohmann::json& j, NearestVertexInfo& b);
 
+void to_json(nlohmann::json& j, const MeshIndex& mi);
+
+void from_json(const nlohmann::json& j, MeshIndex& mi);
+
 }  // namespace spark_dsg

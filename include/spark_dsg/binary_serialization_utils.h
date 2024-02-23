@@ -505,4 +505,19 @@ size_t read_binary(const Deserializer& s, NearestVertexInfo& info) {
   return 0;
 }
 
+template <typename Deserializer>
+size_t read_binary(const Deserializer& s, MeshIndex& index) {
+  s.checkFixedArrayLength(4);
+  s.read(index.robot_id);
+  s.read(index.idx);
+  return 0;
+}
+
+template <typename Serializer>
+void write_binary(Serializer& s, const MeshIndex& index) {
+  s.startFixedArray(2);
+  s.write(index.robot_id);
+  s.write(index.idx);
+}
+
 }  // namespace spark_dsg

@@ -36,6 +36,13 @@
 
 namespace spark_dsg {
 
+bool MeshIndex::operator<(const MeshIndex& other) const {
+  if (robot_id != other.robot_id) {
+    return robot_id < other.robot_id;
+  }
+  return idx < other.idx;
+}
+
 NodeAttributes::NodeAttributes() : NodeAttributes(Eigen::Vector3d::Zero()) {}
 
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)
@@ -99,6 +106,17 @@ std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
   out << "  - distance: " << distance << std::endl;
   out << "  - num_basis_points: " << num_basis_points << std::endl;
+  return out;
+}
+
+Place2dNodeAttributes::Place2dNodeAttributes() : SemanticNodeAttributes() {}
+
+Place2dNodeAttributes::Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary)
+    : SemanticNodeAttributes(), boundary(boundary) {}
+
+std::ostream& Place2dNodeAttributes::fill_ostream(std::ostream& out) const {
+  SemanticNodeAttributes::fill_ostream(out);
+  out << "  - boundary.size(): " << boundary.size() << std::endl;
   return out;
 }
 
