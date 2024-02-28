@@ -440,35 +440,6 @@ size_t read_binary(const Deserializer& s, Quaternion<Scalar>& q) {
 
 namespace spark_dsg {
 
-template <typename Serializer>
-void write_binary(Serializer& s, const BoundingBox& box) {
-  s.startFixedArray(5);
-  s.write(static_cast<int32_t>(box.type));
-  s.write(box.min);
-  s.write(box.max);
-  s.write(box.world_P_center);
-  s.write(box.world_R_center);
-}
-
-template <typename Serializer>
-void write_binary(Serializer& s, const NearestVertexInfo& info) {
-  s.startFixedArray(4);
-  s.startFixedArray(3);
-  s.write(info.block[0]);
-  s.write(info.block[1]);
-  s.write(info.block[2]);
-  s.startFixedArray(3);
-  s.write(info.voxel_pos[0]);
-  s.write(info.voxel_pos[1]);
-  s.write(info.voxel_pos[2]);
-  s.write(info.vertex);
-  if (info.label) {
-    s.write(info.label.value());
-  } else {
-    s.write_type(serialization::PackType::NIL);
-  }
-}
-
 template <typename Deserializer>
 size_t read_binary(const Deserializer& s, BoundingBox& box) {
   s.checkFixedArrayLength(5);
@@ -484,25 +455,67 @@ size_t read_binary(const Deserializer& s, BoundingBox& box) {
   return 0;
 }
 
+template <typename Serializer>
+void write_binary(Serializer& s, const BoundingBox& box) {
+  s.startFixedArray(5);
+  s.write(static_cast<int32_t>(box.type));
+  s.write(box.min);
+  s.write(box.max);
+  s.write(box.world_P_center);
+  s.write(box.world_R_center);
+}
+
 template <typename Deserializer>
 size_t read_binary(const Deserializer& s, NearestVertexInfo& info) {
+  // array: [block_index, pos, vertex_index, label]
   s.checkFixedArrayLength(4);
+  // block index
   s.checkFixedArrayLength(3);
   s.read(info.block[0]);
   s.read(info.block[1]);
   s.read(info.block[2]);
+  // pos
   s.checkFixedArrayLength(3);
   s.read(info.voxel_pos[0]);
   s.read(info.voxel_pos[1]);
   s.read(info.voxel_pos[2]);
+  // vertex
   s.read(info.vertex);
+  // label
   const auto label_type = s.getCurrType();
   if (label_type == serialization::PackType::NIL) {
     s.checkType(serialization::PackType::NIL);
   } else {
-    s.read(*info.label);
+    // note: deferencing an optional without a value is UB
+    uint32_t label;
+    s.read(label);
+    info.label = label;
   }
   return 0;
+}
+
+template <typename Serializer>
+void write_binary(Serializer& s, const NearestVertexInfo& info) {
+  // array: [block_index, pos, vertex_index, label]
+  s.startFixedArray(4);
+  // block index
+  s.startFixedArray(3);
+  s.write(info.block[0]);
+  s.write(info.block[1]);
+  s.write(info.block[2]);
+  // pos
+  s.startFixedArray(3);
+  s.write(info.voxel_pos[0]);
+  s.write(info.voxel_pos[1]);
+  s.write(info.voxel_pos[2]);
+  // vertex
+  s.write(info.vertex);
+  // label
+  if (info.label) {
+    s.write(info.label.value());
+  } else {
+    s.write_type(serialization::PackType::NIL);
+  }
 }
 
 template <typename Deserializer>
