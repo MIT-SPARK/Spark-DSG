@@ -457,9 +457,10 @@ class DynamicSceneGraph {
 
   /**
    * @brief Clone the scene graph
+   * @param include_mesh Whether to also copy the mesh. Defaults to true.
    * @returns Copy of the scene graph
    */
-  DynamicSceneGraph::Ptr clone() const;
+  DynamicSceneGraph::Ptr clone(bool include_mesh = true) const;
 
   /**
    * @brief Save the DSG to file. By default, this will save a binary version of the

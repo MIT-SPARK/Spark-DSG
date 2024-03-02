@@ -751,7 +751,7 @@ void DynamicSceneGraph::removeAllStaleEdges() {
   removeStaleEdges(dynamic_interlayer_edges_);
 }
 
-DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
+DynamicSceneGraph::Ptr DynamicSceneGraph::clone(bool include_mesh) const {
   auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids, mesh_layer_id);
   for (const auto id_layer_pair : node_lookup_) {
     auto node = getNodePtr(id_layer_pair.first, id_layer_pair.second);
@@ -799,7 +799,7 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
     to_return->insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
-  if (mesh_) {
+  if (mesh_ && include_mesh) {
     to_return->mesh_ = mesh_->clone();
   }
 
