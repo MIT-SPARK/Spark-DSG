@@ -15,21 +15,11 @@ option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
 
+find_package(nlohmann_json REQUIRED)
+find_package(Eigen3 REQUIRED)
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(zmq libzmq)
-
-include(FetchContent)
-FetchContent_Declare(
-  json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
-)
-
-if(NOT json_POPULATED)
-  FetchContent_Populate(json)
-endif()
-
-add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
-
-find_package(Eigen3 REQUIRED)
 
 add_library(
   ${PROJECT_NAME}
@@ -62,16 +52,11 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 target_include_directories(
-  ${PROJECT_NAME}
-  PUBLIC $<INSTALL_INTERFACE:include>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${PCL_INCLUDE_DIRS}
+  ${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>
+                         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
-target_link_libraries(
-  ${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES} Eigen3::Eigen
-  PRIVATE "$<BUILD_INTERFACE:nlohmann_json::nlohmann_json>"
-)
+target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json)
 
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${zmq_LIBRARIES})

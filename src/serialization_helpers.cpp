@@ -32,7 +32,7 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "serialization_helpers.h"
+#include "spark_dsg/serialization_helpers.h"
 
 using nlohmann::json;
 

@@ -12,9 +12,9 @@
   <license>BSD</license>
 
   <buildtool_depend>cmake</buildtool_depend>
-  <depend>libpcl-all-dev</depend>
   <depend>eigen</depend>
-  <depend>libgoogle-glog-dev</depend>
+  <depend>libzmqpp-dev</depend>
+  <depend>nlohmann-json-dev</depend>
 
   <export>
       <build_type>cmake</build_type>

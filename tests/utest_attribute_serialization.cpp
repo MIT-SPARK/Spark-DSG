@@ -34,9 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 #include <spark_dsg/attribute_factory.h>
+#include <spark_dsg/graph_json_serialization.h>
+#include <spark_dsg/serialization_helpers.h>
 
-#include "graph_json_serialization.h"
-#include "serialization_helpers.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {

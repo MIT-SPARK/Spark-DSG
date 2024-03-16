@@ -32,15 +32,15 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "graph_json_serialization.h"
+#include "spark_dsg/graph_json_serialization.h"
 
 #include <fstream>
 
-#include "serialization_helpers.h"
 #include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/graph_file_io.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/serialization_helpers.h"
 
 namespace spark_dsg {
 
@@ -62,7 +62,7 @@ using DynamicNodeCallback = std::function<void(
 using EdgeCallback = std::function<void(NodeId, NodeId, EdgeAttributes::Ptr&&)>;
 
 namespace io {
-  
+
 void to_json(json& record, const FileHeader& header) {
   record = {{"project_name", header.project_name},
             {"version",
