@@ -280,7 +280,6 @@ std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
   record["nodes"] = json::array();
   record["edges"] = json::array();
   record["layer_ids"] = layer_ids;
-  record["mesh_layer_id"] = mesh_layer_id;
 
   for (const auto& id_layer_pair : layers_) {
     for (const auto& id_node_pair : id_layer_pair.second->nodes_) {
@@ -333,10 +332,8 @@ std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
 DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
     const std::string& contents) {
   const auto record = json::parse(contents);
-  const auto mesh_layer_id = record.at("mesh_layer_id").get<LayerId>();
   const auto layer_ids = record.at("layer_ids").get<LayerIds>();
-
-  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids, mesh_layer_id);
+  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
 
   std::map<NodeId, json> dynamic_contents;
   for (const auto& node : record.at("nodes")) {

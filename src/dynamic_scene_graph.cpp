@@ -50,17 +50,11 @@ DynamicSceneGraph::LayerIds getDefaultLayerIds() {
       DsgLayers::OBJECTS, DsgLayers::PLACES, DsgLayers::ROOMS, DsgLayers::BUILDINGS};
 }
 
-DynamicSceneGraph::DynamicSceneGraph(LayerId mesh_layer_id)
-    : DynamicSceneGraph(getDefaultLayerIds(), mesh_layer_id) {}
+DynamicSceneGraph::DynamicSceneGraph() : DynamicSceneGraph(getDefaultLayerIds()) {}
 
-DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids, LayerId mesh_layer_id)
-    : mesh_layer_id(mesh_layer_id), layer_ids(layer_ids) {
+DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids) : layer_ids(layer_ids) {
   if (layer_ids.empty()) {
     throw std::domain_error("scene graph cannot be initialized without layers");
-  }
-
-  if (std::find(layer_ids.begin(), layer_ids.end(), mesh_layer_id) != layer_ids.end()) {
-    throw std::domain_error("mesh layer id must be unique");
   }
 
   clear();
@@ -302,10 +296,6 @@ bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
 }
 
 bool DynamicSceneGraph::hasLayer(LayerId layer_id) const {
-  if (layer_id == mesh_layer_id) {
-    return mesh_ != nullptr;
-  }
-
   return layers_.count(layer_id) != 0;
 }
 
@@ -455,12 +445,11 @@ bool DynamicSceneGraph::isDynamic(NodeId source) const {
 }
 
 size_t DynamicSceneGraph::numLayers() const {
-  const size_t static_size = layers_.size() + 1;  // for the mesh
+  const size_t static_size = layers_.size();
 
   size_t unique_dynamic_layers = 0;
   for (const auto& id_layer_group_pair : dynamic_layers_) {
-    if (!layers_.count(id_layer_group_pair.first) &&
-        id_layer_group_pair.first != mesh_layer_id) {
+    if (!layers_.count(id_layer_group_pair.first)) {
       unique_dynamic_layers++;
     }
   }
@@ -752,7 +741,7 @@ void DynamicSceneGraph::removeAllStaleEdges() {
 }
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
-  auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids, mesh_layer_id);
+  auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids);
   for (const auto id_layer_pair : node_lookup_) {
     auto node = getNodePtr(id_layer_pair.first, id_layer_pair.second);
     if (id_layer_pair.second.dynamic) {

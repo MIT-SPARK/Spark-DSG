@@ -71,16 +71,14 @@ class DynamicSceneGraph {
 
   /**
    * @brief Construct the scene graph (with a default layer factory)
-   * @param mesh_layer_id Mesh layer id (must be unique)
    */
-  explicit DynamicSceneGraph(LayerId mesh_layer_id = DsgLayers::MESH);
+  DynamicSceneGraph();
 
   /**
    * @brief Construct the scene graph (with a provided layer factory)
-   * @param factor List of layer ids (not including the mesh)
-   * @param mesh_layer_id Mesh layer id (must be unique)
+   * @param factor List of layer ids
    */
-  DynamicSceneGraph(const LayerIds& factory, LayerId mesh_layer_id = DsgLayers::MESH);
+  explicit DynamicSceneGraph(const LayerIds& factory);
 
   /**
    * @brief Default destructor
@@ -489,9 +487,6 @@ class DynamicSceneGraph {
    * @returns Resulting parsed scene graph
    */
   static Ptr deserializeFromJson(const std::string& contents);
-
-  //! mesh layer id
-  const LayerId mesh_layer_id;
 
   //! current static layer ids in the graph
   const LayerIds layer_ids;

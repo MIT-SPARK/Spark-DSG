@@ -118,7 +118,7 @@ class LayerPrefix {
  * @note A higher layer id corresponds to parents for interlayer edges
  */
 struct DsgLayers {
-  inline const static LayerId MESH = 1;     //< Mesh layer
+  inline const static LayerId SEGMENTS = 1; //< Pre-Object node layer (static)
   inline const static LayerId OBJECTS = 2;  //< Object node layer (static)
   inline const static LayerId AGENTS = 2;   //< Agents layer (dynamic)
   inline const static LayerId PLACES = 3;   //< Places node layer (as well as structure)

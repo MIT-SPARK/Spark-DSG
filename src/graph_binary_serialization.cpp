@@ -166,7 +166,6 @@ void writeGraph(const DynamicSceneGraph& graph,
                 bool include_mesh) {
   BinarySerializer serializer(&buffer);
   serializer.write(graph.layer_ids);
-  serializer.write(graph.mesh_layer_id);
 
   serializer.writeArrayStart();
   for (const auto& id_layer_pair : graph.layers()) {
@@ -222,15 +221,18 @@ void writeGraph(const DynamicSceneGraph& graph,
 
 DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer,
                                  size_t length,
-                                 const io::FileHeader&) {
+                                 const io::FileHeader& header) {
   BinaryDeserializer deserializer(buffer, length);
 
   std::vector<LayerId> layer_ids;
-  LayerId mesh_layer_id;
   deserializer.read(layer_ids);
-  deserializer.read(mesh_layer_id);
 
-  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids, mesh_layer_id);
+  if (header.version < io::FileHeader::Version(1, 0, 2)) {
+    LayerId mesh_layer_id;
+    deserializer.read(mesh_layer_id);
+  }
+
+  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
 
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
@@ -258,16 +260,9 @@ DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer,
 bool updateGraphNormal(DynamicSceneGraph& graph,
                        const BinaryDeserializer& deserializer) {
   std::vector<LayerId> layer_ids;
-  LayerId mesh_layer_id;
   deserializer.read(layer_ids);
-  deserializer.read(mesh_layer_id);
 
   if (graph.layer_ids != layer_ids) {
-    // TODO(nathan) maybe throw exception
-    return false;
-  }
-
-  if (graph.mesh_layer_id != mesh_layer_id) {
     // TODO(nathan) maybe throw exception
     return false;
   }
@@ -298,16 +293,9 @@ bool updateGraphNormal(DynamicSceneGraph& graph,
 bool updateGraphRemoveStale(DynamicSceneGraph& graph,
                             const BinaryDeserializer& deserializer) {
   std::vector<LayerId> layer_ids;
-  LayerId mesh_layer_id;
   deserializer.read(layer_ids);
-  deserializer.read(mesh_layer_id);
 
   if (graph.layer_ids != layer_ids) {
-    // TODO(nathan) maybe throw exception
-    return false;
-  }
-
-  if (graph.mesh_layer_id != mesh_layer_id) {
     // TODO(nathan) maybe throw exception
     return false;
   }

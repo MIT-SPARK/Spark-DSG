@@ -107,8 +107,6 @@ bool LayerKey::isParent(const LayerKey& other) const { return layer > other.laye
 
 std::string DsgLayers::LayerIdToString(LayerId id) {
   switch (id) {
-    case MESH:
-      return "MESH";
     case OBJECTS:
       return "OBJECTS";  // we default to the static labels
     case PLACES:
@@ -128,9 +126,7 @@ LayerId DsgLayers::StringToLayerId(const std::string& id_str) {
       to_check.begin(), to_check.end(), to_check.begin(), [](unsigned char c) {
         return std::toupper(c);
       });
-  if (to_check == "MESH") {
-    return DsgLayers::MESH;
-  } else if (to_check == "OBJECTS" || to_check == "AGENTS") {
+  if (to_check == "OBJECTS" || to_check == "AGENTS") {
     return DsgLayers::OBJECTS;
   } else if (to_check == "PLACES" || to_check == "STRUCTURE") {
     return DsgLayers::PLACES;
