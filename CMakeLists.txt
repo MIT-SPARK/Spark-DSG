@@ -9,7 +9,7 @@ add_compile_options(-Wall -Wextra)
 
 option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
 option(SPARK_DSG_BUILD_TESTS "Build tests" ON)
-option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
+option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
@@ -65,10 +65,10 @@ if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
     ${PROJECT_NAME}
     PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zmq_interface.cpp>"
   )
-endif()
 
-if(SPARK_DSG_BUILD_EXAMPLES AND zmq_FOUND)
-  add_subdirectory(examples)
+  if(SPARK_DSG_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+  endif()
 endif()
 
 if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
@@ -80,9 +80,13 @@ if(SPARK_DSG_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 add_library(
   spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME}
 )
+
 install(TARGETS ${PROJECT_NAME} EXPORT spark_dsg-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -92,7 +96,6 @@ install(EXPORT spark_dsg-targets FILE spark_dsgTargets.cmake NAMESPACE spark_dsg
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
 )
 
-include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}
   COMPATIBILITY AnyNewerVersion
