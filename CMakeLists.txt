@@ -71,7 +71,7 @@ if(SPARK_DSG_BUILD_EXAMPLES AND zmq_FOUND)
   add_subdirectory(examples)
 endif()
 
-if(SPARK_DSG_BUILD_PYTHON)
+if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
   add_subdirectory(python)
 endif()
 

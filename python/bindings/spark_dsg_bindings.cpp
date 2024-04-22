@@ -38,9 +38,10 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <spark_dsg/dynamic_scene_graph.h>
-#include <spark_dsg/graph_binary_serialization.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_utilities.h>
+#include <spark_dsg/serialization/file_io.h>
+#include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include <iomanip>
 #include <iostream>
