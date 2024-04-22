@@ -32,9 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+
 #pragma once
-#include "spark_dsg/attribute_factory.h"
-#include "spark_dsg/binary_serialization_utils.h"
+
+#include "spark_dsg/serialization/attribute_factory.h"
+#include "spark_dsg/serialization/binary_serialization_utils.h"
 #include "spark_dsg/dynamic_scene_graph.h"
 
 namespace spark_dsg::serialization {
@@ -47,9 +49,9 @@ namespace spark_dsg::serialization {
 struct BinarySerializer {
   explicit BinarySerializer(std::vector<uint8_t>* buffer);
 
-  void writeArrayStart();
+  void startDynamicArray();
 
-  void writeArrayEnd();
+  void endDynamicArray();
 
   void startFixedArray(size_t length);
 
@@ -161,5 +163,11 @@ void BinarySerializer::write<DynamicSceneGraphNode>(const DynamicSceneGraphNode&
 
 template <>
 void BinarySerializer::write<SceneGraphEdge>(const SceneGraphEdge& edge);
+
+template <>
+void BinarySerializer::write<Mesh>(const Mesh& mesh);
+
+template <>
+void BinaryDeserializer::read<Mesh>(Mesh& mesh) const;
 
 }  // namespace spark_dsg::serialization

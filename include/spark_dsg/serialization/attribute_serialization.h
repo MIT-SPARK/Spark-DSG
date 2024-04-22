@@ -33,8 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/node_attributes.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 namespace attributes {
@@ -85,6 +87,30 @@ void deserialize(const Converter& converter, ObjectNodeAttributes& attrs) {
   converter.read("mesh_connections", attrs.mesh_connections);
   converter.read("registered", attrs.registered);
   converter.read("world_R_object", attrs.world_R_object);
+}
+
+template <typename Converter>
+void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
+  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
+  converter.write("first_observed_ns", attrs.first_observed_ns);
+  converter.write("last_observed_ns", attrs.last_observed_ns);
+  converter.write("mesh", attrs.mesh);
+  converter.write("trajectory_positions", attrs.trajectory_positions);
+  converter.write("trajectory_timestamps", attrs.trajectory_timestamps);
+  converter.write("dynamic_object_points", attrs.dynamic_object_points);
+  converter.write("details", attrs.details);
+}
+
+template <typename Converter>
+void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
+  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
+  converter.read("first_observed_ns", attrs.first_observed_ns);
+  converter.read("last_observed_ns", attrs.last_observed_ns);
+  converter.read("mesh", attrs.mesh);
+  converter.read("trajectory_positions", attrs.trajectory_positions);
+  converter.read("trajectory_timestamps", attrs.trajectory_timestamps);
+  converter.read("dynamic_object_points", attrs.dynamic_object_points);
+  converter.read("details", attrs.details);
 }
 
 template <typename Converter>

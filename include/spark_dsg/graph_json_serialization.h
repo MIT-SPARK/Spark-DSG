@@ -36,7 +36,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "spark_dsg/attribute_factory.h"
+#include "spark_dsg/serialization/attribute_factory.h"
 
 namespace spark_dsg {
 

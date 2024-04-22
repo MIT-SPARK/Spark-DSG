@@ -35,14 +35,16 @@
 #include <filesystem>
 #include <fstream>
 
-#include "spark_dsg/binary_serializer.h"
-#include "spark_dsg/graph_file_io.h"
 #include "spark_dsg/mesh.h"
+#include "spark_dsg/serialization/binary_serializer.h"
+#include "spark_dsg/serialization/file_io.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
 void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
   serialization::BinarySerializer serializer(&buffer);
+  const auto header = io::FileHeader::current();
 
   // Write the mesh configuration.
   serializer.write(has_colors);
@@ -79,6 +81,11 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
     serializer.write(label);
   }
 
+  serializer.startFixedArray(first_seen_stamps.size());
+  for (const auto& stamp : first_seen_stamps) {
+    serializer.write(stamp);
+  }
+
   // Faces.
   serializer.startFixedArray(3 * faces.size());
   for (const auto& face : faces) {
@@ -96,7 +103,7 @@ void Mesh::save(std::string filepath) const {
     return;
   }
 
-  const auto header_buffer = io::FileHeader::current().serialize();
+  const auto header_buffer = io::FileHeader::current().serializeToBinary();
   std::vector<uint8_t> mesh_buffer;
   serializeToBinary(mesh_buffer);
 
@@ -106,65 +113,9 @@ void Mesh::save(std::string filepath) const {
   out.write(reinterpret_cast<const char*>(mesh_buffer.data()), mesh_buffer.size());
 }
 
-Mesh::Ptr deserializeLegacyMesh(const serialization::BinaryDeserializer& deserializer) {
-  // NOTE(lschmid): Since the new serialization is completely different all of this is
-  // factored out.
-  auto mesh = std::make_shared<Mesh>();
-  size_t num_vertices = deserializer.readFixedArrayLength() / 6;
-  for (size_t i = 0; i < num_vertices; ++i) {
-    Mesh::Pos pos;
-    deserializer.read(pos.x());
-    deserializer.read(pos.y());
-    deserializer.read(pos.z());
-    mesh->points.push_back(pos);
-
-    Eigen::Vector3f color;
-    deserializer.read(color.x());
-    deserializer.read(color.y());
-    deserializer.read(color.z());
-    color *= 255.0f;
-    mesh->colors.push_back({static_cast<uint8_t>(color.x()),
-                            static_cast<uint8_t>(color.y()),
-                            static_cast<uint8_t>(color.z()),
-                            255});
-  }
-
-  size_t num_faces = deserializer.readFixedArrayLength() / 3;
-  mesh->faces.resize(num_faces);
-  for (size_t i = 0; i < num_faces; ++i) {
-    auto& face = mesh->face(i);
-    deserializer.read(face[0]);
-    deserializer.read(face[1]);
-    deserializer.read(face[2]);
-  }
-
-  if (deserializer.checkIfTrue()) {
-    size_t num_stamps = deserializer.readFixedArrayLength();
-    mesh->stamps.resize(num_stamps);
-    for (size_t i = 0; i < num_stamps; ++i) {
-      deserializer.read(mesh->stamps.at(i));
-    }
-  }
-
-  if (deserializer.checkIfTrue()) {
-    size_t num_labels = deserializer.readFixedArrayLength();
-    mesh->labels.resize(num_labels);
-    for (size_t i = 0; i < num_labels; ++i) {
-      deserializer.read(mesh->labels.at(i));
-    }
-  }
-
-  return mesh;
-}
-
 Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length) {
   serialization::BinaryDeserializer deserializer(buffer, length);
   const auto header = io::GlobalInfo::loadedHeader();
-
-  if (header.version < io::FileHeader::Version(1, 0, 1)) {
-    // Load legacy mesh.
-    return deserializeLegacyMesh(deserializer);
-  }
 
   // Mesh flags.
   bool has_colors, has_timestamps, has_labels;
@@ -205,6 +156,12 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
     deserializer.read(mesh->labels.at(i));
   }
 
+  const size_t num_first_seen_stamps = deserializer.readFixedArrayLength();
+  mesh->first_seen_stamps.resize(num_first_seen_stamps);
+  for (size_t i = 0; i < num_first_seen_stamps; ++i) {
+    deserializer.read(mesh->first_seen_stamps.at(i));
+  }
+
   // Faces.
   const size_t num_faces = deserializer.readFixedArrayLength() / 3;
   mesh->faces.resize(num_faces);
@@ -237,14 +194,14 @@ Mesh::Ptr Mesh::load(std::string filepath) {
                               std::istreambuf_iterator<char>());
 
   size_t offset;
-  const auto header = io::FileHeader::deserialize(buffer, &offset);
+  const auto header = io::FileHeader::deserializeFromBinary(buffer, &offset);
   if (!header) {
     throw std::runtime_error("invalid file: file has bad encoding");
   }
 
-  // TODO(lschmid): This check should probably be replaced to only consider thinsg
+  // TODO(lschmid): This check should probably be replaced to only consider things
   // relevant to meshes.
-  checkCompatibility(*header);
+  io::checkCompatibility(*header);
   return deserializeFromBinary(buffer.data() + offset, buffer.size() - offset);
 }
 

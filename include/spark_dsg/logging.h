@@ -38,8 +38,31 @@
 
 #define ENABLE_LOGGING() 0
 
+// To log use the macro SG_LOG(SEVERITY) << "message"; If available, this will use glog, otherwise it will use std::cout.
+
+namespace spark_dsg {
+
+struct DefaultLogger {
+  DefaultLogger() = default;
+  virtual ~DefaultLogger() {
+    // Flush the log after invoking the macro.
+    std::cout << std::endl;
+  }
+};
+
+}  // namespace spark_dsg
+
+
 #if ENABLE_LOGGING()
-#define SG_LOG(level) std::cout << "[Scene Graph] " #level ": "
+  #ifdef GLOG_LOGGING_H
+    #define SG_LOG(SEVERITY) LOG(#SEVERITY)
+  #else
+    #define SG_LOG(SEVERITY) \
+      (spark_dsg::DefaultLogger(), std::cout << "["<< #SEVERITY << "] [" << __FILE__ << ":" << __LINE__ << "]: ")
+  #endif
 #else
-#define SG_LOG(level) std::ostream(nullptr)
+  #define SG_LOG(SEVERITY) std::ostream(nullptr)
 #endif
+
+// Always log dev messages, i.e. about loading deprecated files.
+#define SG_LOG_DEV (spark_dsg::DefaultLogger(), std::cout)

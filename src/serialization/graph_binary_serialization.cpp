@@ -32,9 +32,9 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/graph_binary_serialization.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 
-#include "spark_dsg/binary_serializer.h"
+#include "spark_dsg/serialization/binary_serializer.h"
 
 namespace spark_dsg {
 
@@ -43,14 +43,6 @@ using serialization::BinaryDeserializer;
 using serialization::BinaryEdgeFactory;
 using serialization::BinaryNodeFactory;
 using serialization::BinarySerializer;
-
-template <>
-std::unique_ptr<AttributeFactory<NodeAttributes, BinaryConverter>>
-    AttributeFactory<NodeAttributes, BinaryConverter>::s_instance_ = nullptr;
-
-template <>
-std::unique_ptr<AttributeFactory<EdgeAttributes, BinaryConverter>>
-    AttributeFactory<EdgeAttributes, BinaryConverter>::s_instance_ = nullptr;
 
 void insertNode(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
   deserializer.checkFixedArrayLength(3);
@@ -168,15 +160,15 @@ void writeGraph(const DynamicSceneGraph& graph,
   serializer.write(graph.layer_ids);
   serializer.write(graph.mesh_layer_id);
 
-  serializer.writeArrayStart();
+  serializer.startDynamicArray();
   for (const auto& id_layer_pair : graph.layers()) {
     for (const auto& id_node_pair : id_layer_pair.second->nodes()) {
       serializer.write(*id_node_pair.second);
     }
   }
-  serializer.writeArrayEnd();
+  serializer.endDynamicArray();
 
-  serializer.writeArrayStart();
+  serializer.startDynamicArray();
   for (const auto& id_layer_group_pair : graph.dynamicLayers()) {
     for (const auto& prefix_layer_pair : id_layer_group_pair.second) {
       for (const auto& node : prefix_layer_pair.second->nodes()) {
@@ -184,9 +176,9 @@ void writeGraph(const DynamicSceneGraph& graph,
       }
     }
   }
-  serializer.writeArrayEnd();
+  serializer.endDynamicArray();
 
-  serializer.writeArrayStart();
+  serializer.startDynamicArray();
   for (const auto& id_layer_pair : graph.layers()) {
     for (const auto& id_edge_pair : id_layer_pair.second->edges()) {
       serializer.write(id_edge_pair.second);
@@ -208,7 +200,7 @@ void writeGraph(const DynamicSceneGraph& graph,
   for (const auto& id_edge_pair : graph.dynamic_interlayer_edges()) {
     serializer.write(id_edge_pair.second);
   }
-  serializer.writeArrayEnd();
+  serializer.endDynamicArray();
 
   auto mesh = graph.mesh();
   if (!include_mesh || !mesh) {

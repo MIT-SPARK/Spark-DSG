@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(spark_dsg VERSION 1.0.1)
+project(spark_dsg VERSION 1.0.2)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,18 +24,13 @@ pkg_check_modules(zmq libzmq)
 add_library(
   ${PROJECT_NAME}
   src/adjacency_matrix.cpp
-  src/binary_serializer.cpp
-  src/bounding_box.cpp
   src/bounding_box_extraction.cpp
+  src/bounding_box.cpp
   src/dynamic_scene_graph_layer.cpp
   src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
-  src/graph_binary_serialization.cpp
-  src/graph_file_io.cpp
-  src/graph_json_serialization.cpp
   src/mesh.cpp
-  src/mesh_io.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
   src/pgmo_mesh_traits.cpp
@@ -44,7 +39,12 @@ add_library(
   src/scene_graph_node.cpp
   src/scene_graph_types.cpp
   src/scene_graph_utilities.cpp
-  src/serialization_helpers.cpp
+  src/serialization/binary_serializer.cpp
+  src/serialization/graph_binary_serialization.cpp
+  src/serialization/file_io.cpp
+  src/serialization/versioning.cpp
+  src/serialization/json_serialization.cpp
+  src/serialization/mesh_io.cpp
 )
 
 if(NOT BUILD_SHARED_LIBS)

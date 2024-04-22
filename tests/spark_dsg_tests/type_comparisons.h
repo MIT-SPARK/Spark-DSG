@@ -101,4 +101,26 @@ inline bool operator==(const EdgeAttributes& lhs, const EdgeAttributes& rhs) {
   return lhs.weighted == rhs.weighted && lhs.weight == rhs.weight;
 }
 
+inline bool operator==(const Mesh& lhs, const Mesh& rhs) {
+  return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
+         lhs.has_labels == rhs.has_labels && lhs.points == rhs.points &&
+         lhs.colors == rhs.colors && lhs.stamps == rhs.stamps &&
+         lhs.first_seen_stamps == rhs.first_seen_stamps && lhs.labels == rhs.labels &&
+         lhs.faces == rhs.faces;
+}
+
+inline bool operator==(const KhronosObjectAttributes& lhs,
+                       const KhronosObjectAttributes& rhs) {
+  return lhs.position == rhs.position && lhs.name == rhs.name &&
+         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
+         lhs.semantic_label == rhs.semantic_label && lhs.registered == rhs.registered &&
+         quaternionsEqual(lhs.world_R_object, rhs.world_R_object) &&
+         lhs.first_observed_ns == rhs.first_observed_ns &&
+         lhs.last_observed_ns == rhs.last_observed_ns && lhs.mesh == rhs.mesh &&
+         lhs.trajectory_positions == rhs.trajectory_positions &&
+         lhs.trajectory_timestamps == rhs.trajectory_timestamps &&
+         lhs.dynamic_object_points == rhs.dynamic_object_points &&
+         lhs.details == rhs.details;
+}
+
 }  // namespace spark_dsg

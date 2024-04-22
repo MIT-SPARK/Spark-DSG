@@ -37,6 +37,7 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -232,6 +233,15 @@ void write_binary(Serializer& s, const std::list<T>& values) {
   }
 }
 
+template <typename Serializer, typename K, typename V>
+void write_binary(Serializer& s, const std::map<K, V>& values) {
+  s.startFixedArray(values.size());
+  for (const auto& value : values) {
+    s.write(value.first);
+    s.write(value.second);
+  }
+}
+
 template <typename Deserializer>
 size_t read_binary(const Deserializer& s, bool& value) {
   PackType ref_type = s.getCurrType();
@@ -347,6 +357,19 @@ size_t read_binary(const Deserializer& s, std::list<T>& values) {
   return 0;
 }
 
+template <typename Deserializer, typename K, typename V>
+size_t read_binary(const Deserializer& s, std::map<K, V>& values) {
+  values.clear();
+  const size_t length = s.readFixedArrayLength();
+  for (size_t i = 0; i < length; ++i) {
+    K key;
+    s.read(key);
+    auto& value = values[key];
+    s.read(value);
+  }
+  return 0;
+}
+
 template <class T>
 constexpr T static_const{};
 
@@ -393,15 +416,6 @@ void write_binary(Serializer& s, const MatrixBase<Derived>& matrix) {
   }
 }
 
-template <typename Serializer, typename Scalar>
-void write_binary(Serializer& s, const Quaternion<Scalar>& q) {
-  s.startFixedArray(4);
-  s.write(q.w());
-  s.write(q.x());
-  s.write(q.y());
-  s.write(q.z());
-}
-
 template <typename Deserializer, typename Derived>
 size_t read_binary(const Deserializer& s, MatrixBase<Derived>& matrix) {
   const size_t length = s.readFixedArrayLength();
@@ -424,6 +438,31 @@ size_t read_binary(const Deserializer& s, MatrixBase<Derived>& matrix) {
     }
   }
   return 0;
+}
+
+// Specialize vector3 since this is a frequently used type.
+template <typename Serializer, typename Scalar>
+void write_binary(Serializer& s, const Matrix<Scalar, 3, 1>& vector3) {
+  s.write(vector3.x());
+  s.write(vector3.y());
+  s.write(vector3.z());
+}
+
+template <typename Deserializer, typename Scalar>
+size_t read_binary(const Deserializer& s, Matrix<Scalar, 3, 1>& vector3) {
+  s.read(vector3.x());
+  s.read(vector3.y());
+  s.read(vector3.z());
+  return 0;
+}
+
+template <typename Serializer, typename Scalar>
+void write_binary(Serializer& s, const Quaternion<Scalar>& q) {
+  s.startFixedArray(4);
+  s.write(q.w());
+  s.write(q.x());
+  s.write(q.y());
+  s.write(q.z());
 }
 
 template <typename Deserializer, typename Scalar>

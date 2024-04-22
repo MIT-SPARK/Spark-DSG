@@ -33,8 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/binary_serializer.h>
-#include <spark_dsg/graph_binary_serialization.h>
+#include "spark_dsg/serialization/binary_serializer.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -130,32 +130,6 @@ T writeRT(const T& expected) {
   return result;
 }
 
-NodeAttributes::Ptr writeAttrsRT(const NodeAttributes& expected) {
-  std::vector<uint8_t> buffer;
-  serialization::BinarySerializer serializer(&buffer);
-  serializer.write(expected);
-
-  serialization::BinaryDeserializer deserializer(buffer);
-  serialization::BinaryConverter converter(&deserializer);
-  auto result = serialization::BinaryNodeFactory::get_default().create(converter);
-  converter.finalize();
-
-  return result;
-}
-
-EdgeAttributes::Ptr writeAttrsRT(const EdgeAttributes& expected) {
-  std::vector<uint8_t> buffer;
-  serialization::BinarySerializer serializer(&buffer);
-  serializer.write(expected);
-
-  serialization::BinaryDeserializer deserializer(buffer);
-  serialization::BinaryConverter converter(&deserializer);
-  auto result = serialization::BinaryEdgeFactory::get_default().create(converter);
-  converter.finalize();
-
-  return result;
-}
-
 TEST(BinarySerializationTests, SerializeEigenVector) {
   {  // double vector
     Eigen::Vector3d expected;
@@ -233,6 +207,26 @@ TEST(BinarySerializationTests, SerializeEigenQuaternion) {
   }
 }
 
+TEST(BinarySerializationTests, SerializeMap) {
+  {  // simple type
+    std::map<uint32_t, uint32_t> expected;
+    expected[1] = 2;
+    expected[3] = 4;
+    expected[5] = 6;
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // more complex type
+    std::map<std::string, std::vector<size_t>> expected;
+    expected["a"] = {1, 2, 3};
+    expected["b"] = {4, 5, 6};
+    expected["c"] = {7, 8, 9};
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+}
+
 TEST(BinarySerializationTests, SerializeBoundingBox) {
   {  // invalid type
     BoundingBox expected;
@@ -264,283 +258,6 @@ TEST(BinarySerializationTests, SerializeBoundingBox) {
     auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
-}
-
-TEST(BinarySerializationTests, SerializeNodeAttributes) {
-  {  // base class
-    NodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-
-    auto result = writeAttrsRT(expected);
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result);
-  }
-
-  {  // semantic attributes
-    SemanticNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "semantic_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-
-    auto result = writeAttrsRT(expected);
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result);
-  }
-
-  {  // object attributes
-    ObjectNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "object_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-    expected.registered = true;
-    expected.world_R_object = Eigen::Quaterniond(0.0, 0.0, 1.0, 0.0);
-
-    auto result = writeAttrsRT(expected);
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result);
-  }
-
-  {  // semantic attributes
-    RoomNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "room_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-
-    auto result = writeAttrsRT(expected);
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result);
-  }
-
-  {  // place attributes
-    PlaceNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "place_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-    expected.distance = 14.0;
-    expected.num_basis_points = 15;
-
-    auto result = writeAttrsRT(expected);
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result);
-  }
-}
-
-TEST(BinarySerializationTests, SerializeEdgeInfo) {
-  {  // base class
-    EdgeAttributes expected;
-    expected.weighted = true;
-    expected.weight = 5.0;
-
-    auto result = writeAttrsRT(expected);
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result);
-  }
-}
-
-TEST(BinarySerializationTests, SerializeDsgBasic) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
-  expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
-
-  expected.insertEdge(0, 1);
-  expected.insertEdge(1, 2);
-
-  std::vector<uint8_t> buffer;
-  writeGraph(expected, buffer);
-  auto result = readGraph(buffer);
-
-  EXPECT_EQ(expected.numNodes(), result->numNodes());
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
-
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(1));
-  EXPECT_TRUE(result->hasNode(2));
-  EXPECT_TRUE(result->hasEdge(0, 1));
-  EXPECT_TRUE(result->hasEdge(1, 2));
-  EXPECT_EQ(expected.hasLayer(0), result->hasLayer(0));
-}
-
-TEST(BinarySerializationTests, SerializeDsgWithNaNs) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
-  expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
-  Eigen::Vector3d bad_pos = Eigen::Vector3d::Zero();
-  bad_pos(0) = std::numeric_limits<double>::quiet_NaN();
-  bad_pos(1) = std::numeric_limits<double>::quiet_NaN();
-  bad_pos(2) = std::numeric_limits<double>::quiet_NaN();
-  expected.emplaceNode(3, 3, std::make_unique<NodeAttributes>(bad_pos));
-
-  expected.insertEdge(0, 1);
-  expected.insertEdge(1, 2);
-  expected.insertEdge(2, 3);
-
-  std::vector<uint8_t> buffer;
-  writeGraph(expected, buffer);
-  auto result = readGraph(buffer);
-
-  EXPECT_EQ(expected.numNodes(), result->numNodes());
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
-
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(1));
-  EXPECT_TRUE(result->hasNode(2));
-  EXPECT_TRUE(result->hasNode(3));
-  EXPECT_TRUE(result->hasEdge(0, 1));
-  EXPECT_TRUE(result->hasEdge(1, 2));
-  EXPECT_TRUE(result->hasEdge(2, 3));
-  EXPECT_EQ(expected.hasLayer(0), result->hasLayer(0));
-}
-
-TEST(BinarySerializationTests, SerializeDsgDynamic) {
-  using namespace std::chrono_literals;
-  DynamicSceneGraph expected;
-  expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
-
-  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
-  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
-
-  std::vector<uint8_t> buffer;
-  writeGraph(expected, buffer);
-  auto result = readGraph(buffer);
-
-  EXPECT_EQ(expected.numNodes(), result->numNodes());
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
-
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 0)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 1)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 3)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
-  EXPECT_FALSE(result->hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
-
-  EXPECT_TRUE(result->hasLayer(2, 'a'));
-}
-
-TEST(BinarySerializationTests, SerializeDsgMesh) {
-  using namespace std::chrono_literals;
-  DynamicSceneGraph expected;
-  expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
-
-  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
-  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
-
-  auto mesh = std::make_shared<Mesh>();
-  mesh->points.push_back(Eigen::Vector3f::Zero());
-  mesh->points.push_back(Eigen::Vector3f::Zero());
-  mesh->points.push_back(Eigen::Vector3f::Zero());
-  mesh->colors.push_back({10, 20, 30, 255});
-  mesh->labels.push_back(2);
-  mesh->labels.push_back(8);
-  mesh->stamps.push_back(0);
-  mesh->stamps.push_back(10);
-  mesh->stamps.push_back(20);
-  mesh->stamps.push_back(30);
-  mesh->faces.push_back({{1, 2, 3}});
-  expected.setMesh(mesh);
-
-  std::vector<uint8_t> buffer;
-  writeGraph(expected, buffer, true);
-  auto result = readGraph(buffer);
-
-  EXPECT_EQ(expected.numNodes(), result->numNodes());
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
-
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 0)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 1)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 3)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
-  EXPECT_FALSE(result->hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
-
-  EXPECT_TRUE(result->hasLayer(2, 'a'));
-  auto result_mesh = result->mesh();
-  ASSERT_TRUE(result_mesh);
-  EXPECT_EQ(result_mesh->points.size(), 3u);
-  EXPECT_EQ(result_mesh->colors.size(), 1u);
-  EXPECT_EQ(result_mesh->labels.size(), 2u);
-  EXPECT_EQ(result_mesh->stamps.size(), 4u);
-  EXPECT_EQ(result_mesh->faces.size(), 1u);
-}
-
-TEST(BinarySerializationTests, UpdateDsgFromBinaryWithCorrection) {
-  using namespace std::chrono_literals;
-  DynamicSceneGraph original;
-  original.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
-  original.emplaceNode(3, 1, std::make_unique<NodeAttributes>());
-  original.emplaceNode(4, 3, std::make_unique<NodeAttributes>());
-
-  original.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  original.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  original.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
-  original.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
-
-  DynamicSceneGraph updated;
-  EXPECT_TRUE(updated.emplaceNode(3, 0, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.emplaceNode(3, 1, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.emplaceNode(3, 2, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.emplaceNode(4, 3, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.emplaceNode(4, 4, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.insertEdge(0, 1));
-  EXPECT_TRUE(updated.insertEdge(0, 3));
-
-  EXPECT_TRUE(updated.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.emplaceNode(3, 'b', 40ns, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(updated.insertEdge(0, "a0"_id));
-
-  std::vector<uint8_t> buffer;
-  writeGraph(original, buffer);
-  updateGraph(updated, buffer, true);
-
-  EXPECT_EQ(original.numDynamicNodes(), updated.numDynamicNodes());
-  EXPECT_EQ(original.numNodes(), updated.numNodes());
-  EXPECT_EQ(original.numEdges(), updated.numEdges());
-  EXPECT_EQ(original.numLayers(), updated.numLayers());
-  EXPECT_EQ(original.layer_ids, updated.layer_ids);
-
-  EXPECT_FALSE(updated.hasNode(2));
-  EXPECT_FALSE(updated.hasNode(4));
-  EXPECT_FALSE(updated.hasNode("b0"_id));
-  EXPECT_FALSE(updated.hasEdge(0, 1));
-  EXPECT_FALSE(updated.hasEdge(0, 3));
-  EXPECT_FALSE(updated.hasEdge(0, "a0"_id));
-  EXPECT_FALSE(updated.hasEdge("a1"_id, "a2"_id));
-  EXPECT_FALSE(updated.getNode(0)->get().hasParent());
 }
 
 }  // namespace spark_dsg

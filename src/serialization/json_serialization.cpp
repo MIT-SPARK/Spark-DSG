@@ -32,25 +32,16 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/graph_json_serialization.h"
+#include "spark_dsg/serialization/json_serialization.h"
 
 #include <fstream>
 
 #include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/graph_file_io.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/scene_graph_layer.h"
-#include "spark_dsg/serialization_helpers.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
-
-template <>
-std::unique_ptr<AttributeFactory<NodeAttributes, JsonConverter>>
-    AttributeFactory<NodeAttributes, JsonConverter>::s_instance_ = nullptr;
-
-template <>
-std::unique_ptr<AttributeFactory<EdgeAttributes, JsonConverter>>
-    AttributeFactory<EdgeAttributes, JsonConverter>::s_instance_ = nullptr;
 
 using nlohmann::json;
 
@@ -60,6 +51,7 @@ using NodeCallback = std::function<void(NodeId, LayerId, NodeAttributes::Ptr&&)>
 using DynamicNodeCallback = std::function<void(
     LayerId, NodeId, std::chrono::nanoseconds, NodeAttributes::Ptr&&)>;
 using EdgeCallback = std::function<void(NodeId, NodeId, EdgeAttributes::Ptr&&)>;
+
 
 namespace io {
 
@@ -79,6 +71,16 @@ void from_json(const json& record, FileHeader& header) {
 }
 
 }  // namespace io
+
+void to_json(json& record, const NodeAttributes& attributes) {
+  JsonConverter converter(&record);
+  JsonNodeFactory::get_default().save(converter, attributes);
+}
+
+void to_json(json& record, const EdgeAttributes& attributes) {
+  JsonConverter converter(&record);
+  JsonEdgeFactory::get_default().save(converter, attributes);
+}
 
 void to_json(json& record, const SceneGraphNode& node) {
   record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
@@ -113,49 +115,11 @@ void from_json(const json& record, Color& c) {
 }
 
 void to_json(json& record, const Mesh& mesh) {
-  record["points"] = mesh.points;
-  record["faces"] = mesh.faces;
-  record["colors"] = mesh.colors;
-  record["stamps"] = mesh.stamps;
-  record["labels"] = mesh.labels;
+  record = json::parse(mesh.serializeToJson());
 }
 
 void from_json(const json& record, Mesh& mesh) {
-  // TODO(nathan) set mesh bool flags
-  if (record.contains("vertices")) {
-    for (const auto& vertex : record.at("vertices")) {
-      Eigen::Vector3f pos(vertex.at("x").get<float>(),
-                          vertex.at("y").get<float>(),
-                          vertex.at("z").get<float>());
-      mesh.points.push_back(pos);
-
-      Color color{vertex.at("r").get<uint8_t>(),
-                  vertex.at("g").get<uint8_t>(),
-                  vertex.at("b").get<uint8_t>(),
-                  255};
-      mesh.colors.push_back(color);
-    }
-
-    for (const auto& face : record.at("faces")) {
-      mesh.faces.push_back({{face.at(0).get<size_t>(),
-                             face.at(1).get<size_t>(),
-                             face.at(2).get<size_t>()}});
-    }
-  } else {
-    mesh.points = record.at("points").get<decltype(mesh.points)>();
-    mesh.faces = record.at("faces").get<decltype(mesh.faces)>();
-    if (record.contains("colors")) {
-      mesh.colors = record.at("colors").get<decltype(mesh.colors)>();
-    }
-  }
-
-  if (record.contains("stamps")) {
-    mesh.stamps = record.at("stamps").get<decltype(mesh.stamps)>();
-  }
-
-  if (record.contains("labels")) {
-    mesh.labels = record.at("labels").get<decltype(mesh.labels)>();
-  }
+  mesh = *Mesh::deserializeFromJson(record.dump());
 }
 
 void read_node_from_json(const json& record, NodeCallback callback) {
@@ -296,6 +260,7 @@ EdgesPtr SceneGraphLayer::deserializeLayer(const std::string& info) {
 std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
   json record;
   record[io::FileHeader::IDENTIFIER_STRING + "_header"] = io::FileHeader::current();
+
   record["directed"] = false;
   record["multigraph"] = false;
   record["nodes"] = json::array();
@@ -347,23 +312,22 @@ std::string DynamicSceneGraph::serializeToJson(bool include_mesh) const {
     return record.dump();
   }
 
-  record["mesh"] = *mesh_;
+  record["mesh"] = json::parse(mesh_->serializeToJson());
+
   return record.dump();
 }
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
     const std::string& contents) {
   const auto record = json::parse(contents);
+
+  // Parse header.
   const std::string header_field_name = io::FileHeader::IDENTIFIER_STRING + "_header";
-  io::FileHeader header;
-  if (record.contains(header_field_name)) {
-    header = record.at(header_field_name).get<io::FileHeader>();
-  } else {
-    // NOTE(lschmid): If no header is stored we just assume it's a legacy file. This can
-    // probably be changed to a proper check of file type in the future.
-    header = io::FileHeader::legacy();
-  }
+  const auto header = record.contains(header_field_name)
+                          ? record.at(header_field_name).get<io::FileHeader>()
+                          : io::FileHeader::legacy();
   io::GlobalInfo::ScopedInfo info(header);
+
   const auto mesh_layer_id = record.at("mesh_layer_id").get<LayerId>();
   const auto layer_ids = record.at("layer_ids").get<LayerIds>();
 
@@ -412,7 +376,7 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
     return graph;
   }
 
-  auto mesh = std::make_shared<Mesh>(record.at("mesh").get<Mesh>());
+  auto mesh = Mesh::deserializeFromJson(record.at("mesh").dump());
   graph->setMesh(mesh);
   return graph;
 }
@@ -420,16 +384,162 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
 std::string Mesh::serializeToJson() const {
   json record;
   record["header"] = io::FileHeader::current();
-  record["mesh"] = *this;
+
+  // Serialize settings.
+  record["has_colors"] = has_colors;
+  record["has_timestamps"] = has_timestamps;
+  record["has_labels"] = has_labels;
+
+  // Serialize all fields if present.
+  if (!points.empty()) {
+    record["points"] = points;
+  }
+  if (!colors.empty()) {
+    record["colors"] = colors;
+  }
+  if (!stamps.empty()) {
+    record["stamps"] = stamps;
+  }
+  if (!first_seen_stamps.empty()) {
+    record["first_seen_stamps"] = first_seen_stamps;
+  }
+  if (!labels.empty()) {
+    record["labels"] = labels;
+  }
+  if (!faces.empty()) {
+    record["faces"] = faces;
+  }
   return record.dump();
+}
+
+Mesh::Ptr deserializeMeshLegacy(const json& record) {
+  // Legacy mesh support.
+  Mesh::Ptr mesh = std::make_shared<Mesh>();
+  if (record.contains("vertices")) {
+    for (const auto& vertex : record.at("vertices")) {
+      Eigen::Vector3f pos(vertex.at("x").get<float>(),
+                          vertex.at("y").get<float>(),
+                          vertex.at("z").get<float>());
+      mesh->points.push_back(pos);
+
+      Color color{vertex.at("r").get<uint8_t>(),
+                  vertex.at("g").get<uint8_t>(),
+                  vertex.at("b").get<uint8_t>(),
+                  255};
+      mesh->colors.push_back(color);
+    }
+  }
+
+  if (record.contains("faces")) {
+    for (const auto& face : record.at("faces")) {
+      mesh->faces.push_back({{face.at(0).get<size_t>(),
+                              face.at(1).get<size_t>(),
+                              face.at(2).get<size_t>()}});
+    }
+  }
+  return mesh;
 }
 
 Mesh::Ptr Mesh::deserializeFromJson(const std::string& contents) {
   const auto record = json::parse(contents);
-  const auto header = record.at("header").get<io::FileHeader>();
-  io::GlobalInfo::ScopedInfo info(header);
-  auto mesh = std::make_shared<Mesh>(record.at("mesh").get<Mesh>());
+  const auto header = record.contains("header")
+                          ? record.at("header").get<io::FileHeader>()
+                          : io::FileHeader::legacy();
+  const io::GlobalInfo::ScopedInfo info(header);
+
+  // Legacy support.
+  if (header.version <= io::Version(1, 0, 1)) {
+    io::warnOutdatedHeader(header);
+    return deserializeMeshLegacy(record);
+  }
+
+  // Deserialize settings.
+  const bool has_colors = record.at("has_colors").get<bool>();
+  const bool has_timestamps = record.at("has_timestamps").get<bool>();
+  const bool has_labels = record.at("has_labels").get<bool>();
+  auto mesh = std::make_shared<Mesh>(has_colors, has_timestamps, has_labels);
+
+  // Deserialize all fields if present.
+  if (record.contains("points")) {
+    mesh->points = record.at("points").get<Mesh::Positions>();
+  }
+  if (record.contains("colors")) {
+    mesh->colors = record.at("colors").get<Mesh::Colors>();
+  }
+  if (record.contains("stamps")) {
+    mesh->stamps = record.at("stamps").get<Mesh::Timestamps>();
+  }
+  if (record.contains("first_seen_stamps")) {
+    mesh->first_seen_stamps = record.at("first_seen_stamps").get<Mesh::Timestamps>();
+  }
+  if (record.contains("labels")) {
+    mesh->labels = record.at("labels").get<Mesh::Labels>();
+  }
+  if (record.contains("faces")) {
+    mesh->faces = record.at("faces").get<Mesh::Faces>();
+  }
+
   return mesh;
+}
+
+void to_json(json& j, const BoundingBox& b) {
+  j = json{{"type", b.type},
+           {"min", b.min},
+           {"max", b.max},
+           {"world_P_center", b.world_P_center},
+           {"world_R_center", Eigen::Quaternionf(b.world_R_center)}};
+}
+
+void from_json(const json& j, BoundingBox& b) {
+  if (j.at("type").is_null()) {
+    b.type = BoundingBox::Type::RAABB;
+  } else {
+    b.type = j.at("type").get<BoundingBox::Type>();
+  }
+
+  if (b.type == BoundingBox::Type::INVALID) {
+    return;
+  }
+
+  b.min = j.at("min").get<Eigen::Vector3f>();
+  b.max = j.at("max").get<Eigen::Vector3f>();
+  b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
+  auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
+  b.world_R_center = world_q_center.toRotationMatrix();
+}
+
+void to_json(json& j, const NearestVertexInfo& info) {
+  j = json{
+      {"block", info.block}, {"voxel_pos", info.voxel_pos}, {"vertex", info.vertex}};
+
+  if (info.label) {
+    j["label"] = info.label.value();
+  } else {
+    j["label"] = nullptr;
+  }
+}
+
+void from_json(const json& j, NearestVertexInfo& info) {
+  info.block[0] = j.at("block").at(0).get<int32_t>();
+  info.block[1] = j.at("block").at(1).get<int32_t>();
+  info.block[2] = j.at("block").at(2).get<int32_t>();
+  info.voxel_pos[0] = j.at("voxel_pos").at(0).get<double>();
+  info.voxel_pos[1] = j.at("voxel_pos").at(1).get<double>();
+  info.voxel_pos[2] = j.at("voxel_pos").at(2).get<double>();
+  info.vertex = j.at("vertex");
+
+  if (j.contains("label") && !j.at("label").is_null()) {
+    info.label = j.at("label").get<uint32_t>();
+  }
+}
+
+void to_json(json& j, const MeshIndex& mi) {
+  j = json{{"robot_id", mi.robot_id}, {"idx", mi.idx}};
+}
+
+void from_json(const json& j, MeshIndex& mi) {
+  mi.robot_id = j.at("robot_id").get<size_t>();
+  mi.idx = j.at("idx").get<size_t>();
 }
 
 }  // namespace spark_dsg

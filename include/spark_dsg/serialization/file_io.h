@@ -34,33 +34,50 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
+#include <optional>
+#include <string>
+#include <unordered_map>
+
 #include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/graph_file_io.h"
 
-namespace spark_dsg {
+namespace spark_dsg::io {
 
-void writeGraph(const DynamicSceneGraph& graph,
-                std::vector<uint8_t>& buffer,
-                bool include_mesh = false);
+// Define file extensions and types.
+inline const std::string JSON_EXTENSION = ".json";
+inline const std::string BSON_EXTENSION = ".bson";
+inline const std::string BINARY_EXTENSION = ".sparkdsg";
+enum class FileType { JSON, BINARY, NONE, UNKNOWN };
 
-DynamicSceneGraph::Ptr readGraph(
-    const uint8_t* const buffer,
-    size_t length);
+/**
+ * @brief Identify the file type of a given filepath.
+ * @param filepath The complete filepath to identify.
+ */
+FileType identifyFileType(const std::string& filepath);
 
-inline DynamicSceneGraph::Ptr readGraph(
-    const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
-}
+/**
+ * @brief Verify that the file extension of a given filepath is valid. If no extension
+ * is provided, default to binary.
+ * @param filepath The complete filepath to verify.
+ * @throws std::runtime_error if the extension is invalid.
+ * @return The file type of the resulting filepath.
+ */
+FileType verifyFileExtension(std::string& filepath);
 
-bool updateGraph(DynamicSceneGraph& graph,
-                 const uint8_t* const buffer,
-                 size_t length,
-                 bool remove_stale = false);
+/**
+ * @brief Save a DynamicSceneGraph to a file in binary serialization.
+ * @param graph The graph to save.
+ * @param filepath The filepath including extension to save to.
+ * @param include_mesh If true, save the mesh data for each node.
+ */
+void saveDsgBinary(const DynamicSceneGraph& graph,
+                   const std::string& filepath,
+                   bool include_mesh = false);
 
-inline bool updateGraph(DynamicSceneGraph& graph,
-                        const std::vector<uint8_t>& buffer,
-                        bool remove_stale = false) {
-  return updateGraph(graph, buffer.data(), buffer.size(), remove_stale);
-}
+/**
+ * @brief Load a DynamicSceneGraph from a file in binary serialization.
+ * @param filepath The filepath including extension to load from.
+ * @return A pointer to the loaded graph or nullptr if loading failed.
+ */
+DynamicSceneGraph::Ptr loadDsgBinary(const std::string& filepath);
 
-}  // namespace spark_dsg
+}  // namespace spark_dsg::io

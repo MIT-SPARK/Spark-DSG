@@ -89,7 +89,7 @@ class Mesh {
   bool empty() const;
 
   /**
-   * @brief Remove all vertices and faces from the mesh.
+   * @brief Clear all vertices and faces from the mesh
    */
   void clear();
 
@@ -150,6 +150,16 @@ class Mesh {
   void setTimestamp(size_t index, Timestamp label);
 
   /**
+   * @brief Get last seen timestamp.
+   */
+  Timestamp firstSeenTimestamp(size_t index) const;
+
+  /**
+   * @brief Set last seen timestamp.
+   */
+  void setFirstSeenTimestamp(size_t index, Timestamp timestamp);
+
+  /**
    * @brief Get current label
    */
   Label label(size_t index) const;
@@ -198,8 +208,9 @@ class Mesh {
   static Ptr deserializeFromJson(const std::string& contents);
 
   /**
-   * @brief parse graph from JSON string
-   * @param contents JSON string to parse
+   * @brief parse graph from binary data
+   * @param buffer start position of binary data to parse
+   * @param length length of binary data to parse
    * @returns Resulting parsed scene graph
    */
   static Ptr deserializeFromBinary(const uint8_t* const buffer, size_t length);
@@ -237,6 +248,7 @@ class Mesh {
   Positions points;
   Colors colors;
   Timestamps stamps;
+  Timestamps first_seen_stamps;
   Labels labels;
   Faces faces;
 };

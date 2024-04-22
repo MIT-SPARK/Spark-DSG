@@ -33,176 +33,146 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/dynamic_scene_graph.h>
+
+#include "spark_dsg/serialization/json_serialization.h"
+#include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
 
-TEST(SceneGraphSerializationTests, SerializeDsgBasic) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
-  expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
+using nlohmann::json;
 
-  expected.insertEdge(0, 1);
-  expected.insertEdge(1, 2);
+TEST(JsonSerializationTests, EigenVectorJson) {
+  {  // double vector
+    Eigen::Vector3d expected;
+    expected << 1.0, 2.0, 3.0;
 
-  const auto output = expected.serializeToJson();
+    json output = expected;
 
-  auto result = DynamicSceneGraph::deserializeFromJson(output);
+    auto result = output.get<Eigen::Vector3d>();
+    EXPECT_EQ(expected, result);
+  }
 
-  EXPECT_EQ(expected.numNodes(), result->numNodes()) << output;
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
+  {  // uint8_t vector
+    SemanticNodeAttributes::ColorVector expected;
+    expected << 1, 2, 3;
 
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(1));
-  EXPECT_TRUE(result->hasNode(2));
-  EXPECT_TRUE(result->hasEdge(0, 1));
-  EXPECT_TRUE(result->hasEdge(1, 2));
-  EXPECT_EQ(expected.hasLayer(0), result->hasLayer(0));
+    json output = expected;
+
+    auto result = output.get<SemanticNodeAttributes::ColorVector>();
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // dynamic float vector
+    Eigen::VectorXf expected(5, 1);
+    expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::VectorXf>();
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // dynamic int vector
+    Eigen::VectorXi expected(5, 1);
+    expected << 1, 2, 3, 4, 5;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::VectorXi>();
+    EXPECT_EQ(expected, result);
+  }
 }
 
-TEST(SceneGraphSerializationTests, SerializeDsgWithNaNs) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
-  expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
-  Eigen::Vector3d bad_pos = Eigen::Vector3d::Zero();
-  bad_pos(0) = std::numeric_limits<double>::quiet_NaN();
-  bad_pos(1) = std::numeric_limits<double>::quiet_NaN();
-  bad_pos(2) = std::numeric_limits<double>::quiet_NaN();
-  expected.emplaceNode(3, 3, std::make_unique<NodeAttributes>(bad_pos));
+TEST(JsonSerializationTests, EigenMatrixJson) {
+  {  // double fixed-size matrix
+    Eigen::Matrix2d expected;
+    expected << 1.0, 2.0, 3.0, 4.0;
 
-  expected.insertEdge(0, 1);
-  expected.insertEdge(1, 2);
-  expected.insertEdge(2, 3);
+    json output = expected;
 
-  const std::string output_str = expected.serializeToJson();
+    auto result = output.get<Eigen::Matrix2d>();
+    EXPECT_EQ(expected, result);
+  }
 
-  auto result = DynamicSceneGraph::deserializeFromJson(output_str);
+  {  // mixed matrix size
+    Eigen::Matrix<float, 3, Eigen::Dynamic> expected(3, 4);
+    expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f,
+        12.0f;
 
-  EXPECT_EQ(expected.numNodes(), result->numNodes());
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
+    json output = expected;
 
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(1));
-  EXPECT_TRUE(result->hasNode(2));
-  EXPECT_TRUE(result->hasNode(3));
-  EXPECT_TRUE(result->hasEdge(0, 1));
-  EXPECT_TRUE(result->hasEdge(1, 2));
-  EXPECT_TRUE(result->hasEdge(2, 3));
-  EXPECT_EQ(expected.hasLayer(0), result->hasLayer(0));
+    auto result = output.get<Eigen::Matrix<float, 3, Eigen::Dynamic>>();
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // dynamic matrix
+    Eigen::MatrixXd expected(2, 3);
+    expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
+
+    json output = expected;
+
+    auto result = output.get<Eigen::MatrixXd>();
+    EXPECT_EQ(expected, result);
+  }
 }
 
-TEST(SceneGraphSerializationTests, SerializeDsgDynamic) {
-  using namespace std::chrono_literals;
-  DynamicSceneGraph expected;
-  expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
+TEST(JsonSerializationTests, EigenQuaternionJson) {
+  std::stringstream ss;
 
-  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
-  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+  {  // single-precision
+    Eigen::Quaternionf expected(0.0, 0.0, 1.0, 0.0);
+    json output = expected;
+    auto result = output.get<Eigen::Quaternionf>();
+    ASSERT_TRUE(quaternionsEqual(expected, result));
+  }
 
-  const auto output = expected.serializeToJson();
-
-  auto result = DynamicSceneGraph::deserializeFromJson(output);
-
-  EXPECT_EQ(expected.numNodes(), result->numNodes()) << output;
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
-
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 0)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 1)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 3)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
-  EXPECT_FALSE(result->hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
-
-  EXPECT_TRUE(result->hasLayer(2, 'a'));
+  {  // double-precision
+    Eigen::Quaterniond expected(0.0, 0.0, 0.0, 1.0);
+    json output = expected;
+    auto result = output.get<Eigen::Quaterniond>();
+    ASSERT_TRUE(quaternionsEqual(expected, result));
+  }
 }
 
-TEST(SceneGraphSerializationTests, SerializeMesh) {
-  Mesh mesh;
-  mesh.points.push_back(Eigen::Vector3f::Zero());
-  mesh.points.push_back(Eigen::Vector3f::Zero());
-  mesh.points.push_back(Eigen::Vector3f::Zero());
-  mesh.colors.push_back({10, 20, 30, 255});
-  mesh.labels.push_back(2);
-  mesh.labels.push_back(8);
-  mesh.stamps.push_back(0);
-  mesh.stamps.push_back(10);
-  mesh.stamps.push_back(20);
-  mesh.stamps.push_back(30);
-  mesh.faces.push_back({{1, 2, 3}});
+TEST(JsonSerializationTests, BoundingBoxJson) {
+  {  // invalid type
+    BoundingBox expected;
 
-  const auto output = mesh.serializeToJson();
-  auto result = Mesh::deserializeFromJson(output);
+    json output = expected;
+    BoundingBox result = output.get<BoundingBox>();
 
-  ASSERT_TRUE(result);
-  EXPECT_EQ(result->points.size(), 3u);
-  EXPECT_EQ(result->colors.size(), 1u);
-  EXPECT_EQ(result->labels.size(), 2u);
-  EXPECT_EQ(result->stamps.size(), 4u);
-  EXPECT_EQ(result->faces.size(), 1u);
-}
+    EXPECT_EQ(expected, result);
+  }
 
-TEST(SceneGraphSerializationTests, SerializeDsgWithMesh) {
-  using namespace std::chrono_literals;
-  DynamicSceneGraph expected;
-  expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
+  {  // ABB
+    Eigen::Vector3f expected_min;
+    expected_min << 1.0f, 2.0f, 3.0f;
+    Eigen::Vector3f expected_max;
+    expected_max << 4.0f, 5.0f, 6.0f;
 
-  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>(), false);
-  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+    BoundingBox expected(expected_min, expected_max);
 
-  auto mesh = std::make_shared<Mesh>();
-  mesh->points.push_back(Eigen::Vector3f::Zero());
-  mesh->points.push_back(Eigen::Vector3f::Zero());
-  mesh->points.push_back(Eigen::Vector3f::Zero());
-  mesh->colors.push_back({10, 20, 30, 255});
-  mesh->labels.push_back(2);
-  mesh->labels.push_back(8);
-  mesh->stamps.push_back(0);
-  mesh->stamps.push_back(10);
-  mesh->stamps.push_back(20);
-  mesh->stamps.push_back(30);
-  mesh->faces.push_back({{1, 2, 3}});
-  expected.setMesh(mesh);
+    json output = expected;
 
-  const auto output = expected.serializeToJson(true);
+    BoundingBox result = output.get<BoundingBox>();
+    EXPECT_EQ(expected, result);
+  }
 
-  auto result = DynamicSceneGraph::deserializeFromJson(output);
+  {  // OBB
+    Eigen::Vector3f expected_min;
+    expected_min << 1.0f, 2.0f, 3.0f;
+    Eigen::Vector3f expected_max;
+    expected_max << 4.0f, 5.0f, 6.0f;
+    Eigen::Vector3f expected_pos;
+    expected_pos << 7.0f, 8.0f, 9.0f;
+    Eigen::Quaternionf expected_rot(0.0, 0.0, 1.0, 0.0);
 
-  EXPECT_EQ(expected.numNodes(), result->numNodes()) << output;
-  EXPECT_EQ(expected.numEdges(), result->numEdges());
-  EXPECT_EQ(expected.numLayers(), result->numLayers());
-  EXPECT_EQ(expected.layer_ids, result->layer_ids);
+    BoundingBox expected(expected_min, expected_max, expected_pos, expected_rot);
 
-  EXPECT_TRUE(result->hasNode(0));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 0)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 1)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasNode(NodeSymbol('a', 3)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
-  EXPECT_FALSE(result->hasEdge(NodeSymbol('a', 1), NodeSymbol('a', 2)));
-  EXPECT_TRUE(result->hasEdge(NodeSymbol('a', 2), NodeSymbol('a', 3)));
-
-  EXPECT_TRUE(result->hasLayer(2, 'a'));
-  auto result_mesh = result->mesh();
-  ASSERT_TRUE(result_mesh);
-  EXPECT_EQ(result_mesh->points.size(), 3u);
-  EXPECT_EQ(result_mesh->colors.size(), 1u);
-  EXPECT_EQ(result_mesh->labels.size(), 2u);
-  EXPECT_EQ(result_mesh->stamps.size(), 4u);
-  EXPECT_EQ(result_mesh->faces.size(), 1u);
+    json output = expected;
+    BoundingBox result = output.get<BoundingBox>();
+    EXPECT_EQ(expected, result);
+  }
 }
 
 }  // namespace spark_dsg

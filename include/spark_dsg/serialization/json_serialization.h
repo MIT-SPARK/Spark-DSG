@@ -33,11 +33,82 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Dense>
+
 #include <nlohmann/json.hpp>
 
-#include "spark_dsg/bounding_box.h"
-#include "spark_dsg/node_attributes.h"
+#include "spark_dsg/serialization/attribute_factory.h"
+
+namespace spark_dsg {
+
+struct JsonConverter {
+  explicit JsonConverter(nlohmann::json* record) : ref(record) {}
+
+  explicit JsonConverter(const nlohmann::json* rec)
+      : cref(rec), attr_type(rec->at("type").get<std::string>()) {}
+
+  ~JsonConverter() = default;
+
+  template <typename Factory>
+  inline std::string read_type(const Factory&) const {
+    return attr_type;
+  }
+
+  template <typename Factory>
+  void mark_type(const Factory&, const std::string& name) {
+    (*ref)["type"] = name;
+  }
+
+  template <typename T>
+  void write(const std::string& name, const T& value) {
+    (*ref)[name] = value;
+  }
+
+  template <typename T>
+  void read(const std::string& name, T& value) const {
+    if (!cref->contains(name)) {
+      return;
+    }
+
+    value = cref->at(name).get<T>();
+  }
+
+  const nlohmann::json* cref = nullptr;
+  nlohmann::json* ref = nullptr;
+  std::string attr_type;
+};
+
+using JsonNodeFactory = NodeAttributeFactory<JsonConverter>;
+using JsonEdgeFactory = EdgeAttributeFactory<JsonConverter>;
+
+NLOHMANN_JSON_SERIALIZE_ENUM(BoundingBox::Type,
+                             {
+                                 {BoundingBox::Type::INVALID, "INVALID"},
+                                 {BoundingBox::Type::AABB, "AABB"},
+                                 {BoundingBox::Type::RAABB, "RAABB"},
+                                 {BoundingBox::Type::OBB, "OBB"},
+                             });
+
+void to_json(nlohmann::json& record, const NodeAttributes& attributes);
+
+void to_json(nlohmann::json& record, const EdgeAttributes& attributes);
+
+void to_json(nlohmann::json& j, const BoundingBox& b);
+
+void from_json(const nlohmann::json& j, BoundingBox& b);
+
+void to_json(nlohmann::json& j, const NearestVertexInfo& b);
+
+void from_json(const nlohmann::json& j, NearestVertexInfo& b);
+
+void to_json(nlohmann::json& j, const MeshIndex& mi);
+
+void from_json(const nlohmann::json& j, MeshIndex& mi);
+
+void to_json(nlohmann::json& j, const Mesh& mesh);
+
+void from_json(const nlohmann::json& j, Mesh& mesh);
+
+}  // namespace spark_dsg
 
 namespace nlohmann {
 
@@ -105,27 +176,3 @@ struct adl_serializer<Eigen::Quaternion<Scalar>> {
 };
 
 }  // namespace nlohmann
-
-namespace spark_dsg {
-
-NLOHMANN_JSON_SERIALIZE_ENUM(BoundingBox::Type,
-                             {
-                                 {BoundingBox::Type::INVALID, "INVALID"},
-                                 {BoundingBox::Type::AABB, "AABB"},
-                                 {BoundingBox::Type::RAABB, "RAABB"},
-                                 {BoundingBox::Type::OBB, "OBB"},
-                             });
-
-void to_json(nlohmann::json& j, const BoundingBox& b);
-
-void from_json(const nlohmann::json& j, BoundingBox& b);
-
-void to_json(nlohmann::json& j, const NearestVertexInfo& b);
-
-void from_json(const nlohmann::json& j, NearestVertexInfo& b);
-
-void to_json(nlohmann::json& j, const MeshIndex& mi);
-
-void from_json(const nlohmann::json& j, MeshIndex& mi);
-
-}  // namespace spark_dsg

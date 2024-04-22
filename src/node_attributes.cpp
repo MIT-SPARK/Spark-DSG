@@ -139,4 +139,20 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
+std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
+  SemanticNodeAttributes::fill_ostream(out);
+  out << "  - first_observed_ns: ";
+  for (uint64_t t : first_observed_ns) {
+    out << t << " ";
+  }
+  out << std::endl << "  - last_observed_ns: ";
+  for (uint64_t t : last_observed_ns) {
+    out << t << " ";
+  }
+  out << std::endl
+      << "  - mesh: " << mesh.numVertices() << " vertices, " << mesh.numFaces() << " faces"
+      << std::endl;
+  return out;
+}
+
 }  // namespace spark_dsg

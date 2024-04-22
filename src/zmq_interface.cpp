@@ -37,7 +37,7 @@
 #include <zmq.hpp>
 
 #include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/graph_binary_serialization.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 
 namespace spark_dsg {
 

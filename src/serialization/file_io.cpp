@@ -32,16 +32,17 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/graph_file_io.h"
+#include "spark_dsg/serialization/file_io.h"
 
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 
-#include "spark_dsg/binary_serializer.h"
 #include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/graph_binary_serialization.h"
-#include "spark_dsg_version.h"
+#include "spark_dsg/logging.h"
+#include "spark_dsg/serialization/binary_serializer.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
@@ -103,8 +104,8 @@ FileType verifyFileExtension(std::string& filepath) {
   if (type == io::FileType::UNKNOWN) {
     std::stringstream msg;
     msg << "Invalid file extension for '" << filepath << "'. Supported are '"
-        << io::BINARY_EXTENSION << "', '" << io::JSON_EXTENSION
-        << "', and no extension (defaults to binary save mode).";
+        << io::BINARY_EXTENSION << "', '" << io::JSON_EXTENSION << "', '"
+        << io::BSON_EXTENSION << "', and no extension (defaults to binary save mode).";
     throw std::runtime_error(msg.str());
   }
 
@@ -116,7 +117,7 @@ void saveDsgBinary(const DynamicSceneGraph& graph,
                    bool include_mesh) {
   // Get the header data.
   const FileHeader header = FileHeader::current();
-  const std::vector<uint8_t> header_buffer = header.serialize();
+  const std::vector<uint8_t> header_buffer = header.serializeToBinary();
 
   // Get the DSG data.
   std::vector<uint8_t> graph_buffer;
@@ -136,10 +137,8 @@ DynamicSceneGraph::Ptr loadDsgBinary(const std::string& filepath) {
 
   // Deserialize the header.
   size_t offset;
-  const auto read_header = FileHeader::deserialize(buffer, &offset);
-  // NOTE(lschmid) If there's no header saved, assume the file is legacy. This can
-  // probably be replaced with a strict check in the future.
-  const FileHeader header = read_header.value_or(FileHeader::legacy());
+  const FileHeader header =
+      FileHeader::deserializeFromBinary(buffer, &offset).value_or(FileHeader::legacy());
 
   // Check for compatibility issues.
   checkCompatibility(header);
@@ -147,100 +146,6 @@ DynamicSceneGraph::Ptr loadDsgBinary(const std::string& filepath) {
   // Deserialize the graph.
   GlobalInfo::ScopedInfo info(header);
   return readGraph(buffer.data() + offset, buffer.size() - offset);
-}
-
-void checkCompatibility(const FileHeader& loaded, const FileHeader& current) {
-  // Check the project name.
-  if (loaded.project_name != current.project_name) {
-    std::stringstream msg;
-    msg << "Attempted to load invalid binary file: the loaded file was created with a "
-           "different project name ("
-        << loaded.project_name << ") than the current project name ("
-        << current.project_name << ").";
-    throw(std::runtime_error(msg.str()));
-    // NOTE(lschmid): Modifications for external projects will always be breaking
-    // changes that are unknown to, so we employ a hard check here. Alternatively, this
-    // distinction could also be more fine graind for known projects.
-  }
-
-  // TODO(lschmid): Add version compatibility checks if needed and once once there.
-}
-
-FileHeader FileHeader::current() {
-  FileHeader header;
-  header.project_name = CURRENT_PROJECT_NAME;
-  header.version.major = SPARK_DSG_VERSION_MAJOR;
-  header.version.minor = SPARK_DSG_VERSION_MINOR;
-  header.version.patch = SPARK_DSG_VERSION_PATCH;
-  return header;
-}
-
-FileHeader FileHeader::legacy() {
-  FileHeader header;
-  header.project_name = "main";
-  header.version = Version(1, 0, 0);
-  return header;
-}
-
-bool FileHeader::Version::operator==(const Version& other) const {
-  return major == other.major && minor == other.minor && patch == other.patch;
-}
-
-bool FileHeader::Version::operator<(const Version& other) const {
-  if (major < other.major) {
-    return true;
-  } else if (major == other.major) {
-    if (minor < other.minor) {
-      return true;
-    } else if (minor == other.minor) {
-      return patch < other.patch;
-    }
-  }
-  return false;
-}
-
-std::string FileHeader::Version::toString() const {
-  std::stringstream ss;
-  ss << static_cast<int>(major) << "." << static_cast<int>(minor) << "."
-     << static_cast<int>(patch);
-  return ss.str();
-}
-
-std::vector<uint8_t> FileHeader::serialize() const {
-  std::vector<uint8_t> buffer;
-  serialization::BinarySerializer serializer(&buffer);
-  serializer.write(IDENTIFIER_STRING);
-  serializer.write(project_name);
-  serializer.write(version.major);
-  serializer.write(version.minor);
-  serializer.write(version.patch);
-  return buffer;
-}
-
-std::optional<FileHeader> FileHeader::deserialize(const std::vector<uint8_t>& buffer,
-                                                  size_t* offset) {
-  // Check the buffer is valid.
-  serialization::BinaryDeserializer deserializer(buffer);
-  if (deserializer.getCurrType() != serialization::PackType::ARR32) {
-    return std::nullopt;
-  }
-  std::string identifier;
-  deserializer.read(identifier);
-  if (identifier != IDENTIFIER_STRING) {
-    return std::nullopt;
-  }
-
-  // Deserialize the header.
-  FileHeader header;
-  deserializer.read(header.project_name);
-  deserializer.read(header.version.major);
-  deserializer.read(header.version.minor);
-  deserializer.read(header.version.patch);
-
-  if (offset) {
-    *offset = deserializer.pos;
-  }
-  return header;
 }
 
 }  // namespace io

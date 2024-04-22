@@ -35,6 +35,8 @@
 #include <gtest/gtest.h>
 #include <spark_dsg/adjacency_matrix.h>
 
+#include "spark_dsg/logging.h"
+
 namespace spark_dsg {
 
 struct AdjacencyMatrixTestConfig {

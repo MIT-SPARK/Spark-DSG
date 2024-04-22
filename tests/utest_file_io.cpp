@@ -33,8 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/graph_file_io.h>
 
+#include "spark_dsg/serialization/file_io.h"
+#include "spark_dsg/serialization/versioning.h"
 #include "spark_dsg_tests/temp_file.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
@@ -58,21 +59,21 @@ TEST(FileIoTests, VersionSerialization) {
   header.version.major = 1;
   header.version.minor = 2;
   header.version.patch = 3;
-  const auto buffer = header.serialize();
+  const auto buffer = header.serializeToBinary();
 
   // Check deserialization.
-  const auto result = FileHeader::deserialize(buffer);
+  const auto result = FileHeader::deserializeFromBinary(buffer);
   EXPECT_TRUE(result.has_value());
   EXPECT_EQ(header.project_name, result->project_name);
   EXPECT_EQ(header.version, result->version);
 
   // Check deserialization with invalid buffer.
   const std::vector<uint8_t> short_buffer = {0, 1, 2, 3};
-  EXPECT_FALSE(FileHeader::deserialize(short_buffer).has_value());
+  EXPECT_FALSE(FileHeader::deserializeFromBinary(short_buffer).has_value());
 
   std::vector<uint8_t> random_buffer = buffer;
   random_buffer[7] = 7;
-  EXPECT_FALSE(FileHeader::deserialize(random_buffer).has_value());
+  EXPECT_FALSE(FileHeader::deserializeFromBinary(random_buffer).has_value());
 }
 
 void testSaveLoad(const std::string& file_name) {
@@ -81,7 +82,6 @@ void testSaveLoad(const std::string& file_name) {
                     NodeSymbol('p', 0),
                     std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
   graph.setMesh(std::make_shared<Mesh>());
-
   graph.save(file_name);
   auto other = DynamicSceneGraph::load(file_name);
 

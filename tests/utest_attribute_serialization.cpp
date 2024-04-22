@@ -33,236 +33,78 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/attribute_factory.h>
-#include <spark_dsg/graph_json_serialization.h>
-#include <spark_dsg/serialization_helpers.h>
 
+#include "spark_dsg/serialization/binary_serializer.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
+#include "spark_dsg/serialization/json_serialization.h"
+#include "spark_dsg_tests/default_attributes.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
 
 using nlohmann::json;
 
-TEST(AttributeSerializationTests, SerializeEigenVector) {
-  {  // double vector
-    Eigen::Vector3d expected;
-    expected << 1.0, 2.0, 3.0;
+TEST(AttributeSerializationTests, NodeAttributesJson) {
+  NodeAttributes expected = getNodeAttributes();
 
-    json output = expected;
+  const json output = expected;
+  auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
-    auto result = output.get<Eigen::Vector3d>();
-    EXPECT_EQ(expected, result);
-  }
-
-  {  // uint8_t vector
-    SemanticNodeAttributes::ColorVector expected;
-    expected << 1, 2, 3;
-
-    json output = expected;
-
-    auto result = output.get<SemanticNodeAttributes::ColorVector>();
-    EXPECT_EQ(expected, result);
-  }
-
-  {  // dynamic float vector
-    Eigen::VectorXf expected(5, 1);
-    expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f;
-
-    json output = expected;
-
-    auto result = output.get<Eigen::VectorXf>();
-    EXPECT_EQ(expected, result);
-  }
-
-  {  // dynamic int vector
-    Eigen::VectorXi expected(5, 1);
-    expected << 1, 2, 3, 4, 5;
-
-    json output = expected;
-
-    auto result = output.get<Eigen::VectorXi>();
-    EXPECT_EQ(expected, result);
-  }
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result) << output;
 }
 
-TEST(AttributeSerializationTests, SerializeEigenMatrix) {
-  {  // double fixed-size matrix
-    Eigen::Matrix2d expected;
-    expected << 1.0, 2.0, 3.0, 4.0;
+TEST(AttributeSerializationTests, SemanticNodeAttributesJson) {
+  SemanticNodeAttributes expected = getSemanticNodeAttributes();
 
-    json output = expected;
+  const json output = expected;
+  auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
-    auto result = output.get<Eigen::Matrix2d>();
-    EXPECT_EQ(expected, result);
-  }
-
-  {  // mixed matrix size
-    Eigen::Matrix<float, 3, Eigen::Dynamic> expected(3, 4);
-    expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f,
-        12.0f;
-
-    json output = expected;
-
-    auto result = output.get<Eigen::Matrix<float, 3, Eigen::Dynamic>>();
-    EXPECT_EQ(expected, result);
-  }
-
-  {  // dynamic matrix
-    Eigen::MatrixXd expected(2, 3);
-    expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
-
-    json output = expected;
-
-    auto result = output.get<Eigen::MatrixXd>();
-    EXPECT_EQ(expected, result);
-  }
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result) << output;
 }
 
-TEST(AttributeSerializationTests, SerializeEigenQuaternion) {
-  std::stringstream ss;
+TEST(AttributeSerializationTests, ObjectNodeAttributesJson) {
+  ObjectNodeAttributes expected = getObjectNodeAttributes();
 
-  {  // single-precision
-    Eigen::Quaternionf expected(0.0, 0.0, 1.0, 0.0);
-    json output = expected;
-    auto result = output.get<Eigen::Quaternionf>();
-    ASSERT_TRUE(quaternionsEqual(expected, result));
-  }
+  const json output = expected;
+  auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
-  {  // double-precision
-    Eigen::Quaterniond expected(0.0, 0.0, 0.0, 1.0);
-    json output = expected;
-    auto result = output.get<Eigen::Quaterniond>();
-    ASSERT_TRUE(quaternionsEqual(expected, result));
-  }
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result) << output;
 }
 
-TEST(AttributeSerializationTests, SerializeBoundingBox) {
-  {  // invalid type
-    BoundingBox expected;
+TEST(AttributeSerializationTests, RoomNodeAttributesJson) {
+  RoomNodeAttributes expected = getRoomNodeAttributes();
 
-    json output = expected;
-    BoundingBox result = output.get<BoundingBox>();
+  const json output = expected;
+  auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
-    EXPECT_EQ(expected, result);
-  }
-
-  {  // ABB
-    Eigen::Vector3f expected_min;
-    expected_min << 1.0f, 2.0f, 3.0f;
-    Eigen::Vector3f expected_max;
-    expected_max << 4.0f, 5.0f, 6.0f;
-
-    BoundingBox expected(expected_min, expected_max);
-
-    json output = expected;
-
-    BoundingBox result = output.get<BoundingBox>();
-    EXPECT_EQ(expected, result);
-  }
-
-  {  // OBB
-    Eigen::Vector3f expected_min;
-    expected_min << 1.0f, 2.0f, 3.0f;
-    Eigen::Vector3f expected_max;
-    expected_max << 4.0f, 5.0f, 6.0f;
-    Eigen::Vector3f expected_pos;
-    expected_pos << 7.0f, 8.0f, 9.0f;
-    Eigen::Quaternionf expected_rot(0.0, 0.0, 1.0, 0.0);
-
-    BoundingBox expected(expected_min, expected_max, expected_pos, expected_rot);
-
-    json output = expected;
-    BoundingBox result = output.get<BoundingBox>();
-    EXPECT_EQ(expected, result);
-  }
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result) << output;
 }
 
-TEST(AttributeSerializationTests, SerializeNodeAttributes) {
-  {  // base class
-    NodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
+TEST(AttributeSerializationTests, PlaceNodeAttributesJson) {
+  PlaceNodeAttributes expected = getPlaceNodeAttributes();
 
-    const json output = expected;
-    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
+  const json output = expected;
+  auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
 
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result) << output;
-  }
-
-  {  // semantic attributes
-    SemanticNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "semantic_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-
-    const json output = expected;
-    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
-
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result) << output;
-  }
-
-  {  // object attributes
-    ObjectNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "object_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-    expected.registered = true;
-    expected.world_R_object = Eigen::Quaterniond(0.0, 0.0, 1.0, 0.0);
-
-    const json output = expected;
-    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
-
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result) << output;
-  }
-
-  {  // semantic attributes
-    RoomNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "room_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-
-    const json output = expected;
-    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
-
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result) << output;
-  }
-
-  {  // place attributes
-    PlaceNodeAttributes expected;
-    expected.position << 1.0, 2.0, 3.0;
-    expected.name = "place_attributes";
-    expected.color << 4, 5, 6;
-    expected.bounding_box.type = BoundingBox::Type::AABB;
-    expected.bounding_box.min << 7.0f, 8.0f, 9.0f;
-    expected.bounding_box.max << 10.0f, 11.0f, 12.0f;
-    expected.semantic_label = 13;
-    expected.distance = 14.0;
-    expected.num_basis_points = 15;
-
-    const json output = expected;
-    auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
-
-    ASSERT_TRUE(result != nullptr);
-    EXPECT_EQ(expected, *result) << output;
-  }
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result) << output;
 }
 
-TEST(AttributeSerializationTests, SerializeEdgeInfo) {
+TEST(AttributeSerializationTests, KhronosObjectAttributesJson) {
+  const auto expected = getKhronosObjectAttributes();
+
+  const json output = expected;
+  auto result = JsonNodeFactory::get_default().create(JsonConverter(&output));
+
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result) << output;
+}
+
+TEST(AttributeSerializationTests, EdgeInfoJson) {
   {  // base class
     EdgeAttributes expected;
     expected.weighted = true;
@@ -276,7 +118,7 @@ TEST(AttributeSerializationTests, SerializeEdgeInfo) {
   }
 }
 
-TEST(AttributeSerializationTests, DeserializeAttributesWithNaN) {
+TEST(AttributeSerializationTests, AttributesWithNaNJson) {
   std::string raw_json =
       R"delim({
         "bounding_box": {
@@ -310,6 +152,84 @@ TEST(AttributeSerializationTests, DeserializeAttributesWithNaN) {
   NodeAttributes new_attrs;
   attributes::deserialize(JsonConverter(&attr_json2), new_attrs);
   EXPECT_TRUE(new_attrs.position.hasNaN());
+}
+
+NodeAttributes::Ptr writeAttrsRT(const NodeAttributes& expected) {
+  std::vector<uint8_t> buffer;
+  serialization::BinarySerializer serializer(&buffer);
+  serializer.write(expected);
+
+  serialization::BinaryDeserializer deserializer(buffer);
+  serialization::BinaryConverter converter(&deserializer);
+  auto result = serialization::BinaryNodeFactory::get_default().create(converter);
+  converter.finalize();
+
+  return result;
+}
+
+EdgeAttributes::Ptr writeAttrsRT(const EdgeAttributes& expected) {
+  std::vector<uint8_t> buffer;
+  serialization::BinarySerializer serializer(&buffer);
+  serializer.write(expected);
+
+  serialization::BinaryDeserializer deserializer(buffer);
+  serialization::BinaryConverter converter(&deserializer);
+  auto result = serialization::BinaryEdgeFactory::get_default().create(converter);
+  converter.finalize();
+
+  return result;
+}
+
+TEST(AttributeSerializationTests, NodeAttributesBinary) {
+  NodeAttributes expected = getNodeAttributes();
+  auto result = writeAttrsRT(expected);
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result);
+}
+
+TEST(AttributeSerializationTests, SemanticNodeAttributesBinary) {
+  SemanticNodeAttributes expected = getSemanticNodeAttributes();
+  auto result = writeAttrsRT(expected);
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result);
+}
+
+TEST(AttributeSerializationTests, ObjectNodeAttributesBinary) {
+  ObjectNodeAttributes expected = getObjectNodeAttributes();
+  auto result = writeAttrsRT(expected);
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result);
+}
+
+TEST(AttributeSerializationTests, RoomNodeAttributesBinary) {
+  RoomNodeAttributes expected = getRoomNodeAttributes();
+  auto result = writeAttrsRT(expected);
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result);
+}
+
+TEST(AttributeSerializationTests, PlaceNodeAttributesBinary) {
+  PlaceNodeAttributes expected = getPlaceNodeAttributes();
+  auto result = writeAttrsRT(expected);
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result);
+}
+
+TEST(AttributeSerializationTests, KhronosObjectAttributesBinary) {
+  const auto expected = getKhronosObjectAttributes();
+  auto result = writeAttrsRT(expected);
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result);
+}
+
+TEST(AttributeSerializationTests, EdgeInfoBinary) {
+  EdgeAttributes expected;
+  expected.weighted = true;
+  expected.weight = 5.0;
+
+  auto result = writeAttrsRT(expected);
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(expected, *result);
 }
 
 }  // namespace spark_dsg

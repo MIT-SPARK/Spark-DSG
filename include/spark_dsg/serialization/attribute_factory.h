@@ -33,12 +33,13 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+
 #include <map>
 #include <sstream>
 #include <typeindex>
 #include <typeinfo>
 
-#include "spark_dsg/attribute_serialization.h"
+#include "spark_dsg/serialization/attribute_serialization.h"
 
 namespace spark_dsg {
 
@@ -181,7 +182,7 @@ class AttributeFactory {
   std::map<std::string, uint8_t> name_index_map_;
   std::map<uint8_t, std::string> index_name_map_;
 
-  static std::unique_ptr<AttributeFactory> s_instance_;
+  inline static std::unique_ptr<AttributeFactory> s_instance_ = nullptr;
 };
 
 // TODO(nathan) figure out how to make clang happy about this not being present
@@ -219,6 +220,7 @@ class NodeAttributeFactory : public AttributeFactory<NodeAttributes, C> {
     REGISTER_ATTR(NodeAttributeFactory, RoomNodeAttributes, C);
     REGISTER_ATTR(NodeAttributeFactory, PlaceNodeAttributes, C);
     REGISTER_ATTR(NodeAttributeFactory, AgentNodeAttributes, C);
+    REGISTER_ATTR(NodeAttributeFactory, KhronosObjectAttributes, C);
     REGISTER_ATTR(NodeAttributeFactory, Place2dNodeAttributes, C);
 
     factory.setTypeIndexMap({{"NodeAttributes", 0},
@@ -227,6 +229,7 @@ class NodeAttributeFactory : public AttributeFactory<NodeAttributes, C> {
                              {"RoomNodeAttributes", 3},
                              {"PlaceNodeAttributes", 4},
                              {"AgentNodeAttributes", 5},
+                             {"KhronosObjectAttributes", 6},
                              {"Place2dNodeAttributes", 7}});
 
     factory.default_set = true;

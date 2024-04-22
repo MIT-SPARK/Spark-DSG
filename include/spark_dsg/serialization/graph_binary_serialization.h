@@ -32,70 +32,35 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/serialization_helpers.h"
+#pragma once
 
-using nlohmann::json;
+#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
-void to_json(json& j, const BoundingBox& b) {
-  j = json{{"type", b.type},
-           {"min", b.min},
-           {"max", b.max},
-           {"world_P_center", b.world_P_center},
-           {"world_R_center", Eigen::Quaternionf(b.world_R_center)}};
+void writeGraph(const DynamicSceneGraph& graph,
+                std::vector<uint8_t>& buffer,
+                bool include_mesh = false);
+
+DynamicSceneGraph::Ptr readGraph(
+    const uint8_t* const buffer,
+    size_t length);
+
+inline DynamicSceneGraph::Ptr readGraph(
+    const std::vector<uint8_t>& buffer) {
+  return readGraph(buffer.data(), buffer.size());
 }
 
-void from_json(const json& j, BoundingBox& b) {
-  if (j.at("type").is_null()) {
-    b.type = BoundingBox::Type::RAABB;
-  } else {
-    b.type = j.at("type").get<BoundingBox::Type>();
-  }
+bool updateGraph(DynamicSceneGraph& graph,
+                 const uint8_t* const buffer,
+                 size_t length,
+                 bool remove_stale = false);
 
-  if (b.type == BoundingBox::Type::INVALID) {
-    return;
-  }
-
-  b.min = j.at("min").get<Eigen::Vector3f>();
-  b.max = j.at("max").get<Eigen::Vector3f>();
-  b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
-  auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
-  b.world_R_center = world_q_center.toRotationMatrix();
-}
-
-void to_json(json& j, const NearestVertexInfo& info) {
-  j = json{
-      {"block", info.block}, {"voxel_pos", info.voxel_pos}, {"vertex", info.vertex}};
-
-  if (info.label) {
-    j["label"] = info.label.value();
-  } else {
-    j["label"] = nullptr;
-  }
-}
-
-void from_json(const json& j, NearestVertexInfo& info) {
-  info.block[0] = j.at("block").at(0).get<int32_t>();
-  info.block[1] = j.at("block").at(1).get<int32_t>();
-  info.block[2] = j.at("block").at(2).get<int32_t>();
-  info.voxel_pos[0] = j.at("voxel_pos").at(0).get<double>();
-  info.voxel_pos[1] = j.at("voxel_pos").at(1).get<double>();
-  info.voxel_pos[2] = j.at("voxel_pos").at(2).get<double>();
-  info.vertex = j.at("vertex");
-
-  if (j.contains("label") && !j.at("label").is_null()) {
-    info.label = j.at("label").get<uint32_t>();
-  }
-}
-
-void to_json(json& j, const MeshIndex& mi) {
-  j = json{{"robot_id", mi.robot_id}, {"idx", mi.idx}};
-}
-
-void from_json(const json& j, MeshIndex& mi) {
-  mi.robot_id = j.at("robot_id").get<size_t>();
-  mi.idx = j.at("idx").get<size_t>();
+inline bool updateGraph(DynamicSceneGraph& graph,
+                        const std::vector<uint8_t>& buffer,
+                        bool remove_stale = false) {
+  return updateGraph(graph, buffer.data(), buffer.size(), remove_stale);
 }
 
 }  // namespace spark_dsg

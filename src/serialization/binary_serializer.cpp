@@ -32,7 +32,7 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/binary_serializer.h"
+#include "spark_dsg/serialization/binary_serializer.h"
 
 #include <iomanip>
 
@@ -74,11 +74,11 @@ std::ostream& operator<<(std::ostream& out, PackType type) {
 
 BinarySerializer::BinarySerializer(std::vector<uint8_t>* buffer) : ref(buffer) {}
 
-void BinarySerializer::writeArrayStart() {
+void BinarySerializer::startDynamicArray() {
   ref->push_back(static_cast<uint8_t>(PackType::ARRXX));
 }
 
-void BinarySerializer::writeArrayEnd() {
+void BinarySerializer::endDynamicArray() {
   ref->push_back(static_cast<uint8_t>(PackType::ARRYY));
 }
 
@@ -176,7 +176,7 @@ bool BinaryDeserializer::checkIfTrue() const {
 
 BinaryConverter::BinaryConverter(BinarySerializer* serializer)
     : serializer_(serializer) {
-  serializer_->writeArrayStart();
+  serializer_->startDynamicArray();
 }
 
 BinaryConverter::BinaryConverter(const BinaryDeserializer* deserializer)
@@ -186,7 +186,7 @@ BinaryConverter::BinaryConverter(const BinaryDeserializer* deserializer)
 
 BinaryConverter::~BinaryConverter() {
   if (serializer_) {
-    serializer_->writeArrayEnd();
+    serializer_->endDynamicArray();
   }
 }
 
@@ -231,6 +231,20 @@ void BinarySerializer::write<SceneGraphEdge>(const SceneGraphEdge& edge) {
   write(edge.source);
   write(edge.target);
   write(*edge.info);
+}
+
+template <>
+void BinarySerializer::write<Mesh>(const Mesh& mesh) {
+  std::vector<uint8_t> buffer;
+  mesh.serializeToBinary(buffer);
+  write(buffer);
+}
+
+template <>
+void BinaryDeserializer::read<Mesh>(Mesh& mesh) const {
+  std::vector<uint8_t> buffer;
+  read(buffer);
+  mesh = *Mesh::deserializeFromBinary(buffer.data(), buffer.size());
 }
 
 }  // namespace spark_dsg::serialization
