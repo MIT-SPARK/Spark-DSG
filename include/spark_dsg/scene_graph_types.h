@@ -122,11 +122,10 @@ struct DsgLayers {
   inline const static LayerId OBJECTS = 2;  //< Object node layer (static)
   inline const static LayerId AGENTS = 2;   //< Agents layer (dynamic)
   inline const static LayerId PLACES = 3;   //< Places node layer (as well as structure)
-  inline const static LayerId MESH_PLACES =
-      3;  //< Places node layer (as well as structure)
   inline const static LayerId STRUCTURE = 3;  //< Struct node layer (as well as places)
   inline const static LayerId ROOMS = 4;      //< Room node layer
   inline const static LayerId BUILDINGS = 5;  //< Building node layer
+  inline const static LayerId MESH_PLACES = 20;  //< Mesh (2D) Places node layer
   inline const static LayerId UNKNOWN = LayerKey::UNKNOWN_LAYER;  //< Catchall layer ID
 
   static std::string LayerIdToString(LayerId id);

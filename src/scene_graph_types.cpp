@@ -117,6 +117,8 @@ std::string DsgLayers::LayerIdToString(LayerId id) {
       return "ROOMS";
     case BUILDINGS:
       return "BUILDINGS";
+    case MESH_PLACES:
+      return "MESH_PLACES";
     default:
       return "UNKNOWN";
   }
@@ -138,6 +140,8 @@ LayerId DsgLayers::StringToLayerId(const std::string& id_str) {
     return DsgLayers::ROOMS;
   } else if (to_check == "BUILDINGS") {
     return DsgLayers::BUILDINGS;
+  } else if (to_check == "MESH_PLACES") {
+    return DsgLayers::MESH_PLACES;
   }
 
   return DsgLayers::UNKNOWN;
