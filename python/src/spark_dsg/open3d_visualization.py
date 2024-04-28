@@ -155,8 +155,8 @@ class RemoteVisualizer:
                 self._update_dynamic_layer(G.get_dynamic_layer(DsgLayers.AGENTS, "a"))
 
     def _update_mesh_geometry(self, G):
-        vertices = G.get_mesh_vertices()
-        faces = G.get_mesh_faces()
+        vertices = G.mesh.get_vertices()
+        faces = G.mesh.get_faces()
         if vertices.size == 0 or faces.size == 0:
             return
 
