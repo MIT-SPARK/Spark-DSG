@@ -44,7 +44,7 @@ add_library(
   src/serialization/file_io.cpp
   src/serialization/versioning.cpp
   src/serialization/json_serialization.cpp
-  src/serialization/mesh_io.cpp
+  src/serialization/mesh_serialization.cpp
 )
 
 if(NOT BUILD_SHARED_LIBS)

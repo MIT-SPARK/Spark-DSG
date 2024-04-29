@@ -114,14 +114,6 @@ void from_json(const json& record, Color& c) {
   }
 }
 
-void to_json(json& record, const Mesh& mesh) {
-  record = json::parse(mesh.serializeToJson());
-}
-
-void from_json(const json& record, Mesh& mesh) {
-  mesh = *Mesh::deserializeFromJson(record.dump());
-}
-
 void read_node_from_json(const json& record, NodeCallback callback) {
   auto node_id = record.at("id").get<NodeId>();
   auto layer = record.at("layer").get<LayerId>();
@@ -379,107 +371,6 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::deserializeFromJson(
   auto mesh = Mesh::deserializeFromJson(record.at("mesh").dump());
   graph->setMesh(mesh);
   return graph;
-}
-
-std::string Mesh::serializeToJson() const {
-  json record;
-  record["header"] = io::FileHeader::current();
-
-  // Serialize settings.
-  record["has_colors"] = has_colors;
-  record["has_timestamps"] = has_timestamps;
-  record["has_labels"] = has_labels;
-
-  // Serialize all fields if present.
-  if (!points.empty()) {
-    record["points"] = points;
-  }
-  if (!colors.empty()) {
-    record["colors"] = colors;
-  }
-  if (!stamps.empty()) {
-    record["stamps"] = stamps;
-  }
-  if (!first_seen_stamps.empty()) {
-    record["first_seen_stamps"] = first_seen_stamps;
-  }
-  if (!labels.empty()) {
-    record["labels"] = labels;
-  }
-  if (!faces.empty()) {
-    record["faces"] = faces;
-  }
-  return record.dump();
-}
-
-Mesh::Ptr deserializeMeshLegacy(const json& record) {
-  // Legacy mesh support.
-  Mesh::Ptr mesh = std::make_shared<Mesh>();
-  if (record.contains("vertices")) {
-    for (const auto& vertex : record.at("vertices")) {
-      Eigen::Vector3f pos(vertex.at("x").get<float>(),
-                          vertex.at("y").get<float>(),
-                          vertex.at("z").get<float>());
-      mesh->points.push_back(pos);
-
-      Color color{vertex.at("r").get<uint8_t>(),
-                  vertex.at("g").get<uint8_t>(),
-                  vertex.at("b").get<uint8_t>(),
-                  255};
-      mesh->colors.push_back(color);
-    }
-  }
-
-  if (record.contains("faces")) {
-    for (const auto& face : record.at("faces")) {
-      mesh->faces.push_back({{face.at(0).get<size_t>(),
-                              face.at(1).get<size_t>(),
-                              face.at(2).get<size_t>()}});
-    }
-  }
-  return mesh;
-}
-
-Mesh::Ptr Mesh::deserializeFromJson(const std::string& contents) {
-  const auto record = json::parse(contents);
-  const auto header = record.contains("header")
-                          ? record.at("header").get<io::FileHeader>()
-                          : io::FileHeader::legacy();
-  const io::GlobalInfo::ScopedInfo info(header);
-
-  // Legacy support.
-  if (header.version <= io::Version(1, 0, 1)) {
-    io::warnOutdatedHeader(header);
-    return deserializeMeshLegacy(record);
-  }
-
-  // Deserialize settings.
-  const bool has_colors = record.at("has_colors").get<bool>();
-  const bool has_timestamps = record.at("has_timestamps").get<bool>();
-  const bool has_labels = record.at("has_labels").get<bool>();
-  auto mesh = std::make_shared<Mesh>(has_colors, has_timestamps, has_labels);
-
-  // Deserialize all fields if present.
-  if (record.contains("points")) {
-    mesh->points = record.at("points").get<Mesh::Positions>();
-  }
-  if (record.contains("colors")) {
-    mesh->colors = record.at("colors").get<Mesh::Colors>();
-  }
-  if (record.contains("stamps")) {
-    mesh->stamps = record.at("stamps").get<Mesh::Timestamps>();
-  }
-  if (record.contains("first_seen_stamps")) {
-    mesh->first_seen_stamps = record.at("first_seen_stamps").get<Mesh::Timestamps>();
-  }
-  if (record.contains("labels")) {
-    mesh->labels = record.at("labels").get<Mesh::Labels>();
-  }
-  if (record.contains("faces")) {
-    mesh->faces = record.at("faces").get<Mesh::Faces>();
-  }
-
-  return mesh;
 }
 
 void to_json(json& j, const BoundingBox& b) {

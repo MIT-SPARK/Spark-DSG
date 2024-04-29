@@ -73,7 +73,10 @@ class Mesh {
   using Labels = std::vector<Label>;
   using Faces = std::vector<Face>;
 
-  Mesh(bool has_colors = true, bool has_timestamps = true, bool has_labels = true);
+  Mesh(bool has_colors = true,
+       bool has_timestamps = true,
+       bool has_labels = true,
+       bool has_first_seen_stamps = false);
 
   Mesh(const Mesh& other) = default;
   Mesh(Mesh&& other) = default;
@@ -187,9 +190,24 @@ class Mesh {
   std::string serializeToJson() const;
 
   /**
+   * @brief parse mesh from JSON string
+   * @param contents JSON string to parse
+   * @returns Resulting parsed mesh
+   */
+  static Ptr deserializeFromJson(const std::string& contents);
+
+  /**
    * @brief Save mesh to binary representation
    */
   void serializeToBinary(std::vector<uint8_t>& buffer) const;
+
+  /**
+   * @brief parse graph from binary data
+   * @param buffer start position of binary data to parse
+   * @param length length of binary data to parse
+   * @returns Resulting parsed scene graph
+   */
+  static Ptr deserializeFromBinary(const uint8_t* const buffer, size_t length);
 
   /**
    * @brief Save the mesh to file.
@@ -199,21 +217,6 @@ class Mesh {
    * @param filepath Filepath to save graph to.
    */
   void save(std::string filepath) const;
-
-  /**
-   * @brief parse mesh from JSON string
-   * @param contents JSON string to parse
-   * @returns Resulting parsed mesh
-   */
-  static Ptr deserializeFromJson(const std::string& contents);
-
-  /**
-   * @brief parse graph from binary data
-   * @param buffer start position of binary data to parse
-   * @param length length of binary data to parse
-   * @returns Resulting parsed scene graph
-   */
-  static Ptr deserializeFromBinary(const uint8_t* const buffer, size_t length);
 
   /**
    * @brief parse mesh from binary or JSON file
@@ -245,6 +248,7 @@ class Mesh {
   const bool has_colors;
   const bool has_timestamps;
   const bool has_labels;
+  const bool has_first_seen_stamps;
   Positions points;
   Colors colors;
   Timestamps stamps;

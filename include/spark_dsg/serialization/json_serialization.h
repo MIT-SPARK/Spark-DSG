@@ -37,6 +37,8 @@
 #include <nlohmann/json.hpp>
 
 #include "spark_dsg/serialization/attribute_factory.h"
+#include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/mesh.h"
 
 namespace spark_dsg {
 
@@ -104,9 +106,21 @@ void to_json(nlohmann::json& j, const MeshIndex& mi);
 
 void from_json(const nlohmann::json& j, MeshIndex& mi);
 
+void to_json(nlohmann::json& record, const Color& c);
+
+void from_json(const nlohmann::json& record, Color& c);
+
 void to_json(nlohmann::json& j, const Mesh& mesh);
 
 void from_json(const nlohmann::json& j, Mesh& mesh);
+
+namespace io {
+
+void to_json(nlohmann::json& record, const FileHeader& header);
+
+void from_json(const nlohmann::json& record, FileHeader& header);
+
+}  // namespace io
 
 }  // namespace spark_dsg
 

@@ -39,8 +39,121 @@
 #include "spark_dsg/serialization/binary_serializer.h"
 #include "spark_dsg/serialization/file_io.h"
 #include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/serialization/json_serialization.h"
 
 namespace spark_dsg {
+
+using json = nlohmann::json;
+
+void to_json(json& record, const Mesh& mesh) {
+  record["header"] = io::FileHeader::current();
+
+  // Serialize settings.
+  record["has_colors"] = mesh.has_colors;
+  record["has_timestamps"] = mesh.has_timestamps;
+  record["has_labels"] = mesh.has_labels;
+  record["has_first_seen_stamps"] = mesh.has_first_seen_stamps;
+
+  // Serialize all fields if present.
+  if (!mesh.points.empty()) {
+    record["points"] = mesh.points;
+  }
+  if (!mesh.colors.empty()) {
+    record["colors"] = mesh.colors;
+  }
+  if (!mesh.stamps.empty()) {
+    record["stamps"] = mesh.stamps;
+  }
+  if (!mesh.first_seen_stamps.empty()) {
+    record["first_seen_stamps"] = mesh.first_seen_stamps;
+  }
+  if (!mesh.labels.empty()) {
+    record["labels"] = mesh.labels;
+  }
+  if (!mesh.faces.empty()) {
+    record["faces"] = mesh.faces;
+  }
+}
+
+std::string Mesh::serializeToJson() const {
+  json record = *this;
+  return record.dump();
+}
+
+Mesh::Ptr deserializeMeshLegacy(const json& record) {
+  // Legacy mesh reading support.
+  Mesh::Ptr mesh = std::make_shared<Mesh>();
+  if (record.contains("vertices")) {
+    for (const auto& vertex : record.at("vertices")) {
+      Eigen::Vector3f pos(vertex.at("x").get<float>(),
+                          vertex.at("y").get<float>(),
+                          vertex.at("z").get<float>());
+      mesh->points.push_back(pos);
+
+      Color color{vertex.at("r").get<uint8_t>(),
+                  vertex.at("g").get<uint8_t>(),
+                  vertex.at("b").get<uint8_t>(),
+                  255};
+      mesh->colors.push_back(color);
+    }
+  }
+
+  if (record.contains("faces")) {
+    for (const auto& face : record.at("faces")) {
+      mesh->faces.push_back({{face.at(0).get<size_t>(),
+                              face.at(1).get<size_t>(),
+                              face.at(2).get<size_t>()}});
+    }
+  }
+  return mesh;
+}
+
+void from_json(const json& record, Mesh& mesh) {
+  // Deserialize settings.
+  const bool has_colors = record.at("has_colors").get<bool>();
+  const bool has_timestamps = record.at("has_timestamps").get<bool>();
+  const bool has_labels = record.at("has_labels").get<bool>();
+  const bool has_first_seen_stamps = record.at("has_first_seen_stamps").get<bool>();
+  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
+
+  // Deserialize all fields if present.
+  if (record.contains("points")) {
+    mesh.points = record.at("points").get<Mesh::Positions>();
+  }
+  if (record.contains("colors")) {
+    mesh.colors = record.at("colors").get<Mesh::Colors>();
+  }
+  if (record.contains("stamps")) {
+    mesh.stamps = record.at("stamps").get<Mesh::Timestamps>();
+  }
+  if (record.contains("first_seen_stamps")) {
+    mesh.first_seen_stamps = record.at("first_seen_stamps").get<Mesh::Timestamps>();
+  }
+  if (record.contains("labels")) {
+    mesh.labels = record.at("labels").get<Mesh::Labels>();
+  }
+  if (record.contains("faces")) {
+    mesh.faces = record.at("faces").get<Mesh::Faces>();
+  }
+}
+
+Mesh::Ptr Mesh::deserializeFromJson(const std::string& contents) {
+  const auto record = json::parse(contents);
+  const auto header = record.contains("header")
+                          ? record.at("header").get<io::FileHeader>()
+                          : io::FileHeader::legacy();
+  const io::GlobalInfo::ScopedInfo info(header);
+
+  // Legacy support.
+  if (header.version <= io::Version(1, 0, 1)) {
+    io::warnOutdatedHeader(header);
+    return deserializeMeshLegacy(record);
+  }
+
+  auto mesh = std::make_shared<Mesh>();
+  *mesh = record.get<Mesh>();
+  return mesh;
+}
 
 void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
   serialization::BinarySerializer serializer(&buffer);
@@ -50,6 +163,7 @@ void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
   serializer.write(has_colors);
   serializer.write(has_timestamps);
   serializer.write(has_labels);
+  serializer.write(has_first_seen_stamps);
 
   // Write vertices.
   serializer.startFixedArray(3 * points.size());
@@ -118,11 +232,12 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
   const auto header = io::GlobalInfo::loadedHeader();
 
   // Mesh flags.
-  bool has_colors, has_timestamps, has_labels;
+  bool has_colors, has_timestamps, has_labels, has_first_seen_stamps;
   deserializer.read(has_colors);
   deserializer.read(has_timestamps);
   deserializer.read(has_labels);
-  auto mesh = std::make_shared<Mesh>(has_colors, has_timestamps, has_labels);
+  deserializer.read(has_first_seen_stamps);
+  auto mesh = std::make_shared<Mesh>(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
 
   // Vertices.
   const size_t num_points = deserializer.readFixedArrayLength() / 3;

@@ -38,13 +38,20 @@
 
 namespace spark_dsg {
 
-Mesh::Mesh(bool has_colors, bool has_timestamps, bool has_labels)
-    : has_colors(has_colors), has_timestamps(has_timestamps), has_labels(has_labels) {}
+Mesh::Mesh(bool has_colors,
+           bool has_timestamps,
+           bool has_labels,
+           bool has_first_seen_stamps)
+    : has_colors(has_colors),
+      has_timestamps(has_timestamps),
+      has_labels(has_labels),
+      has_first_seen_stamps(has_first_seen_stamps) {}
 
 Mesh& Mesh::operator=(const Mesh& other) {
   const_cast<bool&>(has_colors) = other.has_colors;
   const_cast<bool&>(has_timestamps) = other.has_timestamps;
   const_cast<bool&>(has_labels) = other.has_labels;
+  const_cast<bool&>(has_first_seen_stamps) = other.has_first_seen_stamps;
   points = other.points;
   colors = other.colors;
   stamps = other.stamps;
@@ -58,6 +65,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
   const_cast<bool&>(has_colors) = other.has_colors;
   const_cast<bool&>(has_timestamps) = other.has_timestamps;
   const_cast<bool&>(has_labels) = other.has_labels;
+  const_cast<bool&>(has_first_seen_stamps) = other.has_first_seen_stamps;
   points = std::move(other.points);
   colors = std::move(other.colors);
   stamps = std::move(other.stamps);
@@ -89,10 +97,12 @@ void Mesh::resizeVertices(size_t size) {
   }
   if (has_timestamps) {
     stamps.resize(size, 0);
-    first_seen_stamps.resize(size, 0);
   }
   if (has_labels) {
     labels.resize(size, 0);
+  }
+  if (has_first_seen_stamps) {
+    first_seen_stamps.resize(size, 0);
   }
 }
 
@@ -148,10 +158,12 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
   }
   if (has_timestamps) {
     new_stamps.reserve(num_new_vertices);
-    new_first_seen_stamps.reserve(num_new_vertices);
   }
   if (has_labels) {
     new_labels.reserve(num_new_vertices);
+  }
+  if (has_first_seen_stamps) {
+    new_first_seen_stamps.reserve(num_new_vertices);
   }
 
   // Copy over the vertices that are not being removed.
@@ -167,10 +179,12 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
     }
     if (has_timestamps) {
       new_stamps.push_back(stamps[old_index]);
-      new_first_seen_stamps.push_back(first_seen_stamps[old_index]);
     }
     if (has_labels) {
       new_labels.push_back(labels[old_index]);
+    }
+    if (has_first_seen_stamps) {
+      new_first_seen_stamps.push_back(first_seen_stamps[old_index]);
     }
   }
 
