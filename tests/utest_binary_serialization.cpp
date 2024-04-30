@@ -33,11 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include "spark_dsg/serialization/binary_serializer.h"
-#include "spark_dsg/serialization/graph_binary_serialization.h"
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "spark_dsg/serialization/binary_serializer.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {

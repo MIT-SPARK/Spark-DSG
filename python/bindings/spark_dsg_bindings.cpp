@@ -170,7 +170,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .value("RAABB", BoundingBox::Type::RAABB);
 
   py::class_<DsgLayers>(module, "DsgLayers")
-      .def_readonly_static("MESH", &DsgLayers::MESH)
+      .def_readonly_static("SEGMENTS", &DsgLayers::SEGMENTS)
       .def_readonly_static("OBJECTS", &DsgLayers::OBJECTS)
       .def_readonly_static("AGENTS", &DsgLayers::AGENTS)
       .def_readonly_static("PLACES", &DsgLayers::PLACES)

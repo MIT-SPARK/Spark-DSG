@@ -41,7 +41,7 @@
 namespace spark_dsg {
 
 TEST(SceneGraphSerializationTests, DsgBasicJson) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
+  DynamicSceneGraph expected({1, 2, 3});
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -67,7 +67,7 @@ TEST(SceneGraphSerializationTests, DsgBasicJson) {
 }
 
 TEST(SceneGraphSerializationTests, DsgWithNaNsJson) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
+  DynamicSceneGraph expected({1, 2, 3});
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -213,7 +213,7 @@ TEST(SceneGraphSerializationTests, DsgWithMeshJson) {
 }
 
 TEST(SceneGraphSerializationTests, DsgBasicBinary) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
+  DynamicSceneGraph expected({1, 2, 3});
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -239,7 +239,7 @@ TEST(SceneGraphSerializationTests, DsgBasicBinary) {
 }
 
 TEST(SceneGraphSerializationTests, DsgWithNaNsBinary) {
-  DynamicSceneGraph expected({1, 2, 3}, 0);
+  DynamicSceneGraph expected({1, 2, 3});
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());

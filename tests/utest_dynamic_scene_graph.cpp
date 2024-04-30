@@ -57,11 +57,11 @@ TEST(DynamicSceneGraphTests, DefaultConstructorInvariants) {
   DynamicSceneGraph graph;
   EXPECT_EQ(0u, graph.numNodes());
   EXPECT_EQ(0u, graph.numEdges());
-  EXPECT_EQ(5u, graph.numLayers());
+  EXPECT_EQ(4u, graph.numLayers());
 }
 
 TEST(DynamicSceneGraphTests, CustomLayerInvariants) {
-  DynamicSceneGraph graph({1, 2, 3, 4, 5}, 0);
+  DynamicSceneGraph graph({1, 2, 3, 4, 5, 6});
   EXPECT_EQ(0u, graph.numNodes());
   EXPECT_EQ(0u, graph.numEdges());
   EXPECT_EQ(6u, graph.numLayers());
@@ -69,16 +69,7 @@ TEST(DynamicSceneGraphTests, CustomLayerInvariants) {
 
 TEST(DynamicSceneGraphTests, EmptyLayerFails) {
   try {
-    DynamicSceneGraph graph({}, 0);
-    FAIL();
-  } catch (const std::domain_error&) {
-    SUCCEED();
-  }
-}
-
-TEST(DynamicSceneGraphTests, DuplicateMeshIdFails) {
-  try {
-    DynamicSceneGraph graph({0, 1, 2, 3}, 0);
+    DynamicSceneGraph graph(std::vector<LayerId>{});
     FAIL();
   } catch (const std::domain_error&) {
     SUCCEED();
@@ -102,7 +93,7 @@ TEST(DynamicSceneGraphTests, NumNodesAndEdges) {
 
 // Test that we only have nodes that we add, and we can't add the same node
 TEST(DynamicSceneGraphTests, EmplaceNodeInvariants) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
   EXPECT_EQ(0u, graph.numNodes());
 
   const auto& layer1 = graph.getLayer(1);
@@ -130,7 +121,7 @@ TEST(DynamicSceneGraphTests, EmplaceNodeInvariants) {
 }
 
 TEST(DynamicSceneGraphTests, AddAndUpdateNode) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
   EXPECT_EQ(0u, graph.numNodes());
 
   Eigen::Vector3d pos1(1.0, 2.0, 3.0);
@@ -171,7 +162,7 @@ TEST(DynamicSceneGraphTests, AddAndUpdateNode) {
 
 // Test that we only have nodes that we add, and we can't add the same node
 TEST(DynamicSceneGraphTests, InsertNodeInvariants) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
   EXPECT_EQ(0u, graph.numNodes());
 
   const auto& layer1 = graph.getLayer(1);
@@ -208,7 +199,7 @@ TEST(DynamicSceneGraphTests, InsertNodeInvariants) {
 //   - That edges are bidirectional
 //   - That the edge must be within a layer or between adjacent layers
 TEST(DynamicSceneGraphTests, InsertEdgeInvariants) {
-  DynamicSceneGraph graph({1, 2, 3}, 0);
+  DynamicSceneGraph graph({1, 2, 3});
   EXPECT_EQ(0u, graph.numEdges());
 
   const auto& layer1 = graph.getLayer(1);
@@ -254,7 +245,7 @@ TEST(DynamicSceneGraphTests, InsertEdgeInvariants) {
 
 // Test that adding and updating edges works as expected
 TEST(DynamicSceneGraphTests, AddOrUpdateEdge) {
-  DynamicSceneGraph graph({1, 2, 3}, 0);
+  DynamicSceneGraph graph({1, 2, 3});
   EXPECT_EQ(0u, graph.numEdges());
 
   EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
@@ -280,7 +271,7 @@ TEST(DynamicSceneGraphTests, AddOrUpdateEdge) {
 
 // Test that we can force switching a parent edge
 TEST(DynamicSceneGraphTests, InsertNewParent) {
-  DynamicSceneGraph graph({1, 2, 3}, 0);
+  DynamicSceneGraph graph({1, 2, 3});
   EXPECT_EQ(0u, graph.numEdges());
   EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>()));
@@ -322,7 +313,7 @@ TEST(DynamicSceneGraphTests, InsertNewParent) {
 
 // Test that inserting specific edge attributes works for a inter-layer edge
 TEST(DynamicSceneGraphTests, EdgeAttributesCorrect) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
 
   EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
@@ -362,7 +353,7 @@ TEST(DynamicSceneGraphTests, EdgeAttributesCorrect) {
 //   - we don't do anything if it doesn't exist
 //   - we remove all edges related to the node if it does
 TEST(DynamicSceneGraphTests, RemoveNodeSound) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(graph.removeNode(0));
@@ -385,7 +376,7 @@ TEST(DynamicSceneGraphTests, RemoveNodeSound) {
 
 // Test that merging two nodes meets the invariants that we expect
 TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
-  DynamicSceneGraph graph({1, 2, 3}, 0);
+  DynamicSceneGraph graph({1, 2, 3});
 
   // we can't merge two nodes that don't exist
   EXPECT_FALSE(graph.mergeNodes(0, 1));
@@ -448,7 +439,7 @@ TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
 
 // Test that removeNode -> !hasNode
 TEST(DynamicSceneGraphTests, RemoveNodeHasNodeCorrent) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
   const auto& layer = graph.getLayer(1);
 
   // we can't remove a node that doesn't exist
@@ -468,7 +459,7 @@ TEST(DynamicSceneGraphTests, RemoveNodeHasNodeCorrent) {
 
 // Test that removing a edge does what it should
 TEST(DynamicSceneGraphTests, RemoveEdgeCorrect) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(graph.removeEdge(0, 1));
@@ -509,7 +500,7 @@ TEST(DynamicSceneGraphTests, RemoveEdgeCorrect) {
 
 TEST(DynamicSceneGraphTests, InsertDynamicLayerCorrect) {
   DynamicSceneGraph graph;
-  EXPECT_EQ(5u, graph.numLayers());
+  EXPECT_EQ(4u, graph.numLayers());
 
   graph.createDynamicLayer(1, 'a');
   EXPECT_EQ(5u, graph.numLayers());
@@ -555,7 +546,7 @@ TEST(DynamicSceneGraphTests, InsertDynamicLayerCorrect) {
 TEST(DynamicSceneGraphTests, EmplaceDynamicNodeCorrect) {
   using namespace std::chrono_literals;
   DynamicSceneGraph graph;
-  EXPECT_EQ(5u, graph.numLayers());
+  EXPECT_EQ(4u, graph.numLayers());
 
   EXPECT_TRUE(graph.emplaceNode(2, 'a', 1s, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.hasNode(NodeSymbol('a', 0)));
@@ -592,7 +583,7 @@ TEST(DynamicSceneGraphTests, EmplaceDynamicNodeCorrect) {
 }
 
 TEST(DynamicSceneGraphTests, updateFromInvalidLayerCorrect) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
 
   IsolatedSceneGraphLayer separate_layer(5);
   std::unique_ptr<Edges> edges(nullptr);
@@ -604,7 +595,7 @@ TEST(DynamicSceneGraphTests, updateFromInvalidLayerCorrect) {
 }
 
 TEST(DynamicSceneGraphTests, updateFromEmptyLayerCorrect) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
 
   IsolatedSceneGraphLayer separate_layer(1);
   std::unique_ptr<Edges> edges(nullptr);
@@ -616,7 +607,7 @@ TEST(DynamicSceneGraphTests, updateFromEmptyLayerCorrect) {
 }
 
 TEST(DynamicSceneGraphTests, updateFromLayerCorrect) {
-  DynamicSceneGraph graph({1, 2}, 0);
+  DynamicSceneGraph graph({1, 2});
   graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   graph.emplaceNode(1, 2, std::make_unique<NodeAttributes>());
   graph.emplaceNode(2, 3, std::make_unique<NodeAttributes>());
@@ -644,7 +635,7 @@ TEST(DynamicSceneGraphTests, updateFromLayerCorrect) {
 }
 
 TEST(DynamicSceneGraphTests, updateFromLayerWithSiblings) {
-  DynamicSceneGraph graph({1}, 0);
+  DynamicSceneGraph graph({1});
   graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   graph.emplaceNode(1, 2, std::make_unique<NodeAttributes>());
   graph.insertEdge(1, 2);
@@ -766,7 +757,7 @@ TEST(DynamicSceneGraphTests, MergeDynamicGraphCorrect) {
 
 TEST(DynamicSceneGraphTests, ClearWithDynamicLayersCorrect) {
   DynamicSceneGraph graph;
-  EXPECT_EQ(5u, graph.numLayers());
+  EXPECT_EQ(4u, graph.numLayers());
 
   EXPECT_TRUE(graph.emplaceNode(
       2, 'a', std::chrono::seconds(1), std::make_unique<NodeAttributes>()));

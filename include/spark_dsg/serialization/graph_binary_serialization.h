@@ -43,12 +43,9 @@ void writeGraph(const DynamicSceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh = false);
 
-DynamicSceneGraph::Ptr readGraph(
-    const uint8_t* const buffer,
-    size_t length);
+DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
 
-inline DynamicSceneGraph::Ptr readGraph(
-    const std::vector<uint8_t>& buffer) {
+inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
   return readGraph(buffer.data(), buffer.size());
 }
 
