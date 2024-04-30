@@ -258,7 +258,10 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("name", &SemanticNodeAttributes::name)
       .def_readwrite("color", &SemanticNodeAttributes::color)
       .def_readwrite("bounding_box", &SemanticNodeAttributes::bounding_box)
-      .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label);
+      .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label)
+      .def_readwrite("semantic_feature", &SemanticNodeAttributes::semantic_feature)
+      .def_readonly_static("NO_SEMANTIC_LABEL",
+                           &SemanticNodeAttributes::NO_SEMANTIC_LABEL);
 
   py::class_<ObjectNodeAttributes, SemanticNodeAttributes>(module,
                                                            "ObjectNodeAttributes")

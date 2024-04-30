@@ -123,6 +123,10 @@ struct SemanticNodeAttributes : public NodeAttributes {
    * @brief alias for semantic label
    */
   using Label = SemanticLabel;
+  /**
+   * @brief flag for whether or not semantic label should be considered valid
+   */
+  inline static constexpr Label NO_SEMANTIC_LABEL = std::numeric_limits<Label>::max();
 
   /**
    * @brief Make a default set of attributes
@@ -143,6 +147,13 @@ struct SemanticNodeAttributes : public NodeAttributes {
   BoundingBox bounding_box;
   //! semantic label of object
   SemanticLabel semantic_label;
+  //! semantic feature of object
+  Eigen::MatrixXd semantic_feature;
+
+  bool hasLabel() const { return semantic_label != NO_SEMANTIC_LABEL; }
+  bool hasFeature() const {
+    return semantic_feature.rows() * semantic_feature.cols() != 0;
+  }
 
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const override;

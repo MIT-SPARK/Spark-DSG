@@ -62,6 +62,7 @@ void serialize(Converter& converter, const SemanticNodeAttributes& attrs) {
   converter.write("color", attrs.color);
   converter.write("bounding_box", attrs.bounding_box);
   converter.write("semantic_label", attrs.semantic_label);
+  converter.write("semantic_feature", attrs.semantic_feature);
 }
 
 template <typename Converter>
@@ -71,6 +72,7 @@ void deserialize(const Converter& converter, SemanticNodeAttributes& attrs) {
   converter.read("color", attrs.color);
   converter.read("bounding_box", attrs.bounding_box);
   converter.read("semantic_label", attrs.semantic_label);
+  converter.read("semantic_feature", attrs.semantic_feature);
 }
 
 template <typename Converter>

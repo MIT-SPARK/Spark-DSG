@@ -63,7 +63,11 @@ std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs) {
 }
 
 SemanticNodeAttributes::SemanticNodeAttributes()
-    : NodeAttributes(), name(""), color(ColorVector::Zero()), semantic_label(0u) {}
+    : NodeAttributes(),
+      name(""),
+      color(ColorVector::Zero()),
+      semantic_label(NO_SEMANTIC_LABEL),
+      semantic_feature(0, 0) {}
 
 std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
   auto format = getDefaultVectorFormat();
@@ -71,7 +75,9 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
   out << "  - color: " << color.cast<int>().transpose().format(format) << std::endl
       << "  - name: " << name << std::endl
       << "  - bounding box: " << bounding_box << std::endl
-      << "  - label: " << std::to_string(semantic_label) << std::endl;
+      << "  - label: " << std::to_string(semantic_label) << std::endl
+      << "  - feature: [" << semantic_feature.rows() << " x " << semantic_feature.cols()
+      << "]" << std::endl;
   return out;
 }
 
@@ -150,8 +156,8 @@ std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
     out << t << " ";
   }
   out << std::endl
-      << "  - mesh: " << mesh.numVertices() << " vertices, " << mesh.numFaces() << " faces"
-      << std::endl;
+      << "  - mesh: " << mesh.numVertices() << " vertices, " << mesh.numFaces()
+      << " faces" << std::endl;
   return out;
 }
 

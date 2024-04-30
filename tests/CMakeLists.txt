@@ -33,6 +33,7 @@ add_executable(
   utest_graph_utilities_layer.cpp
   utest_json_serialization.cpp
   utest_mesh.cpp
+  utest_node_attributes.cpp
   utest_node_symbol.cpp
   utest_scene_graph_layer.cpp
   utest_scene_graph_node.cpp
