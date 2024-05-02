@@ -4,6 +4,7 @@ This is the core c++ library that contains the dynamic scene graph data-structur
 
 ### Change Notes
 
+- 4/22/24: Python bindings and unit tests are built by default. You will need to install relevant dependencies (via `sudo apt install python3-dev` or `rosdep`) or disable the bindings and tests via cmake options.
 - 3/16/24: Updated dependencies to use system libraries for `nlohmann_json`. You will need to install it either via `sudo apt install nlohmann-json3-dev` or use `rosdep` to update dependencies.
 
 ### Acknowledgements and Disclaimer
