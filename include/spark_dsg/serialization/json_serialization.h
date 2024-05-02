@@ -102,10 +102,6 @@ void to_json(nlohmann::json& j, const NearestVertexInfo& b);
 
 void from_json(const nlohmann::json& j, NearestVertexInfo& b);
 
-void to_json(nlohmann::json& j, const MeshIndex& mi);
-
-void from_json(const nlohmann::json& j, MeshIndex& mi);
-
 void to_json(nlohmann::json& record, const Color& c);
 
 void from_json(const nlohmann::json& record, Color& c);

@@ -36,13 +36,6 @@
 
 namespace spark_dsg {
 
-bool MeshIndex::operator<(const MeshIndex& other) const {
-  if (robot_id != other.robot_id) {
-    return robot_id < other.robot_id;
-  }
-  return idx < other.idx;
-}
-
 NodeAttributes::NodeAttributes() : NodeAttributes(Eigen::Vector3d::Zero()) {}
 
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)

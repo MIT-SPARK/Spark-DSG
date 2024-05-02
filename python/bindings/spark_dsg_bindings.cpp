@@ -192,17 +192,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
         return ss.str();
       });
 
-  py::class_<MeshIndex>(module, "MeshIndex")
-      .def(py::init<>())
-      .def(py::init<size_t, size_t>())
-      .def_readwrite("robot_id", &MeshIndex::robot_id)
-      .def_readwrite("idx", &MeshIndex::idx)
-      .def("__repr__", [](const MeshIndex& m) {
-        std::stringstream ss;
-        ss << m.robot_id << "," << m.idx;
-        return ss.str();
-      });
-
   py::class_<Quaternion<double>>(module, "Quaterniond")
       .def(py::init<>())
       .def(py::init<double, double, double, double>())

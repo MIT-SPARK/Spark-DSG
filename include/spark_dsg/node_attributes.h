@@ -54,12 +54,6 @@ namespace spark_dsg {
  */
 using SemanticLabel = uint32_t;
 
-struct MeshIndex {
-  size_t robot_id;
-  size_t idx;
-  bool operator<(const MeshIndex& other) const;
-};
-
 /**
  * @brief Base node attributes.
  *
@@ -323,14 +317,11 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   //! shape matrix for plotting ellipsoid
   Eigen::Matrix<double, 2, 2> ellipse_matrix_expand;
   //! pcl mesh vertices corresponding to boundary points
-  std::vector<MeshIndex> pcl_boundary_connections;
-  // TODO(Yun) this is a bit confusing, for all places other than hydra-multi, usually
-  // only use the idx attribute of the MeshIndex. In hydra-multi, the robot-id is only
-  // used when rewiring the mesh and not when updating
+  std::vector<size_t> pcl_boundary_connections;
   //! voxblox mesh vertices that are closest to this place
   std::vector<NearestVertexInfo> voxblox_mesh_connections;
   //! pcl mesh vertices that are closest to this place
-  std::vector<MeshIndex> pcl_mesh_connections;
+  std::vector<size_t> pcl_mesh_connections;
   //! min vertex index of associated mesh vertices
   size_t pcl_min_index;
   //! max vertex index of associated mesh vertices
@@ -338,7 +329,7 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   //! semantic labels of parents
   std::vector<uint8_t> mesh_vertex_labels;
   //! deformation vertices that are closest to this place
-  std::vector<MeshIndex> deformation_connections;
+  std::vector<size_t> deformation_connections;
   //! tracks whether the node still needs to be cleaned up during merging
   bool need_finish_merge;
   //! whether this node has been merged to while in current active window

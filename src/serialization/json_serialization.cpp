@@ -420,13 +420,4 @@ void from_json(const json& j, NearestVertexInfo& info) {
   }
 }
 
-void to_json(json& j, const MeshIndex& mi) {
-  j = json{{"robot_id", mi.robot_id}, {"idx", mi.idx}};
-}
-
-void from_json(const json& j, MeshIndex& mi) {
-  mi.robot_id = j.at("robot_id").get<size_t>();
-  mi.idx = j.at("idx").get<size_t>();
-}
-
 }  // namespace spark_dsg
