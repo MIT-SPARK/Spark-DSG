@@ -361,7 +361,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "value",
           [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); },
           nullptr)
-      .def("__repr__", &NodeSymbol::getLabel);
+      .def("__repr__", &NodeSymbol::getLabel)
+      .def("__hash__",
+           [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); })
+      .def(pybind11::self == pybind11::self)
+      .def(pybind11::self != pybind11::self);
 
   py::class_<LayerPrefix>(module, "LayerPrefix")
       .def(py::init([](char key) { return LayerPrefix(key); }))
