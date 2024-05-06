@@ -134,6 +134,13 @@ void serialize(Converter& converter, const PlaceNodeAttributes& attrs) {
   converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
   converter.write("mesh_vertex_labels", attrs.mesh_vertex_labels);
   converter.write("deformation_connections", attrs.deformation_connections);
+  converter.write("real_place", attrs.real_place);
+  converter.write("predicted_place", attrs.predicted_place);
+  converter.write("active_frontier", attrs.active_frontier);
+  converter.write("frontier_scale", attrs.frontier_scale);
+  converter.write("orientation", attrs.orientation);
+  converter.write("need_cleanup", attrs.need_cleanup);
+  converter.write("num_frontier_voxels", attrs.num_frontier_voxels);
 }
 
 template <typename Converter>
@@ -145,6 +152,13 @@ void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
   converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
   converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
   converter.read("deformation_connections", attrs.deformation_connections);
+  converter.read("real_place", attrs.real_place);
+  converter.read("predicted_place", attrs.predicted_place);
+  converter.read("active_frontier", attrs.active_frontier);
+  converter.read("frontier_scale", attrs.frontier_scale);
+  converter.read("orientation", attrs.orientation);
+  converter.read("need_cleanup", attrs.need_cleanup);
+  converter.read("num_frontier_voxels", attrs.num_frontier_voxels);
 }
 
 template <typename Converter>

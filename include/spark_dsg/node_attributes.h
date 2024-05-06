@@ -278,9 +278,18 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   //! deformation vertices that are closest to this place
   std::vector<size_t> deformation_connections;
 
+  bool real_place = true;
+  bool predicted_place = false;
+  bool need_cleanup = false;
+  bool active_frontier = false;
+  Eigen::Vector3d frontier_scale;
+  Eigen::Quaterniond orientation;
+  size_t num_frontier_voxels = 0;
+
  protected:
   virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
+using FrontierNodeAttributes = PlaceNodeAttributes;
 
 /**
  * @brief Additional node attributes for a 2d (outdoor) place

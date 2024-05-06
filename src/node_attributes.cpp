@@ -93,13 +93,14 @@ std::ostream& RoomNodeAttributes::fill_ostream(std::ostream& out) const {
   return out;
 }
 
-PlaceNodeAttributes::PlaceNodeAttributes()
-    : SemanticNodeAttributes(), distance(0.0), num_basis_points(0) {}
+PlaceNodeAttributes::PlaceNodeAttributes() : PlaceNodeAttributes(0.0, 0) {}
 
 PlaceNodeAttributes::PlaceNodeAttributes(double distance, unsigned int num_basis_points)
     : SemanticNodeAttributes(),
       distance(distance),
-      num_basis_points(num_basis_points) {}
+      num_basis_points(num_basis_points),
+      frontier_scale(Eigen::Vector3d::Zero()),
+      orientation(Eigen::Quaterniond::Identity()) {}
 
 std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);

@@ -316,7 +316,21 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("mesh_vertex_labels", &PlaceNodeAttributes::mesh_vertex_labels)
       .def_readwrite("deformation_connections",
                      &PlaceNodeAttributes::deformation_connections)
-      .def_readwrite("is_active", &PlaceNodeAttributes::is_active);
+      .def_readwrite("is_active", &PlaceNodeAttributes::is_active)
+      .def_readwrite("real_place", &PlaceNodeAttributes::real_place)
+      .def_readwrite("predicted_place", &PlaceNodeAttributes::predicted_place)
+      .def_readwrite("active_frontier", &PlaceNodeAttributes::active_frontier)
+      .def_readwrite("frontier_scale", &PlaceNodeAttributes::frontier_scale)
+      .def_property(
+          "orientation",
+          [](const PlaceNodeAttributes& attrs) {
+            return Quaternion<double>(attrs.orientation);
+          },
+          [](PlaceNodeAttributes& attrs, const Quaternion<double>& rot) {
+            attrs.orientation = rot;
+          })
+      .def_readwrite("num_frontier_voxels", &PlaceNodeAttributes::num_frontier_voxels)
+      .def_readwrite("need_cleanup", &PlaceNodeAttributes::need_cleanup);
 
   py::class_<Place2dNodeAttributes, SemanticNodeAttributes>(module,
                                                             "Place2dNodeAttributes")
