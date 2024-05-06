@@ -1,4 +1,5 @@
 #include "spark_dsg/node_attributes.h"
+#include "spark_dsg/edge_attributes.h"
 
 namespace spark_dsg {
 
@@ -72,6 +73,13 @@ inline KhronosObjectAttributes getKhronosObjectAttributes() {
   expected.dynamic_object_points.emplace_back(13, Eigen::Vector3f::UnitZ());
   expected.details["test"] = {14, 15, 16};
   expected.details["test2"] = {17, 18, 19};
+  return expected;
+}
+
+inline EdgeAttributes getEdgeAttributes() {
+  EdgeAttributes expected;
+  expected.weighted = true;
+  expected.weight = 5.0;
   return expected;
 }
 

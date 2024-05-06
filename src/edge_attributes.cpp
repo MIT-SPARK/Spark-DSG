@@ -36,6 +36,8 @@
 
 #include <iomanip>
 
+#include "spark_dsg/serialization/attribute_serialization.h"
+
 namespace spark_dsg {
 
 EdgeAttributes::EdgeAttributes() : weighted(false), weight(1.0) {}
@@ -44,6 +46,10 @@ EdgeAttributes::EdgeAttributes(double weight) : weighted(true), weight(weight) {
 
 EdgeAttributes::~EdgeAttributes() = default;
 
+EdgeAttributes::Ptr EdgeAttributes::clone() const {
+  return std::make_unique<EdgeAttributes>(*this);
+}
+
 std::ostream& operator<<(std::ostream& out, const EdgeAttributes& attrs) {
   out << "{";
   attrs.fill_ostream(out);
@@ -51,12 +57,25 @@ std::ostream& operator<<(std::ostream& out, const EdgeAttributes& attrs) {
   return out;
 }
 
+bool EdgeAttributes::operator==(const EdgeAttributes& other) const {
+  return is_equal(other);
+}
+
 void EdgeAttributes::fill_ostream(std::ostream& out) const {
   out << std::boolalpha << "weighted: " << weighted << ", weight: " << weight;
 }
 
-EdgeAttributes::Ptr EdgeAttributes::clone() const {
-  return std::make_unique<EdgeAttributes>(*this);
+void EdgeAttributes::serialization_info() {
+  serialization::field("weighted", weighted);
+  serialization::field("weight", weight);
+}
+
+void EdgeAttributes::serialization_info() const {
+  const_cast<EdgeAttributes*>(this)->serialization_info();
+}
+
+bool EdgeAttributes::is_equal(const EdgeAttributes& other) const {
+  return weighted == other.weighted && weight == other.weight;
 }
 
 }  // namespace spark_dsg

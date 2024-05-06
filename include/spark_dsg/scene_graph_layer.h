@@ -227,12 +227,6 @@ class SceneGraphLayer : public BaseLayer {
   std::unordered_set<NodeId> getNeighborhood(const std::unordered_set<NodeId>& nodes,
                                              size_t num_hops = 1) const;
 
-  std::string serializeLayer(const std::unordered_set<NodeId>& nodes) const;
-
-  std::unique_ptr<Edges> deserializeLayer(const std::string& info);
-
-  std::string toBson() const;
-
  protected:
   void reset();
 
@@ -326,10 +320,6 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
   using SceneGraphLayer::removeNode;
 
   using SceneGraphLayer::mergeNodes;
-
-  static SPtr fromBson(const std::string& contents);
-
-  static SPtr readFromJson(const std::string& contents);
 };
 
 namespace graph_utilities {

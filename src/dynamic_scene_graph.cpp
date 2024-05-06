@@ -34,8 +34,11 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/dynamic_scene_graph.h"
 
+#include <filesystem>
+
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/serialization/file_io.h"
 
 namespace spark_dsg {
 
@@ -74,6 +77,11 @@ void DynamicSceneGraph::clear() {
   for (const auto& id : layer_ids) {
     layers_[id] = std::make_unique<SceneGraphLayer>(id);
   }
+}
+
+void DynamicSceneGraph::reset(const LayerIds& new_layer_ids) {
+  const_cast<LayerIds&>(layer_ids) = new_layer_ids;
+  clear();
 }
 
 // TODO(nathan) consider refactoring to use operator[]
@@ -193,7 +201,8 @@ bool DynamicSceneGraph::insertNode(Node::Ptr&& node) {
 
 bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
                                         NodeId node_id,
-                                        NodeAttributes::Ptr&& attrs) {
+                                        NodeAttributes::Ptr&& attrs,
+                                        std::optional<std::chrono::nanoseconds> stamp) {
   if (!layers_.count(layer_id)) {
     SG_LOG(WARNING) << "Invalid layer: " << layer_id << std::endl;
     return false;
@@ -203,6 +212,10 @@ bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
   if (iter != node_lookup_.end()) {
     getNodePtr(node_id, iter->second)->attributes_ = std::move(attrs);
     return true;
+  }
+
+  if (stamp) {
+    return emplacePrevDynamicNode(layer_id, node_id, stamp.value(), std::move(attrs));
   }
 
   const bool successful = layers_[layer_id]->emplaceNode(node_id, std::move(attrs));
@@ -252,11 +265,12 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
 
 bool DynamicSceneGraph::addOrUpdateEdge(NodeId source,
                                         NodeId target,
-                                        EdgeAttributes::Ptr&& edge_info) {
+                                        EdgeAttributes::Ptr&& edge_info,
+                                        bool force_insert) {
   if (hasEdge(source, target)) {
     return setEdgeAttributes(source, target, std::move(edge_info));
   } else {
-    return insertEdge(source, target, std::move(edge_info));
+    return insertEdge(source, target, std::move(edge_info), force_insert);
   }
 }
 
@@ -795,6 +809,37 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
   return to_return;
 }
 
+void DynamicSceneGraph::save(std::string filepath, bool include_mesh) const {
+  const auto type = io::verifyFileExtension(filepath);
+  if (type == io::FileType::JSON) {
+    io::saveDsgJson(*this, filepath, include_mesh);
+    return;
+  }
+
+  // Can only be binary after verification.
+  io::saveDsgBinary(*this, filepath, include_mesh);
+}
+
+DynamicSceneGraph::Ptr DynamicSceneGraph::load(std::string filepath) {
+  if (!std::filesystem::exists(filepath)) {
+    throw std::runtime_error("graph file does not exist: " + filepath);
+  }
+
+  const auto type = io::verifyFileExtension(filepath);
+  if (type == io::FileType::JSON) {
+    return io::loadDsgJson(filepath);
+  }
+
+  // Can only be binary after verification (worstcase: throws meaningful error)
+  return io::loadDsgBinary(filepath);
+}
+
+void DynamicSceneGraph::setMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
+
+bool DynamicSceneGraph::hasMesh() const { return mesh_ != nullptr; }
+
+Mesh::Ptr DynamicSceneGraph::mesh() const { return mesh_; }
+
 BaseLayer& DynamicSceneGraph::layerFromKey(const LayerKey& key) {
   const auto& layer = static_cast<const DynamicSceneGraph*>(this)->layerFromKey(key);
   return const_cast<BaseLayer&>(layer);
@@ -995,11 +1040,5 @@ void DynamicSceneGraph::visitLayers(const LayerVisitor& cb) {
     }
   }
 }
-
-void DynamicSceneGraph::setMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
-
-bool DynamicSceneGraph::hasMesh() const { return mesh_ != nullptr; }
-
-Mesh::Ptr DynamicSceneGraph::mesh() const { return mesh_; }
 
 }  // namespace spark_dsg

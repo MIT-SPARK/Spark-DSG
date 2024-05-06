@@ -242,4 +242,13 @@ void Mesh::eraseFaces(const std::unordered_set<size_t>& indices,
   eraseVertices(unused_vertices);
 }
 
+bool operator==(const Mesh& lhs, const Mesh& rhs) {
+  return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
+         lhs.has_labels == rhs.has_labels &&
+         lhs.has_first_seen_stamps == rhs.has_first_seen_stamps &&
+         lhs.points == rhs.points && lhs.colors == rhs.colors &&
+         lhs.stamps == rhs.stamps && lhs.first_seen_stamps == rhs.first_seen_stamps &&
+         lhs.labels == rhs.labels && lhs.faces == rhs.faces;
+}
+
 }  // namespace spark_dsg

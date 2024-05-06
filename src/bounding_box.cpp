@@ -147,4 +147,23 @@ Eigen::Vector3f BoundingBox::dimensions() const {
   }
 }
 
+bool operator==(const BoundingBox& lhs, const BoundingBox& rhs) {
+  if (lhs.type != rhs.type) {
+    return false;
+  }
+
+  switch (lhs.type) {
+    case BoundingBox::Type::INVALID:
+      return true;
+    case BoundingBox::Type::AABB:
+      return lhs.min == rhs.min && lhs.max == rhs.max;
+    case BoundingBox::Type::OBB:
+      return lhs.min == rhs.min && lhs.max == rhs.max &&
+             lhs.world_P_center == rhs.world_P_center &&
+             lhs.world_R_center == rhs.world_R_center;
+    default:
+      return false;
+  }
+}
+
 }  // namespace spark_dsg

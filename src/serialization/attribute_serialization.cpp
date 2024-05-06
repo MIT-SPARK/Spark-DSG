@@ -32,27 +32,18 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
+#include "spark_dsg/serialization/attribute_serialization.h"
 
-#include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/serialization/versioning.h"
+namespace spark_dsg::serialization {
 
-namespace spark_dsg::io::binary {
+Visitor& Visitor::instance() {
+  if (!s_instance_) {
+    s_instance_.reset(new Visitor());
+  }
 
-void writeGraph(const DynamicSceneGraph& graph,
-                std::vector<uint8_t>& buffer,
-                bool include_mesh = false);
-
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
-
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
+  return *s_instance_;
 }
 
-bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length);
+Visitor::Visitor() {}
 
-inline bool updateGraph(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
-  return updateGraph(graph, buffer.data(), buffer.size());
-}
-
-}  // namespace spark_dsg::io::binary
+}  // namespace spark_dsg::serialization

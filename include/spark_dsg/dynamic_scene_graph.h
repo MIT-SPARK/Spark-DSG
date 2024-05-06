@@ -91,6 +91,11 @@ class DynamicSceneGraph {
   void clear();
 
   /**
+   * @brief Reset scene graph to use new layer ids
+   */
+  void reset(const LayerIds& layer_ids);
+
+  /**
    * @brief Add a new dynamic layer to the graph if it doesn't exist already
    *
    * @param layer dynamic layer id
@@ -153,8 +158,13 @@ class DynamicSceneGraph {
    * @param layer_id layer to add to
    * @param node_id node to add
    * @param attrs attributes to add
+   * @param timestamp timestamp to use (if dynamic)
    */
-  bool addOrUpdateNode(LayerId layer_id, NodeId node_id, NodeAttributes::Ptr&& attrs);
+  bool addOrUpdateNode(
+      LayerId layer_id,
+      NodeId node_id,
+      NodeAttributes::Ptr&& attrs,
+      std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
 
   /**
    * @brief Add an edge to the graph
@@ -182,7 +192,10 @@ class DynamicSceneGraph {
    * @param target edge target id
    * @param edge_info edge attributes
    */
-  bool addOrUpdateEdge(NodeId source, NodeId target, EdgeAttributes::Ptr&& edge_info);
+  bool addOrUpdateEdge(NodeId source,
+                       NodeId target,
+                       EdgeAttributes::Ptr&& edge_info,
+                       bool force_insert = false);
 
   /**
    * @brief Set the attributes of an existing node
@@ -468,34 +481,20 @@ class DynamicSceneGraph {
   void save(std::string filepath, bool include_mesh = true) const;
 
   /**
-   * @brief Get JSON string representing graph
-   * @param include_mesh Optionally encode mesh (defaults to false)
-   * @returns JSON string representing graph
-   */
-  std::string serializeToJson(bool include_mesh = false) const;
-
-  /**
    * @brief parse graph from binary or JSON file
    * @param filepath Complete path to file to read, including extension.
    * @returns Resulting parsed scene graph
    */
   static Ptr load(std::string filepath);
 
-  /**
-   * @brief parse graph from JSON string
-   * @param contents JSON string to parse
-   * @returns Resulting parsed scene graph
-   */
-  static Ptr deserializeFromJson(const std::string& contents);
-
-  //! current static layer ids in the graph
-  const LayerIds layer_ids;
-
   void setMesh(const std::shared_ptr<Mesh>& mesh);
 
   bool hasMesh() const;
 
   Mesh::Ptr mesh() const;
+
+  //! current static layer ids in the graph
+  const LayerIds layer_ids;
 
  protected:
   BaseLayer& layerFromKey(const LayerKey& key);

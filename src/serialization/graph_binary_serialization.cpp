@@ -34,123 +34,77 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 
-#include "spark_dsg/serialization/binary_serializer.h"
+#include "spark_dsg/serialization/attribute_registry.h"
+#include "spark_dsg/serialization/attribute_serialization.h"
+#include "spark_dsg/serialization/binary_conversions.h"
 
 namespace spark_dsg {
 
-using serialization::BinaryConverter;
-using serialization::BinaryDeserializer;
-using serialization::BinaryEdgeFactory;
-using serialization::BinaryNodeFactory;
-using serialization::BinarySerializer;
-
-void insertNode(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
-  deserializer.checkFixedArrayLength(3);
-  LayerId layer;
-  deserializer.read(layer);
-  NodeId node;
-  deserializer.read(node);
-
-  BinaryConverter converter(&deserializer);
-  graph.emplaceNode(layer, node, BinaryNodeFactory::get_default().create(converter));
-  converter.finalize();
+void write_binary(serialization::BinarySerializer& s, const SceneGraphNode& node) {
+  s.startFixedArray(3);
+  s.write(node.layer);
+  s.write(node.id);
+  s.write(node.attributes());
 }
 
-std::optional<NodeId> updateNode(const BinaryDeserializer& deserializer,
-                                 DynamicSceneGraph& graph) {
-  deserializer.checkFixedArrayLength(3);
+void write_binary(serialization::BinarySerializer& s,
+                  const DynamicSceneGraphNode& node) {
+  s.startFixedArray(4);
+  s.write(node.layer);
+  s.write(node.id);
+  s.write(node.timestamp.count());
+  s.write(node.attributes());
+}
+
+void write_binary(serialization::BinarySerializer& s, const SceneGraphEdge& edge) {
+  s.startFixedArray(3);
+  s.write(edge.source);
+  s.write(edge.target);
+  s.write(*edge.info);
+}
+
+namespace io::binary {
+
+using spark_dsg::serialization::AttributeFactory;
+using spark_dsg::serialization::BinaryDeserializer;
+using spark_dsg::serialization::BinarySerializer;
+
+NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
+                 const BinaryDeserializer& deserializer,
+                 DynamicSceneGraph& graph) {
+  const auto size = deserializer.readFixedArrayLength();
   LayerId layer;
   deserializer.read(layer);
   NodeId node;
   deserializer.read(node);
-
-  BinaryConverter conv(&deserializer);
-  const auto node_opt = graph.getNode(node);
-  if (node_opt) {
-    BinaryNodeFactory::get_default().update(conv, node_opt->get().attributes());
-  } else {
-    graph.emplaceNode(layer, node, BinaryNodeFactory::get_default().create(conv));
+  std::optional<std::chrono::nanoseconds> stamp;
+  if (size == 4) {
+    std::chrono::nanoseconds::rep stamp_value;
+    deserializer.read(stamp_value);
+    stamp = std::chrono::nanoseconds(stamp_value);
   }
-  conv.finalize();
-  return node_opt ? std::optional<NodeId>(node_opt->get().id) : std::nullopt;
-}
 
-void insertDynamicNode(const BinaryDeserializer& deserializer,
-                       DynamicSceneGraph& graph) {
-  deserializer.checkFixedArrayLength(4);
-  LayerId layer_id;
-  deserializer.read(layer_id);
-  NodeId node_id;
-  deserializer.read(node_id);
-  std::chrono::nanoseconds::rep timestamp_ns;
-  deserializer.read(timestamp_ns);
-
-  BinaryConverter converter(&deserializer);
-  graph.emplacePrevDynamicNode(layer_id,
-                               node_id,
-                               std::chrono::nanoseconds(timestamp_ns),
-                               BinaryNodeFactory::get_default().create(converter));
-  converter.finalize();
-}
-
-std::optional<NodeId> updateDynamicNode(const BinaryDeserializer& deserializer,
-                                        DynamicSceneGraph& graph) {
-  deserializer.checkFixedArrayLength(4);
-  LayerId layer;
-  deserializer.read(layer);
-  NodeId node;
-  deserializer.read(node);
-  std::chrono::nanoseconds::rep timestamp_ns_value;
-  deserializer.read(timestamp_ns_value);
-  std::chrono::nanoseconds timestamp_ns(timestamp_ns_value);
-
-  BinaryConverter conv(&deserializer);
-  const auto node_opt = graph.getNode(node);
-  if (node_opt) {
-    BinaryNodeFactory::get_default().update(conv, node_opt->get().attributes());
-  } else {
-    graph.emplacePrevDynamicNode(
-        layer, node, timestamp_ns, BinaryNodeFactory::get_default().create(conv));
+  auto attrs = serialization::Visitor::from(factory, deserializer);
+  if (!attrs) {
+    return node;
   }
-  conv.finalize();
-  return node_opt ? std::optional<NodeId>(node_opt->get().id) : std::nullopt;
+
+  graph.addOrUpdateNode(layer, node, std::move(attrs), stamp);
+  return node;
 }
 
-void insertEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
+void parseEdge(const AttributeFactory<EdgeAttributes>& factory,
+               const BinaryDeserializer& deserializer,
+               DynamicSceneGraph& graph) {
   deserializer.checkFixedArrayLength(3);
   NodeId source;
   deserializer.read(source);
   NodeId target;
   deserializer.read(target);
 
-  BinaryConverter conv(&deserializer);
-  graph.insertEdge(source, target, BinaryEdgeFactory::get_default().create(conv));
-  conv.finalize();
-}
-
-void updateEdge(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
-  deserializer.checkFixedArrayLength(3);
-  NodeId source;
-  deserializer.read(source);
-  NodeId target;
-  deserializer.read(target);
-
-  BinaryConverter conv(&deserializer);
-  const auto edge_opt = graph.getEdge(source, target);
-  if (edge_opt) {
-    BinaryEdgeFactory::get_default().update(conv, edge_opt->get().attributes());
-  } else {
-    // always force parents to switch
-    graph.insertEdge(
-        source, target, BinaryEdgeFactory::get_default().create(conv), true);
-  }
-  conv.finalize();
-}
-
-void insertMesh(const BinaryDeserializer& deserializer, DynamicSceneGraph& graph) {
-  const auto mesh_ref = deserializer.ref + deserializer.pos;
-  auto mesh = Mesh::deserializeFromBinary(mesh_ref, deserializer.buffer_length);
-  graph.setMesh(mesh);
+  // last argument always forces parents to rewire
+  auto attrs = serialization::Visitor::from(factory, deserializer);
+  graph.addOrUpdateEdge(source, target, std::move(attrs), true);
 }
 
 void writeGraph(const DynamicSceneGraph& graph,
@@ -158,6 +112,10 @@ void writeGraph(const DynamicSceneGraph& graph,
                 bool include_mesh) {
   BinarySerializer serializer(&buffer);
   serializer.write(graph.layer_ids);
+
+  // saves names to type index mapping
+  serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
+  serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
 
   serializer.startDynamicArray();
   for (const auto& id_layer_pair : graph.layers()) {
@@ -211,85 +169,28 @@ void writeGraph(const DynamicSceneGraph& graph,
   mesh->serializeToBinary(buffer);
 }
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
-  BinaryDeserializer deserializer(buffer, length);
+template <typename Attrs>
+AttributeFactory<Attrs> loadFactory(const io::FileHeader& header,
+                                    const BinaryDeserializer& deserializer) {
+  if (header.version < io::Version(1, 0, 2)) {
+    return serialization::AttributeRegistry<Attrs>::current();
+  }
 
-  std::vector<LayerId> layer_ids;
-  deserializer.read(layer_ids);
+  std::vector<std::string> names;
+  deserializer.read(names);
+  return serialization::AttributeRegistry<Attrs>::fromNames(names);
+}
 
+bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserializer) {
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 0, 2)) {
     LayerId mesh_layer_id;
     deserializer.read(mesh_layer_id);
   }
 
-  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    insertNode(deserializer, *graph);
-  }
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    insertDynamicNode(deserializer, *graph);
-  }
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    insertEdge(deserializer, *graph);
-  }
-
-  if (!deserializer.checkIfTrue()) {
-    return graph;
-  }
-
-  insertMesh(deserializer, *graph);
-  return graph;
-}
-
-bool updateGraphNormal(DynamicSceneGraph& graph,
-                       const BinaryDeserializer& deserializer) {
-  std::vector<LayerId> layer_ids;
-  deserializer.read(layer_ids);
-
-  if (graph.layer_ids != layer_ids) {
-    // TODO(nathan) maybe throw exception
-    return false;
-  }
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    updateNode(deserializer, graph);
-  }
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    updateDynamicNode(deserializer, graph);
-  }
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    updateEdge(deserializer, graph);
-  }
-
-  if (!deserializer.checkIfTrue()) {
-    return true;
-  }
-
-  insertMesh(deserializer, graph);
-  return true;
-}
-
-bool updateGraphRemoveStale(DynamicSceneGraph& graph,
-                            const BinaryDeserializer& deserializer) {
-  std::vector<LayerId> layer_ids;
-  deserializer.read(layer_ids);
-
-  if (graph.layer_ids != layer_ids) {
-    // TODO(nathan) maybe throw exception
-    return false;
-  }
+  // load name to type index mapping if present
+  const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);
+  const auto edge_factory = loadFactory<EdgeAttributes>(header, deserializer);
 
   std::unordered_set<NodeId> stale_nodes;
   for (const auto& id_key_pair : graph.node_lookup()) {
@@ -298,18 +199,12 @@ bool updateGraphRemoveStale(DynamicSceneGraph& graph,
 
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
-    const auto node_id = updateNode(deserializer, graph);
-    if (node_id) {
-      stale_nodes.erase(*node_id);
-    }
+    stale_nodes.erase(parseNode(node_factory, deserializer, graph));
   }
 
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
-    const auto node_id = updateDynamicNode(deserializer, graph);
-    if (node_id) {
-      stale_nodes.erase(*node_id);
-    }
+    stale_nodes.erase(parseNode(node_factory, deserializer, graph));
   }
 
   for (const auto& node_id : stale_nodes) {
@@ -319,7 +214,7 @@ bool updateGraphRemoveStale(DynamicSceneGraph& graph,
   graph.markEdgesAsStale();
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
-    updateEdge(deserializer, graph);
+    parseEdge(edge_factory, deserializer, graph);
   }
   graph.removeAllStaleEdges();
 
@@ -327,21 +222,39 @@ bool updateGraphRemoveStale(DynamicSceneGraph& graph,
     return true;
   }
 
-  insertMesh(deserializer, graph);
+  auto mesh = std::make_shared<Mesh>();
+  deserializer.read(*mesh);
+  graph.setMesh(mesh);
   return true;
 }
 
-bool updateGraph(DynamicSceneGraph& graph,
-                 const uint8_t* const buffer,
-                 size_t length,
-                 bool remove_stale) {
+DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
-  if (remove_stale) {
-    return updateGraphRemoveStale(graph, deserializer);
+
+  std::vector<LayerId> layer_ids;
+  deserializer.read(layer_ids);
+
+  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
+  if (!updateGraph(*graph, deserializer)) {
+    return nullptr;
   }
 
-  graph.clear();
-  return updateGraphNormal(graph, deserializer);
+  return graph;
 }
 
+bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length) {
+  BinaryDeserializer deserializer(buffer, length);
+
+  std::vector<LayerId> layer_ids;
+  deserializer.read(layer_ids);
+
+  if (graph.layer_ids != layer_ids) {
+    // TODO(nathan) maybe warn about mismatch
+    graph.reset(layer_ids);
+  }
+
+  return updateGraph(graph, deserializer);
+}
+
+}  // namespace io::binary
 }  // namespace spark_dsg

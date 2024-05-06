@@ -33,26 +33,22 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-
 #include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/serialization/versioning.h"
 
-namespace spark_dsg::io::binary {
+namespace spark_dsg::io::json {
 
-void writeGraph(const DynamicSceneGraph& graph,
-                std::vector<uint8_t>& buffer,
-                bool include_mesh = false);
+/**
+ * @brief Get JSON string representing graph
+ * @param include_mesh Optionally encode mesh (defaults to false)
+ * @returns JSON string representing graph
+ */
+std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh = false);
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
+/**
+ * @brief parse graph from JSON string
+ * @param contents JSON string to parse
+ * @returns Resulting parsed scene graph
+ */
+DynamicSceneGraph::Ptr readGraph(const std::string& contents);
 
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
-}
-
-bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length);
-
-inline bool updateGraph(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
-  return updateGraph(graph, buffer.data(), buffer.size());
-}
-
-}  // namespace spark_dsg::io::binary
+}  // namespace spark_dsg::io::json

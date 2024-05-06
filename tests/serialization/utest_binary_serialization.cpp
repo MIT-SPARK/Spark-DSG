@@ -32,27 +32,82 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
+#include <gtest/gtest.h>
 
-#include "spark_dsg/dynamic_scene_graph.h"
-#include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/serialization/binary_serialization.h"
 
-namespace spark_dsg::io::binary {
+namespace spark_dsg::serialization {
 
-void writeGraph(const DynamicSceneGraph& graph,
-                std::vector<uint8_t>& buffer,
-                bool include_mesh = false);
+TEST(BinarySerialization, SwapCorrect16) {
+  uint16_t original = 0x1234;
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
+  uint16_t swapped;
+  detail::SwapEndian::swap(original, swapped);
 
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
+  ASSERT_EQ(swapped, 0x3412);
+
+  uint16_t rt_value;
+  detail::SwapEndian::swap(swapped, rt_value);
+  ASSERT_EQ(original, rt_value);
 }
 
-bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length);
+TEST(BinarySerialization, SwapCorrect32) {
+  uint32_t original = 0x12345678;
 
-inline bool updateGraph(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
-  return updateGraph(graph, buffer.data(), buffer.size());
+  uint32_t swapped;
+  detail::SwapEndian::swap(original, swapped);
+
+  ASSERT_EQ(swapped, 0x78563412);
+
+  uint32_t rt_value;
+  detail::SwapEndian::swap(swapped, rt_value);
+  ASSERT_EQ(original, rt_value);
 }
 
-}  // namespace spark_dsg::io::binary
+TEST(BinarySerialization, SwapCorrect64) {
+  uint64_t original = 0x123456789abcdef0;
+
+  uint64_t swapped = 0;
+  detail::SwapEndian::swap(original, swapped);
+
+  ASSERT_EQ(swapped, 0xf0debc9a78563412);
+
+  uint64_t rt_value = 0;
+  detail::SwapEndian::swap(swapped, rt_value);
+  ASSERT_EQ(original, rt_value);
+}
+
+TEST(BinarySerialization, TestWriteWord) {
+  std::vector<uint8_t> buffer;
+  uint32_t word = 0x12345678;
+  detail::writeWord(buffer, word);
+  ASSERT_EQ(buffer.size(), 4u);
+  if (!detail::NeedEndianSwap()) {
+    EXPECT_EQ(buffer[0], 0x78);
+    EXPECT_EQ(buffer[1], 0x56);
+    EXPECT_EQ(buffer[2], 0x34);
+    EXPECT_EQ(buffer[3], 0x12);
+  } else {
+    EXPECT_EQ(buffer[3], 0x78);
+    EXPECT_EQ(buffer[2], 0x56);
+    EXPECT_EQ(buffer[1], 0x34);
+    EXPECT_EQ(buffer[0], 0x12);
+  }
+
+  int32_t signed_word = 0x12345678;
+  detail::writeWord(buffer, signed_word);
+  ASSERT_EQ(buffer.size(), 8u);
+  if (!detail::NeedEndianSwap()) {
+    EXPECT_EQ(buffer[4], 0x78);
+    EXPECT_EQ(buffer[5], 0x56);
+    EXPECT_EQ(buffer[6], 0x34);
+    EXPECT_EQ(buffer[7], 0x12);
+  } else {
+    EXPECT_EQ(buffer[7], 0x78);
+    EXPECT_EQ(buffer[6], 0x56);
+    EXPECT_EQ(buffer[5], 0x34);
+    EXPECT_EQ(buffer[4], 0x12);
+  }
+}
+
+}  // namespace spark_dsg::serialization

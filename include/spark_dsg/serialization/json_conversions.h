@@ -36,51 +36,10 @@
 
 #include <nlohmann/json.hpp>
 
-#include "spark_dsg/serialization/attribute_factory.h"
-#include "spark_dsg/serialization/versioning.h"
-#include "spark_dsg/mesh.h"
+#include "spark_dsg/bounding_box.h"
 
 namespace spark_dsg {
 
-struct JsonConverter {
-  explicit JsonConverter(nlohmann::json* record) : ref(record) {}
-
-  explicit JsonConverter(const nlohmann::json* rec)
-      : cref(rec), attr_type(rec->at("type").get<std::string>()) {}
-
-  ~JsonConverter() = default;
-
-  template <typename Factory>
-  inline std::string read_type(const Factory&) const {
-    return attr_type;
-  }
-
-  template <typename Factory>
-  void mark_type(const Factory&, const std::string& name) {
-    (*ref)["type"] = name;
-  }
-
-  template <typename T>
-  void write(const std::string& name, const T& value) {
-    (*ref)[name] = value;
-  }
-
-  template <typename T>
-  void read(const std::string& name, T& value) const {
-    if (!cref->contains(name)) {
-      return;
-    }
-
-    value = cref->at(name).get<T>();
-  }
-
-  const nlohmann::json* cref = nullptr;
-  nlohmann::json* ref = nullptr;
-  std::string attr_type;
-};
-
-using JsonNodeFactory = NodeAttributeFactory<JsonConverter>;
-using JsonEdgeFactory = EdgeAttributeFactory<JsonConverter>;
 
 NLOHMANN_JSON_SERIALIZE_ENUM(BoundingBox::Type,
                              {
@@ -90,30 +49,31 @@ NLOHMANN_JSON_SERIALIZE_ENUM(BoundingBox::Type,
                                  {BoundingBox::Type::OBB, "OBB"},
                              });
 
-void to_json(nlohmann::json& record, const NodeAttributes& attributes);
-
-void to_json(nlohmann::json& record, const EdgeAttributes& attributes);
-
 void to_json(nlohmann::json& j, const BoundingBox& b);
-
 void from_json(const nlohmann::json& j, BoundingBox& b);
 
+struct NearestVertexInfo;
 void to_json(nlohmann::json& j, const NearestVertexInfo& b);
-
 void from_json(const nlohmann::json& j, NearestVertexInfo& b);
 
+struct Color;
 void to_json(nlohmann::json& record, const Color& c);
-
 void from_json(const nlohmann::json& record, Color& c);
 
+class Mesh;
 void to_json(nlohmann::json& j, const Mesh& mesh);
-
 void from_json(const nlohmann::json& j, Mesh& mesh);
+
+class NodeAttributes;
+void to_json(nlohmann::json& j, const NodeAttributes& attrs);
+
+class EdgeAttributes;
+void to_json(nlohmann::json& j, const EdgeAttributes& attrs);
 
 namespace io {
 
+struct FileHeader;
 void to_json(nlohmann::json& record, const FileHeader& header);
-
 void from_json(const nlohmann::json& record, FileHeader& header);
 
 }  // namespace io

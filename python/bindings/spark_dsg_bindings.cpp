@@ -464,23 +464,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("num_nodes", &IsolatedSceneGraphLayer::numNodes)
       .def("num_edges", &IsolatedSceneGraphLayer::numEdges)
       .def("get_position", &IsolatedSceneGraphLayer::getPosition)
-      .def("to_bson",
-           [](const IsolatedSceneGraphLayer& layer) -> py::bytes {
-             return layer.toBson();
-           })
-      .def("to_json",
-           [](const IsolatedSceneGraphLayer& layer) {
-             std::unordered_set<NodeId> nodes;
-             for (const auto& id_node_pair : layer.nodes()) {
-               nodes.insert(id_node_pair.first);
-             }
-             return layer.serializeLayer(nodes);
-           })
-      .def_static("from_json", &IsolatedSceneGraphLayer::readFromJson)
-      .def_static("from_bson",
-                  [](const py::bytes& contents) {
-                    return IsolatedSceneGraphLayer::fromBson(contents);
-                  })
       .def_readonly("id", &IsolatedSceneGraphLayer::id)
       .def_property(
           "nodes",
@@ -747,24 +730,22 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "to_binary",
           [](const DynamicSceneGraph& graph, bool include_mesh) {
             std::vector<uint8_t> buffer;
-            writeGraph(graph, buffer, include_mesh);
+            io::binary::writeGraph(graph, buffer, include_mesh);
             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
           },
           "include_mesh"_a = false)
       .def(
           "update_from_binary",
-          [](DynamicSceneGraph& graph, const py::bytes& contents, bool remove_stale) {
+          [](DynamicSceneGraph& graph, const py::bytes& contents) {
             const auto& view = static_cast<const std::string_view&>(contents);
-            return updateGraph(graph,
-                               reinterpret_cast<const uint8_t*>(view.data()),
-                               view.size(),
-                               remove_stale);
+            return io::binary::updateGraph(
+                graph, reinterpret_cast<const uint8_t*>(view.data()), view.size());
           },
-          "contents"_a,
-          "remove_stale"_a = true)
+          "contents"_a)
       .def_static("from_binary", [](const py::bytes& contents) {
         const auto& view = static_cast<const std::string_view&>(contents);
-        return readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());
+        return io::binary::readGraph(reinterpret_cast<const uint8_t*>(view.data()),
+                                     view.size());
       });
 
   module.def("compute_ancestor_bounding_box",

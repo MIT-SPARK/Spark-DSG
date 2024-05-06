@@ -39,7 +39,7 @@
 #include <sstream>
 
 #include "spark_dsg/logging.h"
-#include "spark_dsg/serialization/binary_serializer.h"
+#include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg_version.h"
 
 namespace spark_dsg::io {
@@ -125,10 +125,7 @@ std::vector<uint8_t> FileHeader::serializeToBinary() const {
   std::vector<uint8_t> buffer;
   serialization::BinarySerializer serializer(&buffer);
   serializer.write(IDENTIFIER_STRING);
-  serializer.write(project_name);
-  serializer.write(version.major);
-  serializer.write(version.minor);
-  serializer.write(version.patch);
+  serializer.write(*this);
   return buffer;
 }
 
@@ -165,6 +162,7 @@ void warnOutdatedHeader(const FileHeader& header) {
              << FileHeader::current().toString() << ").";
 }
 
+// TODO(nathan) this and the header write might belong in file_io instead
 std::optional<FileHeader> FileHeader::deserializeFromBinary(
     const std::vector<uint8_t>& buffer, size_t* offset) {
   // Check the buffer is valid.
@@ -172,6 +170,7 @@ std::optional<FileHeader> FileHeader::deserializeFromBinary(
   if (deserializer.getCurrType() != serialization::PackType::ARR32) {
     return std::nullopt;
   }
+
   std::string identifier;
   deserializer.read(identifier);
   if (identifier != IDENTIFIER_STRING) {
@@ -180,13 +179,10 @@ std::optional<FileHeader> FileHeader::deserializeFromBinary(
 
   // Deserialize the header.
   FileHeader header;
-  deserializer.read(header.project_name);
-  deserializer.read(header.version.major);
-  deserializer.read(header.version.minor);
-  deserializer.read(header.version.patch);
+  deserializer.read(header);
 
   if (offset) {
-    *offset = deserializer.pos;
+    *offset = deserializer.pos();
   }
   return header;
 }

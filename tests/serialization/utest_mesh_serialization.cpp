@@ -32,62 +32,69 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
+#include <gtest/gtest.h>
 
-#include <nlohmann/json.hpp>
-
-#include "spark_dsg/serialization/attribute_factory.h"
+#include "spark_dsg/mesh.h"
 
 namespace spark_dsg {
 
-struct JsonConverter {
-  explicit JsonConverter(nlohmann::json* record) : ref(record) {}
+TEST(MeshSerialization, MeshJson) {
+  Mesh mesh;
+  mesh.points.push_back(Eigen::Vector3f::Zero());
+  mesh.points.push_back(Eigen::Vector3f::Zero());
+  mesh.points.push_back(Eigen::Vector3f::Zero());
+  mesh.colors.push_back({10, 20, 30, 255});
+  mesh.labels.push_back(2);
+  mesh.labels.push_back(8);
+  mesh.stamps.push_back(0);
+  mesh.stamps.push_back(10);
+  mesh.stamps.push_back(20);
+  mesh.stamps.push_back(30);
+  mesh.first_seen_stamps.push_back(7);
+  mesh.first_seen_stamps.push_back(14);
+  mesh.first_seen_stamps.push_back(21);
+  mesh.faces.push_back({{1, 2, 3}});
 
-  explicit JsonConverter(const nlohmann::json* rec)
-      : cref(rec), attr_type(rec->at("type").get<std::string>()) {}
+  const auto output = mesh.serializeToJson();
+  auto result = Mesh::deserializeFromJson(output);
 
-  ~JsonConverter() = default;
-
-  template <typename Factory>
-  inline std::string read_type(const Factory&) const {
-    return attr_type;
-  }
-
-  template <typename Factory>
-  void mark_type(const Factory&, const std::string& name) {
-    (*ref)["type"] = name;
-  }
-
-  template <typename T>
-  void write(const std::string& name, const T& value) {
-    (*ref)[name] = value;
-  }
-
-  template <typename T>
-  void read(const std::string& name, T& value) const {
-    if (!cref->contains(name)) {
-      return;
-    }
-
-    value = cref->at(name).get<T>();
-  }
-
-  const nlohmann::json* cref = nullptr;
-  nlohmann::json* ref = nullptr;
-  std::string attr_type;
-};
-
-using JsonNodeFactory = NodeAttributeFactory<JsonConverter>;
-using JsonEdgeFactory = EdgeAttributeFactory<JsonConverter>;
-
-inline void to_json(nlohmann::json& record, const NodeAttributes& attributes) {
-  JsonConverter converter(&record);
-  JsonNodeFactory::get_default().save(converter, attributes);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result->points.size(), 3u);
+  EXPECT_EQ(result->colors.size(), 1u);
+  EXPECT_EQ(result->labels.size(), 2u);
+  EXPECT_EQ(result->stamps.size(), 4u);
+  EXPECT_EQ(result->first_seen_stamps.size(), 3u);
+  EXPECT_EQ(result->faces.size(), 1u);
 }
 
-inline void to_json(nlohmann::json& record, const EdgeAttributes& attributes) {
-  JsonConverter converter(&record);
-  JsonEdgeFactory::get_default().save(converter, attributes);
+TEST(MeshSerialization, MeshBinary) {
+  Mesh mesh;
+  mesh.points.push_back(Eigen::Vector3f::Zero());
+  mesh.points.push_back(Eigen::Vector3f::Zero());
+  mesh.points.push_back(Eigen::Vector3f::Zero());
+  mesh.colors.push_back({10, 20, 30, 255});
+  mesh.labels.push_back(2);
+  mesh.labels.push_back(8);
+  mesh.stamps.push_back(0);
+  mesh.stamps.push_back(10);
+  mesh.stamps.push_back(20);
+  mesh.stamps.push_back(30);
+  mesh.first_seen_stamps.push_back(7);
+  mesh.first_seen_stamps.push_back(14);
+  mesh.first_seen_stamps.push_back(21);
+  mesh.faces.push_back({{1, 2, 3}});
+
+  std::vector<uint8_t> buffer;
+  mesh.serializeToBinary(buffer);
+  auto result = Mesh::deserializeFromBinary(buffer.data(), buffer.size());
+
+  ASSERT_TRUE(result);
+  EXPECT_EQ(result->points.size(), 3u);
+  EXPECT_EQ(result->colors.size(), 1u);
+  EXPECT_EQ(result->labels.size(), 2u);
+  EXPECT_EQ(result->stamps.size(), 4u);
+  EXPECT_EQ(result->first_seen_stamps.size(), 3u);
+  EXPECT_EQ(result->faces.size(), 1u);
 }
 
 }  // namespace spark_dsg

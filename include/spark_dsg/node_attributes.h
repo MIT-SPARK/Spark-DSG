@@ -45,14 +45,42 @@
 #include "spark_dsg/bounding_box.h"
 #include "spark_dsg/mesh.h"
 #include "spark_dsg/scene_graph_types.h"
+#include "spark_dsg/serialization/attribute_registry.h"
 
 namespace spark_dsg {
+namespace serialization {
+class Visitor;
+}
+
+struct NodeAttributes;
+
+template <typename T>
+using NodeAttributeRegistration =
+    serialization::AttributeRegistration<NodeAttributes, T>;
+
+#define REGISTER_NODE_ATTRIBUTES(attr_type)                                  \
+  inline static const auto registration_ =                                   \
+      NodeAttributeRegistration<attr_type>(#attr_type);                      \
+  const serialization::RegistrationInfo& registrationImpl() const override { \
+    return registration_.info;                                               \
+  }                                                                          \
+  static_assert(true, "")
 
 // TODO(nathan) handle this better
 /**
  * @brief Typedef representing the semantic class of an object or other node
  */
 using SemanticLabel = uint32_t;
+
+/**
+ * @brief Information related to place to mesh coorespondence
+ */
+struct NearestVertexInfo {
+  int32_t block[3];
+  double voxel_pos[3];
+  size_t vertex;
+  std::optional<uint32_t> label;
+};
 
 /**
  * @brief Base node attributes.
@@ -64,16 +92,24 @@ using SemanticLabel = uint32_t;
 struct NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  friend class serialization::Visitor;
+
   //! desired node pointer type
   using Ptr = std::unique_ptr<NodeAttributes>;
 
   //! Make a default set of attributes
   NodeAttributes();
-
   //! Set the node position
   explicit NodeAttributes(const Eigen::Vector3d& position);
-
   virtual ~NodeAttributes() = default;
+  virtual NodeAttributes::Ptr clone() const;
+
+  //! Position of the node
+  Eigen::Vector3d position;
+  //! last time the place was updated (while active)
+  uint64_t last_update_time_ns;
+  //! whether or not the node is in the active window
+  bool is_active;
 
   /**
    * @brief output attribute information
@@ -83,20 +119,29 @@ struct NodeAttributes {
    */
   friend std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs);
 
-  virtual NodeAttributes::Ptr clone() const {
-    return std::make_unique<NodeAttributes>(*this);
-  }
+  bool operator==(const NodeAttributes& other) const;
 
-  //! Position of the node
-  Eigen::Vector3d position;
-  //! last time the place was updated (while active)
-  uint64_t last_update_time_ns;
-  //! whether or not the node is in the active window
-  bool is_active;
+  const serialization::RegistrationInfo& registration() const {
+    return registrationImpl();
+  }
 
  protected:
   //! actually output information to the std::ostream
   virtual std::ostream& fill_ostream(std::ostream& out) const;
+  //! dispatch function for serialization
+  virtual void serialization_info();
+  //! dispatch function for serialization
+  void serialization_info() const;
+  //! compute equality
+  virtual bool is_equal(const NodeAttributes& other) const;
+
+  inline static const auto registration_ =
+      NodeAttributeRegistration<NodeAttributes>("NodeAttributes");
+
+  //! get registration
+  virtual const serialization::RegistrationInfo& registrationImpl() const {
+    return registration_.info;
+  }
 };
 
 /**
@@ -105,33 +150,21 @@ struct NodeAttributes {
 struct SemanticNodeAttributes : public NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  /**
-   * @brief pointer type for node
-   */
+  //! pointer type for node
   using Ptr = std::unique_ptr<SemanticNodeAttributes>;
-  /**
-   * @brief alias between color type and Eigen vector of uint8_t
-   */
+  //! alias between color type and Eigen vector of uint8_t
   using ColorVector = Eigen::Matrix<uint8_t, 3, 1>;
-  /**
-   * @brief alias for semantic label
-   */
+  //! alias for semantic label
   using Label = SemanticLabel;
-  /**
-   * @brief flag for whether or not semantic label should be considered valid
-   */
+  // !flag for whether or not semantic label should be considered valid
   inline static constexpr Label NO_SEMANTIC_LABEL = std::numeric_limits<Label>::max();
 
-  /**
-   * @brief Make a default set of attributes
-   */
   SemanticNodeAttributes();
-
   virtual ~SemanticNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
 
-  virtual NodeAttributes::Ptr clone() const override {
-    return std::make_unique<SemanticNodeAttributes>(*this);
-  }
+  bool hasLabel() const;
+  bool hasFeature() const;
 
   //! Name of the node
   std::string name;
@@ -144,13 +177,12 @@ struct SemanticNodeAttributes : public NodeAttributes {
   //! semantic feature of object
   Eigen::MatrixXd semantic_feature;
 
-  bool hasLabel() const { return semantic_label != NO_SEMANTIC_LABEL; }
-  bool hasFeature() const {
-    return semantic_feature.rows() * semantic_feature.cols() != 0;
-  }
-
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const override;
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(SemanticNodeAttributes);
 };
 
 /**
@@ -163,25 +195,13 @@ struct SemanticNodeAttributes : public NodeAttributes {
 struct ObjectNodeAttributes : public SemanticNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  /**
-   * @brief desired pointer type of node
-   */
+  //! desired pointer type of node
   using Ptr = std::unique_ptr<ObjectNodeAttributes>;
-  /**
-   * @brief color type for node
-   */
-  using ColorVector = SemanticNodeAttributes::ColorVector;
 
-  /**
-   * @brief Make a default set of attributes
-   */
+  //! Make a default set of attributes
   ObjectNodeAttributes();
-
   virtual ~ObjectNodeAttributes() = default;
-
-  virtual NodeAttributes::Ptr clone() const override {
-    return std::make_unique<ObjectNodeAttributes>(*this);
-  }
+  NodeAttributes::Ptr clone() const override;
 
   //! Mesh vertice connections
   std::list<size_t> mesh_connections;
@@ -191,7 +211,11 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   Eigen::Quaterniond world_R_object;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const override;
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(ObjectNodeAttributes);
 };
 
 /**
@@ -202,38 +226,20 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
 struct RoomNodeAttributes : public SemanticNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  /**
-   * @brief desired pointer type of node
-   */
+  //! desired pointer type of node
   using Ptr = std::unique_ptr<RoomNodeAttributes>;
-  /**
-   * @brief color type for node
-   */
-  using ColorVector = SemanticNodeAttributes::ColorVector;
 
-  /**
-   * @brief Make a default set of attributes
-   */
+  //!  Make a default set of attributes
   RoomNodeAttributes();
-
   virtual ~RoomNodeAttributes() = default;
-
-  virtual NodeAttributes::Ptr clone() const override {
-    return std::make_unique<RoomNodeAttributes>(*this);
-  }
+  NodeAttributes::Ptr clone() const override;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const override;
-};
-
-/**
- * @brief Information related to place to mesh coorespondence
- */
-struct NearestVertexInfo {
-  int32_t block[3];
-  double voxel_pos[3];
-  size_t vertex;
-  std::optional<uint32_t> label;
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(RoomNodeAttributes);
 };
 
 /**
@@ -247,8 +253,6 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of node
   using Ptr = std::unique_ptr<PlaceNodeAttributes>;
-  //! color type for node
-  using ColorVector = SemanticNodeAttributes::ColorVector;
 
   PlaceNodeAttributes();
 
@@ -258,12 +262,8 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
    * @param num_basis_points number of basis points of the places node
    */
   PlaceNodeAttributes(double distance, unsigned int num_basis_points);
-
   virtual ~PlaceNodeAttributes() = default;
-
-  virtual NodeAttributes::Ptr clone() const override {
-    return std::make_unique<PlaceNodeAttributes>(*this);
-  }
+  NodeAttributes::Ptr clone() const override;
 
   //! distance to nearest obstacle
   double distance;
@@ -287,7 +287,11 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   size_t num_frontier_voxels = 0;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const override;
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(PlaceNodeAttributes);
 };
 using FrontierNodeAttributes = PlaceNodeAttributes;
 
@@ -300,8 +304,6 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of node
   using Ptr = std::unique_ptr<Place2dNodeAttributes>;
-  //! color type for node
-  using ColorVector = SemanticNodeAttributes::ColorVector;
 
   Place2dNodeAttributes();
 
@@ -310,12 +312,8 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
    * @param boundary Boundary points surrounding place
    */
   Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary);
-
   virtual ~Place2dNodeAttributes() = default;
-
-  virtual NodeAttributes::Ptr clone() const override {
-    return std::make_unique<Place2dNodeAttributes>(*this);
-  }
+  NodeAttributes::Ptr clone() const override;
 
   //! points on boundary of place region
   std::vector<Eigen::Vector3d> boundary;
@@ -347,7 +345,11 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   bool has_active_mesh_indices;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const override;
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(Place2dNodeAttributes);
 };
 
 struct AgentNodeAttributes : public NodeAttributes {
@@ -357,26 +359,23 @@ struct AgentNodeAttributes : public NodeAttributes {
   using BowIdVector = Eigen::Matrix<uint32_t, Eigen::Dynamic, 1>;
 
   AgentNodeAttributes();
-
   AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
                       const Eigen::Vector3d& world_P_body,
                       NodeId external_key);
-
   virtual ~AgentNodeAttributes() = default;
-
-  virtual NodeAttributes::Ptr clone() const override {
-    return std::make_unique<AgentNodeAttributes>(*this);
-  }
+  NodeAttributes::Ptr clone() const override;
 
   Eigen::Quaterniond world_R_body;
-
   NodeId external_key;
-
   BowIdVector dbow_ids;
   Eigen::VectorXf dbow_values;
 
  protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const override;
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(AgentNodeAttributes);
 };
 
 /**
@@ -385,17 +384,12 @@ struct AgentNodeAttributes : public NodeAttributes {
 struct KhronosObjectAttributes : public ObjectNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  /**
-   * @brief desired pointer type of node
-   */
+  //! desired pointer type of node
   using Ptr = std::unique_ptr<KhronosObjectAttributes>;
 
-  KhronosObjectAttributes() : mesh(true, false, false){};
+  KhronosObjectAttributes();
   virtual ~KhronosObjectAttributes() = default;
-
-  NodeAttributes::Ptr clone() const override {
-    return std::make_unique<KhronosObjectAttributes>(*this);
-  }
+  NodeAttributes::Ptr clone() const override;
 
   // Attributes.
   // Sequence of observation starts and ends.
@@ -419,6 +413,10 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(KhronosObjectAttributes);
 };
 
 }  // namespace spark_dsg

@@ -118,4 +118,6 @@ struct BoundingBox {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
+bool operator==(const BoundingBox& lhs, const BoundingBox& rhs);
+
 }  // namespace spark_dsg

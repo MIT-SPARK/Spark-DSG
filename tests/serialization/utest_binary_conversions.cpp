@@ -34,21 +34,30 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
-#include "spark_dsg/serialization/json_serialization.h"
+#include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
 
-using nlohmann::json;
+template <typename T>
+T writeRT(const T& expected) {
+  std::vector<uint8_t> buffer;
+  serialization::BinarySerializer serializer(&buffer);
+  serializer.write(expected);
 
-TEST(JsonSerializationTests, EigenVectorJson) {
+  serialization::BinaryDeserializer deserializer(buffer);
+
+  T result;
+  deserializer.read(result);
+  return result;
+}
+
+TEST(BinaryConversions, SerializeEigenVector) {
   {  // double vector
     Eigen::Vector3d expected;
     expected << 1.0, 2.0, 3.0;
 
-    json output = expected;
-
-    auto result = output.get<Eigen::Vector3d>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 
@@ -56,9 +65,7 @@ TEST(JsonSerializationTests, EigenVectorJson) {
     SemanticNodeAttributes::ColorVector expected;
     expected << 1, 2, 3;
 
-    json output = expected;
-
-    auto result = output.get<SemanticNodeAttributes::ColorVector>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 
@@ -66,9 +73,7 @@ TEST(JsonSerializationTests, EigenVectorJson) {
     Eigen::VectorXf expected(5, 1);
     expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f;
 
-    json output = expected;
-
-    auto result = output.get<Eigen::VectorXf>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 
@@ -76,21 +81,17 @@ TEST(JsonSerializationTests, EigenVectorJson) {
     Eigen::VectorXi expected(5, 1);
     expected << 1, 2, 3, 4, 5;
 
-    json output = expected;
-
-    auto result = output.get<Eigen::VectorXi>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 }
 
-TEST(JsonSerializationTests, EigenMatrixJson) {
+TEST(BinaryConversions, SerializeEigenMatrix) {
   {  // double fixed-size matrix
     Eigen::Matrix2d expected;
     expected << 1.0, 2.0, 3.0, 4.0;
 
-    json output = expected;
-
-    auto result = output.get<Eigen::Matrix2d>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 
@@ -99,9 +100,7 @@ TEST(JsonSerializationTests, EigenMatrixJson) {
     expected << 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f,
         12.0f;
 
-    json output = expected;
-
-    auto result = output.get<Eigen::Matrix<float, 3, Eigen::Dynamic>>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 
@@ -109,38 +108,51 @@ TEST(JsonSerializationTests, EigenMatrixJson) {
     Eigen::MatrixXd expected(2, 3);
     expected << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
 
-    json output = expected;
-
-    auto result = output.get<Eigen::MatrixXd>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 }
 
-TEST(JsonSerializationTests, EigenQuaternionJson) {
+TEST(BinaryConversions, SerializeEigenQuaternion) {
   std::stringstream ss;
 
   {  // single-precision
     Eigen::Quaternionf expected(0.0, 0.0, 1.0, 0.0);
-    json output = expected;
-    auto result = output.get<Eigen::Quaternionf>();
-    ASSERT_TRUE(quaternionsEqual(expected, result));
+    auto result = writeRT(expected);
+    ASSERT_TRUE(::spark_dsg::test::quaternionsEqual(expected, result));
   }
 
   {  // double-precision
     Eigen::Quaterniond expected(0.0, 0.0, 0.0, 1.0);
-    json output = expected;
-    auto result = output.get<Eigen::Quaterniond>();
-    ASSERT_TRUE(quaternionsEqual(expected, result));
+    auto result = writeRT(expected);
+    ASSERT_TRUE(::spark_dsg::test::quaternionsEqual(expected, result));
   }
 }
 
-TEST(JsonSerializationTests, BoundingBoxJson) {
+TEST(BinaryConversions, SerializeMap) {
+  {  // simple type
+    std::map<uint32_t, uint32_t> expected;
+    expected[1] = 2;
+    expected[3] = 4;
+    expected[5] = 6;
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+
+  {  // more complex type
+    std::map<std::string, std::vector<size_t>> expected;
+    expected["a"] = {1, 2, 3};
+    expected["b"] = {4, 5, 6};
+    expected["c"] = {7, 8, 9};
+    auto result = writeRT(expected);
+    EXPECT_EQ(expected, result);
+  }
+}
+
+TEST(BinaryConversions, SerializeBoundingBox) {
   {  // invalid type
     BoundingBox expected;
-
-    json output = expected;
-    BoundingBox result = output.get<BoundingBox>();
-
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 
@@ -151,10 +163,7 @@ TEST(JsonSerializationTests, BoundingBoxJson) {
     expected_max << 4.0f, 5.0f, 6.0f;
 
     BoundingBox expected(expected_min, expected_max);
-
-    json output = expected;
-
-    BoundingBox result = output.get<BoundingBox>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 
@@ -168,9 +177,7 @@ TEST(JsonSerializationTests, BoundingBoxJson) {
     Eigen::Quaternionf expected_rot(0.0, 0.0, 1.0, 0.0);
 
     BoundingBox expected(expected_min, expected_max, expected_pos, expected_rot);
-
-    json output = expected;
-    BoundingBox result = output.get<BoundingBox>();
+    auto result = writeRT(expected);
     EXPECT_EQ(expected, result);
   }
 }

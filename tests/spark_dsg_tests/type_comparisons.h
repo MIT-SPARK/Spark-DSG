@@ -33,10 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/node_attributes.h>
 
 namespace spark_dsg {
+namespace test {
 
 template <typename Scalar>
 bool quaternionsEqual(const Eigen::Quaternion<Scalar>& lhs,
@@ -45,82 +46,140 @@ bool quaternionsEqual(const Eigen::Quaternion<Scalar>& lhs,
          lhs.z() == rhs.z();
 }
 
-inline bool operator==(const BoundingBox& lhs, const BoundingBox& rhs) {
-  if (lhs.type != rhs.type) {
+}  // namespace test
+
+inline bool operator==(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
+  return lhs.id == rhs.id && lhs.layer == rhs.layer &&
+         lhs.attributes() == rhs.attributes();
+}
+
+inline bool operator!=(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
+  return !(lhs == rhs);
+}
+
+inline bool operator==(const DynamicSceneGraphNode& lhs,
+                       const DynamicSceneGraphNode& rhs) {
+  return lhs.id == rhs.id && lhs.layer == rhs.layer &&
+         lhs.attributes() == rhs.attributes() && lhs.timestamp == rhs.timestamp;
+}
+
+inline bool operator!=(const DynamicSceneGraphNode& lhs,
+                       const DynamicSceneGraphNode& rhs) {
+  return !(lhs == rhs);
+}
+
+inline bool operator==(const SceneGraphEdge& lhs, const SceneGraphEdge& rhs) {
+  return lhs.source == rhs.source && lhs.target == rhs.target &&
+         lhs.attributes() == rhs.attributes();
+}
+
+inline bool operator!=(const SceneGraphEdge& lhs, const SceneGraphEdge& rhs) {
+  return !(lhs == rhs);
+}
+
+inline bool isSubset(const std::map<EdgeKey, SceneGraphEdge>& lhs,
+                     const std::map<EdgeKey, SceneGraphEdge>& rhs) {
+  for (const auto& [key, edge] : lhs) {
+    auto iter = rhs.find(key);
+    if (iter == rhs.end()) {
+      return false;
+    }
+
+    if (iter->second != edge) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
+  for (const auto& [node_id, node] : lhs.nodes()) {
+    const auto rhs_node = rhs.getNode(node_id);
+    if (!rhs_node) {
+      return false;
+    }
+
+    if (rhs_node->get() != *node) {
+      std::cout << "lhs:\n" <<  node->attributes() << std::endl;
+      std::cout << "rhs:\n" <<  rhs_node->get().attributes() << std::endl;
+      return false;
+    }
+  }
+
+  return isSubset(lhs.edges(), rhs.edges());
+}
+
+inline bool isSubset(const DynamicSceneGraphLayer& lhs,
+                     const DynamicSceneGraphLayer& rhs) {
+  for (const auto& node : lhs.nodes()) {
+    if (!node) {
+      continue;
+    }
+
+    const auto rhs_node = rhs.getNode(node->id);
+    if (!rhs_node) {
+      return false;
+    }
+
+    if (rhs_node->get() != *node) {
+      return false;
+    }
+  }
+
+  return isSubset(lhs.edges(), rhs.edges());
+}
+
+inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rhs) {
+  for (const auto& [layer_id, layer] : lhs.layers()) {
+    if (!rhs.hasLayer(layer_id)) {
+      return false;
+    }
+
+    const auto& rhs_layer = rhs.getLayer(layer_id);
+    const auto layers_equal =
+        isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
+    if (!layers_equal) {
+      return false;
+    }
+  }
+
+  for (const auto& [layer_id, layer_group] : lhs.dynamicLayers()) {
+    for (const auto& [prefix, layer] : layer_group) {
+      if (!rhs.hasLayer(layer_id, prefix)) {
+        return false;
+      }
+
+      const auto& rhs_layer = rhs.getLayer(layer_id, prefix);
+      const auto layers_equal =
+          isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
+      if (!layers_equal) {
+        return false;
+      }
+    }
+  }
+
+  if (!(isSubset(lhs.interlayer_edges(), rhs.interlayer_edges()) &&
+        isSubset(rhs.interlayer_edges(), lhs.interlayer_edges()))) {
     return false;
   }
 
-  switch (lhs.type) {
-    case BoundingBox::Type::INVALID:
-      return true;
-    case BoundingBox::Type::AABB:
-      return lhs.min == rhs.min && lhs.max == rhs.max;
-    case BoundingBox::Type::OBB:
-      return lhs.min == rhs.min && lhs.max == rhs.max &&
-             lhs.world_P_center == rhs.world_P_center &&
-             quaternionsEqual(Eigen::Quaternionf(lhs.world_R_center),
-                              Eigen::Quaternionf(rhs.world_R_center));
-    default:
-      return false;
+  if (!(isSubset(lhs.dynamic_interlayer_edges(), rhs.dynamic_interlayer_edges()) &&
+        isSubset(rhs.dynamic_interlayer_edges(), lhs.dynamic_interlayer_edges()))) {
+    return false;
   }
-}
 
-inline bool operator==(const NodeAttributes& lhs, const NodeAttributes& rhs) {
-  return lhs.position == rhs.position;
-}
+  const auto lhs_mesh = lhs.mesh();
+  const auto rhs_mesh = rhs.mesh();
+  if (!lhs_mesh && !rhs_mesh) {
+    return true;
+  }
 
-inline bool operator==(const SemanticNodeAttributes& lhs,
-                       const SemanticNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label;
-}
+  if (!lhs_mesh || !rhs_mesh) {
+    return false;
+  }
 
-inline bool operator==(const ObjectNodeAttributes& lhs,
-                       const ObjectNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label && lhs.registered == rhs.registered &&
-         quaternionsEqual(lhs.world_R_object, rhs.world_R_object);
-}
-
-inline bool operator==(const RoomNodeAttributes& lhs, const RoomNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label;
-}
-
-inline bool operator==(const PlaceNodeAttributes& lhs, const PlaceNodeAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label && lhs.distance == rhs.distance &&
-         lhs.num_basis_points == rhs.num_basis_points;
-}
-
-inline bool operator==(const EdgeAttributes& lhs, const EdgeAttributes& rhs) {
-  return lhs.weighted == rhs.weighted && lhs.weight == rhs.weight;
-}
-
-inline bool operator==(const Mesh& lhs, const Mesh& rhs) {
-  return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
-         lhs.has_labels == rhs.has_labels && lhs.points == rhs.points &&
-         lhs.colors == rhs.colors && lhs.stamps == rhs.stamps &&
-         lhs.first_seen_stamps == rhs.first_seen_stamps && lhs.labels == rhs.labels &&
-         lhs.faces == rhs.faces;
-}
-
-inline bool operator==(const KhronosObjectAttributes& lhs,
-                       const KhronosObjectAttributes& rhs) {
-  return lhs.position == rhs.position && lhs.name == rhs.name &&
-         lhs.color == rhs.color && lhs.bounding_box == rhs.bounding_box &&
-         lhs.semantic_label == rhs.semantic_label && lhs.registered == rhs.registered &&
-         quaternionsEqual(lhs.world_R_object, rhs.world_R_object) &&
-         lhs.first_observed_ns == rhs.first_observed_ns &&
-         lhs.last_observed_ns == rhs.last_observed_ns && lhs.mesh == rhs.mesh &&
-         lhs.trajectory_positions == rhs.trajectory_positions &&
-         lhs.trajectory_timestamps == rhs.trajectory_timestamps &&
-         lhs.dynamic_object_points == rhs.dynamic_object_points &&
-         lhs.details == rhs.details;
+  return *lhs_mesh == *rhs_mesh;
 }
 
 }  // namespace spark_dsg

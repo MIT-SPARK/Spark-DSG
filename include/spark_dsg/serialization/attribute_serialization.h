@@ -34,194 +34,191 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/node_attributes.h"
-#include "spark_dsg/serialization/versioning.h"
+#include <map>
+#include <nlohmann/json.hpp>
+#include <sstream>
 
-namespace spark_dsg {
-namespace attributes {
+#include "spark_dsg/serialization/attribute_registry.h"
+#include "spark_dsg/serialization/binary_serialization.h"
 
-template <typename Converter>
-void serialize(Converter& converter, const NodeAttributes& attrs) {
-  converter.write("position", attrs.position);
-  converter.write("last_update_time_ns", attrs.last_update_time_ns);
-  converter.write("is_active", attrs.is_active);
+namespace spark_dsg::serialization {
+
+struct SerializationImpl {};
+
+struct BinaryWriter : SerializationImpl {
+  BinaryWriter(BinarySerializer* serializer) : serializer_(serializer) {}
+
+  template <typename T>
+  void write(const T& value) {
+    serializer_->write(value);
+  }
+
+  BinarySerializer* serializer_;
+};
+
+struct BinaryReader : SerializationImpl {
+  BinaryReader(const BinaryDeserializer* deserializer) : deserializer_(deserializer) {}
+
+  template <typename T>
+  void read(T& value) {
+    deserializer_->read(value);
+  }
+
+  const BinaryDeserializer* deserializer_;
+};
+
+// for visitor set context
+struct JsonWriter : SerializationImpl {
+  explicit JsonWriter(nlohmann::json* record) : ref(record) {}
+  ~JsonWriter() = default;
+
+  template <typename T>
+  void write(const std::string& name, const T& value) {
+    (*ref)[name] = value;
+  }
+
+  nlohmann::json* ref = nullptr;
+};
+
+// for visitor set context
+struct JsonReader : SerializationImpl {
+  explicit JsonReader(const nlohmann::json* rec) : cref(rec) {}
+  ~JsonReader() = default;
+
+  template <typename T>
+  void read(const std::string& name, T& value) const {
+    if (!cref->contains(name)) {
+      return;
+    }
+
+    value = cref->at(name).get<T>();
+  }
+
+  const nlohmann::json* cref = nullptr;
+};
+
+class Visitor {
+ public:
+  static Visitor& instance();
+
+  template <typename T>
+  static void visit(const std::string& name, T& value);
+
+  template <typename Attrs>
+  static void to(nlohmann::json& record, const Attrs& attrs);
+
+  template <typename Attrs>
+  static void to(BinarySerializer& serializer, const Attrs& attrs);
+
+  template <typename Attrs>
+  static std::unique_ptr<Attrs> from(const AttributeFactory<Attrs>& factory,
+                                     const nlohmann::json& record);
+
+  template <typename Attrs>
+  static std::unique_ptr<Attrs> from(const AttributeFactory<Attrs>& factory,
+                                     const BinaryDeserializer& deserializer);
+
+ private:
+  Visitor();
+
+  enum class Type {
+    BINARY_WRITE,
+    BINARY_READ,
+    JSON_WRITE,
+    JSON_READ,
+  } type_;
+
+  std::unique_ptr<SerializationImpl> impl_;
+  inline thread_local static std::unique_ptr<Visitor> s_instance_ = nullptr;
+};
+
+template <typename T>
+void field(const std::string& name, T& value) {
+  Visitor::visit(name, value);
 }
 
-template <typename Converter>
-void deserialize(const Converter& converter, NodeAttributes& attrs) {
-  converter.read("position", attrs.position);
-  converter.read("last_update_time_ns", attrs.last_update_time_ns);
-  converter.read("is_active", attrs.is_active);
+template <typename T>
+void Visitor::visit(const std::string& name, T& value) {
+  auto& visitor = instance();
+  if (!visitor.impl_) {
+    // TODO(nathan) warn or do something here
+    return;
+  }
+
+  auto impl_pointer = visitor.impl_.get();
+  switch (visitor.type_) {
+    case Type::BINARY_WRITE:
+      static_cast<BinaryWriter*>(impl_pointer)->write(value);
+      break;
+    case Type::BINARY_READ:
+      static_cast<BinaryReader*>(impl_pointer)->read(value);
+      break;
+    case Type::JSON_WRITE:
+      static_cast<JsonWriter*>(impl_pointer)->write(name, value);
+      break;
+    case Type::JSON_READ:
+      static_cast<JsonReader*>(impl_pointer)->read(name, value);
+      break;
+    default:
+      // TODO(nathan) warn or do something here
+      break;
+  }
 }
 
-template <typename Converter>
-void serialize(Converter& converter, const SemanticNodeAttributes& attrs) {
-  serialize(converter, static_cast<const NodeAttributes&>(attrs));
-  converter.write("name", attrs.name);
-  converter.write("color", attrs.color);
-  converter.write("bounding_box", attrs.bounding_box);
-  converter.write("semantic_label", attrs.semantic_label);
-  converter.write("semantic_feature", attrs.semantic_feature);
+template <typename Attrs>
+void Visitor::to(nlohmann::json& record, const Attrs& attrs) {
+  auto& visitor = instance();
+  visitor.type_ = Type::JSON_WRITE;
+  visitor.impl_ = std::make_unique<JsonWriter>(&record);
+  record["type"] = attrs.registration().name;
+  attrs.serialization_info();
+  visitor.impl_.reset();
 }
 
-template <typename Converter>
-void deserialize(const Converter& converter, SemanticNodeAttributes& attrs) {
-  deserialize(converter, static_cast<NodeAttributes&>(attrs));
-  converter.read("name", attrs.name);
-  converter.read("color", attrs.color);
-  converter.read("bounding_box", attrs.bounding_box);
-  converter.read("semantic_label", attrs.semantic_label);
-  converter.read("semantic_feature", attrs.semantic_feature);
+template <typename Attrs>
+void Visitor::to(BinarySerializer& serializer, const Attrs& attrs) {
+  auto& visitor = instance();
+  visitor.type_ = Type::BINARY_WRITE;
+  visitor.impl_ = std::make_unique<BinaryWriter>(&serializer);
+  serializer.write(attrs.registration().type_id);
+  attrs.serialization_info();
+  visitor.impl_.reset();
 }
 
-template <typename Converter>
-void serialize(Converter& converter, const ObjectNodeAttributes& attrs) {
-  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
-  converter.write("mesh_connections", attrs.mesh_connections);
-  converter.write("registered", attrs.registered);
-  converter.write("world_R_object", attrs.world_R_object);
+template <typename Attrs>
+std::unique_ptr<Attrs> Visitor::from(const AttributeFactory<Attrs>& factory,
+                                     const nlohmann::json& record) {
+  auto& visitor = instance();
+  visitor.type_ = Type::JSON_READ;
+  visitor.impl_ = std::make_unique<JsonReader>(&record);
+
+  auto attrs = factory.create(record.at("type").get<std::string>());
+  if (!attrs) {
+    return nullptr;
+  }
+
+  attrs->serialization_info();
+  visitor.impl_.reset();
+  return attrs;
 }
 
-template <typename Converter>
-void deserialize(const Converter& converter, ObjectNodeAttributes& attrs) {
-  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
-  converter.read("mesh_connections", attrs.mesh_connections);
-  converter.read("registered", attrs.registered);
-  converter.read("world_R_object", attrs.world_R_object);
+template <typename Attrs>
+std::unique_ptr<Attrs> Visitor::from(const AttributeFactory<Attrs>& factory,
+                                     const BinaryDeserializer& deserializer) {
+  auto& visitor = instance();
+  visitor.type_ = Type::BINARY_READ;
+  visitor.impl_ = std::make_unique<BinaryReader>(&deserializer);
+
+  uint8_t type;
+  deserializer.read(type);
+  auto attrs = factory.create(type);
+  if (!attrs) {
+    return nullptr;
+  }
+
+  attrs->serialization_info();
+  visitor.impl_.reset();
+  return attrs;
 }
 
-template <typename Converter>
-void serialize(Converter& converter, const KhronosObjectAttributes& attrs) {
-  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
-  converter.write("first_observed_ns", attrs.first_observed_ns);
-  converter.write("last_observed_ns", attrs.last_observed_ns);
-  converter.write("mesh", attrs.mesh);
-  converter.write("trajectory_positions", attrs.trajectory_positions);
-  converter.write("trajectory_timestamps", attrs.trajectory_timestamps);
-  converter.write("dynamic_object_points", attrs.dynamic_object_points);
-  converter.write("details", attrs.details);
-}
-
-template <typename Converter>
-void deserialize(const Converter& converter, KhronosObjectAttributes& attrs) {
-  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
-  converter.read("first_observed_ns", attrs.first_observed_ns);
-  converter.read("last_observed_ns", attrs.last_observed_ns);
-  converter.read("mesh", attrs.mesh);
-  converter.read("trajectory_positions", attrs.trajectory_positions);
-  converter.read("trajectory_timestamps", attrs.trajectory_timestamps);
-  converter.read("dynamic_object_points", attrs.dynamic_object_points);
-  converter.read("details", attrs.details);
-}
-
-template <typename Converter>
-void serialize(Converter& converter, const RoomNodeAttributes& attrs) {
-  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
-}
-
-template <typename Converter>
-void deserialize(const Converter& converter, RoomNodeAttributes& attrs) {
-  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
-}
-
-template <typename Converter>
-void serialize(Converter& converter, const PlaceNodeAttributes& attrs) {
-  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
-  converter.write("distance", attrs.distance);
-  converter.write("num_basis_points", attrs.num_basis_points);
-  converter.write("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
-  converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
-  converter.write("mesh_vertex_labels", attrs.mesh_vertex_labels);
-  converter.write("deformation_connections", attrs.deformation_connections);
-  converter.write("real_place", attrs.real_place);
-  converter.write("predicted_place", attrs.predicted_place);
-  converter.write("active_frontier", attrs.active_frontier);
-  converter.write("frontier_scale", attrs.frontier_scale);
-  converter.write("orientation", attrs.orientation);
-  converter.write("need_cleanup", attrs.need_cleanup);
-  converter.write("num_frontier_voxels", attrs.num_frontier_voxels);
-}
-
-template <typename Converter>
-void deserialize(const Converter& converter, PlaceNodeAttributes& attrs) {
-  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
-  converter.read("distance", attrs.distance);
-  converter.read("num_basis_points", attrs.num_basis_points);
-  converter.read("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
-  converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
-  converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
-  converter.read("deformation_connections", attrs.deformation_connections);
-  converter.read("real_place", attrs.real_place);
-  converter.read("predicted_place", attrs.predicted_place);
-  converter.read("active_frontier", attrs.active_frontier);
-  converter.read("frontier_scale", attrs.frontier_scale);
-  converter.read("orientation", attrs.orientation);
-  converter.read("need_cleanup", attrs.need_cleanup);
-  converter.read("num_frontier_voxels", attrs.num_frontier_voxels);
-}
-
-template <typename Converter>
-void serialize(Converter& converter, const Place2dNodeAttributes& attrs) {
-  serialize(converter, static_cast<const SemanticNodeAttributes&>(attrs));
-  converter.write("boundary", attrs.boundary);
-  converter.write("ellipse_centroid", attrs.ellipse_centroid);
-  converter.write("ellipse_matrix_compress", attrs.ellipse_matrix_compress);
-  converter.write("ellipse_matrix_expand", attrs.ellipse_matrix_expand);
-  converter.write("pcl_boundary_connections", attrs.pcl_boundary_connections);
-  converter.write("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
-  converter.write("pcl_mesh_connections", attrs.pcl_mesh_connections);
-  converter.write("mesh_vertex_labels", attrs.mesh_vertex_labels);
-  converter.write("deformation_connections", attrs.deformation_connections);
-  converter.write("need_cleanup_splitting", attrs.need_cleanup_splitting);
-  converter.write("has_active_mesh_indices", attrs.has_active_mesh_indices);
-}
-
-template <typename Converter>
-void deserialize(const Converter& converter, Place2dNodeAttributes& attrs) {
-  deserialize(converter, static_cast<SemanticNodeAttributes&>(attrs));
-  converter.read("boundary", attrs.boundary);
-  converter.read("ellipse_centroid", attrs.ellipse_centroid);
-  converter.read("ellipse_matrix_compress", attrs.ellipse_matrix_compress);
-  converter.read("ellipse_matrix_expand", attrs.ellipse_matrix_expand);
-  converter.read("pcl_boundary_connections", attrs.pcl_boundary_connections);
-  converter.read("voxblox_mesh_connections", attrs.voxblox_mesh_connections);
-  converter.read("pcl_mesh_connections", attrs.pcl_mesh_connections);
-  converter.read("mesh_vertex_labels", attrs.mesh_vertex_labels);
-  converter.read("deformation_connections", attrs.deformation_connections);
-  converter.read("need_cleanup_splitting", attrs.need_cleanup_splitting);
-  converter.read("has_active_mesh_indices", attrs.has_active_mesh_indices);
-}
-
-template <typename Converter>
-void serialize(Converter& converter, const AgentNodeAttributes& attrs) {
-  serialize(converter, static_cast<const NodeAttributes&>(attrs));
-  converter.write("world_R_body", attrs.world_R_body);
-  converter.write("external_key", attrs.external_key);
-  converter.write("dbow_ids", attrs.dbow_ids);
-  converter.write("dbow_values", attrs.dbow_values);
-}
-
-template <typename Converter>
-void deserialize(const Converter& converter, AgentNodeAttributes& attrs) {
-  deserialize(converter, static_cast<NodeAttributes&>(attrs));
-  converter.read("world_R_body", attrs.world_R_body);
-  converter.read("external_key", attrs.external_key);
-  converter.read("dbow_ids", attrs.dbow_ids);
-  converter.read("dbow_values", attrs.dbow_values);
-}
-
-template <typename Converter>
-void serialize(Converter& converter, const EdgeAttributes& attrs) {
-  converter.write("weighted", attrs.weighted);
-  converter.write("weight", attrs.weight);
-}
-
-template <typename Converter>
-void deserialize(const Converter& converter, EdgeAttributes& attrs) {
-  converter.read("weighted", attrs.weighted);
-  converter.read("weight", attrs.weight);
-}
-
-}  // namespace attributes
-}  // namespace spark_dsg
+}  // namespace spark_dsg::serialization

@@ -257,4 +257,6 @@ class Mesh {
   Faces faces;
 };
 
+bool operator==(const Mesh& lhs, const Mesh& rhs);
+
 }  // namespace spark_dsg
