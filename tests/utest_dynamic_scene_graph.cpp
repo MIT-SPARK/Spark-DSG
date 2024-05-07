@@ -37,12 +37,6 @@
 
 namespace spark_dsg {
 
-using Node = SceneGraphNode;
-using Edge = SceneGraphEdge;
-using Edges = DynamicSceneGraph::Edges;
-using NodeRef = DynamicSceneGraph::NodeRef;
-using EdgeRef = DynamicSceneGraph::EdgeRef;
-
 std::shared_ptr<Mesh> makeMesh(size_t num_points) {
   auto mesh = std::make_shared<Mesh>();
 
@@ -107,9 +101,9 @@ TEST(DynamicSceneGraphTests, EmplaceNodeInvariants) {
   EXPECT_TRUE(layer1.hasNode(0));
   EXPECT_FALSE(layer2.hasNode(0));
 
-  std::optional<NodeRef> node_opt = layer1.getNode(0);
+  auto node_opt = layer1.findNode(0);
   ASSERT_TRUE(node_opt);
-  const Node& node = *node_opt;
+  const auto& node = *node_opt;
   EXPECT_EQ(1u, node.layer);
   EXPECT_EQ(0u, node.id);
 
@@ -135,9 +129,9 @@ TEST(DynamicSceneGraphTests, AddAndUpdateNode) {
     EXPECT_EQ(1u, graph.numNodes());
     EXPECT_TRUE(graph.hasNode(0));
 
-    auto node_opt = graph.getNode(0);
+    auto node_opt = graph.findNode(0);
     ASSERT_TRUE(node_opt);
-    const Node& node = *node_opt;
+    const auto& node = *node_opt;
     EXPECT_EQ(1u, node.layer);
     EXPECT_EQ(0u, node.id);
     EXPECT_NEAR((node.attributes().position - pos1).norm(), 0.0, 1.0e-9);
@@ -151,9 +145,9 @@ TEST(DynamicSceneGraphTests, AddAndUpdateNode) {
     EXPECT_EQ(1u, graph.numNodes());
     EXPECT_TRUE(graph.hasNode(0));
 
-    auto node_opt = graph.getNode(0);
+    auto node_opt = graph.findNode(0);
     ASSERT_TRUE(node_opt);
-    const Node& node = *node_opt;
+    const auto& node = *node_opt;
     EXPECT_EQ(1u, node.layer);
     EXPECT_EQ(0u, node.id);
     EXPECT_NEAR((node.attributes().position - pos2).norm(), 0.0, 1.0e-9);
@@ -168,8 +162,8 @@ TEST(DynamicSceneGraphTests, InsertNodeInvariants) {
   const auto& layer1 = graph.getLayer(1);
   const auto& layer2 = graph.getLayer(2);
 
-  Node::Ptr valid_node =
-      std::make_unique<Node>(0, 1, std::make_unique<NodeAttributes>());
+  auto valid_node =
+      std::make_unique<SceneGraphNode>(0, 1, std::make_unique<NodeAttributes>());
   EXPECT_TRUE(graph.insertNode(std::move(valid_node)));
   EXPECT_EQ(1u, graph.numNodes());
   EXPECT_EQ(1u, layer1.numNodes());
@@ -179,17 +173,17 @@ TEST(DynamicSceneGraphTests, InsertNodeInvariants) {
   EXPECT_FALSE(layer2.hasNode(0));
 
   // we already have this node, so we should fail
-  Node::Ptr repeat_node =
-      std::make_unique<Node>(0, 1, std::make_unique<NodeAttributes>());
+  auto repeat_node =
+      std::make_unique<SceneGraphNode>(0, 1, std::make_unique<NodeAttributes>());
   EXPECT_FALSE(graph.insertNode(std::move(repeat_node)));
 
   // invalid layers (0) should also get rejected
-  Node::Ptr invalid_node =
-      std::make_unique<Node>(1, 0, std::make_unique<NodeAttributes>());
+  auto invalid_node =
+      std::make_unique<SceneGraphNode>(1, 0, std::make_unique<NodeAttributes>());
   EXPECT_FALSE(graph.insertNode(std::move(invalid_node)));
 
   // null nodes should also get rejected
-  Node::Ptr null_node(nullptr);
+  std::unique_ptr<SceneGraphNode> null_node(nullptr);
   EXPECT_FALSE(graph.insertNode(std::move(null_node)));
 }
 
@@ -256,17 +250,17 @@ TEST(DynamicSceneGraphTests, AddOrUpdateEdge) {
   EXPECT_TRUE(graph.addOrUpdateEdge(0, 1, std::make_unique<EdgeAttributes>(1.0)));
   EXPECT_EQ(1u, graph.numEdges());
   ASSERT_TRUE(graph.hasEdge(0, 1));
-  EXPECT_EQ(graph.getEdge(0, 1)->get().info->weight, 1.0);
+  EXPECT_EQ(graph.getEdge(0, 1).info->weight, 1.0);
   EXPECT_TRUE(graph.addOrUpdateEdge(0, 1, std::make_unique<EdgeAttributes>(2.0)));
-  EXPECT_EQ(graph.getEdge(0, 1)->get().info->weight, 2.0);
+  EXPECT_EQ(graph.getEdge(0, 1).info->weight, 2.0);
 
   // add and update an interlayer edge
   EXPECT_TRUE(graph.addOrUpdateEdge(0, 2, std::make_unique<EdgeAttributes>(1.0)));
   EXPECT_EQ(2u, graph.numEdges());
   ASSERT_TRUE(graph.hasEdge(0, 2));
-  EXPECT_EQ(graph.getEdge(0, 2)->get().info->weight, 1.0);
+  EXPECT_EQ(graph.getEdge(0, 2).info->weight, 1.0);
   EXPECT_TRUE(graph.addOrUpdateEdge(0, 2, std::make_unique<EdgeAttributes>(2.0)));
-  EXPECT_EQ(graph.getEdge(0, 2)->get().info->weight, 2.0);
+  EXPECT_EQ(graph.getEdge(0, 2).info->weight, 2.0);
 }
 
 // Test that we can force switching a parent edge
@@ -277,9 +271,9 @@ TEST(DynamicSceneGraphTests, InsertNewParent) {
   EXPECT_TRUE(graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 2, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(3, 3, std::make_unique<NodeAttributes>()));
-  const SceneGraphNode& child = graph.getNode(0).value();
-  const SceneGraphNode& p1 = graph.getNode(2).value();
-  const SceneGraphNode& p2 = graph.getNode(3).value();
+  const auto& child = graph.getNode(0);
+  const auto& p1 = graph.getNode(2);
+  const auto& p2 = graph.getNode(3);
 
   EXPECT_TRUE(graph.insertEdge(0, 2));
   EXPECT_EQ(1u, graph.numEdges());
@@ -326,19 +320,19 @@ TEST(DynamicSceneGraphTests, EdgeAttributesCorrect) {
   EXPECT_TRUE(graph.hasEdge(0, 1));
   EXPECT_EQ(1u, graph.numEdges());
 
-  std::optional<EdgeRef> edge_opt = graph.getEdge(0, 1);
+  auto edge_opt = graph.findEdge(0, 1);
   ASSERT_TRUE(edge_opt);
-  const Edge& edge = *edge_opt;
+  const auto& edge = *edge_opt;
   EXPECT_EQ(0u, edge.source);
   EXPECT_EQ(1u, edge.target);
   ASSERT_TRUE(edge.info != nullptr);
   EXPECT_TRUE(edge.info->weighted);
   EXPECT_EQ(0.5, edge.info->weight);
 
-  std::optional<EdgeRef> swapped_edge_opt = graph.getEdge(1, 0);
+  auto swapped_edge_opt = graph.findEdge(1, 0);
   ASSERT_TRUE(swapped_edge_opt);
 
-  const Edge& swapped_edge = *swapped_edge_opt;
+  const auto& swapped_edge = *swapped_edge_opt;
   // note that accessing an edge from the reverse direction
   // that is was added doesn't change the info and keeps the
   // source and target the same as how the edge was added
@@ -408,9 +402,9 @@ TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
   EXPECT_EQ(7u, graph.numNodes());
   EXPECT_FALSE(graph.hasNode(5));
   EXPECT_TRUE(graph.hasEdge(2, 4));
-  ASSERT_TRUE(graph.getNode(4)->get().hasParent());
-  EXPECT_EQ(2u, graph.getNode(4)->get().getParent().value());
-  EXPECT_EQ(std::set<NodeId>{4}, graph.getNode(2)->get().children());
+  ASSERT_TRUE(graph.getNode(4).hasParent());
+  EXPECT_EQ(2u, graph.getNode(4).getParent().value());
+  EXPECT_EQ(std::set<NodeId>{4}, graph.getNode(2).children());
 
   // merge node 2 into node 0
   EXPECT_TRUE(graph.mergeNodes(2, 0));
@@ -418,9 +412,9 @@ TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
   EXPECT_EQ(6u, graph.numNodes());
   EXPECT_FALSE(graph.hasNode(2));
   EXPECT_TRUE(graph.hasEdge(0, 4));
-  ASSERT_TRUE(graph.getNode(4)->get().hasParent());
-  EXPECT_EQ(0u, graph.getNode(4)->get().getParent().value());
-  EXPECT_EQ(std::set<NodeId>{4}, graph.getNode(0)->get().children());
+  ASSERT_TRUE(graph.getNode(4).hasParent());
+  EXPECT_EQ(0u, graph.getNode(4).getParent().value());
+  EXPECT_EQ(std::set<NodeId>{4}, graph.getNode(0).children());
 
   // check that we clean up old interlayer edges
   EXPECT_TRUE(graph.mergeNodes(0, 6));
@@ -476,8 +470,8 @@ TEST(DynamicSceneGraphTests, RemoveEdgeCorrect) {
 
   std::vector<NodeId> nodes{0, 1, 2};
   for (const auto& node_id : nodes) {
-    ASSERT_TRUE(graph.getNode(node_id));
-    const Node& node = *(graph.getNode(node_id));
+    ASSERT_TRUE(graph.findNode(node_id));
+    const auto& node = graph.getNode(node_id);
     EXPECT_FALSE(node.hasSiblings());
     EXPECT_FALSE(node.hasParent());
     EXPECT_FALSE(node.hasChildren());
@@ -490,8 +484,8 @@ TEST(DynamicSceneGraphTests, RemoveEdgeCorrect) {
   EXPECT_EQ(0u, graph.numEdges());
 
   for (const auto& node_id : nodes) {
-    ASSERT_TRUE(graph.getNode(node_id));
-    const Node& node = *(graph.getNode(node_id));
+    ASSERT_TRUE(graph.findNode(node_id));
+    const auto& node = graph.getNode(node_id);
     EXPECT_FALSE(node.hasSiblings());
     EXPECT_FALSE(node.hasParent());
     EXPECT_FALSE(node.hasChildren());
@@ -550,8 +544,7 @@ TEST(DynamicSceneGraphTests, EmplaceDynamicNodeCorrect) {
 
   EXPECT_TRUE(graph.emplaceNode(2, 'a', 1s, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.hasNode(NodeSymbol('a', 0)));
-  EXPECT_TRUE(graph.getNode(NodeSymbol('a', 0)));
-  EXPECT_TRUE(graph.getDynamicNode(NodeSymbol('a', 0)));
+  EXPECT_TRUE(graph.findNode(NodeSymbol('a', 0)));
   EXPECT_EQ(1u, graph.numNodes());
   EXPECT_EQ(1u, graph.numDynamicNodes());
 
@@ -566,8 +559,7 @@ TEST(DynamicSceneGraphTests, EmplaceDynamicNodeCorrect) {
   EXPECT_EQ(2u, graph.numNodes());
   EXPECT_EQ(1u, graph.numDynamicNodes());
   EXPECT_TRUE(graph.hasNode(NodeSymbol('o', 0)));
-  EXPECT_TRUE(graph.getNode(NodeSymbol('o', 0)));
-  EXPECT_FALSE(graph.getDynamicNode(NodeSymbol('o', 0)));
+  EXPECT_TRUE(graph.findNode(NodeSymbol('o', 0)));
 
   // repeat static nodes (of dynamic nodes) don't work
   EXPECT_FALSE(
@@ -586,7 +578,7 @@ TEST(DynamicSceneGraphTests, updateFromInvalidLayerCorrect) {
   DynamicSceneGraph graph({1, 2});
 
   IsolatedSceneGraphLayer separate_layer(5);
-  std::unique_ptr<Edges> edges(nullptr);
+  std::unique_ptr<DynamicSceneGraph::Edges> edges(nullptr);
   EXPECT_FALSE(graph.updateFromLayer(separate_layer, std::move(edges)));
   EXPECT_EQ(0u, graph.numNodes());
   EXPECT_EQ(0u, graph.numEdges());
@@ -598,7 +590,7 @@ TEST(DynamicSceneGraphTests, updateFromEmptyLayerCorrect) {
   DynamicSceneGraph graph({1, 2});
 
   IsolatedSceneGraphLayer separate_layer(1);
-  std::unique_ptr<Edges> edges(nullptr);
+  std::unique_ptr<DynamicSceneGraph::Edges> edges(nullptr);
   EXPECT_TRUE(graph.updateFromLayer(separate_layer, std::move(edges)));
   EXPECT_EQ(0u, graph.numNodes());
   EXPECT_EQ(0u, graph.numEdges());
@@ -617,7 +609,7 @@ TEST(DynamicSceneGraphTests, updateFromLayerCorrect) {
   IsolatedSceneGraphLayer separate_layer(1);
   separate_layer.emplaceNode(1, std::make_unique<NodeAttributes>());
   separate_layer.emplaceNode(5, std::make_unique<NodeAttributes>());
-  std::unique_ptr<Edges> edges(new Edges);
+  auto edges = std::make_unique<DynamicSceneGraph::Edges>();
   edges->emplace(std::piecewise_construct,
                  std::forward_as_tuple(5, 2),
                  std::forward_as_tuple(5, 2, std::make_unique<EdgeAttributes>()));
@@ -642,7 +634,7 @@ TEST(DynamicSceneGraphTests, updateFromLayerWithSiblings) {
 
   IsolatedSceneGraphLayer separate_layer(1);
   separate_layer.emplaceNode(2, std::make_unique<NodeAttributes>());
-  std::unique_ptr<Edges> edges(new Edges);
+  auto edges = std::make_unique<DynamicSceneGraph::Edges>();
 
   EXPECT_TRUE(graph.updateFromLayer(separate_layer, std::move(edges)));
   EXPECT_EQ(2u, graph.numNodes());
@@ -840,8 +832,8 @@ TEST(DynamicSceneGraphTests, getPositionCorrect) {
 void testParentRelationship(const DynamicSceneGraph& graph,
                             NodeId parent,
                             NodeId child) {
-  const SceneGraphNode& parent_node = *graph.getNode(parent);
-  const SceneGraphNode& child_node = *graph.getNode(child);
+  const auto& parent_node = graph.getNode(parent);
+  const auto& child_node = graph.getNode(child);
 
   EXPECT_TRUE(parent_node.children().count(child_node.id))
       << NodeSymbol(child).getLabel() << " is not child of "
@@ -856,8 +848,8 @@ void testParentRelationship(const DynamicSceneGraph& graph,
 void testSiblingRelationship(const DynamicSceneGraph& graph,
                              NodeId source,
                              NodeId target) {
-  const SceneGraphNode& source_node = *graph.getNode(source);
-  const SceneGraphNode& target_node = *graph.getNode(target);
+  const auto& source_node = graph.getNode(source);
+  const auto& target_node = graph.getNode(target);
 
   EXPECT_TRUE(source_node.siblings().count(target_node.id))
       << NodeSymbol(target).getLabel() << " is not a sibling of "

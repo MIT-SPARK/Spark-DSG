@@ -156,15 +156,18 @@ TEST(EdgeContainerTests, StaleInvariants) {
   }
 
   for (size_t i = 0; i < 3; ++i) {
-    container.get(0, i);
+    EXPECT_NE(container.find(0, i), nullptr);
   }
+
   for (const auto& key_info_pair : container.stale_edges) {
     EXPECT_EQ(key_info_pair.first.k2 >= 3, key_info_pair.second);
   }
 
+  const auto const_container = const_cast<const EdgeContainer*>(&container);
   for (size_t i = 3; i < 6; ++i) {
-    const_cast<const EdgeContainer*>(&container)->get(0, i);
+    EXPECT_NE(const_container->find(0, i), nullptr);
   }
+
   for (const auto& key_info_pair : container.stale_edges) {
     EXPECT_EQ(key_info_pair.first.k2 >= 6, key_info_pair.second);
   }

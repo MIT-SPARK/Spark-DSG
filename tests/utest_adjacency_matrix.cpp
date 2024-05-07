@@ -74,7 +74,7 @@ TEST_P(AdjacencyMatrixFixture, AdjacencyMatrixCorrect) {
   if (config.weighted) {
     A = getAdjacencyMatrix(
         layer, config.ordering, [&](const NodeId source, const NodeId target) {
-          return layer.getEdge(source, target)->get().info->weight;
+          return layer.getEdge(source, target).info->weight;
         });
   } else {
     A = getAdjacencyMatrix(layer, config.ordering);
@@ -107,7 +107,7 @@ TEST_P(AdjacencyMatrixFixture, AdjacencyMatrixCorrect) {
   if (config.weighted) {
     sparse_A = getSparseAdjacencyMatrix(
         layer, config.ordering, [&](const NodeId source, const NodeId target) {
-          return layer.getEdge(source, target)->get().info->weight;
+          return layer.getEdge(source, target).info->weight;
         });
   } else {
     sparse_A = getSparseAdjacencyMatrix(layer, config.ordering);
@@ -127,7 +127,7 @@ TEST_P(AdjacencyMatrixFixture, LaplacianCorrect) {
   if (config.weighted) {
     L = getLaplacian(
         layer, config.ordering, [&](const NodeId source, const NodeId target) {
-          return layer.getEdge(source, target)->get().info->weight;
+          return layer.getEdge(source, target).info->weight;
         });
   } else {
     L = getLaplacian(layer, config.ordering);
@@ -162,7 +162,7 @@ TEST_P(AdjacencyMatrixFixture, LaplacianCorrect) {
   if (config.weighted) {
     sparse_L = getSparseLaplacian(
         layer, config.ordering, [&](const NodeId source, const NodeId target) {
-          return layer.getEdge(source, target)->get().info->weight;
+          return layer.getEdge(source, target).info->weight;
         });
   } else {
     sparse_L = getSparseLaplacian(layer, config.ordering);

@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <limits>
 #include <list>
@@ -324,6 +325,12 @@ class BinarySerializer {
     }
   }
 
+  template <typename T, typename P>
+  void write(const std::chrono::duration<T, P>& value) {
+    const auto temp = std::chrono::duration_cast<std::chrono::nanoseconds>(value);
+    write(temp.count());
+  }
+
   //! Write specialization for bool
   void write(bool value);
 
@@ -393,6 +400,13 @@ class BinaryDeserializer {
       read(opt_value);
       value = opt_value;
     }
+  }
+
+  template <typename T, typename P>
+  void read(std::chrono::duration<T, P>& value) const {
+    std::chrono::nanoseconds::rep temp;
+    read(temp);
+    value = std::chrono::nanoseconds(temp);
   }
 
   //! Specialization for bool value

@@ -42,14 +42,8 @@ class DynamicSceneGraphLayer : public BaseLayer {
  public:
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<DynamicSceneGraphLayer>;
-  //! node type of the layer
-  using Node = DynamicSceneGraphNode;
-  //! node reference type of the layer
-  using NodeRef = BaseLayer::DynamicNodeRef;
   //! node container for the layer
-  using Nodes = std::vector<Node::Ptr>;
-  //! edge type for the layer
-  using Edge = SceneGraphEdge;
+  using Nodes = std::vector<SceneGraphNode::Ptr>;
   //! edge container type for the layer
   using Edges = EdgeContainer::Edges;
 
@@ -73,13 +67,17 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   bool hasEdgeByIndex(size_t source_index, size_t target_index) const;
 
-  std::optional<NodeRef> getNode(NodeId node_id) const;
+  const SceneGraphNode* findNode(NodeId node_id) const override;
 
-  std::optional<NodeRef> getNodeByIndex(size_t node_id) const;
+  const SceneGraphNode* findNodeByIndex(size_t index) const;
 
-  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const override;
+  const SceneGraphNode& getNodeByIndex(size_t node_id) const;
 
-  std::optional<EdgeRef> getEdgeByIndex(size_t source_index, size_t target_index) const;
+  const SceneGraphEdge* findEdge(NodeId source, NodeId target) const override;
+
+  const SceneGraphEdge* findEdgeByIndex(size_t source, size_t target) const;
+
+  const SceneGraphEdge& getEdgeByIndex(size_t source_index, size_t target_index) const;
 
   bool insertEdge(NodeId source,
                   NodeId target,

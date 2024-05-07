@@ -36,12 +36,12 @@
 
 namespace spark_dsg {
 
+using Edge = EdgeContainer::Edge;
+
 SceneGraphEdge::SceneGraphEdge(NodeId source, NodeId target, AttrPtr&& info)
     : source(source), target(target), info(std::move(info)) {}
 
 SceneGraphEdge::~SceneGraphEdge() = default;
-
-using Edge = EdgeContainer::Edge;
 
 void EdgeContainer::insert(NodeId source,
                            NodeId target,
@@ -61,28 +61,46 @@ void EdgeContainer::remove(NodeId source, NodeId target) {
   edges.erase(key);
 }
 
+void EdgeContainer::rewire(NodeId source,
+                           NodeId target,
+                           NodeId new_source,
+                           NodeId new_target) {
+  EdgeKey key(source, target);
+  const auto prev = find(key);
+  if (!prev) {
+    return;
+  }
+
+  auto attrs = prev->info->clone();
+  edge_status.at(key) = EdgeStatus::MERGED;
+  remove(source, target);
+  insert(new_source, new_target, std::move(attrs));
+}
+
 bool EdgeContainer::contains(NodeId source, NodeId target) const {
   return edges.count(EdgeKey(source, target));
 }
+
+size_t EdgeContainer::size() const { return edges.size(); }
 
 void EdgeContainer::reset() {
   edges.clear();
   edge_status.clear();
 }
 
-void EdgeContainer::rewire(NodeId source,
-                           NodeId target,
-                           NodeId new_source,
-                           NodeId new_target) {
-  auto attrs = get(source, target).info->clone();
-  edge_status.at(EdgeKey(source, target)) = EdgeStatus::MERGED;
-  remove(source, target);
-  insert(new_source, new_target, std::move(attrs));
-}
-
 EdgeStatus EdgeContainer::getStatus(NodeId source, NodeId target) const {
   const auto iter = edge_status.find(EdgeKey(source, target));
   return (iter == edge_status.end()) ? EdgeStatus::NONEXISTENT : iter->second;
+}
+
+const Edge* EdgeContainer::find(NodeId source, NodeId target) const {
+  const EdgeKey key(source, target);
+  return find(key);
+}
+
+Edge* EdgeContainer::find(NodeId source, NodeId target) {
+  const EdgeKey key(source, target);
+  return find(key);
 }
 
 void EdgeContainer::getNew(std::vector<EdgeKey>& new_edges, bool clear_new) {
@@ -123,5 +141,16 @@ void EdgeContainer::setStale() {
     stale_edges[key_edge_pair.first] = true;
   }
 }
+
+Edge* EdgeContainer::find(const EdgeKey& key) const {
+  auto iter = edges.find(key);
+  if (iter == edges.end()) {
+    return nullptr;
+  }
+
+  stale_edges[key] = false;
+  return const_cast<SceneGraphEdge*>(&iter->second);
+}
+
 
 }  // namespace spark_dsg

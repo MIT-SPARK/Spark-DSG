@@ -37,9 +37,6 @@
 
 namespace spark_dsg {
 
-using Node = DynamicSceneGraphLayer::Node;
-using Edge = DynamicSceneGraphLayer::Edge;
-
 class TestableDynamicLayer : public DynamicSceneGraphLayer {
  public:
   TestableDynamicLayer(spark_dsg::LayerId id, char prefix)
@@ -72,14 +69,15 @@ TEST(DynamicSceneGraphLayerTests, EmplaceNodeInvariants) {
   EXPECT_FALSE(layer.hasNode(NodeSymbol(layer_prefix + 1, 0)));
   EXPECT_TRUE(layer.hasNodeByIndex(0));
 
-  EXPECT_FALSE(layer.getNodeByIndex(NodeSymbol(layer_prefix + 1, 0)));
-  EXPECT_TRUE(layer.getNodeByIndex(0));
-  auto node_opt = layer.getNode(NodeSymbol(layer_prefix, 0));
+  EXPECT_FALSE(layer.findNodeByIndex(NodeSymbol(layer_prefix + 1, 0)));
+  EXPECT_TRUE(layer.findNodeByIndex(0));
+  auto node_opt = layer.findNode(NodeSymbol(layer_prefix, 0));
   ASSERT_TRUE(node_opt);
-  const Node& node = *node_opt;
+  const auto& node = *node_opt;
   EXPECT_EQ(1u, node.layer);
   EXPECT_EQ(NodeSymbol(layer_prefix, 0), node.id);
-  EXPECT_NEAR(1.0, std::chrono::duration<double>(node.timestamp).count(), 1.0e-9);
+  EXPECT_TRUE(node.timestamp);
+  EXPECT_NEAR(1.0, std::chrono::duration<double>(*node.timestamp).count(), 1.0e-9);
 
   EXPECT_FALSE(
       layer.emplaceNode(std::chrono::seconds(1), std::make_unique<NodeAttributes>()));
@@ -161,20 +159,20 @@ TEST(DynamicSceneGraphLayerTests, EdgeAttributesCorrect) {
   EXPECT_TRUE(layer.hasEdgeByIndex(0, 1));
   EXPECT_EQ(1u, layer.numEdges());
 
-  EXPECT_TRUE(layer.getEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
-  auto edge_opt = layer.getEdgeByIndex(0, 1);
+  EXPECT_TRUE(layer.findEdge(NodeSymbol('a', 0), NodeSymbol('a', 1)));
+  auto edge_opt = layer.findEdgeByIndex(0, 1);
   ASSERT_TRUE(edge_opt);
-  const Edge& edge = *edge_opt;
+  const auto& edge = *edge_opt;
   EXPECT_EQ(NodeSymbol('a', 0), edge.source);
   EXPECT_EQ(NodeSymbol('a', 1), edge.target);
   ASSERT_TRUE(edge.info != nullptr);
   EXPECT_TRUE(edge.info->weighted);
   EXPECT_EQ(0.5, edge.info->weight);
 
-  auto swapped_edge_opt = layer.getEdgeByIndex(1, 0);
+  auto swapped_edge_opt = layer.findEdgeByIndex(1, 0);
   ASSERT_TRUE(swapped_edge_opt);
 
-  const Edge& swapped_edge = *swapped_edge_opt;
+  const auto& swapped_edge = *swapped_edge_opt;
   // note that accessing an edge from the reverse direction
   // that is was added doesn't change the info and keeps the
   // source and target the same as how the edge was added
@@ -218,17 +216,16 @@ TEST(DynamicSceneGraphLayerTests, BasicEdgeIterationCorrect) {
         layer.emplaceNode(std::chrono::seconds(i), std::make_unique<NodeAttributes>()));
   }
 
-  std::set<NodeId> expected_targets{1, 2, 3, 4};
-
   // nodes may be stored unordered in the future
   std::set<NodeId> actual_targets;
   for (const auto& id_edge_pair : layer.edges()) {
-    const Edge& edge = id_edge_pair.second;
+    const auto& edge = id_edge_pair.second;
     ASSERT_TRUE(edge.info != nullptr);
     EXPECT_EQ(edge.source + 1, edge.target);
     actual_targets.insert(edge.target);
   }
 
+  std::set<NodeId> expected_targets{1, 2, 3, 4};
   EXPECT_EQ(expected_targets, actual_targets);
 }
 

@@ -116,21 +116,13 @@ struct EdgeContainer {
 
   bool contains(NodeId source, NodeId target) const;
 
-  inline size_t size() const { return edges.size(); }
+  size_t size() const;
 
   void reset();
 
-  inline const Edge& get(NodeId source, NodeId target) const {
-    const EdgeKey key(source, target);
-    stale_edges[key] = false;
-    return edges.at(key);
-  }
+  Edge* find(NodeId source, NodeId target);
 
-  inline Edge& get(NodeId source, NodeId target) {
-    const EdgeKey key(source, target);
-    stale_edges[key] = false;
-    return edges.at(key);
-  }
+  const Edge* find(NodeId source, NodeId target) const;
 
   EdgeStatus getStatus(NodeId source, NodeId target) const;
 
@@ -143,6 +135,9 @@ struct EdgeContainer {
   Edges edges;
   EdgeStatusMap edge_status;
   mutable std::map<EdgeKey, bool> stale_edges;
+
+ protected:
+  Edge* find(const EdgeKey& key) const;
 };
 
 }  // namespace spark_dsg

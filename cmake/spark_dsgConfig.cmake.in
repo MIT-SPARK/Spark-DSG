@@ -9,6 +9,4 @@ if(NOT TARGET spark_dsg::spark_dsg)
 endif()
 
 set(spark_dsg_LIBRARIES spark_dsg::spark_dsg)
-
 set(spark_dsg_FOUND_CATKIN_PROJECT TRUE)
-

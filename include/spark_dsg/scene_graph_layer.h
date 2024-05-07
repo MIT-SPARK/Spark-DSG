@@ -55,18 +55,14 @@ class SceneGraphLayer : public BaseLayer {
  public:
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<SceneGraphLayer>;
-  //! node type of the layer
-  using Node = SceneGraphNode;
   //! node container for the layer
-  using Nodes = std::map<NodeId, Node::Ptr>;
+  using Nodes = std::map<NodeId, SceneGraphNode::Ptr>;
   //! type tracking the status of nodes
   using NodeCheckup = std::map<NodeId, NodeStatus>;
-  //! edge type for the layer
-  using Edge = SceneGraphEdge;
   //! edge container type for the layer
   using Edges = EdgeContainer::Edges;
   //! callback function for filtering nodes
-  using NodeChecker = std::function<bool(const Node&)>;
+  using NodeChecker = std::function<bool(const SceneGraphNode&)>;
 
   friend class DynamicSceneGraph;
   friend class SceneGraphLogger;
@@ -126,7 +122,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param node_id node to get
    * @returns a potentially valid node constant reference
    */
-  std::optional<NodeRef> getNode(NodeId node_id) const;
+  const SceneGraphNode* findNode(NodeId node_id) const override;
 
   /**
    * @brief Get a particular edge in the layer
@@ -139,7 +135,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param target target of edge to get
    * @returns a potentially valid edge constant reference
    */
-  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const override;
+  const SceneGraphEdge* findEdge(NodeId source, NodeId target) const override;
 
   /**
    * @brief remove an edge if it exists
@@ -209,9 +205,6 @@ class SceneGraphLayer : public BaseLayer {
    */
   virtual SceneGraphLayer::Ptr clone(const NodeChecker& is_valid = {}) const;
 
-  //! ID of the layer
-  const LayerId id;
-
   /**
    * @brief Get the immediate neighborhood of a node via BFS
    * @param node Node to get the neighborhood of
@@ -226,6 +219,9 @@ class SceneGraphLayer : public BaseLayer {
    */
   std::unordered_set<NodeId> getNeighborhood(const std::unordered_set<NodeId>& nodes,
                                              size_t num_hops = 1) const;
+
+  //! ID of the layer
+  const LayerId id;
 
  protected:
   void reset();
@@ -261,7 +257,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param node to add
    * @returns true if the node was added successfully
    */
-  bool insertNode(Node::Ptr&& node);
+  bool insertNode(SceneGraphNode::Ptr&& node);
 
   /**
    * @brief merge a node into the other if both nodes exist
@@ -331,7 +327,7 @@ struct graph_traits<SceneGraphLayer> {
   using edge_valid_func = const std::function<bool(const SceneGraphEdge&)>&;
 
   static inline std::set<NodeId> neighbors(const SceneGraphLayer& graph, NodeId node) {
-    return graph.getNode(node)->get().siblings();
+    return get_node(graph, node).siblings();
   }
 
   static inline bool contains(const SceneGraphLayer& graph, NodeId node) {
@@ -353,14 +349,14 @@ struct graph_traits<SceneGraphLayer> {
   }
 
   static inline const SceneGraphNode& get_node(const SceneGraphLayer& graph,
-                                               NodeId node) {
-    return graph.getNode(node).value();
+                                               NodeId node_id) {
+    return graph.getNode(node_id);
   }
 
   static inline const SceneGraphEdge& get_edge(const SceneGraphLayer& graph,
                                                NodeId source,
                                                NodeId target) {
-    return graph.getEdge(source, target).value();
+    return graph.getEdge(source, target);
   }
 };
 

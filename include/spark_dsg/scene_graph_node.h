@@ -66,9 +66,6 @@ enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
 class SceneGraphNode {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  //! attribute type of the node
-  using Attributes = NodeAttributes;
-  using AttributesPtr = std::unique_ptr<Attributes>;
   //! desired pointer type of the node (unique)
   using Ptr = std::unique_ptr<SceneGraphNode>;
   friend class DynamicSceneGraphLayer;
@@ -85,7 +82,21 @@ class SceneGraphNode {
    * @param layer the layer that the node will belong to
    * @param attrs attributes for the node
    */
-  SceneGraphNode(NodeId id, LayerId layer, AttributesPtr&& attrs);
+  SceneGraphNode(NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs);
+
+  /**
+   * @brief Make a scene graph node (with a timestamp)
+   *
+   *
+   * @param id the id of the node to create
+   * @param layer the layer that the node will belong to
+   * @param attrs attributes for the node
+   * @param timestamp node timestamp in nanoseconds
+   */
+  SceneGraphNode(NodeId id,
+                 LayerId layer,
+                 std::chrono::nanoseconds timestamp,
+                 NodeAttributes::Ptr&& attrs);
 
   SceneGraphNode(const SceneGraphNode& other) = delete;
 
@@ -101,7 +112,7 @@ class SceneGraphNode {
    * @brief get whether a node has a parent
    * @returns whether or not the node has a parent
    */
-  inline bool hasParent() const { return has_parent_; }
+  bool hasParent() const;
 
   /**
    * @brief get whether a node has any siblings
@@ -109,7 +120,7 @@ class SceneGraphNode {
    * meaning
    * @returns whether or not the node has any siblings
    */
-  inline bool hasSiblings() const { return not siblings_.empty(); }
+  bool hasSiblings() const;
 
   /**
    * @brief get whether a node has any children
@@ -117,19 +128,23 @@ class SceneGraphNode {
    * meaning
    * @returns whether or not the node has any children
    */
-  inline bool hasChildren() const { return not children_.empty(); }
+  bool hasChildren() const;
 
   /**
    * @brief get the parent of the node (if it exists)
    * @returns the id of the parent of the node (if it exists)
    */
-  inline std::optional<NodeId> getParent() const {
-    if (!has_parent_) {
-      return std::nullopt;
-    }
+  std::optional<NodeId> getParent() const;
 
-    return parent_;
-  }
+  /**
+   * @brief constant iterable over the node's sibilings
+   */
+  const std::set<NodeId>& siblings() const;
+
+  /**
+   * @brief constant iterable over the node's children
+   */
+  const std::set<NodeId>& children() const;
 
   /**
    * @brief get a reference to the attributes of the node (with an optional
@@ -142,12 +157,14 @@ class SceneGraphNode {
     return dynamic_cast<Derived&>(*attributes_);
   }
 
-  NodeAttributes* getAttributesPtr() const { return attributes_.get(); }
+  NodeAttributes* getAttributesPtr() const;
 
   //! ID of the node
   const NodeId id;
   //! ID of the layer the node belongs to
   const LayerId layer;
+  //! Timestamp of node (if dynamic)
+  const std::optional<std::chrono::nanoseconds> timestamp;
 
   /**
    * @brief output node information
@@ -169,20 +186,17 @@ class SceneGraphNode {
    * @note only for internal (scene-graph) use
    * @param parent_id new parent of node
    */
-  inline void setParent(NodeId parent_id) {
-    has_parent_ = true;
-    parent_ = parent_id;
-  }
+  void setParent(NodeId parent_id);
 
   /**
    * @brief remove a parent from a node
    * @note only for internal (scene-graph) use
    */
-  inline void clearParent() { has_parent_ = false; }
+  void clearParent();
 
  protected:
   //! pointer to attributes
-  AttributesPtr attributes_;
+  NodeAttributes::Ptr attributes_;
 
   //! whether or not the node has a parent
   bool has_parent_;
@@ -192,43 +206,6 @@ class SceneGraphNode {
   std::set<NodeId> siblings_;
   //! children node ids (maintained by graph)
   std::set<NodeId> children_;
-
- public:
-  /**
-   * @brief constant iterable over the node's sibilings
-   */
-  inline const std::set<NodeId>& siblings() const { return siblings_; };
-  /**
-   * @brief constant iterable over the node's children
-   */
-  inline const std::set<NodeId>& children() const { return children_; };
-};
-
-class DynamicSceneGraphNode : public SceneGraphNode {
- public:
-  friend class DynamicSceneGraphLayer;
-  using Ptr = std::unique_ptr<DynamicSceneGraphNode>;
-
-  DynamicSceneGraphNode(NodeId id,
-                        LayerId layer,
-                        NodeAttributes::Ptr&& attrs,
-                        std::chrono::nanoseconds timestamp)
-      : SceneGraphNode(id, layer, std::move(attrs)), timestamp(timestamp) {}
-
-  virtual ~DynamicSceneGraphNode() = default;
-
-  DynamicSceneGraphNode(const DynamicSceneGraphNode& other) = delete;
-
-  DynamicSceneGraphNode& operator=(const DynamicSceneGraphNode& other) = delete;
-
-  const std::chrono::nanoseconds timestamp;
-
- protected:
-  /**
-   * @brief internal function for outputing information to a ostream
-   * @param out ostream to output info to
-   */
-  virtual std::ostream& fill_ostream(std::ostream& out) const override;
 };
 
 }  // namespace spark_dsg

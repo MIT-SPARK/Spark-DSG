@@ -37,11 +37,6 @@
 
 namespace spark_dsg {
 
-using Node = SceneGraphLayer::Node;
-using NodeRef = SceneGraphLayer::NodeRef;
-using Edge = SceneGraphLayer::Edge;
-using Edges = SceneGraphLayer::Edges;
-using EdgeRef = SceneGraphLayer::EdgeRef;
 using NodeSet = std::unordered_set<NodeId>;
 
 // Test that an empty layer has no nodes and edges
@@ -63,9 +58,9 @@ TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
   EXPECT_TRUE(layer.hasNode(0));
   EXPECT_EQ(NodeStatus::NEW, layer.checkNode(0));
 
-  std::optional<NodeRef> node_opt = layer.getNode(0);
+  auto node_opt = layer.findNode(0);
   ASSERT_TRUE(node_opt);
-  const Node& node = *node_opt;
+  const auto& node = *node_opt;
   EXPECT_EQ(1u, node.layer);
   EXPECT_EQ(0u, node.id);
 
@@ -80,26 +75,26 @@ TEST(SceneGraphLayerTests, InsertNodeInvariants) {
   EXPECT_FALSE(layer.hasNode(0));
   EXPECT_EQ(NodeStatus::NONEXISTENT, layer.checkNode(0));
 
-  Node::Ptr valid_node =
-      std::make_unique<Node>(0, 1, std::make_unique<NodeAttributes>());
+  auto valid_node =
+      std::make_unique<SceneGraphNode>(0, 1, std::make_unique<NodeAttributes>());
   EXPECT_TRUE(layer.insertNode(std::move(valid_node)));
   EXPECT_EQ(1u, layer.numNodes());
   EXPECT_TRUE(layer.hasNode(0));
   EXPECT_EQ(NodeStatus::NEW, layer.checkNode(0));
 
   // we already have this node, so we should fail
-  Node::Ptr repeat_node =
-      std::make_unique<Node>(0, 1, std::make_unique<NodeAttributes>());
+  auto repeat_node =
+      std::make_unique<SceneGraphNode>(0, 1, std::make_unique<NodeAttributes>());
   EXPECT_FALSE(layer.insertNode(std::move(repeat_node)));
 
   // invalid layers should also get rejected
-  Node::Ptr invalid_node =
-      std::make_unique<Node>(1, 0, std::make_unique<NodeAttributes>());
+  auto invalid_node =
+      std::make_unique<SceneGraphNode>(1, 0, std::make_unique<NodeAttributes>());
   EXPECT_FALSE(layer.insertNode(std::move(invalid_node)));
   EXPECT_EQ(1u, layer.numNodes());
 
   // null nodes should also get rejected
-  Node::Ptr null_node(nullptr);
+  std::unique_ptr<SceneGraphNode> null_node(nullptr);
   EXPECT_FALSE(layer.insertNode(std::move(null_node)));
   EXPECT_EQ(1u, layer.numNodes());
 }
@@ -150,19 +145,19 @@ TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
   EXPECT_TRUE(layer.hasEdge(0, 1));
   EXPECT_EQ(1u, layer.numEdges());
 
-  std::optional<EdgeRef> edge_opt = layer.getEdge(0, 1);
+  auto edge_opt = layer.findEdge(0, 1);
   ASSERT_TRUE(edge_opt);
-  const Edge& edge = *edge_opt;
+  const auto& edge = *edge_opt;
   EXPECT_EQ(0u, edge.source);
   EXPECT_EQ(1u, edge.target);
   ASSERT_TRUE(edge.info != nullptr);
   EXPECT_TRUE(edge.info->weighted);
   EXPECT_EQ(0.5, edge.info->weight);
 
-  std::optional<EdgeRef> swapped_edge_opt = layer.getEdge(1, 0);
+  auto swapped_edge_opt = layer.findEdge(1, 0);
   ASSERT_TRUE(swapped_edge_opt);
 
-  const Edge& swapped_edge = *swapped_edge_opt;
+  const auto& swapped_edge = *swapped_edge_opt;
   // note that accessing an edge from the reverse direction
   // that is was added doesn't change the info and keeps the
   // source and target the same as how the edge was added
@@ -212,7 +207,7 @@ TEST(SceneGraphLayerTests, BasicEdgeIterationCorrect) {
   // nodes may be stored unordered in the future
   std::set<NodeId> actual_targets;
   for (const auto& id_edge_pair : layer.edges()) {
-    const Edge& edge = id_edge_pair.second;
+    const auto& edge = id_edge_pair.second;
     ASSERT_TRUE(edge.info != nullptr);
     EXPECT_EQ(edge.source + 1, edge.target);
     actual_targets.insert(edge.target);
@@ -268,8 +263,8 @@ TEST(SceneGraphLayerTests, MergeNodesCorrect) {
     EXPECT_TRUE(layer.insertEdge(0, i));
   }
 
-  const Node& node0 = *layer.getNode(0);
-  const Node& node1 = *layer.getNode(1);
+  const auto& node0 = layer.getNode(0);
+  const auto& node1 = layer.getNode(1);
 
   EXPECT_EQ(4u, layer.numNodes());
   EXPECT_EQ(3u, layer.numEdges());
@@ -343,7 +338,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
     Eigen::Vector3d node_pos;
     node_pos << static_cast<double>(i), 0.0, 0.0;
     EXPECT_TRUE(layer_1.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
-    layer_1.getNode(i)->get().attributes().is_active = true;
+    layer_1.getNode(i).attributes().is_active = true;
   }
   for (size_t i = 1; i < 3; ++i) {
     EXPECT_TRUE(layer_1.insertEdge(i - 1, i));

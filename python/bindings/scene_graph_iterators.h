@@ -44,7 +44,7 @@ class NodeIter {
   NodeIter(const SceneGraphLayer::Nodes& container)
       : curr_iter_(container.begin()), end_iter_(container.end()) {}
 
-  const SceneGraphLayer::Node* operator*() const { return curr_iter_->second.get(); }
+  const SceneGraphNode* operator*() const { return curr_iter_->second.get(); }
 
   NodeIter& operator++() {
     ++curr_iter_;
@@ -67,7 +67,7 @@ class DynamicNodeIter {
     }
   }
 
-  const DynamicSceneGraphLayer::Node* operator*() const { return curr_iter_->get(); }
+  const SceneGraphNode* operator*() const { return curr_iter_->get(); }
 
   DynamicNodeIter& operator++() {
     ++curr_iter_;
@@ -89,7 +89,7 @@ class EdgeIter {
   EdgeIter(const SceneGraphLayer::Edges& container)
       : curr_iter_(container.begin()), end_iter_(container.end()) {}
 
-  const SceneGraphLayer::Edge* operator*() const { return &(curr_iter_->second); }
+  const SceneGraphEdge* operator*() const { return &(curr_iter_->second); }
 
   EdgeIter& operator++() {
     ++curr_iter_;
@@ -252,11 +252,11 @@ class LayerView {
     return layer_ref_.hasEdge(source, target);
   }
 
-  std::optional<SceneGraphLayer::NodeRef> getNode(NodeId node_id) const {
+  const SceneGraphNode& getNode(NodeId node_id) const {
     return layer_ref_.getNode(node_id);
   }
 
-  std::optional<SceneGraphLayer::EdgeRef> getEdge(NodeId source, NodeId target) const {
+  const SceneGraphEdge& getEdge(NodeId source, NodeId target) const {
     return layer_ref_.getEdge(source, target);
   }
 

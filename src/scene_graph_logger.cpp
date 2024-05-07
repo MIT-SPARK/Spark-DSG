@@ -84,10 +84,10 @@ void SceneGraphLogger::logGraph(const DynamicSceneGraph::Ptr& graph) {
           case NodeStatus::NEW:
           case NodeStatus::VISIBLE:
             num_active_nodes++;
-            if (graph->getNode(id_node_status.first).value().get().hasParent()) {
+            if (graph->getNode(id_node_status.first).hasParent()) {
               num_nodes_with_parents++;
             }
-            if (graph->getNode(id_node_status.first).value().get().hasChildren()) {
+            if (graph->getNode(id_node_status.first).hasChildren()) {
               num_nodes_with_children++;
             }
             break;

@@ -50,10 +50,6 @@ namespace spark_dsg {
  */
 class DynamicSceneGraph {
  public:
-  using NodeRef = BaseLayer::NodeRef;
-  using DynamicNodeRef = BaseLayer::DynamicNodeRef;
-  using EdgeRef = BaseLayer::EdgeRef;
-
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<DynamicSceneGraph>;
   //! container type for the layer ids
@@ -280,9 +276,21 @@ class DynamicSceneGraph {
    * be modified
    *
    * @param node_id node to get
-   * @returns a potentially valid node constant reference
+   * @returns The scene graph node
    */
-  std::optional<NodeRef> getNode(NodeId node_id) const;
+  const SceneGraphNode& getNode(NodeId node_id) const;
+
+  /**
+   * @brief Get a particular node in the graph
+   *
+   * This can be used to update the node attributes, though
+   * information about the node (i.e. siblings, etc) cannot
+   * be modified
+   *
+   * @param node_id node to get
+   * @returns a pointer to a potentially valid node
+   */
+  const SceneGraphNode* findNode(NodeId node_id) const;
 
   /**
    * @brief Get node layer information (if the node exists)
@@ -292,11 +300,17 @@ class DynamicSceneGraph {
   std::optional<LayerKey> getLayerForNode(NodeId node_id) const;
 
   /**
-   * @brief Get a reference to a dynamic node (if the node exists)
-   * @param node_id Dynamic node to get
-   * @returns Potentially valid dynamic node reference
+   * @brief Get a particular edge in the graph
+   *
+   * This can be used to update the edge "info", though
+   * information about the edge (i.e. source and target) cannot
+   * be modified
+   *
+   * @param source source of edge to get
+   * @param target target of edge to get
+   * @returns a valid edge constant reference
    */
-  std::optional<DynamicNodeRef> getDynamicNode(NodeId node_id) const;
+  const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
 
   /**
    * @brief Get a particular edge in the graph
@@ -309,7 +323,7 @@ class DynamicSceneGraph {
    * @param target target of edge to get
    * @returns a potentially valid edge constant reference
    */
-  std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const;
+  const SceneGraphEdge* findEdge(NodeId source, NodeId target) const;
 
   /**
    * @brief Remove a node from the graph

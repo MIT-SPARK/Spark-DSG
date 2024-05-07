@@ -50,21 +50,10 @@ bool quaternionsEqual(const Eigen::Quaternion<Scalar>& lhs,
 
 inline bool operator==(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
   return lhs.id == rhs.id && lhs.layer == rhs.layer &&
-         lhs.attributes() == rhs.attributes();
-}
-
-inline bool operator!=(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
-  return !(lhs == rhs);
-}
-
-inline bool operator==(const DynamicSceneGraphNode& lhs,
-                       const DynamicSceneGraphNode& rhs) {
-  return lhs.id == rhs.id && lhs.layer == rhs.layer &&
          lhs.attributes() == rhs.attributes() && lhs.timestamp == rhs.timestamp;
 }
 
-inline bool operator!=(const DynamicSceneGraphNode& lhs,
-                       const DynamicSceneGraphNode& rhs) {
+inline bool operator!=(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
   return !(lhs == rhs);
 }
 
@@ -95,14 +84,12 @@ inline bool isSubset(const std::map<EdgeKey, SceneGraphEdge>& lhs,
 
 inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
   for (const auto& [node_id, node] : lhs.nodes()) {
-    const auto rhs_node = rhs.getNode(node_id);
+    const auto rhs_node = rhs.findNode(node_id);
     if (!rhs_node) {
       return false;
     }
 
-    if (rhs_node->get() != *node) {
-      std::cout << "lhs:\n" <<  node->attributes() << std::endl;
-      std::cout << "rhs:\n" <<  rhs_node->get().attributes() << std::endl;
+    if (*rhs_node != *node) {
       return false;
     }
   }
@@ -117,12 +104,12 @@ inline bool isSubset(const DynamicSceneGraphLayer& lhs,
       continue;
     }
 
-    const auto rhs_node = rhs.getNode(node->id);
+    const auto rhs_node = rhs.findNode(node->id);
     if (!rhs_node) {
       return false;
     }
 
-    if (rhs_node->get() != *node) {
+    if (*rhs_node != *node) {
       return false;
     }
   }

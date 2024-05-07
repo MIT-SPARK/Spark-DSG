@@ -42,8 +42,8 @@
 
 namespace spark_dsg {
 
-using EdgeRef = SceneGraphLayer::EdgeRef;
-using NodeRef = SceneGraphLayer::NodeRef;
+using Node = SceneGraphNode;
+using Edge = SceneGraphEdge;
 
 SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id) {}
 
@@ -120,21 +120,13 @@ bool SceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
   return edges_.contains(source, target);
 }
 
-std::optional<NodeRef> SceneGraphLayer::getNode(NodeId node_id) const {
-  if (!hasNode(node_id)) {
-    return std::nullopt;
-  }
-
-  assert(nodes_.at(node_id) != nullptr);
-  return std::cref(*(nodes_.at(node_id)));
+const Node* SceneGraphLayer::findNode(NodeId node_id) const {
+  auto iter = nodes_.find(node_id);
+  return iter == nodes_.end() ? nullptr : iter->second.get();
 }
 
-std::optional<EdgeRef> SceneGraphLayer::getEdge(NodeId source, NodeId target) const {
-  if (!hasEdge(source, target)) {
-    return std::nullopt;
-  }
-
-  return std::cref(edges_.get(source, target));
+const Edge* SceneGraphLayer::findEdge(NodeId source, NodeId target) const {
+  return edges_.find(source, target);
 }
 
 bool SceneGraphLayer::removeNode(NodeId node_id) {

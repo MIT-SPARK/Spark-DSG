@@ -41,13 +41,27 @@ namespace spark_dsg {
 
 SceneGraphNode::SceneGraphNode(NodeId node_id,
                                LayerId layer_id,
-                               SceneGraphNode::AttributesPtr&& attrs)
+                               NodeAttributes::Ptr&& attrs)
     : id(node_id), layer(layer_id), attributes_(std::move(attrs)), has_parent_(false) {}
+
+SceneGraphNode::SceneGraphNode(NodeId node_id,
+                               LayerId layer_id,
+                               std::chrono::nanoseconds timestamp,
+                               NodeAttributes::Ptr&& attrs)
+    : id(node_id),
+      layer(layer_id),
+      timestamp(timestamp),
+      attributes_(std::move(attrs)),
+      has_parent_(false) {}
 
 SceneGraphNode::~SceneGraphNode() = default;
 
 std::ostream& SceneGraphNode::fill_ostream(std::ostream& out) const {
-  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer << ">";
+  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer;
+  if (timestamp) {
+    out << ", timestamp=" << timestamp->count() << "[ns]";
+  }
+  out << ">";
   return out;
 }
 
@@ -55,10 +69,31 @@ std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
   return node.fill_ostream(out);
 }
 
-std::ostream& DynamicSceneGraphNode::fill_ostream(std::ostream& out) const {
-  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer
-      << ", time=" << timestamp.count() << "[ns]>";
-  return out;
+bool SceneGraphNode::hasParent() const { return has_parent_; }
+
+bool SceneGraphNode::hasSiblings() const { return not siblings_.empty(); }
+
+bool SceneGraphNode::hasChildren() const { return not children_.empty(); }
+
+std::optional<NodeId> SceneGraphNode::getParent() const {
+  if (!has_parent_) {
+    return std::nullopt;
+  }
+
+  return parent_;
 }
+
+NodeAttributes* SceneGraphNode::getAttributesPtr() const { return attributes_.get(); }
+
+void SceneGraphNode::setParent(NodeId parent_id) {
+  has_parent_ = true;
+  parent_ = parent_id;
+}
+
+void SceneGraphNode::clearParent() { has_parent_ = false; }
+
+const std::set<NodeId>& SceneGraphNode::siblings() const { return siblings_; };
+
+const std::set<NodeId>& SceneGraphNode::children() const { return children_; };
 
 }  // namespace spark_dsg

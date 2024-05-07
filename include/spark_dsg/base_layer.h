@@ -33,8 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <optional>
-
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/edge_container.h"
 #include "spark_dsg/scene_graph_node.h"
@@ -60,13 +58,6 @@ struct GraphMergeConfig {
 
 class BaseLayer {
  public:
-  //! Static node reference
-  using NodeRef = std::reference_wrapper<const SceneGraphNode>;
-  //! Dynamic node reference
-  using DynamicNodeRef = std::reference_wrapper<const DynamicSceneGraphNode>;
-  //! alias to the layer edge reference type
-  using EdgeRef = std::reference_wrapper<const SceneGraphEdge>;
-
   friend class DynamicSceneGraph;
 
   virtual ~BaseLayer() = default;
@@ -79,7 +70,29 @@ class BaseLayer {
 
   virtual NodeStatus checkNode(NodeId node_id) const = 0;
 
-  virtual std::optional<EdgeRef> getEdge(NodeId source, NodeId target) const = 0;
+  virtual const SceneGraphNode* findNode(NodeId node) const = 0;
+
+  virtual const SceneGraphEdge* findEdge(NodeId source, NodeId target) const = 0;
+
+  virtual const SceneGraphNode& getNode(NodeId node_id) const {
+    const auto node = findNode(node_id);
+    if (!node) {
+      throw std::out_of_range("missing node '" + NodeSymbol(node_id).getLabel() + "'");
+    }
+
+    return *node;
+  }
+
+  virtual const SceneGraphEdge& getEdge(NodeId source, NodeId target) const {
+    const auto edge = findEdge(source, target);
+    if (!edge) {
+      std::stringstream ss;
+      ss << "Missing edge '" << EdgeKey(source, target) << "'";
+      throw std::out_of_range(ss.str());
+    }
+
+    return *edge;
+  }
 
   /**
    * @brief Get node ids of newly inserted nodes

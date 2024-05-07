@@ -42,17 +42,16 @@ void getAncestorsOfLayer(const DynamicSceneGraph& graph,
                          NodeId parent,
                          LayerKey child_layer,
                          const SgNodeCallback& callback) {
-  const auto& node_opt = graph.getNode(parent);
-  if (!node_opt) {
+  const auto node = graph.findNode(parent);
+  if (!node) {
     return;
   }
 
-  const SceneGraphNode& node = *node_opt;
-  if (node.layer <= child_layer) {
+  if (node->layer <= child_layer) {
     return;
   }
 
-  for (const auto& child : node.children()) {
+  for (const auto& child : node->children()) {
     const auto layer_key = *graph.getLayerForNode(child);
     if (layer_key == child_layer) {
       callback(graph, child);

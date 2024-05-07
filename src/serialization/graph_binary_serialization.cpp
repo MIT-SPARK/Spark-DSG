@@ -41,18 +41,10 @@
 namespace spark_dsg {
 
 void write_binary(serialization::BinarySerializer& s, const SceneGraphNode& node) {
-  s.startFixedArray(3);
-  s.write(node.layer);
-  s.write(node.id);
-  s.write(node.attributes());
-}
-
-void write_binary(serialization::BinarySerializer& s,
-                  const DynamicSceneGraphNode& node) {
   s.startFixedArray(4);
   s.write(node.layer);
   s.write(node.id);
-  s.write(node.timestamp.count());
+  s.write(node.timestamp);
   s.write(node.attributes());
 }
 
@@ -72,17 +64,13 @@ using spark_dsg::serialization::BinarySerializer;
 NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
                  const BinaryDeserializer& deserializer,
                  DynamicSceneGraph& graph) {
-  const auto size = deserializer.readFixedArrayLength();
+  deserializer.checkFixedArrayLength(4);
   LayerId layer;
   deserializer.read(layer);
   NodeId node;
   deserializer.read(node);
   std::optional<std::chrono::nanoseconds> stamp;
-  if (size == 4) {
-    std::chrono::nanoseconds::rep stamp_value;
-    deserializer.read(stamp_value);
-    stamp = std::chrono::nanoseconds(stamp_value);
-  }
+  deserializer.read(stamp);
 
   auto attrs = serialization::Visitor::from(factory, deserializer);
   if (!attrs) {

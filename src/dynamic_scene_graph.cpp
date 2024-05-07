@@ -44,9 +44,6 @@ namespace spark_dsg {
 
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
-using NodeRef = DynamicSceneGraph::NodeRef;
-using DynamicNodeRef = DynamicSceneGraph::DynamicNodeRef;
-using EdgeRef = DynamicSceneGraph::EdgeRef;
 
 DynamicSceneGraph::LayerIds getDefaultLayerIds() {
   return {
@@ -287,26 +284,26 @@ bool DynamicSceneGraph::setNodeAttributes(NodeId node, NodeAttributes::Ptr&& att
 bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
                                           NodeId target,
                                           EdgeAttributes::Ptr&& attrs) {
-  if (!hasEdge(source, target)) {
-    return false;
-  }
-
   // defer to layers if it is a intralayer edge
   const auto& source_key = node_lookup_.at(source);
   const auto& target_key = node_lookup_.at(target);
+  SceneGraphEdge* edge;
   if (source_key == target_key) {
-    layerFromKey(source_key).edgeContainer().get(source, target).info =
-        std::move(attrs);
-    return true;
+    edge = layerFromKey(source_key).edgeContainer().find(source, target);
+  } else {
+    if (source_key.dynamic || target_key.dynamic) {
+      edge = dynamic_interlayer_edges_.find(source, target);
+    } else {
+      edge = interlayer_edges_.find(source, target);
+    }
   }
 
-  if (source_key.dynamic || target_key.dynamic) {
-    dynamic_interlayer_edges_.get(source, target).info = std::move(attrs);
-    return true;
-  } else {
-    interlayer_edges_.get(source, target).info = std::move(attrs);
-    return true;
+  if (!edge) {
+    return false;
   }
+
+  edge->info = std::move(attrs);
+  return true;
 }
 
 bool DynamicSceneGraph::hasLayer(LayerId layer_id) const {
@@ -358,14 +355,22 @@ const DynamicSceneGraphLayer& DynamicSceneGraph::getLayer(LayerId layer,
 
   return *dynamic_layers_.at(layer).at(prefix);
 }
-
-std::optional<NodeRef> DynamicSceneGraph::getNode(NodeId node_id) const {
-  auto iter = node_lookup_.find(node_id);
-  if (iter == node_lookup_.end()) {
-    return std::nullopt;
+const Node& DynamicSceneGraph::getNode(NodeId node_id) const {
+  const auto node = findNode(node_id);
+  if (!node) {
+    throw std::out_of_range("missing node '" + NodeSymbol(node_id).getLabel() + "'");
   }
 
-  return std::cref(*getNodePtr(node_id, iter->second));
+  return *node;
+}
+
+const Node* DynamicSceneGraph::findNode(NodeId node_id) const {
+  auto iter = node_lookup_.find(node_id);
+  if (iter == node_lookup_.end()) {
+    return nullptr;
+  }
+
+  return getNodePtr(node_id, iter->second);
 }
 
 std::optional<LayerKey> DynamicSceneGraph::getLayerForNode(NodeId node_id) const {
@@ -377,36 +382,29 @@ std::optional<LayerKey> DynamicSceneGraph::getLayerForNode(NodeId node_id) const
   return iter->second;
 }
 
-std::optional<DynamicNodeRef> DynamicSceneGraph::getDynamicNode(NodeId node_id) const {
-  auto iter = node_lookup_.find(node_id);
-  if (iter == node_lookup_.end()) {
-    return std::nullopt;
+const Edge& DynamicSceneGraph::getEdge(NodeId source, NodeId target) const {
+  const auto edge = findEdge(source, target);
+  if (!edge) {
+    std::stringstream ss;
+    ss << "Missing edge '" << EdgeKey(source, target) << "'";
+    throw std::out_of_range(ss.str());
   }
 
-  const auto& info = iter->second;
-  if (!info.dynamic) {
-    return std::nullopt;
-  }
-
-  return dynamic_layers_.at(info.layer).at(info.prefix)->getNode(node_id);
+  return *edge;
 }
 
-std::optional<EdgeRef> DynamicSceneGraph::getEdge(NodeId source, NodeId target) const {
-  if (!hasEdge(source, target)) {
-    return std::nullopt;
-  }
-
+const Edge* DynamicSceneGraph::findEdge(NodeId source, NodeId target) const {
   // defer to layers if it is a intralayer edge
   const auto& source_key = node_lookup_.at(source);
   const auto& target_key = node_lookup_.at(target);
   if (source_key == target_key) {
-    return layerFromKey(source_key).getEdge(source, target);
+    return layerFromKey(source_key).findEdge(source, target);
   }
 
   if (source_key.dynamic || target_key.dynamic) {
-    return std::cref(dynamic_interlayer_edges_.get(source, target));
+    return dynamic_interlayer_edges_.find(source, target);
   } else {
-    return std::cref(interlayer_edges_.get(source, target));
+    return interlayer_edges_.find(source, target);
   }
 }
 
@@ -759,18 +757,8 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
   for (const auto id_layer_pair : node_lookup_) {
     auto node = getNodePtr(id_layer_pair.first, id_layer_pair.second);
     if (id_layer_pair.second.dynamic) {
-      auto node_dyn = dynamic_cast<DynamicSceneGraphNode*>(node);
-      if (!node_dyn) {
-        // TODO(nathan) fix exception messages
-        std::stringstream ss;
-        ss << "node " << NodeSymbol(node->id).getLabel() << " is not dynamic!";
-        throw std::runtime_error(ss.str());
-      }
-
-      to_return->emplacePrevDynamicNode(node_dyn->layer,
-                                        node_dyn->id,
-                                        node_dyn->timestamp,
-                                        node_dyn->attributes_->clone());
+      to_return->emplacePrevDynamicNode(
+          node->layer, node->id, node->timestamp.value(), node->attributes_->clone());
     } else {
       to_return->emplaceNode(node->layer, node->id, node->attributes_->clone());
     }
@@ -1001,11 +989,22 @@ void DynamicSceneGraph::rewireInterlayerEdge(NodeId source,
   // index not being available in other container
   EdgeAttributes::Ptr attrs;
   if (source_key.dynamic || target_key.dynamic) {
-    attrs = dynamic_interlayer_edges_.get(source, target).info->clone();
-    dynamic_interlayer_edges_.remove(source, target);
+    const auto edge = dynamic_interlayer_edges_.find(source, target);
+    if (edge) {
+      attrs = edge->info->clone();
+      dynamic_interlayer_edges_.remove(source, target);
+    }
   } else {
-    attrs = interlayer_edges_.get(source, target).info->clone();
-    interlayer_edges_.remove(source, target);
+    const auto edge = interlayer_edges_.find(source, target);
+    if (edge) {
+      attrs = edge->info->clone();
+      interlayer_edges_.remove(source, target);
+    }
+  }
+
+  if (!attrs) {
+    // we somehow didn't have the edge
+    return;
   }
 
   if (new_source_has_parent) {

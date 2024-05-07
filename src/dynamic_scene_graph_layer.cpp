@@ -39,8 +39,8 @@
 
 namespace spark_dsg {
 
-using EdgeRef = DynamicSceneGraphLayer::EdgeRef;
-using NodeRef = DynamicSceneGraphLayer::NodeRef;
+using Node = SceneGraphNode;
+using Edge = SceneGraphEdge;
 
 DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, LayerPrefix node_prefix)
     : id(layer), prefix(node_prefix), next_node_(0) {}
@@ -66,7 +66,7 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
       nodes_[i]->attributes_ = other_node.attributes_->clone();
       nodes_[i]->attributes_->position = node_position;
     } else {
-      emplaceNode(other_node.timestamp, other_node.attributes_->clone(), false);
+      emplaceNode(other_node.timestamp.value(), other_node.attributes_->clone(), false);
       nodes_.back()->attributes_->position += last_update_delta;
       if (layer_lookup) {
         layer_lookup->insert({nodes_.back()->id, layer_key});
@@ -96,7 +96,7 @@ bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
 
   const NodeId new_id = prefix.makeId(next_node_);
   times_.insert(stamp.count());
-  nodes_.emplace_back(std::make_unique<Node>(new_id, id, std::move(attrs), stamp));
+  nodes_.emplace_back(std::make_unique<Node>(new_id, id, stamp, std::move(attrs)));
   node_status_[nodes_.size() - 1] = NodeStatus::NEW;
 
   // TODO(nathan) track newest time and don't add edge if node is older than that.
@@ -127,7 +127,7 @@ bool DynamicSceneGraphLayer::emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
 
   const NodeId new_id = prefix.makeId(index);
   times_.insert(stamp.count());
-  nodes_[index] = std::make_unique<Node>(new_id, id, std::move(attrs), stamp);
+  nodes_[index] = std::make_unique<Node>(new_id, id, stamp, std::move(attrs));
   node_status_[index] = NodeStatus::NEW;
   return true;
 }
@@ -166,33 +166,29 @@ bool DynamicSceneGraphLayer::hasEdgeByIndex(size_t source_idx,
   return hasEdge(prefix.makeId(source_idx), prefix.makeId(target_idx));
 }
 
-std::optional<NodeRef> DynamicSceneGraphLayer::getNodeByIndex(size_t node_index) const {
-  if (!hasNodeByIndex(node_index)) {
-    return std::nullopt;
-  }
-
-  return std::cref(*nodes_.at(node_index));
+const Node* DynamicSceneGraphLayer::findNode(NodeId node_id) const {
+  return findNodeByIndex(prefix.index(node_id));
 }
 
-std::optional<NodeRef> DynamicSceneGraphLayer::getNode(NodeId node_id) const {
-  if (!hasNode(node_id)) {
-    return std::nullopt;
-  }
-
-  return getNodeByIndex(prefix.index(node_id));
+const Node* DynamicSceneGraphLayer::findNodeByIndex(size_t index) const {
+  return index >= nodes_.size() ? nullptr : nodes_.at(index).get();
 }
 
-std::optional<EdgeRef> DynamicSceneGraphLayer::getEdge(NodeId source,
-                                                       NodeId target) const {
-  if (!hasEdge(source, target)) {
-    return std::nullopt;
-  }
-
-  return std::cref(edges_.get(source, target));
+const Node& DynamicSceneGraphLayer::getNodeByIndex(size_t index) const {
+  return getNode(prefix.makeId(index));
 }
 
-std::optional<EdgeRef> DynamicSceneGraphLayer::getEdgeByIndex(size_t source_idx,
-                                                              size_t target_idx) const {
+const Edge* DynamicSceneGraphLayer::findEdge(NodeId source, NodeId target) const {
+  return edges_.find(source, target);
+}
+
+const Edge* DynamicSceneGraphLayer::findEdgeByIndex(size_t source_idx,
+                                                    size_t target_idx) const {
+  return findEdge(prefix.makeId(source_idx), prefix.makeId(target_idx));
+}
+
+const Edge& DynamicSceneGraphLayer::getEdgeByIndex(size_t source_idx,
+                                                   size_t target_idx) const {
   return getEdge(prefix.makeId(source_idx), prefix.makeId(target_idx));
 }
 
@@ -268,7 +264,7 @@ bool DynamicSceneGraphLayer::removeNode(NodeId node) {
 
   // TODO(nathan) this is slightly brittle, maybe consider std::map instead
   node_status_[index] = NodeStatus::DELETED;
-  times_.erase(nodes_.at(index)->timestamp.count());
+  times_.erase(nodes_.at(index)->timestamp->count());
   nodes_[index].reset();
   return true;
 }

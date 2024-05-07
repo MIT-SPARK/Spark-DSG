@@ -41,15 +41,15 @@
 namespace spark_dsg {
 
 using SparseMatrixXd = Eigen::SparseMatrix<double>;
+using WeightFunc = std::function<double(NodeId, NodeId)>;
 
-Eigen::MatrixXd getAdjacencyMatrix(
-    const SceneGraphLayer& layer,
-    const std::map<NodeId, size_t>& ordering,
-    const std::function<double(NodeId, NodeId)>& weight_func);
+Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
+                                   const std::map<NodeId, size_t>& ordering,
+                                   const WeightFunc& weight_func);
 
 Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
                              const std::map<NodeId, size_t>& ordering,
-                             const std::function<double(NodeId, NodeId)>& weight_func);
+                             const WeightFunc& weight_func);
 
 inline Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
                                           const std::map<NodeId, size_t>& ordering) {
@@ -61,15 +61,13 @@ inline Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
   return getLaplacian(layer, ordering, [](NodeId, NodeId) { return 1.0; });
 }
 
-SparseMatrixXd getSparseAdjacencyMatrix(
-    const SceneGraphLayer& layer,
-    const std::map<NodeId, size_t>& ordering,
-    const std::function<double(NodeId, NodeId)>& weight_func);
+SparseMatrixXd getSparseAdjacencyMatrix(const SceneGraphLayer& layer,
+                                        const std::map<NodeId, size_t>& ordering,
+                                        const WeightFunc& weight_func);
 
-SparseMatrixXd getSparseLaplacian(
-    const SceneGraphLayer& layer,
-    const std::map<NodeId, size_t>& ordering,
-    const std::function<double(NodeId, NodeId)>& weight_func);
+SparseMatrixXd getSparseLaplacian(const SceneGraphLayer& layer,
+                                  const std::map<NodeId, size_t>& ordering,
+                                  const WeightFunc& weight_func);
 
 inline SparseMatrixXd getSparseAdjacencyMatrix(
     const SceneGraphLayer& layer, const std::map<NodeId, size_t>& ordering) {

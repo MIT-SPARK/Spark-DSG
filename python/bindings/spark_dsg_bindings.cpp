@@ -400,6 +400,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("get_parent", &SceneGraphNode::getParent)
       .def("siblings", &SceneGraphNode::siblings)
       .def("children", &SceneGraphNode::children)
+      .def_property_readonly("timestamp",
+                             [](const SceneGraphNode& node) -> std::optional<uint64_t> {
+                               if (node.timestamp) {
+                                 return node.timestamp.value().count();
+                               } else {
+                                 return std::nullopt;
+                               }
+                             })
       .def_property("attributes",
                     &SceneGraphNode::getAttributesPtr,
                     &SceneGraphNode::getAttributesPtr,
@@ -412,12 +420,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
         ss << node;
         return ss.str();
       });
-
-  py::class_<DynamicSceneGraphNode, SceneGraphNode>(module, "DynamicSceneGraphNode")
-      .def_property(
-          "timestamp",
-          [](const DynamicSceneGraphNode& node) { return node.timestamp.count(); },
-          nullptr);
 
   py::class_<EdgeAttributes>(module, "EdgeAttributes")
       .def(py::init<>())
@@ -652,7 +654,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           },
           py::return_value_policy::reference_internal)
       .def("get_node", &DynamicSceneGraph::getNode)
-      .def("get_dynamic_node", &DynamicSceneGraph::getDynamicNode)
       .def("get_edge", &DynamicSceneGraph::getEdge)
       .def("remove_node", &DynamicSceneGraph::removeNode)
       .def("remove_edge", &DynamicSceneGraph::removeEdge)

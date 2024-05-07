@@ -142,7 +142,7 @@ void BinaryDeserializer::checkFixedArrayLength(size_t length) const {
   uint32_t ref_length;
   readWord(getReadPtr<uint32_t>(), ref_length);
   pos += sizeof(ref_length);
-  if (length != static_cast<size_t>(length)) {
+  if (length != static_cast<size_t>(ref_length)) {
     THROW_SERIALIZATION_ERROR("fixed length mismatch: " << ref_length
                                                         << " != " << length);
   }
@@ -210,19 +210,18 @@ void BinarySerializer::write<EdgeAttributes>(const EdgeAttributes& attrs) {
 
 template <>
 void BinarySerializer::write<SceneGraphNode>(const SceneGraphNode& node) {
-  startFixedArray(3);
-  write(node.layer);
-  write(node.id);
-  write(node.attributes());
-}
-
-template <>
-void BinarySerializer::write<DynamicSceneGraphNode>(const DynamicSceneGraphNode& node) {
-  startFixedArray(4);
-  write(node.layer);
-  write(node.id);
-  write(node.timestamp.count());
-  write(node.attributes());
+  if (node.timestamp) {
+    startFixedArray(4);
+    write(node.layer);
+    write(node.id);
+    write(node.timestamp->count());
+    write(node.attributes());
+  } else {
+    startFixedArray(3);
+    write(node.layer);
+    write(node.id);
+    write(node.attributes());
+  }
 }
 
 template <>

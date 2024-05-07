@@ -47,15 +47,12 @@ namespace spark_dsg {
 using nlohmann::json;
 
 void to_json(json& record, const SceneGraphNode& node) {
-  record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
-}
-
-void to_json(json& record, const DynamicSceneGraphNode& node) {
   record = {{"id", node.id},
             {"layer", node.layer},
-            {"prefix", NodeSymbol(node.id).category()},
-            {"timestamp", node.timestamp.count()},
             {"attributes", node.attributes()}};
+  if (node.timestamp) {
+    record["timestamp"] = node.timestamp->count();
+  }
 }
 
 void to_json(json& record, const SceneGraphEdge& edge) {
@@ -145,7 +142,7 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
           continue;
         }
 
-        record["nodes"].push_back(*layer.getNodeByIndex(i));
+        record["nodes"].push_back(layer.getNodeByIndex(i));
       }
 
       for (const auto& id_edge_pair : layer.edges()) {
