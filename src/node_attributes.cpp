@@ -233,6 +233,7 @@ std::ostream& RoomNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void RoomNodeAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
+  serialization::field("semantic_class_probabilities", semantic_class_probabilities);
 }
 
 bool RoomNodeAttributes::is_equal(const NodeAttributes& other) const {

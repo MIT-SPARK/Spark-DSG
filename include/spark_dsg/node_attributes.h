@@ -234,6 +234,8 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   virtual ~RoomNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
 
+  std::map<std::string, double> semantic_class_probabilities;
+
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;

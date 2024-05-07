@@ -266,7 +266,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           });
 
   py::class_<RoomNodeAttributes, SemanticNodeAttributes>(module, "RoomNodeAttributes")
-      .def(py::init<>());
+      .def(py::init<>())
+      .def_readwrite("semantic_class_probabilities",
+                     &RoomNodeAttributes::semantic_class_probabilities);
 
   py::class_<NearestVertexInfo>(module, "NearestVertexInfo")
       .def(py::init<>())
