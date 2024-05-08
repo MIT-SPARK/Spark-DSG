@@ -462,8 +462,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
            })
       .def("has_node", &IsolatedSceneGraphLayer::hasNode)
       .def("has_edge", &IsolatedSceneGraphLayer::hasEdge)
-      .def("get_node", &IsolatedSceneGraphLayer::getNode)
-      .def("get_edge", &IsolatedSceneGraphLayer::getEdge)
+      .def("get_node",
+           &IsolatedSceneGraphLayer::getNode,
+           py::return_value_policy::reference_internal)
+      .def("get_edge",
+           &IsolatedSceneGraphLayer::getEdge,
+           py::return_value_policy::reference_internal)
       .def("remove_edge", &IsolatedSceneGraphLayer::removeEdge)
       .def("num_nodes", &IsolatedSceneGraphLayer::numNodes)
       .def("num_edges", &IsolatedSceneGraphLayer::numEdges)
@@ -487,8 +491,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<LayerView>(module, "LayerView")
       .def("has_node", &LayerView::hasNode)
       .def("has_edge", &LayerView::hasEdge)
-      .def("get_node", &LayerView::getNode)
-      .def("get_edge", &LayerView::getEdge)
+      .def("get_node", &LayerView::getNode, py::return_value_policy::reference_internal)
+      .def("get_edge", &LayerView::getEdge, py::return_value_policy::reference_internal)
       .def("num_nodes", &LayerView::numNodes)
       .def("num_edges", &LayerView::numEdges)
       .def("get_position", &LayerView::getPosition)
@@ -653,8 +657,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
             return DynamicLayerView(graph.getLayer(layer_id, prefix));
           },
           py::return_value_policy::reference_internal)
-      .def("get_node", &DynamicSceneGraph::getNode)
-      .def("get_edge", &DynamicSceneGraph::getEdge)
+      .def("get_node",
+           &DynamicSceneGraph::getNode,
+           py::return_value_policy::reference_internal)
+      .def("get_edge",
+           &DynamicSceneGraph::getEdge,
+           py::return_value_policy::reference_internal)
       .def("remove_node", &DynamicSceneGraph::removeNode)
       .def("remove_edge", &DynamicSceneGraph::removeEdge)
       .def("is_dynamic", &DynamicSceneGraph::isDynamic)
