@@ -46,12 +46,14 @@ void PrintTo(const DynamicSceneGraph& graph, std::ostream* os) {
 
 struct SerializationMethod {
   using Ptr = std::shared_ptr<SerializationMethod>;
+  virtual ~SerializationMethod() = default;
   virtual DynamicSceneGraph::Ptr compute(const DynamicSceneGraph& graph,
                                          bool include_mesh = true) const = 0;
   virtual std::string name() const = 0;
 };
 
 struct JsonRoundTrip : SerializationMethod {
+  virtual ~JsonRoundTrip() = default;
   DynamicSceneGraph::Ptr compute(const DynamicSceneGraph& graph,
                                  bool include_mesh = true) const override {
     const auto output = io::json::writeGraph(graph, include_mesh);
@@ -61,7 +63,8 @@ struct JsonRoundTrip : SerializationMethod {
   std::string name() const override { return "Json"; }
 };
 
-struct BinaryRoudTrip : SerializationMethod {
+struct BinaryRoundTrip : SerializationMethod {
+  virtual ~BinaryRoundTrip() = default;
   DynamicSceneGraph::Ptr compute(const DynamicSceneGraph& graph,
                                  bool include_mesh = true) const override {
     std::vector<uint8_t> buffer;
@@ -80,7 +83,7 @@ struct GraphSerializationFixture
 
 const SerializationMethod::Ptr serialization_test_cases[] = {
     std::make_shared<JsonRoundTrip>(),
-    std::make_shared<BinaryRoudTrip>(),
+    std::make_shared<BinaryRoundTrip>(),
 };
 
 INSTANTIATE_TEST_SUITE_P(

@@ -64,10 +64,10 @@ class Mesh;
 void to_json(nlohmann::json& j, const Mesh& mesh);
 void from_json(const nlohmann::json& j, Mesh& mesh);
 
-class NodeAttributes;
+struct NodeAttributes;
 void to_json(nlohmann::json& j, const NodeAttributes& attrs);
 
-class EdgeAttributes;
+struct EdgeAttributes;
 void to_json(nlohmann::json& j, const EdgeAttributes& attrs);
 
 namespace io {

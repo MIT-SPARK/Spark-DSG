@@ -55,10 +55,10 @@ class Mesh;
 void read_binary(const serialization::BinaryDeserializer& s, Mesh& mesh);
 void write_binary(serialization::BinarySerializer& s, const Mesh& mesh);
 
-class NodeAttributes;
+struct NodeAttributes;
 void write_binary(serialization::BinarySerializer& s, const NodeAttributes& attrs);
 
-class EdgeAttributes;
+struct EdgeAttributes;
 void write_binary(serialization::BinarySerializer& s, const EdgeAttributes& attrs);
 
 namespace io {
