@@ -312,10 +312,17 @@ bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
          num_frontier_voxels == derived->num_frontier_voxels;
 }
 
-Place2dNodeAttributes::Place2dNodeAttributes() : SemanticNodeAttributes() {}
+Place2dNodeAttributes::Place2dNodeAttributes()
+    : Place2dNodeAttributes(std::vector<Eigen::Vector3d>()) {}
 
 Place2dNodeAttributes::Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary)
-    : SemanticNodeAttributes(), boundary(boundary) {}
+    : SemanticNodeAttributes(),
+      boundary(boundary),
+      pcl_min_index(0),
+      pcl_max_index(0),
+      need_finish_merge(false),
+      need_cleanup_splitting(false),
+      has_active_mesh_indices(false) {}
 
 NodeAttributes::Ptr Place2dNodeAttributes::clone() const {
   return std::make_unique<Place2dNodeAttributes>(*this);
