@@ -17,6 +17,7 @@ configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
 
 find_package(nlohmann_json REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Threads REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(zmq libzmq)
@@ -59,7 +60,10 @@ target_include_directories(
                          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json)
+target_link_libraries(
+  ${PROJECT_NAME} PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json
+  PRIVATE Threads::Threads
+)
 
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${zmq_LIBRARIES})

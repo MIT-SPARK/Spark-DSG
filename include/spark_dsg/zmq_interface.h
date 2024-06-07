@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+
 #include "spark_dsg/dynamic_scene_graph.h"
 
 namespace spark_dsg {
@@ -53,7 +54,7 @@ class ZmqSender {
 
 class ZmqReceiver {
  public:
-  ZmqReceiver(const std::string& url, size_t num_threads);
+  ZmqReceiver(const std::string& url, size_t num_threads, bool conflate = true);
 
   ~ZmqReceiver();
 
@@ -64,6 +65,19 @@ class ZmqReceiver {
  private:
   struct Detail;
 
+  std::unique_ptr<Detail> internals_;
+};
+
+class ZmqGraph {
+ public:
+  ZmqGraph(const std::string& url, size_t num_threads, size_t poll_time_ms = 100);
+  ~ZmqGraph();
+
+  bool hasChange() const;
+  DynamicSceneGraph::Ptr graph() const;
+
+ private:
+  struct Detail;
   std::unique_ptr<Detail> internals_;
 };
 

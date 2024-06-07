@@ -34,6 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/zmq_interface.h"
 
+#include <atomic>
+#include <mutex>
+#include <thread>
 #include <zmq.hpp>
 
 #include "spark_dsg/dynamic_scene_graph.h"
@@ -99,10 +102,14 @@ void ZmqSender::send(const DynamicSceneGraph& graph, bool include_mesh) {
 }
 
 struct ZmqReceiver::Detail {
-  Detail(const std::string& url, size_t) {
+  Detail(const std::string& url, size_t, bool conflate) {
     socket.reset(new zmq::socket_t(ZmqContextHolder::instance().context(), ZMQ_SUB));
     socket->connect(url);
     socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
+    if (conflate) {
+      int conflate_flag = 1;
+      socket->setsockopt(ZMQ_CONFLATE, &conflate_flag, sizeof(conflate_flag));
+    }
   }
 
   ~Detail() = default;
@@ -143,8 +150,8 @@ struct ZmqReceiver::Detail {
   DynamicSceneGraph::Ptr graph;
 };
 
-ZmqReceiver::ZmqReceiver(const std::string& url, size_t num_threads)
-    : internals_(new ZmqReceiver::Detail(url, num_threads)) {}
+ZmqReceiver::ZmqReceiver(const std::string& url, size_t num_threads, bool conflate)
+    : internals_(new ZmqReceiver::Detail(url, num_threads, conflate)) {}
 
 ZmqReceiver::~ZmqReceiver() {}
 
@@ -161,5 +168,69 @@ bool ZmqReceiver::recv(size_t timeout_ms, bool recv_all) {
 }
 
 DynamicSceneGraph::Ptr ZmqReceiver::graph() const { return internals_->graph; }
+
+struct ZmqGraph::Detail {
+ public:
+  Detail(const std::string& url, size_t num_threads, size_t poll_time_ms = 100)
+      : poll_time_ms_(poll_time_ms),
+        has_change_(false),
+        receiver_(url, num_threads),
+        recv_thread_(new std::thread(&Detail::receiveLoop, this)) {}
+
+  ~Detail() {
+    should_shutdown_ = true;
+    if (recv_thread_) {
+      recv_thread_->join();
+      recv_thread_.reset();
+    }
+  }
+
+  bool hasChange() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return has_change_;
+  }
+
+  DynamicSceneGraph::Ptr graph() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    has_change_ = false;
+    if (!graph_) {
+      return nullptr;
+    }
+
+    return graph_->clone();
+  }
+
+ private:
+  void receiveLoop() {
+    while (!should_shutdown_) {
+      const auto new_data = receiver_.recv(poll_time_ms_, true);
+      if (!new_data) {
+        continue;
+      }
+
+      std::lock_guard<std::mutex> lock(mutex_);
+      has_change_ = true;
+      graph_ = receiver_.graph();
+    }
+  }
+
+  const size_t poll_time_ms_;
+  std::atomic<bool> should_shutdown_;
+  mutable bool has_change_;
+  ZmqReceiver receiver_;
+
+  mutable std::mutex mutex_;
+  DynamicSceneGraph::Ptr graph_;
+  std::unique_ptr<std::thread> recv_thread_;
+};
+
+ZmqGraph::ZmqGraph(const std::string& url, size_t num_threads, size_t poll_time_ms)
+    : internals_(new ZmqGraph::Detail(url, num_threads, poll_time_ms)) {}
+
+ZmqGraph::~ZmqGraph() {}
+
+bool ZmqGraph::hasChange() const { return internals_->hasChange(); }
+
+DynamicSceneGraph::Ptr ZmqGraph::graph() const { return internals_->graph(); }
 
 }  // namespace spark_dsg

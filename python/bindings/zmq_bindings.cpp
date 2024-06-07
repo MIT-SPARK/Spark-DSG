@@ -56,6 +56,16 @@ void add_zmq_bindings(pybind11::module_& module) {
         }
         return receiver.graph();
       });
+
+  py::class_<ZmqGraph>(module, "ZmqGraph")
+      .def(py::init<const std::string&, size_t, size_t>(),
+           "url"_a,
+           "num_threads"_a = 1,
+           "poll_time_ms"_a = 100)
+      .def_property_readonly(
+          "has_change", [](const ZmqGraph& zmq_graph) { return zmq_graph.hasChange(); })
+      .def_property_readonly(
+          "graph", [](const ZmqGraph& zmq_graph) { return zmq_graph.graph(); });
 }
 #else
 void add_zmq_bindings(pybind11::module_&) {}
