@@ -49,15 +49,14 @@ using nlohmann::json;
 
 void to_json(json& j, const BoundingBox& b) {
   j = json{{"type", b.type},
-           {"min", b.min},
-           {"max", b.max},
+           {"dimensions", b.dimensions},
            {"world_P_center", b.world_P_center},
            {"world_R_center", Eigen::Quaternionf(b.world_R_center)}};
 }
 
 void from_json(const json& j, BoundingBox& b) {
   if (j.at("type").is_null()) {
-    b.type = BoundingBox::Type::RAABB;
+    b.type = BoundingBox::Type::INVALID;
   } else {
     b.type = j.at("type").get<BoundingBox::Type>();
   }
@@ -65,9 +64,17 @@ void from_json(const json& j, BoundingBox& b) {
   if (b.type == BoundingBox::Type::INVALID) {
     return;
   }
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 0, 3)) {
+    // Legacy bboxes with min/max encoding.
+    b.dimensions =
+        j.at("max").get<Eigen::Vector3f>() - j.at("min").get<Eigen::Vector3f>();
+    io::warnOutdatedHeader(header);
+  } else {
+    // New bboxes with dimensions encoding.
+    b.dimensions = j.at("dimensions").get<Eigen::Vector3f>();
+  }
 
-  b.min = j.at("min").get<Eigen::Vector3f>();
-  b.max = j.at("max").get<Eigen::Vector3f>();
   b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
   auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
   b.world_R_center = world_q_center.toRotationMatrix();

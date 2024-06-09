@@ -68,7 +68,7 @@ def _centroid_bbx_embedding(G, x) -> NodeConversionFunc:
     return np.hstack(
         (
             x.attributes.position,
-            x.attributes.bounding_box.max - x.attributes.bounding_box.min,
+            x.attributes.bounding_box.dimensions,
         )
     )
 

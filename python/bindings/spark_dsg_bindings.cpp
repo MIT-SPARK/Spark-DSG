@@ -207,25 +207,32 @@ PYBIND11_MODULE(_dsg_bindings, module) {
 
   py::class_<BoundingBox>(module, "BoundingBox")
       .def(py::init<>())
+      .def(py::init<const Eigen::Vector3f&>())
       .def(py::init<const Eigen::Vector3f&, const Eigen::Vector3f&>())
-      .def(py::init(
-          [](const Eigen::Vector3f& min,
-             const Eigen::Vector3f& max,
-             const Eigen::Vector3f& pos,
-             const Quaternion<float>& rot) { return BoundingBox(min, max, pos, rot); }))
+      .def(py::init<const Eigen::Vector3f&, const Eigen::Vector3f&, float>())
+      .def(py::init([](BoundingBox::Type type,
+                       const Eigen::Vector3f& dim,
+                       const Eigen::Vector3f& pos,
+                       const Eigen::Matrix3f& trans) {
+        return BoundingBox(type, dim, pos, trans);
+      }))
       .def_readwrite("type", &BoundingBox::type)
-      .def_readwrite("min", &BoundingBox::min)
-      .def_readwrite("max", &BoundingBox::max)
+      .def_readwrite("dimensions", &BoundingBox::dimensions)
       .def_readwrite("world_P_center", &BoundingBox::world_P_center)
       .def_readwrite("world_R_center", &BoundingBox::world_R_center)
-      .def("is_inside",
-           static_cast<bool (BoundingBox::*)(const Eigen::Vector3d&) const>(
-               &BoundingBox::isInside))
-      .def("is_inside",
-           static_cast<bool (BoundingBox::*)(const Eigen::Vector3f&) const>(
-               &BoundingBox::isInside))
+      .def("is_valid", &BoundingBox::isValid)
       .def("volume", &BoundingBox::volume)
-      .def("dimensions", &BoundingBox::dimensions)
+      .def("has_rotation", &BoundingBox::hasRotation)
+      .def("corners", &BoundingBox::corners)
+      .def("contains",
+           static_cast<bool (BoundingBox::*)(const Eigen::Vector3f&) const>(
+               &BoundingBox::contains))
+      .def("intersects",
+           static_cast<bool (BoundingBox::*)(const BoundingBox&) const>(
+               &BoundingBox::intersects))
+      .def("compute_iou",
+           static_cast<float (BoundingBox::*)(const BoundingBox&) const>(
+               &BoundingBox::computeIoU))
       .def("__repr__", [](const BoundingBox& box) {
         std::stringstream ss;
         ss << box;

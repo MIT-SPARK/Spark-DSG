@@ -518,12 +518,14 @@ def add_gt_room_label(
             hydra_polygon = _get_combined_polygon(places_nodes)
         else:
             bbox = room.attributes.bounding_box
+            bbox_min = bbox.min_corner()
+            bbox_max = bbox.max_corner()
             hydra_polygon = shapely.geometry.Polygon(
                 [
-                    [bbox.min[0], bbox.min[1]],
-                    [bbox.min[0], bbox.max[1]],
-                    [bbox.max[0], bbox.max[1]],
-                    [bbox.max[0], bbox.min[1]],
+                    [bbox_max[0], bbox_min[1]],
+                    [bbox_min[0], bbox_max[1]],
+                    [bbox_max[0], bbox_max[1]],
+                    [bbox_max[0], bbox_min[1]],
                 ]
             )
 

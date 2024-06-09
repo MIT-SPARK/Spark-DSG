@@ -134,8 +134,8 @@ const BoundingBoxTestConfig bbox_test_cases[] = {
     {1, 4, {}},
     {2, 3, {}},
     {3, 3, {}},
-    {0, 2, {{1, 1, 1}, {2, 2, 2}}},
-    {1, 2, {{3, 3, 3}, {4, 4, 4}}},
+    {0, 2, {{1, 1, 1}, {1.5, 1.5, 1.5}}},
+    {1, 2, {{1, 1, 1}, {3.5, 3.5, 3.5}}},
 };
 
 INSTANTIATE_TEST_SUITE_P(GetChildBoundingBox,

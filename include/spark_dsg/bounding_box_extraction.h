@@ -36,17 +36,11 @@
 #include <list>
 
 #include "spark_dsg/bounding_box.h"
-#include "spark_dsg/mesh.h"
 
 namespace spark_dsg {
 namespace bounding_box {
 
-// TODO(nathan) think about precision
-struct PointAdaptor {
-  virtual size_t size() const = 0;
-  virtual Eigen::Vector3f get(size_t index) const = 0;
-  Eigen::Vector3f operator[](size_t index) const { return get(index); }
-};
+using PointAdaptor = BoundingBox::PointAdaptor;
 
 /**
  * @brief compute 2D convex hull in x-y plane
@@ -65,16 +59,5 @@ BoundingBox extract(const PointAdaptor& points,
                     BoundingBox::Type type = BoundingBox::Type::AABB);
 
 }  // namespace bounding_box
-
-struct MeshAdaptor : bounding_box::PointAdaptor {
-  MeshAdaptor(const Mesh& mesh, const std::vector<size_t>* indices = nullptr);
-
-  size_t size() const override;
-
-  Eigen::Vector3f get(size_t index) const override;
-
-  const Mesh& mesh;
-  const std::vector<size_t>* indices;
-};
 
 }  // namespace spark_dsg

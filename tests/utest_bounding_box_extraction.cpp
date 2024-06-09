@@ -83,15 +83,14 @@ TEST(BoundingBoxExtractionTests, AABBFromPoints) {
   };
 
   // get bounding box from pointcloud
-  BoundingBox box = bounding_box::extract(adaptor);
+  BoundingBox box(adaptor);
   EXPECT_EQ(BoundingBox::Type::AABB, box.type);
-
-  EXPECT_EQ(-1.0f, box.min(0));
-  EXPECT_EQ(1.0f, box.max(0));
-  EXPECT_EQ(-0.5f, box.min(1));
-  EXPECT_EQ(1.5f, box.max(1));
-  EXPECT_EQ(0.0f, box.min(2));  // "lower z" is superseded by x and y points
-  EXPECT_EQ(4.0f, box.max(2));
+  EXPECT_EQ(2.0f, box.dimensions(0));
+  EXPECT_EQ(2.0f, box.dimensions(1));
+  EXPECT_EQ(4.0f, box.dimensions(2));
+  EXPECT_EQ(0.0f, box.world_P_center(0));
+  EXPECT_EQ(0.5f, box.world_P_center(1));
+  EXPECT_EQ(2.0f, box.world_P_center(2));
 }
 
 TEST(BoundingBoxExtractionTests, ConvexHull) {
@@ -123,17 +122,12 @@ TEST(BoundingBoxExtractionTests, RAABBFromTwoPoints) {
 
   BoundingBox box = bounding_box::extract(adaptor, BoundingBox::Type::RAABB);
   EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
-
-  EXPECT_NEAR(-2.5f, box.min(0), 1.0e-6);
-  EXPECT_NEAR(2.5f, box.max(0), 1.0e-6);
-  EXPECT_NEAR(0.0f, box.min(1), 1.0e-6);
-  EXPECT_NEAR(0.0f, box.max(1), 1.0e-6);
-  EXPECT_NEAR(0.0f, box.min(2), 1.0e-6);
-  EXPECT_NEAR(0.0f, box.max(2), 1.0e-6);
-
-  Eigen::Vector3f expected_pos(2.5f, 0.0f, 0.0f);
-  EXPECT_NEAR(0.0f, (expected_pos - box.world_P_center).norm(), 1.0e-6f)
-      << box.world_P_center;
+  EXPECT_NEAR(5.0f, box.dimensions(0), 1.0e-6);
+  EXPECT_NEAR(0.0f, box.dimensions(1), 1.0e-6);
+  EXPECT_NEAR(0.0f, box.dimensions(2), 1.0e-6);
+  EXPECT_NEAR(2.5f, box.world_P_center(0), 1.0e-6);
+  EXPECT_NEAR(0.0f, box.world_P_center(1), 1.0e-6);
+  EXPECT_NEAR(0.0f, box.world_P_center(2), 1.0e-6);
 
   Eigen::Quaternionf expected_rotation = Eigen::Quaternionf::Identity();
   EXPECT_NEAR(0.0f, getRotationError(expected_rotation, box), 1.0e-6f);
@@ -150,17 +144,12 @@ TEST(BoundingBoxExtractionTests, RAABBFromPoints) {
   // get bounding box from pointcloud
   BoundingBox box = bounding_box::extract(adaptor, BoundingBox::Type::RAABB);
   EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
-
-  EXPECT_NEAR(-2.5f, box.min(0), 1.0e-6);
-  EXPECT_NEAR(2.5f, box.max(0), 1.0e-6);
-  EXPECT_NEAR(-1.25f, box.min(1), 1.0e-6);
-  EXPECT_NEAR(1.25f, box.max(1), 1.0e-6);
-  EXPECT_NEAR(-0.5f, box.min(2), 1.0e-6);
-  EXPECT_NEAR(0.5f, box.max(2), 1.0e-6);
-
-  Eigen::Vector3f expected_pos(2.5f, 1.25f, 0.5f);
-  EXPECT_NEAR(0.0f, (expected_pos - box.world_P_center).norm(), 1.0e-6f)
-      << box.world_P_center;
+  EXPECT_NEAR(5.0f, box.dimensions(0), 1.0e-6);
+  EXPECT_NEAR(2.5f, box.dimensions(1), 1.0e-6);
+  EXPECT_NEAR(1.0f, box.dimensions(2), 1.0e-6);
+  EXPECT_NEAR(2.5f, box.world_P_center(0), 1.0e-6);
+  EXPECT_NEAR(1.25f, box.world_P_center(1), 1.0e-6);
+  EXPECT_NEAR(0.5f, box.world_P_center(2), 1.0e-6);
 
   Eigen::Quaternionf expected_rotation = Eigen::Quaternionf::Identity();
   EXPECT_NEAR(0.0f, getRotationError(expected_rotation, box), 1.0e-6f);
@@ -200,12 +189,9 @@ TEST(BoundingBoxExtractionTests, RAABBFromPointsNonTrivial) {
   BoundingBox box = bounding_box::extract(adaptor, BoundingBox::Type::RAABB);
   EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
 
-  EXPECT_NEAR(-length / 2.0f, box.min(0), 1.0e-6);
-  EXPECT_NEAR(length / 2.0f, box.max(0), 1.0e-6);
-  EXPECT_NEAR(-width / 2.0f, box.min(1), 1.0e-6);
-  EXPECT_NEAR(width / 2.0f, box.max(1), 1.0e-6);
-  EXPECT_NEAR(-height / 2.0f, box.min(2), 1.0e-6);
-  EXPECT_NEAR(height / 2.0f, box.max(2), 1.0e-6);
+  EXPECT_NEAR(length, box.dimensions(0), 1.0e-6);
+  EXPECT_NEAR(width, box.dimensions(1), 1.0e-6);
+  EXPECT_NEAR(height, box.dimensions(2), 1.0e-6);
 
   const Eigen::Vector3f expected_pos = world_R_box * box_centroid + world_p_box;
   EXPECT_NEAR(0.0f, (expected_pos - box.world_P_center).norm(), 1.0e-6f)

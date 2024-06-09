@@ -185,32 +185,22 @@ BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hul
 }
 
 BoundingBox extractAABB(const PointAdaptor& points) {
-  BoundingBox box;
-  box.type = BoundingBox::Type::AABB;
-
-  box.min = points[0];
-  box.max = box.min;
-
+  Eigen::Vector3f min = points[0];
+  Eigen::Vector3f max = min;
   for (size_t i = 1; i < points.size(); ++i) {
-    box.min = box.min.array().min(points[i].array());
-    box.max = box.max.array().max(points[i].array());
+    min = min.array().min(points[i].array());
+    max = max.array().max(points[i].array());
   }
-
-  box.world_P_center = (box.max + box.min) / 2.0;
-  return box;
+  return BoundingBox(max - min, (min + max) / 2.0f);
 }
 
 BoundingBox extractOBB(const PointAdaptor&) { return {}; }
 
 BoundingBox extractRAABB(const PointAdaptor& points) {
-  BoundingBox bbox;
-  bbox.type = BoundingBox::Type::RAABB;
-
   auto hull = get2dConvexHull(points);
   const auto min_2d_box = getMin2DBox(points, hull);
   if (!min_2d_box.min_area) {
-    bbox.type = BoundingBox::Type::INVALID;
-    return bbox;
+    return {};
   }
 
   float min_z = points[0].z();
@@ -227,12 +217,9 @@ BoundingBox extractRAABB(const PointAdaptor& points) {
   Eigen::Vector3f p_max;
   p_max << min_2d_box.x_max, max_z;
 
-  bbox.world_P_center = (p_min + p_max) / 2.0f;
-  bbox.world_R_center << std::cos(yaw), -std::sin(yaw), 0.0f, std::sin(yaw),
-      std::cos(yaw), 0.0f, 0.0f, 0.0f, 1.0f;
-  bbox.min = bbox.world_R_center.transpose() * (p_min - bbox.world_P_center);
-  bbox.max = bbox.world_R_center.transpose() * (p_max - bbox.world_P_center);
-  return bbox;
+  BoundingBox result(Eigen::Vector3f::Zero(), (p_min + p_max) / 2.0f, yaw);
+  result.dimensions = result.pointToBoxFrame(p_max) - result.pointToBoxFrame(p_min);
+  return result;
 }
 
 BoundingBox extract(const PointAdaptor& points, BoundingBox::Type type) {
@@ -253,17 +240,5 @@ BoundingBox extract(const PointAdaptor& points, BoundingBox::Type type) {
 }
 
 }  // namespace bounding_box
-
-MeshAdaptor::MeshAdaptor(const Mesh& mesh, const std::vector<size_t>* indices)
-    : mesh(mesh), indices(indices) {}
-
-size_t MeshAdaptor::size() const {
-  return indices ? indices->size() : mesh.numVertices();
-}
-
-Eigen::Vector3f MeshAdaptor::get(size_t index) const {
-  const size_t global_idx = indices ? indices->at(index) : index;
-  return mesh.pos(global_idx);
-}
 
 }  // namespace spark_dsg

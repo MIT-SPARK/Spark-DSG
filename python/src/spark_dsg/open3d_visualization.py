@@ -174,11 +174,10 @@ class RemoteVisualizer:
 
         for node in layer.nodes:
             bbox = node.attributes.bounding_box
-            extents = bbox.max - bbox.min
             o3d_bbox = o3d.geometry.OrientedBoundingBox(
                 bbox.world_P_center.astype(np.float64),
                 bbox.world_R_center.astype(np.float64),
-                extents.astype(np.float64),
+                bbox.dimensions.astype(np.float64),
             )
             o3d_bbox.color = node.attributes.color / 255.0
             bboxes += o3d.geometry.LineSet.create_from_oriented_bounding_box(o3d_bbox)

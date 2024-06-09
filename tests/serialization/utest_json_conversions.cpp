@@ -137,38 +137,25 @@ TEST(JsonConversions, EigenQuaternionJson) {
 TEST(JsonConversions, BoundingBoxJson) {
   {  // invalid type
     BoundingBox expected;
-
     json output = expected;
     BoundingBox result = output.get<BoundingBox>();
-
     EXPECT_EQ(expected, result);
   }
 
   {  // ABB
-    Eigen::Vector3f expected_min;
-    expected_min << 1.0f, 2.0f, 3.0f;
-    Eigen::Vector3f expected_max;
-    expected_max << 4.0f, 5.0f, 6.0f;
-
-    BoundingBox expected(expected_min, expected_max);
-
+    Eigen::Vector3f expected_pos{1.0f, 2.0f, 3.0f};
+    Eigen::Vector3f expected_dim{4.0f, 5.0f, 6.0f};
+    BoundingBox expected(expected_pos, expected_dim);
     json output = expected;
-
     BoundingBox result = output.get<BoundingBox>();
     EXPECT_EQ(expected, result);
   }
 
   {  // OBB
-    Eigen::Vector3f expected_min;
-    expected_min << 1.0f, 2.0f, 3.0f;
-    Eigen::Vector3f expected_max;
-    expected_max << 4.0f, 5.0f, 6.0f;
-    Eigen::Vector3f expected_pos;
-    expected_pos << 7.0f, 8.0f, 9.0f;
+    Eigen::Vector3f expected_pos{1.0f, 2.0f, 3.0f};
+    Eigen::Vector3f expected_dim{4.0f, 5.0f, 6.0f};
     Eigen::Quaternionf expected_rot(0.0, 0.0, 1.0, 0.0);
-
-    BoundingBox expected(expected_min, expected_max, expected_pos, expected_rot);
-
+    BoundingBox expected(expected_pos, expected_dim, expected_rot);
     json output = expected;
     BoundingBox result = output.get<BoundingBox>();
     EXPECT_EQ(expected, result);
