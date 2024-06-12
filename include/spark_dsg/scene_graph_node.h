@@ -152,6 +152,11 @@ class SceneGraphNode {
   const std::set<NodeId>& parents() const;
 
   /**
+   * @brief get list of all node ids the node is connected to
+   */
+  std::vector<NodeId> connections() const;
+
+  /**
    * @brief get a reference to the attributes of the node (with an optional
    * template argument to perform a cast to the desired attribute type
    */

@@ -90,4 +90,13 @@ const std::set<NodeId>& SceneGraphNode::children() const { return children_; };
 
 const std::set<NodeId>& SceneGraphNode::parents() const { return parents_; };
 
+std::vector<NodeId> SceneGraphNode::connections() const {
+  // TODO(nathan) this would be better as a custom iterator
+  std::vector<NodeId> to_return;
+  to_return.insert(to_return.end(), siblings_.begin(), siblings_.end());
+  to_return.insert(to_return.end(), children_.begin(), children_.end());
+  to_return.insert(to_return.end(), parents_.begin(), parents_.end());
+  return to_return;
+}
+
 }  // namespace spark_dsg
