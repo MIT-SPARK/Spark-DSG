@@ -131,7 +131,7 @@ class SceneGraphNode {
   bool hasChildren() const;
 
   /**
-   * @brief get the parent of the node (if it exists)
+   * @brief get the parent of the node (if it exists and is unique)
    * @returns the id of the parent of the node (if it exists)
    */
   std::optional<NodeId> getParent() const;
@@ -145,6 +145,11 @@ class SceneGraphNode {
    * @brief constant iterable over the node's children
    */
   const std::set<NodeId>& children() const;
+
+  /**
+   * @brief constant iterable over the node's parents
+   */
+  const std::set<NodeId>& parents() const;
 
   /**
    * @brief get a reference to the attributes of the node (with an optional
@@ -181,27 +186,12 @@ class SceneGraphNode {
    */
   virtual std::ostream& fill_ostream(std::ostream& out) const;
 
-  /**
-   * @brief set the parent for a node
-   * @note only for internal (scene-graph) use
-   * @param parent_id new parent of node
-   */
-  void setParent(NodeId parent_id);
-
-  /**
-   * @brief remove a parent from a node
-   * @note only for internal (scene-graph) use
-   */
-  void clearParent();
-
  protected:
   //! pointer to attributes
   NodeAttributes::Ptr attributes_;
 
-  //! whether or not the node has a parent
-  bool has_parent_;
   //! node id of parent (if valid)
-  NodeId parent_;
+  std::set<NodeId> parents_;
   //! sibling node ids (maintained by layer)
   std::set<NodeId> siblings_;
   //! children node ids (maintained by graph)

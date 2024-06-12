@@ -92,7 +92,7 @@ void parseEdge(const AttributeFactory<EdgeAttributes>& factory,
 
   // last argument always forces parents to rewire
   auto attrs = serialization::Visitor::from(factory, deserializer);
-  graph.addOrUpdateEdge(source, target, std::move(attrs), true);
+  graph.addOrUpdateEdge(source, target, std::move(attrs));
 }
 
 void writeGraph(const DynamicSceneGraph& graph,

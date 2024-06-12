@@ -229,8 +229,8 @@ TEST(DynamicSceneGraphTests, InsertEdgeInvariants) {
   EXPECT_TRUE(graph.hasEdge(0, 2));
   EXPECT_TRUE(graph.hasEdge(2, 0));
 
-  // add an improper edge (0 already has a parent)
-  EXPECT_FALSE(graph.insertEdge(0, 3));
+  // add an improper edge (0 already has a parent) that should work
+  EXPECT_TRUE(graph.insertEdge(0, 3));
 
   // add an edge between non-existant nodes
   EXPECT_FALSE(graph.insertEdge(0, 5));
@@ -284,21 +284,14 @@ TEST(DynamicSceneGraphTests, InsertNewParent) {
   EXPECT_TRUE(p1.children().count(0));
   EXPECT_FALSE(p2.children().count(0));
 
-  // add an improper edge (0 already has a parent)
-  EXPECT_FALSE(graph.insertEdge(0, 3));
-  ASSERT_TRUE(child.hasParent());
-  EXPECT_EQ(child.getParent().value(), 2u);
-  EXPECT_TRUE(p1.children().count(0));
-  EXPECT_FALSE(p2.children().count(0));
-
-  EXPECT_TRUE(graph.insertEdge(0, 3, nullptr, true));
+  EXPECT_TRUE(graph.insertParentEdge(0, 3, nullptr));
   ASSERT_TRUE(child.hasParent());
   EXPECT_EQ(child.getParent().value(), 3u);
   EXPECT_FALSE(p1.children().count(0));
   EXPECT_TRUE(p2.children().count(0));
 
   // reset the original parent (but flip argument order)
-  EXPECT_TRUE(graph.insertEdge(2, 0, nullptr, true));
+  EXPECT_TRUE(graph.insertParentEdge(2, 0, nullptr));
   ASSERT_TRUE(child.hasParent());
   EXPECT_EQ(child.getParent().value(), 2u);
   EXPECT_TRUE(p1.children().count(0));
@@ -425,7 +418,7 @@ TEST(DynamicSceneGraphTests, MergeNodesCorrect) {
 
   // check that conflicting parents get handled
   EXPECT_TRUE(graph.mergeNodes(6, 7));
-  EXPECT_EQ(3u, graph.numEdges());
+  EXPECT_EQ(4u, graph.numEdges());
   EXPECT_EQ(4u, graph.numNodes());
   EXPECT_FALSE(graph.hasNode(6));
   EXPECT_TRUE(graph.hasEdge(7, 3));

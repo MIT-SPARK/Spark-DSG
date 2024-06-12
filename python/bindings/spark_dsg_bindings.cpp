@@ -625,17 +625,33 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "timestamp"_a,
           "attrs"_a,
           "add_edge_to_previous"_a = true)
-      .def("insert_edge",
-           [](DynamicSceneGraph& graph, NodeId source, NodeId target) {
-             return graph.insertEdge(source, target);
-           })
-      .def("insert_edge",
-           [](DynamicSceneGraph& graph,
-              NodeId source,
-              NodeId target,
-              const EdgeAttributes& info) {
-             return graph.insertEdge(source, target, info.clone());
-           })
+      .def(
+          "insert_edge",
+          [](DynamicSceneGraph& graph,
+             NodeId source,
+             NodeId target,
+             bool enforce_single_parent) {
+            return enforce_single_parent ? graph.insertParentEdge(source, target)
+                                         : graph.insertEdge(source, target);
+          },
+          "source"_a,
+          "target"_a,
+          "enforce_single_parent"_a = false)
+      .def(
+          "insert_edge",
+          [](DynamicSceneGraph& graph,
+             NodeId source,
+             NodeId target,
+             const EdgeAttributes& info,
+             bool enforce_single_parent) {
+            return enforce_single_parent
+                       ? graph.insertParentEdge(source, target, info.clone())
+                       : graph.insertEdge(source, target, info.clone());
+          },
+          "source"_a,
+          "target"_a,
+          "info"_a,
+          "enforce_single_parent"_a = false)
       .def("has_layer",
            static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(
                &DynamicSceneGraph::hasLayer))

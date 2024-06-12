@@ -42,7 +42,7 @@ namespace spark_dsg {
 SceneGraphNode::SceneGraphNode(NodeId node_id,
                                LayerId layer_id,
                                NodeAttributes::Ptr&& attrs)
-    : id(node_id), layer(layer_id), attributes_(std::move(attrs)), has_parent_(false) {}
+    : id(node_id), layer(layer_id), attributes_(std::move(attrs)) {}
 
 SceneGraphNode::SceneGraphNode(NodeId node_id,
                                LayerId layer_id,
@@ -51,8 +51,7 @@ SceneGraphNode::SceneGraphNode(NodeId node_id,
     : id(node_id),
       layer(layer_id),
       timestamp(timestamp),
-      attributes_(std::move(attrs)),
-      has_parent_(false) {}
+      attributes_(std::move(attrs)) {}
 
 SceneGraphNode::~SceneGraphNode() = default;
 
@@ -69,31 +68,26 @@ std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
   return node.fill_ostream(out);
 }
 
-bool SceneGraphNode::hasParent() const { return has_parent_; }
+bool SceneGraphNode::hasParent() const { return parents_.size() == 1; }
 
 bool SceneGraphNode::hasSiblings() const { return not siblings_.empty(); }
 
 bool SceneGraphNode::hasChildren() const { return not children_.empty(); }
 
 std::optional<NodeId> SceneGraphNode::getParent() const {
-  if (!has_parent_) {
+  if (parents_.size() != 1) {
     return std::nullopt;
   }
 
-  return parent_;
+  return *parents_.begin();
 }
 
 NodeAttributes* SceneGraphNode::getAttributesPtr() const { return attributes_.get(); }
 
-void SceneGraphNode::setParent(NodeId parent_id) {
-  has_parent_ = true;
-  parent_ = parent_id;
-}
-
-void SceneGraphNode::clearParent() { has_parent_ = false; }
-
 const std::set<NodeId>& SceneGraphNode::siblings() const { return siblings_; };
 
 const std::set<NodeId>& SceneGraphNode::children() const { return children_; };
+
+const std::set<NodeId>& SceneGraphNode::parents() const { return parents_; };
 
 }  // namespace spark_dsg

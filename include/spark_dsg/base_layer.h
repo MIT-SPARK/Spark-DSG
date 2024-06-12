@@ -45,6 +45,7 @@ struct GraphMergeConfig {
   bool update_dynamic_attributes = true;
   bool update_archived_attributes = false;
   bool clear_removed = false;
+  bool enforce_parent_constraints = true;
 
   NodeId getMergedId(NodeId original) const {
     if (!previous_merges) {
