@@ -56,42 +56,69 @@ inline Mesh createDummyMesh() {
 TEST(MeshTests, EraseVertices) {
   Mesh mesh = createDummyMesh();
   mesh.eraseVertices({0, 1, 2, 3, 4, 6});
-  ASSERT_EQ(mesh.points.size(), 6);
-  ASSERT_EQ(mesh.colors.size(), 6);
-  ASSERT_EQ(mesh.stamps.size(), 6);
-  ASSERT_EQ(mesh.labels.size(), 0);
-  ASSERT_EQ(mesh.faces.size(), 1);
+  EXPECT_EQ(mesh.points.size(), 6);
+  EXPECT_EQ(mesh.colors.size(), 6);
+  EXPECT_EQ(mesh.stamps.size(), 6);
+  EXPECT_EQ(mesh.labels.size(), 0);
+  EXPECT_EQ(mesh.faces.size(), 1);
   // Note that new indices should be shifted.
-  ASSERT_EQ(mesh.faces[0][0], 3);
-  ASSERT_EQ(mesh.faces[0][1], 4);
-  ASSERT_EQ(mesh.faces[0][2], 5);
-  ASSERT_EQ(mesh.timestamp(0), 5);
-  ASSERT_EQ(mesh.timestamp(1), 7);
-  ASSERT_EQ(mesh.timestamp(2), 8);
+  EXPECT_EQ(mesh.faces[0][0], 3);
+  EXPECT_EQ(mesh.faces[0][1], 4);
+  EXPECT_EQ(mesh.faces[0][2], 5);
+  EXPECT_EQ(mesh.timestamp(0), 5);
+  EXPECT_EQ(mesh.timestamp(1), 7);
+  EXPECT_EQ(mesh.timestamp(2), 8);
 }
 
 TEST(MeshTests, EraseFaces) {
   Mesh mesh = createDummyMesh();
 
   mesh.eraseFaces({0, 1}, false);
-  ASSERT_EQ(mesh.points.size(), 12);
-  ASSERT_EQ(mesh.colors.size(), 12);
-  ASSERT_EQ(mesh.stamps.size(), 12);
-  ASSERT_EQ(mesh.labels.size(), 0);
-  ASSERT_EQ(mesh.faces.size(), 2);
-  ASSERT_EQ(mesh.faces[0][0], 6);
-  ASSERT_EQ(mesh.faces[0][1], 7);
-  ASSERT_EQ(mesh.faces[0][2], 8);
+  EXPECT_EQ(mesh.points.size(), 12);
+  EXPECT_EQ(mesh.colors.size(), 12);
+  EXPECT_EQ(mesh.stamps.size(), 12);
+  EXPECT_EQ(mesh.labels.size(), 0);
+  EXPECT_EQ(mesh.faces.size(), 2);
+  EXPECT_EQ(mesh.faces[0][0], 6);
+  EXPECT_EQ(mesh.faces[0][1], 7);
+  EXPECT_EQ(mesh.faces[0][2], 8);
 
   mesh.eraseFaces({0}, true);
-  ASSERT_EQ(mesh.points.size(), 3);
-  ASSERT_EQ(mesh.colors.size(), 3);
-  ASSERT_EQ(mesh.stamps.size(), 3);
-  ASSERT_EQ(mesh.labels.size(), 0);
-  ASSERT_EQ(mesh.faces.size(), 1);
-  ASSERT_EQ(mesh.timestamp(0), 9);
-  ASSERT_EQ(mesh.timestamp(1), 10);
-  ASSERT_EQ(mesh.timestamp(2), 11);
+  EXPECT_EQ(mesh.points.size(), 3);
+  EXPECT_EQ(mesh.colors.size(), 3);
+  EXPECT_EQ(mesh.stamps.size(), 3);
+  EXPECT_EQ(mesh.labels.size(), 0);
+  EXPECT_EQ(mesh.faces.size(), 1);
+  EXPECT_EQ(mesh.timestamp(0), 9);
+  EXPECT_EQ(mesh.timestamp(1), 10);
+  EXPECT_EQ(mesh.timestamp(2), 11);
+}
+
+TEST(MeshTests, transform) {
+  Mesh mesh = createDummyMesh();
+
+  // Identity transform
+  Eigen::Isometry3f transform = Eigen::Isometry3f::Identity();
+  mesh.transform(transform);
+  for (size_t i = 0; i < mesh.numVertices(); ++i) {
+    EXPECT_EQ(mesh.pos(i), Eigen::Vector3f(i, i, i));
+  }
+
+  // Translation.
+  transform.translation() = Eigen::Vector3f(1, 2, 3);
+  mesh.transform(transform);
+  for (size_t i = 0; i < mesh.numVertices(); ++i) {
+    EXPECT_EQ(mesh.pos(i), Eigen::Vector3f(i + 1, i + 2, i + 3));
+  }
+
+  // Rotation.
+  transform = Eigen::Isometry3f::Identity();
+  transform.rotate(Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitZ()));
+  mesh.transform(transform);
+  for (size_t i = 0; i < mesh.numVertices(); ++i) {
+    EXPECT_NEAR(
+        (mesh.pos(i) - Eigen::Vector3f(-(i + 2.0f), i + 1, i + 3)).norm(), 0.0f, 1e-5);
+  }
 }
 
 }  // namespace spark_dsg

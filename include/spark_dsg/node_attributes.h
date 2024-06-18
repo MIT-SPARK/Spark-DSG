@@ -43,6 +43,7 @@
 #include <string>
 
 #include "spark_dsg/bounding_box.h"
+#include "spark_dsg/color.h"
 #include "spark_dsg/mesh.h"
 #include "spark_dsg/scene_graph_types.h"
 #include "spark_dsg/serialization/attribute_registry.h"
@@ -152,8 +153,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! pointer type for node
   using Ptr = std::unique_ptr<SemanticNodeAttributes>;
-  //! alias between color type and Eigen vector of uint8_t
-  using ColorVector = Eigen::Matrix<uint8_t, 3, 1>;
+
   //! alias for semantic label
   using Label = SemanticLabel;
   // !flag for whether or not semantic label should be considered valid
@@ -169,7 +169,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   //! Name of the node
   std::string name;
   //! Color of the node (if it exists)
-  ColorVector color;
+  Color color;
   //! Extents of the node (if they exists)
   BoundingBox bounding_box;
   //! semantic label of object

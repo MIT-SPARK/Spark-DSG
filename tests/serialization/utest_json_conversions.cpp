@@ -53,12 +53,11 @@ TEST(JsonConversions, EigenVectorJson) {
   }
 
   {  // uint8_t vector
-    SemanticNodeAttributes::ColorVector expected;
-    expected << 1, 2, 3;
+    Color expected(1, 2, 3);
 
     json output = expected;
 
-    auto result = output.get<SemanticNodeAttributes::ColorVector>();
+    auto result = output.get<Color>();
     EXPECT_EQ(expected, result);
   }
 

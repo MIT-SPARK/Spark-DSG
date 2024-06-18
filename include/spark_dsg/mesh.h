@@ -41,23 +41,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include "spark_dsg/color.h"
+
 namespace spark_dsg {
-
-struct Color {
-  uint8_t r = 0;
-  uint8_t g = 0;
-  uint8_t b = 0;
-  uint8_t a = 255;
-
-  Color() = default;
-  Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {}
-  virtual ~Color() = default;
-
-  bool operator==(const Color& other) const {
-    return r == other.r && g == other.g && b == other.b && a == other.a;
-  }
-  bool operator!=(const Color& other) const { return !(*this == other); }
-};
 
 class Mesh {
  public:
@@ -84,6 +70,8 @@ class Mesh {
 
   Mesh& operator=(const Mesh& other);
   Mesh& operator=(Mesh&& other);
+
+  // ------ Container data ------
 
   /**
    * @brief Check whether the mesh is empty
@@ -116,6 +104,8 @@ class Mesh {
    * @brief Set mesh face size
    */
   void resizeFaces(size_t size);
+
+  // ------ Access ------
 
   /**
    * @brief Copy mesh (allowing for derived classes)
@@ -182,7 +172,7 @@ class Mesh {
    */
   Face& face(size_t index);
 
- public:
+  // ------ I/O ------
   /**
    * @brief Get JSON string representing mesh
    * @returns JSON string representing mesh
@@ -225,6 +215,8 @@ class Mesh {
    */
   static Ptr load(std::string filepath);
 
+  // ------ Modification ------
+
   /**
    * @brief Erase the vertices with index in the given vector from the mesh. This will
    * re-index the faces and prune faces that are no longer valid.
@@ -243,6 +235,12 @@ class Mesh {
    */
   void eraseFaces(const std::unordered_set<size_t>& indices,
                   const bool update_vertices = true);
+
+  /**
+   * @brief Transform the mesh coordinates by the given transformation.
+   * @param transform The transformation to in homogeneous coordinates.
+   */
+  void transform(const Eigen::Isometry3f& transform);
 
  public:
   const bool has_colors;

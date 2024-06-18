@@ -252,7 +252,18 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<SemanticNodeAttributes, NodeAttributes>(module, "SemanticNodeAttributes")
       .def(py::init<>())
       .def_readwrite("name", &SemanticNodeAttributes::name)
-      .def_readwrite("color", &SemanticNodeAttributes::color)
+      .def_property(
+          "color",
+          [](const SemanticNodeAttributes& attrs) {
+            Eigen::Matrix<uint8_t, 3, 1> color;
+            color << attrs.color.r, attrs.color.g, attrs.color.b;
+            return color;
+          },
+          [](SemanticNodeAttributes& attrs, const Eigen::Matrix<uint8_t, 3, 1> color) {
+            attrs.color.r = color(0);
+            attrs.color.g = color(1);
+            attrs.color.b = color(2);
+          })
       .def_readwrite("bounding_box", &SemanticNodeAttributes::bounding_box)
       .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label)
       .def_readwrite("semantic_feature", &SemanticNodeAttributes::semantic_feature)

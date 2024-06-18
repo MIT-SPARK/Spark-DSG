@@ -121,7 +121,6 @@ bool NodeAttributes::is_equal(const NodeAttributes& other) const {
 SemanticNodeAttributes::SemanticNodeAttributes()
     : NodeAttributes(),
       name(""),
-      color(ColorVector::Zero()),
       semantic_label(NO_SEMANTIC_LABEL),
       semantic_feature(0, 0) {}
 
@@ -138,9 +137,8 @@ bool SemanticNodeAttributes::hasFeature() const {
 }
 
 std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
-  auto format = getDefaultVectorFormat();
   NodeAttributes::fill_ostream(out);
-  out << "\n  - color: " << color.cast<int>().transpose().format(format) << "\n"
+  out << "\n  - color: " << color << "\n"
       << "  - name: " << name << "\n"
       << "  - bounding box: " << bounding_box << "\n"
       << "  - label: " << std::to_string(semantic_label) << "\n"

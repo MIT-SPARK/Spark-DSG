@@ -1,5 +1,5 @@
-#include "spark_dsg/node_attributes.h"
 #include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 
@@ -13,7 +13,7 @@ inline SemanticNodeAttributes getSemanticNodeAttributes() {
   SemanticNodeAttributes expected;
   expected.position << 1.0, 2.0, 3.0;
   expected.name = "semantic_attributes";
-  expected.color << 4, 5, 6;
+  expected.color = Color(4, 5, 6);
   expected.bounding_box.type = BoundingBox::Type::AABB;
   expected.bounding_box.world_P_center << 7.0f, 8.0f, 9.0f;
   expected.bounding_box.dimensions << 10.0f, 11.0f, 12.0f;
@@ -25,7 +25,7 @@ inline ObjectNodeAttributes getObjectNodeAttributes() {
   ObjectNodeAttributes expected;
   expected.position << 1.0, 2.0, 3.0;
   expected.name = "object_attributes";
-  expected.color << 4, 5, 6;
+  expected.color = Color(4, 5, 6);
   expected.bounding_box.type = BoundingBox::Type::AABB;
   expected.bounding_box.world_P_center << 7.0f, 8.0f, 9.0f;
   expected.bounding_box.dimensions << 10.0f, 11.0f, 12.0f;
@@ -39,7 +39,7 @@ inline RoomNodeAttributes getRoomNodeAttributes() {
   RoomNodeAttributes expected;
   expected.position << 1.0, 2.0, 3.0;
   expected.name = "room_attributes";
-  expected.color << 4, 5, 6;
+  expected.color = Color(4, 5, 6);
   expected.bounding_box.type = BoundingBox::Type::AABB;
   expected.bounding_box.world_P_center << 7.0f, 8.0f, 9.0f;
   expected.bounding_box.dimensions << 10.0f, 11.0f, 12.0f;
@@ -51,7 +51,7 @@ inline PlaceNodeAttributes getPlaceNodeAttributes() {
   PlaceNodeAttributes expected;
   expected.position << 1.0, 2.0, 3.0;
   expected.name = "place_attributes";
-  expected.color << 4, 5, 6;
+  expected.color = Color(4, 5, 6);
   expected.bounding_box.type = BoundingBox::Type::AABB;
   expected.bounding_box.world_P_center << 7.0f, 8.0f, 9.0f;
   expected.bounding_box.dimensions << 10.0f, 11.0f, 12.0f;

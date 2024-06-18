@@ -242,6 +242,12 @@ void Mesh::eraseFaces(const std::unordered_set<size_t>& indices,
   eraseVertices(unused_vertices);
 }
 
+void Mesh::transform(const Eigen::Isometry3f& transform) {
+  for (auto& point : points) {
+    point = transform * point;
+  }
+}
+
 bool operator==(const Mesh& lhs, const Mesh& rhs) {
   return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
          lhs.has_labels == rhs.has_labels &&

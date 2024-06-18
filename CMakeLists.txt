@@ -27,6 +27,7 @@ add_library(
   src/adjacency_matrix.cpp
   src/bounding_box_extraction.cpp
   src/bounding_box.cpp
+  src/color.cpp
   src/dynamic_scene_graph_layer.cpp
   src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp

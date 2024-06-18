@@ -23,6 +23,7 @@ add_executable(
   utest_adjacency_matrix.cpp
   utest_bounding_box_extraction.cpp
   utest_bounding_box.cpp
+  utest_color.cpp
   utest_dynamic_scene_graph_layer.cpp
   utest_dynamic_scene_graph.cpp
   utest_edge_container.cpp

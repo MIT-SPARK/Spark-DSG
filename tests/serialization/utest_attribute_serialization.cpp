@@ -159,7 +159,7 @@ TEST(AttributeSerializationTests, AttributesWithNaNJson) {
             "world_P_center": [-16.95003890991211, 21.499961853027344, 1.3764979839324951],
             "world_R_center": {"w": 1.0, "x": 0.0, "y": 0.0, "z": 0.0}
         },
-        "color": [39, 144, 65],
+        "color": {"r": 39, "g": 144, "b": 65},
         "name": "O(0)",
         "position": [null, null, null],
         "registered": false,
