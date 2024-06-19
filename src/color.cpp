@@ -86,12 +86,21 @@ Color Color::quality(float value) {
   return color;
 }
 
-Color Color::ironbow(float value) {
-  value = std::clamp(value, 0.0f, 0.9999f);
-  const size_t index = static_cast<size_t>(value * 5);
-  const float weight = value * 5 - index;
-  return ironbow_colors_.at(index).blend(ironbow_colors_.at(index + 1), weight);
+Color Color::spectrum(float value, const std::vector<Color>& colors) {
+  if (colors.empty()) {
+    return Color::black();
+  }
+  value = std::clamp(value, 0.0f, 1.0f);
+  const size_t num_steps = colors.size() - 1;
+  const size_t index = static_cast<size_t>(value * num_steps);
+  if (index >= num_steps) {
+    return colors.at(num_steps);
+  }
+  const float weight = value * num_steps - index;
+  return colors.at(index).blend(colors.at(index + 1), weight);
 }
+
+Color Color::ironbow(float value) { return spectrum(value, ironbow_colors_); }
 
 Color Color::rainbow(float value) {
   return fromHLS(std::clamp(value, 0.0f, 1.0f), 0.5f, 1.0f);

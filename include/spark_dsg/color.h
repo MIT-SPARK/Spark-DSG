@@ -115,6 +115,14 @@ struct Color {
   static Color quality(float value);
 
   /**
+   * @brief Generate a color based on a spectrum of colors.
+   * @param value The spectrum value [0,1], where 0 is the first color and 1 is the
+   * last color.
+   * @param colors The list of colors in the spectrum. Colors are assumed equidistant.
+   */
+  static Color spectrum(float value, const std::vector<Color>& colors);
+
+  /**
    * @brief Generate a color based on a ironbow value.
    * @param value The temperature value [0,1], where 0 is dark and 1 is light.
    */
