@@ -483,8 +483,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("get_node",
            &IsolatedSceneGraphLayer::getNode,
            py::return_value_policy::reference_internal)
+      .def("find_node",
+           &IsolatedSceneGraphLayer::findNode,
+           py::return_value_policy::reference_internal)
       .def("get_edge",
            &IsolatedSceneGraphLayer::getEdge,
+           py::return_value_policy::reference_internal)
+      .def("find_edge",
+           &IsolatedSceneGraphLayer::findEdge,
            py::return_value_policy::reference_internal)
       .def("remove_edge", &IsolatedSceneGraphLayer::removeEdge)
       .def("num_nodes", &IsolatedSceneGraphLayer::numNodes)
@@ -694,8 +700,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("get_node",
            &DynamicSceneGraph::getNode,
            py::return_value_policy::reference_internal)
+      .def("find_node",
+           &DynamicSceneGraph::findNode,
+           py::return_value_policy::reference_internal)
       .def("get_edge",
            &DynamicSceneGraph::getEdge,
+           py::return_value_policy::reference_internal)
+      .def("find_edge",
+           &DynamicSceneGraph::findEdge,
            py::return_value_policy::reference_internal)
       .def("remove_node", &DynamicSceneGraph::removeNode)
       .def("remove_edge", &DynamicSceneGraph::removeEdge)
