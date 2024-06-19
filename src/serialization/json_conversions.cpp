@@ -113,6 +113,20 @@ void to_json(json& record, const Color& c) {
 }
 
 void from_json(const json& record, Color& c) {
+  // Support scene graphs 1.0.2 and earlier where colors were encoded as vectors.
+  // TODO(lschmid): Remove this in the future. 
+  if (record.is_array()) {
+    io::warnOutdatedHeader(io::GlobalInfo::loadedHeader());
+    c.r = record.at(0).get<uint8_t>();
+    c.g = record.at(1).get<uint8_t>();
+    c.b = record.at(2).get<uint8_t>();
+    if (record.size() > 3) {
+      c.a = record.at(3).get<uint8_t>();
+    } else {
+      c.a = 255;
+    }
+    return;
+  }
   c.r = record.at("r").get<uint8_t>();
   c.g = record.at("g").get<uint8_t>();
   c.b = record.at("b").get<uint8_t>();
