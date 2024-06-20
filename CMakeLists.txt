@@ -32,6 +32,7 @@ add_library(
   src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
+  src/layer_view.cpp
   src/mesh.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
