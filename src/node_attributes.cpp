@@ -40,6 +40,29 @@
 
 namespace spark_dsg {
 
+template <typename T>
+std::string showIterable(const T& iterable, size_t max_length = 80) {
+  std::stringstream ss;
+  ss << "[";
+  auto iter = iterable.begin();
+  while (iter != iterable.end()) {
+    ss << *iter;
+
+    ++iter;
+    if (iter != iterable.end()) {
+      ss << ", ";
+    }
+
+    if (max_length && ss.str().size() >= max_length) {
+      ss << "...";
+      break;
+    }
+  }
+  ss << "]";
+
+  return ss.str();
+}
+
 template <typename Scalar>
 std::string quatToString(const Eigen::Quaternion<Scalar>& q) {
   std::stringstream ss;
@@ -139,7 +162,7 @@ bool SemanticNodeAttributes::hasFeature() const {
 std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
   out << "\n  - color: " << color << "\n"
-      << "  - name: " << name << "\n"
+      << "  - name: '" << name << "'\n"
       << "  - bounding box: " << bounding_box << "\n"
       << "  - label: " << std::to_string(semantic_label) << "\n"
       << "  - feature: [" << semantic_feature.rows() << " x " << semantic_feature.cols()
@@ -182,8 +205,8 @@ NodeAttributes::Ptr ObjectNodeAttributes::clone() const {
 }
 
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
-  // TODO(nathan) think about printing out rotation here
   SemanticNodeAttributes::fill_ostream(out);
+  out << "\n  - mesh_connections: " << showIterable(mesh_connections);
   out << "\n  - registered?: " << (registered ? "yes" : "no");
   out << "\n  - world_R_object: " << quatToString(world_R_object);
   return out;
