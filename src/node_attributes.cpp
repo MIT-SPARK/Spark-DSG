@@ -98,7 +98,7 @@ std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
   out << "  - last update time: "
       << (last_update_time_ns == 0 ? "n/a" : std::to_string(last_update_time_ns))
       << "\n";
-  out << std::boolalpha << " -  is_active: " << is_active;
+  out << std::boolalpha << "  - is_active: " << is_active;
   return out;
 }
 
@@ -185,7 +185,7 @@ std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   // TODO(nathan) think about printing out rotation here
   SemanticNodeAttributes::fill_ostream(out);
   out << "\n  - registered?: " << (registered ? "yes" : "no");
-  out << "\n - world_R_object: " << quatToString(world_R_object);
+  out << "\n  - world_R_object: " << quatToString(world_R_object);
   return out;
 }
 
