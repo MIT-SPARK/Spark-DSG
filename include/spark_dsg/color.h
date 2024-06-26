@@ -55,6 +55,8 @@ struct Color {
   // Operators.
   bool operator==(const Color& other) const;
   bool operator!=(const Color& other) const { return !(*this == other); }
+  bool operator<(const Color& other) const;
+  bool operator>(const Color& other) const { return other < *this; }
   friend std::ostream& operator<<(std::ostream&, const Color&);
 
   // Tools.

@@ -92,8 +92,32 @@ TEST(Color, Blend) {
   rg = r.blend(g, 0.5f);
   EXPECT_EQ(rg, Color(127, 127, 0));
   rg = r.blend(g, 0.25f);
-  std::cout << rg << std::endl;
   EXPECT_EQ(rg, Color(191, 63, 0));
+}
+
+TEST(Color, Rainbow) {
+  EXPECT_EQ(Color::rainbow(0), Color::red());
+  EXPECT_EQ(Color::rainbow(0.1), Color(255,153,0));
+  EXPECT_EQ(Color::rainbow(0.2), Color(203,255,0));
+  EXPECT_EQ(Color::rainbow(0.3), Color(50,255,0));
+  EXPECT_EQ(Color::rainbow(0.4), Color(0,255,102));
+  EXPECT_EQ(Color::rainbow(0.5), Color::cyan());
+  EXPECT_EQ(Color::rainbow(0.6), Color(0,101,255));
+  EXPECT_EQ(Color::rainbow(0.7), Color(50,0,255));
+  EXPECT_EQ(Color::rainbow(0.8), Color(204,0,255));
+  EXPECT_EQ(Color::rainbow(0.9), Color(255,0,153));
+  EXPECT_EQ(Color::rainbow(1), Color::red());
+}
+
+TEST(Color, RainbowID) {
+  EXPECT_EQ(Color::rainbowId(0,16), Color::red());
+  EXPECT_EQ(Color::rainbowId(1,16), Color(255,95,0));
+  EXPECT_EQ(Color::rainbowId(8,16), Color::cyan());
+  EXPECT_EQ(Color::rainbowId(15,16), Color(255,0,95));
+  EXPECT_EQ(Color::rainbowId(16,16), Color(255, 47, 0));
+  EXPECT_EQ(Color::rainbowId(17,16), Color(255, 143, 0));
+  EXPECT_EQ(Color::rainbowId(32,16), Color(255, 23, 0));
+  EXPECT_EQ(Color::rainbowId(33,16), Color(255, 119, 0));
 }
 
 TEST(Color, fromHSV) {

@@ -13,6 +13,19 @@ bool Color::operator==(const Color& other) const {
   return r == other.r && g == other.g && b == other.b && a == other.a;
 }
 
+bool Color::operator<(const Color& other) const {
+  if (r != other.r) {
+    return r < other.r;
+  }
+  if (g != other.g) {
+    return g < other.g;
+  }
+  if (b != other.b) {
+    return b < other.b;
+  }
+  return a < other.a;
+}
+
 void Color::merge(const Color& other, float weight) { *this = blend(other, weight); }
 
 Color Color::blend(const Color& other, float weight) const {
@@ -106,22 +119,31 @@ Color Color::rainbow(float value) {
   return fromHLS(std::clamp(value, 0.0f, 1.0f), 0.5f, 1.0f);
 }
 
-Color Color::rainbowId(size_t id, size_t ids_per_revolution) {
+/**
+ * @brief Map a potentially infinite number of ids to a never repeating pattern in [0,
+ * 1].
+ */
+float exponentialOffsetId(size_t id, size_t ids_per_revolution) {
   const size_t revolution = id / ids_per_revolution;
-  const float progress_along_revolution = std::fmod(id / ids_per_revolution, 1.f);
-  float offset = 0;
+  const float progress_along_revolution =
+      std::fmod(static_cast<float>(id) / ids_per_revolution, 1.f);
+  float offset = 0.0f;
   if (ids_per_revolution < id + 1u) {
     const size_t current_episode = std::floor(std::log2(revolution));
     const size_t episode_start = std::exp2(current_episode);
     const size_t current_subdivision = revolution - episode_start;
-    const float subdivision_step_size = 1 / (ids_per_revolution * 2 * episode_start);
-    offset = (2 * current_subdivision + 1) * subdivision_step_size;
+    const float subdivision_step_size = 1.0f / (ids_per_revolution * 2 * episode_start);
+    offset = (2.0f * current_subdivision + 1) * subdivision_step_size;
   }
-  return Color::rainbow(progress_along_revolution + offset);
+  return progress_along_revolution + offset;
+}
+
+Color Color::rainbowId(size_t id, size_t ids_per_revolution) {
+  return Color::rainbow(exponentialOffsetId(id, ids_per_revolution));
 }
 
 const std::vector<Color> Color::ironbow_colors_ = {
-    {0, 0, 0}, {145, 20, 145}, {255, 138, 0}, {255, 230, 40}, {255, 255, 255}};
+    {0, 0, 0}, {145, 20, 145}, {255, 138, 0}, {255, 230, 40}, {255, 240, 200}};
 
 std::ostream& operator<<(std::ostream& out, const Color& color) {
   out << "[r: " << static_cast<int>(color.r) << ", g: " << static_cast<int>(color.g)
