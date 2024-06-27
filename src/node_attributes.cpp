@@ -466,10 +466,13 @@ std::ostream& KhronosObjectAttributes::fill_ostream(std::ostream& out) const {
 }
 
 void KhronosObjectAttributes::serialization_info() {
+  const auto& header = io::GlobalInfo::loadedHeader();
   SemanticNodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
-  serialization::field("mesh", mesh);
+  if (header.version >= io::Version(1, 0, 3)) {
+    serialization::field("mesh", mesh);
+  }
   serialization::field("trajectory_positions", trajectory_positions);
   serialization::field("trajectory_timestamps", trajectory_timestamps);
   serialization::field("dynamic_object_points", dynamic_object_points);
