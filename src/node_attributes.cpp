@@ -37,6 +37,7 @@
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
@@ -173,7 +174,15 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
 void SemanticNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("name", name);
-  serialization::field("color", color);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version <= io::Version(1, 0, 2)) {
+    Eigen::Matrix<uint8_t, 3, 1> color_uint8;
+    serialization::field("color", color_uint8);
+    color = Color(color_uint8[0], color_uint8[1], color_uint8[2]);
+    io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("color", color);
+  }
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
   serialization::field("semantic_feature", semantic_feature);

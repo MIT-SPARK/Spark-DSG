@@ -87,10 +87,15 @@ bool BoundingBox::isValid() const {
   if (type == Type::INVALID) {
     return false;
   }
-  return volume() > 0.0f;
+  return (dimensions.array() > 0.0f).all();
 }
 
-float BoundingBox::volume() const { return std::max(dimensions.prod(), 0.0f); }
+float BoundingBox::volume() const {
+  if (!isValid()) {
+    return 0.0f;
+  }
+  return dimensions.prod();
+}
 
 bool BoundingBox::hasRotation() const {
   if (type == Type::INVALID || type == Type::AABB) {
