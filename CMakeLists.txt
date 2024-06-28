@@ -41,6 +41,7 @@ add_library(
   src/mesh.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
+  src/printing.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_logger.cpp
   src/scene_graph_node.cpp

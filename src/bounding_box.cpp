@@ -35,6 +35,7 @@
 #include "spark_dsg/bounding_box.h"
 
 #include "spark_dsg/bounding_box_extraction.h"
+#include "spark_dsg/printing.h"
 #include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {

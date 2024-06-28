@@ -32,80 +32,13 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/node_symbol.h"
-
-#include <ostream>
-#include <sstream>
+#include "spark_dsg/printing.h"
 
 namespace spark_dsg {
 
-NodeSymbol::NodeSymbol(char key, NodeId index) {
-  value_.symbol.key = key;
-  value_.symbol.index = index;
-}
-
-NodeSymbol::NodeSymbol(NodeId value) { value_.value = value; }
-
-  NodeSymbol::operator NodeId() const { return value_.value; }
-
-  NodeId NodeSymbol::categoryId() const { return value_.symbol.index; }
-
-  char NodeSymbol::category() const { return value_.symbol.key; }
-
-  NodeSymbol& NodeSymbol::operator++() {
-    value_.symbol.index++;
-    return *this;
-  }
-
-  NodeSymbol NodeSymbol::operator++(int) {
-    NodeSymbol old = *this;
-    value_.symbol.index++;
-    return old;
-  }
-
-  std::string NodeSymbol::getLabel() const {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
-  }
-
-
-NodeSymbol operator"" _id(const char* str, size_t size) {
-  if (size < 1) {
-    throw std::domain_error("invalid literal: must have at least two characters");
-  }
-
-  char prefix = str[0];
-  std::string number(str + 1, size - 1);
-  size_t index = std::stoull(number);
-  return NodeSymbol(prefix, index);
-}
-
-/*
-template <typename Container>
-std::string displayNodeSymbolContainer(const Container& set) {
-  std::stringstream ss;
-  ss << "[";
-  auto iter = set.begin();
-  while (iter != set.end()) {
-    ss << NodeSymbol(*iter).getLabel();
-    ++iter;
-    if (iter != set.end()) {
-      ss << ", ";
-    }
-  }
-  ss << "]";
-  return ss.str();
-}
-*/
-
-std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol) {
-  if (std::isalpha(symbol.value_.symbol.key)) {
-    out << symbol.value_.symbol.key << "(" << symbol.value_.symbol.index << ")";
-  } else {
-    out << symbol.value_.value;
-  }
-  return out;
+Eigen::IOFormat getDefaultVectorFormat() {
+  return Eigen::IOFormat(
+      Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n", "[", "]");
 }
 
 }  // namespace spark_dsg
