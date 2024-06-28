@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 #include <spark_dsg/graph_utilities.h>
+#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/printing.h>
 #include <spark_dsg/scene_graph_layer.h>
 

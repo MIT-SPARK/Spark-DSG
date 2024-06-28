@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_layer.h>
 
 namespace spark_dsg {
@@ -375,7 +376,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
 TEST(SceneGraphLayerTests, getPositionCorrect) {
   Eigen::Vector3d expected;
   expected << 1.0, 2.0, 3.0;
-  NodeAttributes::Ptr attrs = std::make_unique<NodeAttributes>(expected);
+  auto attrs = std::make_unique<NodeAttributes>(expected);
 
   IsolatedSceneGraphLayer layer(1);
   layer.emplaceNode(NodeSymbol('x', 0), std::move(attrs));

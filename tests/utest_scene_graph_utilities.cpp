@@ -33,8 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/scene_graph_utilities.h>
+#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/printing.h>
+#include <spark_dsg/scene_graph_utilities.h>
 
 #include "spark_dsg_tests/type_comparisons.h"
 

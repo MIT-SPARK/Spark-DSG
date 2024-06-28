@@ -33,17 +33,15 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Dense>
 #include <chrono>
 #include <memory>
 #include <optional>
 #include <ostream>
 #include <set>
-#include <sstream>
-#include <string>
+#include <vector>
 
-#include "spark_dsg/node_attributes.h"
 #include "spark_dsg/scene_graph_types.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
@@ -65,7 +63,6 @@ enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
  */
 class SceneGraphNode {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of the node (unique)
   using Ptr = std::unique_ptr<SceneGraphNode>;
   friend class DynamicSceneGraphLayer;
@@ -82,7 +79,7 @@ class SceneGraphNode {
    * @param layer the layer that the node will belong to
    * @param attrs attributes for the node
    */
-  SceneGraphNode(NodeId id, LayerId layer, NodeAttributes::Ptr&& attrs);
+  SceneGraphNode(NodeId id, LayerId layer, std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief Make a scene graph node (with a timestamp)
@@ -96,7 +93,7 @@ class SceneGraphNode {
   SceneGraphNode(NodeId id,
                  LayerId layer,
                  std::chrono::nanoseconds timestamp,
-                 NodeAttributes::Ptr&& attrs);
+                 std::unique_ptr<NodeAttributes>&& attrs);
 
   SceneGraphNode(const SceneGraphNode& other) = delete;
 
@@ -193,7 +190,7 @@ class SceneGraphNode {
 
  protected:
   //! pointer to attributes
-  NodeAttributes::Ptr attributes_;
+  std::unique_ptr<NodeAttributes> attributes_;
 
   //! node id of parent (if valid)
   std::set<NodeId> parents_;

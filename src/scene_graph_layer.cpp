@@ -39,6 +39,7 @@
 
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 
@@ -47,7 +48,8 @@ using Edge = SceneGraphEdge;
 
 SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id) {}
 
-bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
+bool SceneGraphLayer::emplaceNode(NodeId node_id,
+                                  std::unique_ptr<NodeAttributes>&& attrs) {
   nodes_status_[node_id] = NodeStatus::NEW;
   return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
       .second;

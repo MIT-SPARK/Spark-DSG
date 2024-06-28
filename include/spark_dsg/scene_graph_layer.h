@@ -246,7 +246,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param attrs node attributes
    * @returns true if emplace into internal map was successful
    */
-  bool emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs);
+  bool emplaceNode(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief add a node to the layer

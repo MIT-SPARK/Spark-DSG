@@ -40,6 +40,7 @@
 #include "spark_dsg/dynamic_scene_graph_layer.h"
 #include "spark_dsg/mesh.h"
 #include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
@@ -107,7 +108,9 @@ class DynamicSceneGraph {
    * @param attrs node attributes
    * @return true if the node was added successfully
    */
-  bool emplaceNode(LayerId layer_id, NodeId node_id, NodeAttributes::Ptr&& attrs);
+  bool emplaceNode(LayerId layer_id,
+                   NodeId node_id,
+                   std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief construct and add a dynamic node to the specified layer in the graph
@@ -121,7 +124,7 @@ class DynamicSceneGraph {
   bool emplaceNode(LayerId layer_id,
                    LayerPrefix prefix,
                    std::chrono::nanoseconds timestamp,
-                   NodeAttributes::Ptr&& attrs,
+                   std::unique_ptr<NodeAttributes>&& attrs,
                    bool add_edge_to_previous = true);
 
   /**
@@ -135,7 +138,7 @@ class DynamicSceneGraph {
   bool emplacePrevDynamicNode(LayerId layer_id,
                               NodeId prev_node_id,
                               std::chrono::nanoseconds timestamp,
-                              NodeAttributes::Ptr&& attrs);
+                              std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief add a node to the graph
@@ -159,7 +162,7 @@ class DynamicSceneGraph {
   bool addOrUpdateNode(
       LayerId layer_id,
       NodeId node_id,
-      NodeAttributes::Ptr&& attrs,
+      std::unique_ptr<NodeAttributes>&& attrs,
       std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
 
   /**
@@ -213,7 +216,7 @@ class DynamicSceneGraph {
    * @param attrs New attributes for the node
    * @return Returns true if update was successful
    */
-  bool setNodeAttributes(NodeId node, NodeAttributes::Ptr&& attrs);
+  bool setNodeAttributes(NodeId node, std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief Set the attributes of an existing edge

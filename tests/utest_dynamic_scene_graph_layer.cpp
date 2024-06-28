@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 #include <spark_dsg/dynamic_scene_graph_layer.h>
+#include <spark_dsg/node_attributes.h>
 
 namespace spark_dsg {
 
@@ -233,7 +234,7 @@ TEST(DynamicSceneGraphLayerTests, getPositionCorrect) {
   using namespace std::chrono_literals;
   Eigen::Vector3d expected;
   expected << 1.0, 2.0, 3.0;
-  NodeAttributes::Ptr attrs = std::make_unique<NodeAttributes>(expected);
+  auto attrs = std::make_unique<NodeAttributes>(expected);
 
   TestableDynamicLayer layer(1, 0);
   layer.emplaceNode(1s, std::move(attrs));

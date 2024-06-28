@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 #include <spark_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/node_attributes.h>
 
 namespace spark_dsg {
 

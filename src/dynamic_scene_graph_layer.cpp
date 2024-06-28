@@ -36,6 +36,7 @@
 
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 
@@ -88,7 +89,7 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
 }
 
 bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
-                                         NodeAttributes::Ptr&& attrs,
+                                         std::unique_ptr<NodeAttributes>&& attrs,
                                          bool add_edge) {
   if (times_.count(stamp.count())) {
     return false;
@@ -112,7 +113,7 @@ bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
 
 bool DynamicSceneGraphLayer::emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
                                                 size_t index,
-                                                NodeAttributes::Ptr&& attrs) {
+                                                std::unique_ptr<NodeAttributes>&& a) {
   if (hasNodeByIndex(index)) {
     return false;
   }
@@ -127,7 +128,7 @@ bool DynamicSceneGraphLayer::emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
 
   const NodeId new_id = prefix.makeId(index);
   times_.insert(stamp.count());
-  nodes_[index] = std::make_unique<Node>(new_id, id, stamp, std::move(attrs));
+  nodes_[index] = std::make_unique<Node>(new_id, id, stamp, std::move(a));
   node_status_[index] = NodeStatus::NEW;
   return true;
 }

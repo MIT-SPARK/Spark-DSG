@@ -38,6 +38,7 @@
 
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/node_attributes.h"
 #include "spark_dsg/serialization/file_io.h"
 
 namespace spark_dsg {
@@ -98,7 +99,7 @@ bool DynamicSceneGraph::createDynamicLayer(LayerId layer, LayerPrefix layer_pref
 
 bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
                                     NodeId node_id,
-                                    NodeAttributes::Ptr&& attrs) {
+                                    std::unique_ptr<NodeAttributes>&& attrs) {
   if (node_lookup_.count(node_id)) {
     return false;
   }
@@ -119,7 +120,7 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
 bool DynamicSceneGraph::emplaceNode(LayerId layer,
                                     LayerPrefix prefix,
                                     std::chrono::nanoseconds time,
-                                    NodeAttributes::Ptr&& attrs,
+                                    std::unique_ptr<NodeAttributes>&& attrs,
                                     bool add_edge) {
   bool has_layer = false;
   NodeSymbol new_node_id = prefix.makeId(0);
@@ -146,10 +147,11 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer,
   return true;
 }
 
-bool DynamicSceneGraph::emplacePrevDynamicNode(LayerId layer,
-                                               NodeId prev_node_id,
-                                               std::chrono::nanoseconds time,
-                                               NodeAttributes::Ptr&& attrs) {
+bool DynamicSceneGraph::emplacePrevDynamicNode(
+    LayerId layer,
+    NodeId prev_node_id,
+    std::chrono::nanoseconds time,
+    std::unique_ptr<NodeAttributes>&& attrs) {
   if (hasNode(prev_node_id)) {
     SG_LOG(ERROR) << "scene graph already contains node "
                   << NodeSymbol(prev_node_id).getLabel() << std::endl;
@@ -198,7 +200,7 @@ bool DynamicSceneGraph::insertNode(Node::Ptr&& node) {
 
 bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
                                         NodeId node_id,
-                                        NodeAttributes::Ptr&& attrs,
+                                        std::unique_ptr<NodeAttributes>&& attrs,
                                         std::optional<std::chrono::nanoseconds> stamp) {
   if (!layers_.count(layer_id)) {
     SG_LOG(WARNING) << "Invalid layer: " << layer_id << std::endl;
@@ -295,7 +297,8 @@ bool DynamicSceneGraph::addOrUpdateEdge(NodeId source,
   }
 }
 
-bool DynamicSceneGraph::setNodeAttributes(NodeId node, NodeAttributes::Ptr&& attrs) {
+bool DynamicSceneGraph::setNodeAttributes(NodeId node,
+                                          std::unique_ptr<NodeAttributes>&& attrs) {
   auto iter = node_lookup_.find(node);
   if (iter == node_lookup_.end()) {
     return false;

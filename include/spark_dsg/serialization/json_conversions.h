@@ -34,21 +34,12 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
+#include <Eigen/Core>
 #include <nlohmann/json.hpp>
-
-#include "spark_dsg/bounding_box.h"
 
 namespace spark_dsg {
 
-
-NLOHMANN_JSON_SERIALIZE_ENUM(BoundingBox::Type,
-                             {
-                                 {BoundingBox::Type::INVALID, "INVALID"},
-                                 {BoundingBox::Type::AABB, "AABB"},
-                                 {BoundingBox::Type::RAABB, "RAABB"},
-                                 {BoundingBox::Type::OBB, "OBB"},
-                             });
-
+struct BoundingBox;
 void to_json(nlohmann::json& j, const BoundingBox& b);
 void from_json(const nlohmann::json& j, BoundingBox& b);
 

@@ -41,13 +41,13 @@ namespace spark_dsg {
 
 SceneGraphNode::SceneGraphNode(NodeId node_id,
                                LayerId layer_id,
-                               NodeAttributes::Ptr&& attrs)
+                               std::unique_ptr<NodeAttributes>&& attrs)
     : id(node_id), layer(layer_id), attributes_(std::move(attrs)) {}
 
 SceneGraphNode::SceneGraphNode(NodeId node_id,
                                LayerId layer_id,
                                std::chrono::nanoseconds timestamp,
-                               NodeAttributes::Ptr&& attrs)
+                               std::unique_ptr<NodeAttributes>&& attrs)
     : id(node_id),
       layer(layer_id),
       timestamp(timestamp),

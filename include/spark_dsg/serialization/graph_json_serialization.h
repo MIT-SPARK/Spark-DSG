@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/dynamic_scene_graph_fwd.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::io::json {
 

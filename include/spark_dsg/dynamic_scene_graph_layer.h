@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include "spark_dsg/base_layer.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 #include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
@@ -114,12 +115,12 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
  protected:
   bool emplaceNode(std::chrono::nanoseconds timestamp,
-                   NodeAttributes::Ptr&& attrs,
+                   std::unique_ptr<NodeAttributes>&& attrs,
                    bool add_edge = true);
 
   bool emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
                           size_t index,
-                          NodeAttributes::Ptr&& attrs);
+                          std::unique_ptr<NodeAttributes>&& attrs);
 
   bool removeNode(NodeId node) override;
 
