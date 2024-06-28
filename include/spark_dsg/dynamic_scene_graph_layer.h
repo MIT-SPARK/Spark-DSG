@@ -33,9 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <Eigen/Core>
+
 #include "spark_dsg/base_layer.h"
-#include "spark_dsg/spark_dsg_fwd.h"
 #include "spark_dsg/node_symbol.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 

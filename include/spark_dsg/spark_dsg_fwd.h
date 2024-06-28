@@ -2,6 +2,7 @@
 #include <memory>
 
 namespace spark_dsg {
+class Mesh;
 struct NodeAttributes;
 
 class DynamicSceneGraph;

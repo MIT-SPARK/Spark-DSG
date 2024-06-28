@@ -35,9 +35,8 @@
 #pragma once
 
 #include <Eigen/Geometry>
-#include <iostream>
 
-#include "spark_dsg/mesh.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
