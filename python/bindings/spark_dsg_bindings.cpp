@@ -36,6 +36,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 #include <pybind11/stl_bind.h>
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/node_attributes.h>
@@ -594,6 +595,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
            })
       .def("save", &Mesh::save)
+      .def("save",
+           [](const Mesh& mesh, const std::filesystem::path& path) { mesh.save(path); })
       .def_static("from_json", &Mesh::deserializeFromJson)
       .def_static("from_binary",
                   [](const py::bytes& contents) {
@@ -602,6 +605,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                         reinterpret_cast<const uint8_t*>(view.data()), view.size());
                   })
       .def_static("load", &Mesh::load)
+      .def_static("load",
+                  [](const std::filesystem::path& path) { return Mesh::load(path); })
       .def("get_vertices", [](const Mesh& mesh) { return getEigenVertices(mesh); })
       .def("get_faces", [](const Mesh& mesh) { return getEigenFaces(mesh); })
       .def("get_labels", [](const Mesh& mesh) { return mesh.labels; })
@@ -730,7 +735,18 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              bool include_mesh) { graph.save(filepath, include_mesh); },
           "filepath"_a,
           "include_mesh"_a = true)
+      .def(
+          "save",
+          [](const DynamicSceneGraph& graph,
+             const std::filesystem::path& filepath,
+             bool include_mesh) { graph.save(filepath, include_mesh); },
+          "filepath"_a,
+          "include_mesh"_a = true)
       .def_static("load", &DynamicSceneGraph::load)
+      .def_static("load",
+                  [](const std::filesystem::path& filepath) {
+                    return DynamicSceneGraph::load(filepath);
+                  })
       .def_property(
           "layers",
           [](const DynamicSceneGraph& graph) {
