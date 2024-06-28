@@ -504,4 +504,37 @@ bool KhronosObjectAttributes::is_equal(const NodeAttributes& other) const {
          details == derived->details;
 }
 
+KhronosPlaceAttributes::KhronosPlaceAttributes() : dynamism(0) {};
+
+KhronosPlaceAttributes::KhronosPlaceAttributes(const PlaceNodeAttributes& attrs)
+    : PlaceNodeAttributes(attrs), dynamism(0){};
+
+NodeAttributes::Ptr KhronosPlaceAttributes::clone() const {
+  return std::make_unique<KhronosPlaceAttributes>(*this);
+}
+
+std::ostream& KhronosPlaceAttributes::fill_ostream(std::ostream& out) const {
+  SemanticNodeAttributes::fill_ostream(out);
+  out << "\n  - dynamism: " << std::to_string(dynamism);
+  return out;
+}
+
+void KhronosPlaceAttributes::serialization_info() {
+  SemanticNodeAttributes::serialization_info();
+  serialization::field("dynamism", dynamism);
+}
+
+bool KhronosPlaceAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const KhronosPlaceAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!PlaceNodeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return dynamism == derived->dynamism;
+}
+
 }  // namespace spark_dsg

@@ -422,4 +422,29 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
   REGISTER_NODE_ATTRIBUTES(KhronosObjectAttributes);
 };
 
+struct KhronosPlaceAttributes : public PlaceNodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! desired pointer type of node
+  using Ptr = std::unique_ptr<KhronosPlaceAttributes>;
+
+  KhronosPlaceAttributes();
+  KhronosPlaceAttributes(const PlaceNodeAttributes& attrs);
+  virtual ~KhronosPlaceAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  // Attributes.
+  // Dynamic tracking
+  // NOTE(marcus): for now this increments with each linked dynamic object, this can
+  // change.
+  int dynamism;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(KhronosPlaceAttributes);
+};
+
 }  // namespace spark_dsg
