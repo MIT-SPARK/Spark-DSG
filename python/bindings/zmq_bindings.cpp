@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "zmq_bindings.h"
 
+#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/zmq_interface.h>
 
 using namespace spark_dsg;

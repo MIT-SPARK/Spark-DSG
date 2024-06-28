@@ -34,7 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/dynamic_scene_graph_fwd.h"
 
 namespace spark_dsg {
 
@@ -60,7 +60,7 @@ class ZmqReceiver {
 
   bool recv(size_t timeout_ms, bool recv_all = false);
 
-  DynamicSceneGraph::Ptr graph() const;
+  DynamicSceneGraphPtr graph() const;
 
  private:
   struct Detail;
@@ -74,7 +74,7 @@ class ZmqGraph {
   ~ZmqGraph();
 
   bool hasChange() const;
-  DynamicSceneGraph::Ptr graph() const;
+  DynamicSceneGraphPtr graph() const;
 
  private:
   struct Detail;

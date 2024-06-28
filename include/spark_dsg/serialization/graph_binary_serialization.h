@@ -34,7 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/dynamic_scene_graph_fwd.h"
 #include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg::io::binary {
@@ -43,9 +43,9 @@ void writeGraph(const DynamicSceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh = false);
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
+DynamicSceneGraphPtr readGraph(const uint8_t* const buffer, size_t length);
 
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
+inline DynamicSceneGraphPtr readGraph(const std::vector<uint8_t>& buffer) {
   return readGraph(buffer.data(), buffer.size());
 }
 

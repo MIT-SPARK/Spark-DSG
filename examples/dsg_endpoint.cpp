@@ -1,3 +1,4 @@
+#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/zmq_interface.h>
 
 #include <chrono>

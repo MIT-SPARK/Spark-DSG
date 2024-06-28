@@ -11,6 +11,7 @@ option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
 option(SPARK_DSG_BUILD_TESTS "Build tests" ON)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
+option(SPARK_DSG_PROFILE_BUILD "Profile build time" OFF)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
@@ -21,6 +22,10 @@ find_package(Threads REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(zmq libzmq)
+
+if(SPARK_DSG_PROFILE_BUILD)
+  add_compile_options(-ftime-trace)
+endif()
 
 add_library(
   ${PROJECT_NAME}

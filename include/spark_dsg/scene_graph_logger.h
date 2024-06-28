@@ -34,9 +34,11 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
+#include <map>
 #include <string>
 
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/dynamic_scene_graph_fwd.h"
+#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
 
@@ -50,11 +52,11 @@ class SceneGraphLogger {
 
   inline void setOutputPath(const std::string& folder) { output_dir_ = folder; }
 
-  inline void setLayerName(const LayerId& id, const std::string& name) {
+  inline void setLayerName(LayerId id, const std::string& name) {
     layer_names_.insert({id, name});
   }
 
-  void logGraph(const DynamicSceneGraph::Ptr& graph);
+  void logGraph(const DynamicSceneGraph& graph);
 
  private:
   std::string output_dir_;
