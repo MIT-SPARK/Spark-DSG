@@ -436,7 +436,7 @@ struct KhronosPlaceAttributes : public PlaceNodeAttributes {
   // Dynamic tracking
   // NOTE(marcus): for now this increments with each linked dynamic object, this can
   // change.
-  int dynamism;
+  float dynamism;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
