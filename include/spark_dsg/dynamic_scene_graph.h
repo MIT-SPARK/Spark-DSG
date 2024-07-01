@@ -33,12 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <map>
-#include <memory>
+#include <Eigen/Core>
 #include <type_traits>
 
 #include "spark_dsg/dynamic_scene_graph_layer.h"
-#include "spark_dsg/mesh.h"
 #include "spark_dsg/scene_graph_layer.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
@@ -526,7 +524,7 @@ class DynamicSceneGraph {
 
   bool hasMesh() const;
 
-  Mesh::Ptr mesh() const;
+  std::shared_ptr<Mesh> mesh() const;
 
   //! current static layer ids in the graph
   const LayerIds layer_ids;

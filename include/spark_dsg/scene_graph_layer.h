@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Core>
+#include <functional>
 #include <map>
 #include <unordered_set>
 
@@ -168,11 +168,6 @@ class SceneGraphLayer : public BaseLayer {
    * @brief Number of edges in the layer
    */
   inline size_t numEdges() const { return edges_.size(); }
-
-  /**
-   * @brief Get the position of a node in the layer with bounds checking
-   */
-  Eigen::Vector3d getPosition(NodeId node) const;
 
   /**
    * @brief Get node ids of newly inserted nodes

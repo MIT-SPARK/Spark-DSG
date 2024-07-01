@@ -363,32 +363,11 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
   EXPECT_EQ(new_nodes, expected_new_nodes);
 
   for (size_t i = 0; i < 5; i++) {
-    Eigen::Vector3d result = layer_1.getPosition(i);
+    Eigen::Vector3d result = layer_1.getNode(i).attributes().position;
     EXPECT_NEAR(static_cast<double>(i) + 10, result(0), 1.0e-9);
     EXPECT_NEAR(0.0, result(1), 1.0e-9);
     EXPECT_NEAR(0.0, result(2), 1.0e-9);
     EXPECT_EQ(NodeStatus::NEW, layer_1.checkNode(i));
-  }
-}
-
-TEST(SceneGraphLayerTests, getPositionCorrect) {
-  Eigen::Vector3d expected;
-  expected << 1.0, 2.0, 3.0;
-  auto attrs = std::make_unique<NodeAttributes>(expected);
-
-  IsolatedSceneGraphLayer layer(1);
-  layer.emplaceNode(NodeSymbol('x', 0), std::move(attrs));
-
-  Eigen::Vector3d result = layer.getPosition(NodeSymbol('x', 0));
-  EXPECT_EQ(expected(0), result(0));
-  EXPECT_EQ(expected(1), result(1));
-  EXPECT_EQ(expected(2), result(2));
-
-  try {
-    layer.getPosition(NodeSymbol('x', 5));
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
   }
 }
 

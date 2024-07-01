@@ -33,8 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Core>
-
 #include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"
 #include "spark_dsg/layer_prefix.h"
@@ -94,14 +92,6 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   bool removeEdgeByIndex(size_t source_index, size_t target_index);
 
-  Eigen::Vector3d getPosition(NodeId node) const;
-
-  Eigen::Vector3d getPositionByIndex(size_t node_index) const;
-
-  const LayerId id;
-
-  const LayerPrefix prefix;
-
   void mergeLayer(const DynamicSceneGraphLayer& other,
                   const GraphMergeConfig& config,
                   std::vector<NodeId>* new_nodes = nullptr);
@@ -114,6 +104,10 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
                        bool clear_removed) override;
+
+  const LayerId id;
+
+  const LayerPrefix prefix;
 
  protected:
   bool emplaceNode(std::chrono::nanoseconds timestamp,

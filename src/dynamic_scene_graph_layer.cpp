@@ -268,26 +268,6 @@ bool DynamicSceneGraphLayer::removeNode(NodeId node) {
   return true;
 }
 
-Eigen::Vector3d DynamicSceneGraphLayer::getPosition(NodeId node) const {
-  if (!hasNode(node)) {
-    std::stringstream ss;
-    ss << "node " << NodeSymbol(node).getLabel() << " is missing";
-    throw std::out_of_range(ss.str());
-  }
-
-  return getPositionByIndex(prefix.index(node));
-}
-
-Eigen::Vector3d DynamicSceneGraphLayer::getPositionByIndex(size_t node_index) const {
-  if (!hasNodeByIndex(node_index)) {
-    std::stringstream ss;
-    ss << "node index" << node_index << " >= " << nodes_.size();
-    throw std::out_of_range(ss.str());
-  }
-
-  return nodes_.at(node_index)->attributes().position;
-}
-
 void DynamicSceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes,
                                          bool clear_new) {
   auto iter = node_status_.begin();

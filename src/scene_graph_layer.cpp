@@ -268,16 +268,6 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
   }
 }
 
-Eigen::Vector3d SceneGraphLayer::getPosition(NodeId node) const {
-  if (!hasNode(node)) {
-    std::stringstream ss;
-    ss << "node " << NodeSymbol(node).getLabel() << " not in layer";
-    throw std::out_of_range(ss.str());
-  }
-
-  return nodes_.at(node)->attributes().position;
-}
-
 void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) {
   auto iter = nodes_status_.begin();
   while (iter != nodes_status_.end()) {

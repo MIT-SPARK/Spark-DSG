@@ -229,40 +229,6 @@ TEST(DynamicSceneGraphLayerTests, BasicEdgeIterationCorrect) {
   EXPECT_EQ(expected_targets, actual_targets);
 }
 
-TEST(DynamicSceneGraphLayerTests, getPositionCorrect) {
-  using namespace std::chrono_literals;
-  Eigen::Vector3d expected;
-  expected << 1.0, 2.0, 3.0;
-  auto attrs = std::make_unique<NodeAttributes>(expected);
-
-  TestableDynamicLayer layer(1, 0);
-  layer.emplaceNode(1s, std::move(attrs));
-
-  Eigen::Vector3d result = layer.getPosition(NodeSymbol(0, 0));
-  EXPECT_EQ(expected(0), result(0));
-  EXPECT_EQ(expected(1), result(1));
-  EXPECT_EQ(expected(2), result(2));
-
-  result = layer.getPositionByIndex(0);
-  EXPECT_EQ(expected(0), result(0));
-  EXPECT_EQ(expected(1), result(1));
-  EXPECT_EQ(expected(2), result(2));
-
-  try {
-    layer.getPosition(NodeSymbol(0, 5));
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
-  }
-
-  try {
-    layer.getPositionByIndex(1);
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
-  }
-}
-
 // Test that rewiring an edge does what it should
 TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
   TestableDynamicLayer layer_1(1, 0);
@@ -292,7 +258,7 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
   EXPECT_EQ(new_nodes, expected_new_nodes);
 
   for (size_t i = 0; i < 5; i++) {
-    Eigen::Vector3d result = layer_1.getPosition(i);
+    Eigen::Vector3d result = layer_1.getNode(i).attributes().position;
     EXPECT_EQ(static_cast<double>(i), result(0));
     EXPECT_EQ(0.0, result(1));
     EXPECT_EQ(0.0, result(2));

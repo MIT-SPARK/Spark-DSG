@@ -38,6 +38,7 @@
 
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/mesh.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/printing.h"
@@ -568,19 +569,15 @@ size_t DynamicSceneGraph::numDynamicEdges() const {
 
 bool DynamicSceneGraph::empty() const { return numNodes() == 0; }
 
-Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node) const {
-  auto iter = node_lookup_.find(node);
+Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node_id) const {
+  auto iter = node_lookup_.find(node_id);
   if (iter == node_lookup_.end()) {
-    throw std::out_of_range("node " + NodeSymbol(node).getLabel() +
+    throw std::out_of_range("node " + NodeSymbol(node_id).getLabel() +
                             " is not in the graph");
   }
 
-  auto info = iter->second;
-  if (info.dynamic) {
-    return dynamic_layers_.at(info.layer).at(info.prefix)->getPosition(node);
-  }
-
-  return layers_.at(info.layer)->getPosition(node);
+  const auto node = getNodePtr(node_id, iter->second);
+  return node->attributes().position;
 }
 
 bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
