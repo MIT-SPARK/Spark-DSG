@@ -32,52 +32,86 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include <Eigen/Dense>
-#include <Eigen/SparseCore>
+#include "spark_dsg/layer_prefix.h"
 
-#include "spark_dsg/scene_graph_types.h"
-#include "spark_dsg/spark_dsg_fwd.h"
+#include <algorithm>
+#include <sstream>
 
 namespace spark_dsg {
 
-using SparseMatrixXd = Eigen::SparseMatrix<double>;
-using WeightFunc = std::function<double(NodeId, NodeId)>;
+LayerKey::LayerKey() : layer(LayerKey::UNKNOWN_LAYER) {}
 
-Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
-                                   const std::map<NodeId, size_t>& ordering,
-                                   const WeightFunc& weight_func);
+LayerKey::LayerKey(LayerId layer_id) : layer(layer_id) {}
 
-Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
-                             const std::map<NodeId, size_t>& ordering,
-                             const WeightFunc& weight_func);
+LayerKey::LayerKey(LayerId layer_id, uint32_t prefix)
+    : layer(layer_id), prefix(prefix), dynamic(true) {}
 
-inline Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
-                                          const std::map<NodeId, size_t>& ordering) {
-  return getAdjacencyMatrix(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+bool LayerKey::operator==(const LayerKey& other) const {
+  if (dynamic != other.dynamic) {
+    return false;
+  }
+
+  const bool same_layer = layer == other.layer;
+  if (!dynamic && same_layer) {
+    return true;
+  }
+
+  return same_layer && prefix == other.prefix;
 }
 
-inline Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
-                                    const std::map<NodeId, size_t>& ordering) {
-  return getLaplacian(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+bool LayerKey::isParent(const LayerKey& other) const { return layer > other.layer; }
+
+std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
+  if (key.dynamic) {
+    out << key.layer << "(" << key.prefix << ")";
+  } else {
+    out << key.layer;
+  }
+  return out;
 }
 
-SparseMatrixXd getSparseAdjacencyMatrix(const SceneGraphLayer& layer,
-                                        const std::map<NodeId, size_t>& ordering,
-                                        const WeightFunc& weight_func);
-
-SparseMatrixXd getSparseLaplacian(const SceneGraphLayer& layer,
-                                  const std::map<NodeId, size_t>& ordering,
-                                  const WeightFunc& weight_func);
-
-inline SparseMatrixXd getSparseAdjacencyMatrix(
-    const SceneGraphLayer& layer, const std::map<NodeId, size_t>& ordering) {
-  return getSparseAdjacencyMatrix(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+LayerPrefix::LayerPrefix(char key) {
+  value_.symbol.key = key;
+  value_.symbol.index = 0;
 }
 
-inline SparseMatrixXd getSparseLaplacian(const SceneGraphLayer& layer,
-                                         const std::map<NodeId, size_t>& ordering) {
-  return getSparseLaplacian(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+LayerPrefix::LayerPrefix(char key, uint32_t index) {
+  value_.symbol.key = key;
+  value_.symbol.index = index;
+}
+
+LayerPrefix::LayerPrefix(uint32_t index) { value_.value = index; }
+
+LayerPrefix LayerPrefix::fromId(NodeId node_id) {
+  // grab the 32 msb portion of the ID
+  return LayerPrefix(static_cast<uint32_t>(node_id >> 32));
+}
+
+std::string LayerPrefix::str(bool with_key) const {
+  if (!with_key) {
+    return std::to_string(value_.value);
+  }
+
+  std::stringstream ss;
+  ss << value_.symbol.key;
+  if (value_.symbol.index) {
+    ss << "(" << value_.symbol.index << ")";
+  }
+
+  return ss.str();
+}
+
+bool LayerPrefix::matches(NodeId node) const {
+  return value_.value == static_cast<uint32_t>(node >> 32);
+}
+
+NodeId LayerPrefix::makeId(size_t index) const {
+  return (static_cast<NodeId>(value_.value) << 32) + index;
+}
+
+size_t LayerPrefix::index(NodeId node_id) const {
+  // grab the 32 lsb portion of the ID
+  return 0xFFFF'FFFF & node_id;
 }
 
 }  // namespace spark_dsg

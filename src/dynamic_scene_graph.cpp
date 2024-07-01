@@ -40,6 +40,7 @@
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
+#include "spark_dsg/printing.h"
 #include "spark_dsg/serialization/file_io.h"
 
 namespace spark_dsg {
@@ -669,7 +670,12 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
         createDynamicLayer(l_id, prefix);
       }
 
-      dynamic_layers_[l_id][prefix]->mergeLayer(*other_layer, config, &node_lookup_);
+      const LayerKey layer_key(l_id, prefix);
+      std::vector<NodeId> new_nodes;
+      dynamic_layers_[l_id][prefix]->mergeLayer(*other_layer, config, &new_nodes);
+      for (const auto node_id : new_nodes) {
+        node_lookup_[node_id] = layer_key;
+      }
     }
   }
 
@@ -690,7 +696,11 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
       layers_[l_id]->removeEdge(removed_edge.k1, removed_edge.k2);
     }
 
-    layers_[l_id]->mergeLayer(*other_layer, config, &node_lookup_);
+    std::vector<NodeId> new_nodes;
+    layers_[l_id]->mergeLayer(*other_layer, config, &new_nodes);
+    for (const auto node_id : new_nodes) {
+      node_lookup_[node_id] = l_id;
+    }
   }
 
   for (const auto& id_edge_pair : other.interlayer_edges()) {

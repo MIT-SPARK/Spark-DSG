@@ -34,8 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 #include <spark_dsg/adjacency_matrix.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/node_attributes.h>
+#include <spark_dsg/scene_graph_layer.h>
 
 #include "spark_dsg/logging.h"
 

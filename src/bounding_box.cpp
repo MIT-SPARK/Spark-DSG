@@ -277,6 +277,10 @@ bool BoundingBox::isInside(const Eigen::Vector3f& point_B) const {
   return (point_B.cwiseAbs() - dimensions / 2).maxCoeff() <= 0;
 }
 
+BoundingBox::MeshAdaptor::MeshAdaptor(const Mesh& mesh,
+                                      const std::vector<size_t>* indices)
+    : mesh(mesh), indices(indices) {}
+
 size_t BoundingBox::MeshAdaptor::size() const {
   return indices ? indices->size() : mesh.numVertices();
 }
@@ -285,6 +289,10 @@ Eigen::Vector3f BoundingBox::MeshAdaptor::get(size_t index) const {
   const size_t global_idx = indices ? indices->at(index) : index;
   return mesh.pos(global_idx);
 }
+
+BoundingBox::PointVectorAdaptor::PointVectorAdaptor(
+    const std::vector<Eigen::Vector3f>& points)
+    : points(points) {}
 
 size_t BoundingBox::PointVectorAdaptor::size() const { return points.size(); }
 

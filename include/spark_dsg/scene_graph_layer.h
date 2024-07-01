@@ -157,9 +157,9 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool rewireEdge(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
 
-  bool mergeLayer(const SceneGraphLayer& other,
+  void mergeLayer(const SceneGraphLayer& other,
                   const GraphMergeConfig& config,
-                  std::map<NodeId, LayerKey>* layer_lookup = nullptr);
+                  std::vector<NodeId>* new_nodes);
 
   /**
    * @brief Number of nodes in the layer

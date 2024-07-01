@@ -47,10 +47,9 @@ using Edge = SceneGraphEdge;
 DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, LayerPrefix node_prefix)
     : id(layer), prefix(node_prefix), next_node_(0) {}
 
-bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
+void DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
                                         const GraphMergeConfig& config,
-                                        std::map<NodeId, LayerKey>* layer_lookup) {
-  LayerKey layer_key{id, prefix};
+                                        std::vector<NodeId>* new_nodes) {
   Eigen::Vector3d last_update_delta = Eigen::Vector3d::Zero();
 
   for (size_t i = 0; i < other.nodes_.size(); i++) {
@@ -70,8 +69,8 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
     } else {
       emplaceNode(other_node.timestamp.value(), other_node.attributes_->clone(), false);
       nodes_.back()->attributes_->position += last_update_delta;
-      if (layer_lookup) {
-        layer_lookup->insert({nodes_.back()->id, layer_key});
+      if (new_nodes) {
+        new_nodes->push_back(nodes_.back()->id);
       }
     }
   }
@@ -85,8 +84,6 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
 
     insertEdge(edge.source, edge.target, edge.info->clone());
   }
-
-  return true;
 }
 
 bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,

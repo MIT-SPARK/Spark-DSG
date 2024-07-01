@@ -36,6 +36,10 @@
 
 namespace spark_dsg {
 
+std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
+  return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
+}
+
 Eigen::IOFormat getDefaultVectorFormat() {
   return Eigen::IOFormat(
       Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n", "[", "]");

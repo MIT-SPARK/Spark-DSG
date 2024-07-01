@@ -283,22 +283,19 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
   }
 
   GraphMergeConfig config;
-  std::map<NodeId, LayerKey> node_to_layer;
-  layer_1.mergeLayer(layer_2, config, &node_to_layer);
-
-  EXPECT_EQ(2u, node_to_layer.size());
+  std::vector<NodeId> new_nodes;
+  layer_1.mergeLayer(layer_2, config, &new_nodes);
   EXPECT_EQ(5u, layer_1.numNodes());
   EXPECT_EQ(4u, layer_1.numEdges());
+
+  std::vector<NodeId> expected_new_nodes{3, 4};
+  EXPECT_EQ(new_nodes, expected_new_nodes);
 
   for (size_t i = 0; i < 5; i++) {
     Eigen::Vector3d result = layer_1.getPosition(i);
     EXPECT_EQ(static_cast<double>(i), result(0));
     EXPECT_EQ(0.0, result(1));
     EXPECT_EQ(0.0, result(2));
-    if (i > 2) {
-      EXPECT_EQ(1u, node_to_layer.at(i).layer);
-      EXPECT_EQ(0, node_to_layer.at(i).prefix);
-    }
   }
 }
 

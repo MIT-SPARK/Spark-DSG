@@ -32,52 +32,73 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include <Eigen/Dense>
-#include <Eigen/SparseCore>
-
-#include "spark_dsg/scene_graph_types.h"
-#include "spark_dsg/spark_dsg_fwd.h"
+#include <gtest/gtest.h>
+#include <spark_dsg/layer_prefix.h>
+#include <spark_dsg/node_symbol.h>
 
 namespace spark_dsg {
 
-using SparseMatrixXd = Eigen::SparseMatrix<double>;
-using WeightFunc = std::function<double(NodeId, NodeId)>;
-
-Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
-                                   const std::map<NodeId, size_t>& ordering,
-                                   const WeightFunc& weight_func);
-
-Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
-                             const std::map<NodeId, size_t>& ordering,
-                             const WeightFunc& weight_func);
-
-inline Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
-                                          const std::map<NodeId, size_t>& ordering) {
-  return getAdjacencyMatrix(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+TEST(LayerKeyTests, TestEquality) {
+  EXPECT_EQ(LayerKey(1), LayerKey(1));
+  EXPECT_NE(LayerKey(1), LayerKey(2));
+  EXPECT_NE(LayerKey(1), LayerKey(1, 0));
+  EXPECT_EQ(LayerKey(2, 0), LayerKey(2, 0));
+  EXPECT_NE(LayerKey(2, 0), LayerKey(2, 1));
 }
 
-inline Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
-                                    const std::map<NodeId, size_t>& ordering) {
-  return getLaplacian(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+TEST(LayerKeyTests, TestIsParent) {
+  LayerKey key1{1};
+  LayerKey key2{1};
+  LayerKey key3{2};
+  LayerKey key4{2, 0};
+  LayerKey key5{3, 0};
+  LayerKey key6{2, 1};
+
+  // static
+  EXPECT_TRUE(key3.isParent(key1));
+  EXPECT_FALSE(key1.isParent(key2));
+  EXPECT_FALSE(key1.isParent(key3));
+
+  // dynamic
+  EXPECT_TRUE(key4.isParent(key1));
+  EXPECT_TRUE(key5.isParent(key6));
+  EXPECT_FALSE(key6.isParent(key4));
 }
 
-SparseMatrixXd getSparseAdjacencyMatrix(const SceneGraphLayer& layer,
-                                        const std::map<NodeId, size_t>& ordering,
-                                        const WeightFunc& weight_func);
-
-SparseMatrixXd getSparseLaplacian(const SceneGraphLayer& layer,
-                                  const std::map<NodeId, size_t>& ordering,
-                                  const WeightFunc& weight_func);
-
-inline SparseMatrixXd getSparseAdjacencyMatrix(
-    const SceneGraphLayer& layer, const std::map<NodeId, size_t>& ordering) {
-  return getSparseAdjacencyMatrix(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+TEST(LayerKeyTests, TestKeyTruthValues) {
+  EXPECT_FALSE(LayerKey());
+  EXPECT_TRUE(LayerKey(1));
+  EXPECT_TRUE(LayerKey(2, 0));
+  EXPECT_TRUE(LayerKey(0));
 }
 
-inline SparseMatrixXd getSparseLaplacian(const SceneGraphLayer& layer,
-                                         const std::map<NodeId, size_t>& ordering) {
-  return getSparseLaplacian(layer, ordering, [](NodeId, NodeId) { return 1.0; });
+TEST(LayerPrefixTests, TestMatches) {
+  LayerPrefix a('a');
+  EXPECT_TRUE(a.matches(NodeSymbol('a', 0)));
+  EXPECT_TRUE(a.matches(NodeSymbol('a', 5)));
+  EXPECT_FALSE(a.matches(NodeSymbol('b', 5)));
+}
+
+TEST(LayerPrefixTests, TestFromId) {
+  EXPECT_EQ(LayerPrefix::fromId("a0"_id), LayerPrefix('a'));
+}
+
+TEST(LayerPrefixTests, TestMakeId) {
+  LayerPrefix a('a');
+  EXPECT_EQ(a.makeId(0), NodeSymbol('a', 0));
+  EXPECT_EQ(a.makeId(5), NodeSymbol('a', 5));
+
+  LayerPrefix b('b');
+  EXPECT_EQ(b.makeId(5), NodeSymbol('b', 5));
+}
+
+TEST(LayerPrefixTests, TestIndex) {
+  LayerPrefix a('a');
+  EXPECT_EQ(a.index(NodeSymbol('a', 0)), 0u);
+  EXPECT_EQ(a.index(NodeSymbol('a', 5)), 5u);
+
+  LayerPrefix b('b', 1);
+  EXPECT_EQ(b.index(b.makeId(5)), 5u);
 }
 
 }  // namespace spark_dsg

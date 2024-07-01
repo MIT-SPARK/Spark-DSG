@@ -33,51 +33,74 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Dense>
-#include <Eigen/SparseCore>
+#include <ostream>
 
 #include "spark_dsg/scene_graph_types.h"
-#include "spark_dsg/spark_dsg_fwd.h"
 
+/**
+ * @brief spark_dsg namespace
+ */
 namespace spark_dsg {
 
-using SparseMatrixXd = Eigen::SparseMatrix<double>;
-using WeightFunc = std::function<double(NodeId, NodeId)>;
+struct LayerKey {
+  static constexpr LayerId UNKNOWN_LAYER = DsgLayers::UNKNOWN;
+  LayerId layer;
+  uint32_t prefix = 0;
+  bool dynamic = false;
 
-Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
-                                   const std::map<NodeId, size_t>& ordering,
-                                   const WeightFunc& weight_func);
+  LayerKey();
 
-Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
-                             const std::map<NodeId, size_t>& ordering,
-                             const WeightFunc& weight_func);
+  LayerKey(LayerId layer_id);
 
-inline Eigen::MatrixXd getAdjacencyMatrix(const SceneGraphLayer& layer,
-                                          const std::map<NodeId, size_t>& ordering) {
-  return getAdjacencyMatrix(layer, ordering, [](NodeId, NodeId) { return 1.0; });
-}
+  LayerKey(LayerId layer_id, uint32_t prefix);
 
-inline Eigen::MatrixXd getLaplacian(const SceneGraphLayer& layer,
-                                    const std::map<NodeId, size_t>& ordering) {
-  return getLaplacian(layer, ordering, [](NodeId, NodeId) { return 1.0; });
-}
+  bool isParent(const LayerKey& other) const;
 
-SparseMatrixXd getSparseAdjacencyMatrix(const SceneGraphLayer& layer,
-                                        const std::map<NodeId, size_t>& ordering,
-                                        const WeightFunc& weight_func);
+  bool operator==(const LayerKey& other) const;
 
-SparseMatrixXd getSparseLaplacian(const SceneGraphLayer& layer,
-                                  const std::map<NodeId, size_t>& ordering,
-                                  const WeightFunc& weight_func);
+  inline bool operator!=(const LayerKey& other) const {
+    return !this->operator==(other);
+  }
 
-inline SparseMatrixXd getSparseAdjacencyMatrix(
-    const SceneGraphLayer& layer, const std::map<NodeId, size_t>& ordering) {
-  return getSparseAdjacencyMatrix(layer, ordering, [](NodeId, NodeId) { return 1.0; });
-}
+  inline operator bool() const { return layer != UNKNOWN_LAYER; }
+};
 
-inline SparseMatrixXd getSparseLaplacian(const SceneGraphLayer& layer,
-                                         const std::map<NodeId, size_t>& ordering) {
-  return getSparseLaplacian(layer, ordering, [](NodeId, NodeId) { return 1.0; });
-}
+std::ostream& operator<<(std::ostream& out, const LayerKey& key);
+
+class LayerPrefix {
+ public:
+  LayerPrefix(char key);
+
+  LayerPrefix(char key, uint32_t index);
+
+  LayerPrefix(uint32_t index);
+
+  static LayerPrefix fromId(NodeId node);
+
+  inline operator uint32_t() const { return value_.value; }
+
+  std::string str(bool with_key = true) const;
+
+  bool matches(NodeId node) const;
+
+  NodeId makeId(size_t index) const;
+
+  size_t index(NodeId node_id) const;
+
+  inline char key() const { return value_.symbol.key; }
+
+  inline uint32_t index() const { return value_.symbol.index; }
+
+ private:
+  union {
+    uint32_t value;
+    struct __attribute__((packed)) {
+      uint32_t index : 24;
+      char key : 8;
+    } symbol;
+  } value_;
+};
+
+std::ostream& operator<<(std::ostream& out, const LayerKey& key);
 
 }  // namespace spark_dsg

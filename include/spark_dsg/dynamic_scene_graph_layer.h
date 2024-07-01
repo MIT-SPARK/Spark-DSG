@@ -39,6 +39,7 @@
 
 #include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"
+#include "spark_dsg/layer_prefix.h"
 
 namespace spark_dsg {
 
@@ -103,9 +104,9 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   const LayerPrefix prefix;
 
-  bool mergeLayer(const DynamicSceneGraphLayer& other,
+  void mergeLayer(const DynamicSceneGraphLayer& other,
                   const GraphMergeConfig& config,
-                  std::map<NodeId, LayerKey>* layer_lookup = nullptr);
+                  std::vector<NodeId>* new_nodes = nullptr);
 
   void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) override;
 

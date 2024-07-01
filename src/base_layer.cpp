@@ -33,9 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/base_layer.h"
-#include "spark_dsg/node_symbol.h"
 
 #include <sstream>
+
+#include "spark_dsg/printing.h"
 
 namespace spark_dsg {
 

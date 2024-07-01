@@ -214,9 +214,9 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
   return true;
 }
 
-bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
+void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
                                  const GraphMergeConfig& config,
-                                 std::map<NodeId, LayerKey>* layer_lookup) {
+                                 std::vector<NodeId>* new_nodes) {
   const bool update_attributes =
       (config.update_layer_attributes && config.update_layer_attributes->count(id))
           ? config.update_layer_attributes->at(id)
@@ -246,9 +246,8 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
     auto attrs = other.attributes_->clone();
     nodes_[other.id] = Node::Ptr(new Node(other.id, id, std::move(attrs)));
     nodes_status_[other.id] = NodeStatus::NEW;
-
-    if (layer_lookup) {
-      layer_lookup->insert({other.id, id});
+    if (new_nodes) {
+      new_nodes->push_back(other.id);
     }
   }
 
@@ -267,8 +266,6 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
 
     insertEdge(new_source, new_target, edge.info->clone());
   }
-
-  return true;
 }
 
 Eigen::Vector3d SceneGraphLayer::getPosition(NodeId node) const {

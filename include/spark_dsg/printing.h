@@ -39,6 +39,8 @@
 
 namespace spark_dsg {
 
+std::ostream& operator<<(std::ostream& out, const EdgeKey& key);
+
 Eigen::IOFormat getDefaultVectorFormat();
 
 template <typename Container>
