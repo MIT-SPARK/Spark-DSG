@@ -32,9 +32,22 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
+#include "spark_dsg/python/scene_graph_utilities.h"
+
+#include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
+#include <spark_dsg/scene_graph_utilities.h>
 
-#define INCLUDE_ZMQ() @ZMQ_INTERFACE_ENABLED@
+namespace py = pybind11;
+using namespace py::literals;
 
-void add_zmq_bindings(pybind11::module_& module);
+namespace spark_dsg::python::scene_graph_utilities {
+
+module.def("compute_ancestor_bounding_box",
+           &computeAncestorBoundingBox,
+           "G"_a,
+           "node_id"_a,
+           "child_layer"_a = DsgLayers::PLACES,
+           "bbox_type"_a = BoundingBox::Type::AABB);
+
+}  // namespace spark_dsg::python::scene_graph_utilities
