@@ -37,6 +37,7 @@
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 
@@ -195,7 +196,7 @@ const Edge& DynamicSceneGraphLayer::getEdgeByIndex(size_t source_idx,
 
 bool DynamicSceneGraphLayer::insertEdge(NodeId source,
                                         NodeId target,
-                                        EdgeAttributes::Ptr&& edge_info) {
+                                        std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (source == target) {
     SG_LOG(WARNING) << "Attempted to add a self-edge for "
                     << NodeSymbol(source).getLabel() << std::endl;
@@ -219,8 +220,8 @@ bool DynamicSceneGraphLayer::insertEdge(NodeId source,
 
 bool DynamicSceneGraphLayer::insertEdgeByIndex(size_t source,
                                                size_t target,
-                                               EdgeAttributes::Ptr&& edge_info) {
-  return insertEdge(prefix.makeId(source), prefix.makeId(target), std::move(edge_info));
+                                               std::unique_ptr<EdgeAttributes>&& info) {
+  return insertEdge(prefix.makeId(source), prefix.makeId(target), std::move(info));
 }
 
 bool DynamicSceneGraphLayer::removeEdge(NodeId source, NodeId target) {

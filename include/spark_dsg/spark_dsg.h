@@ -33,72 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/edge_container.h"
-#include "spark_dsg/scene_graph_node.h"
 
-namespace spark_dsg {
-
-struct GraphMergeConfig {
-  const std::map<NodeId, NodeId>* previous_merges = nullptr;
-  const std::map<LayerId, bool>* update_layer_attributes = nullptr;
-  bool update_dynamic_attributes = true;
-  bool update_archived_attributes = false;
-  bool clear_removed = false;
-  bool enforce_parent_constraints = true;
-
-  NodeId getMergedId(NodeId original) const;
-};
-
-class BaseLayer {
- public:
-  friend class DynamicSceneGraph;
-
-  virtual ~BaseLayer() = default;
-
-  virtual bool hasEdge(NodeId source, NodeId target) const = 0;
-
-  virtual bool removeEdge(NodeId source, NodeId target) = 0;
-
-  virtual bool insertEdge(NodeId source,
-                          NodeId target,
-                          std::unique_ptr<EdgeAttributes>&& info) = 0;
-
-  virtual NodeStatus checkNode(NodeId node_id) const = 0;
-
-  virtual const SceneGraphNode* findNode(NodeId node) const = 0;
-
-  virtual const SceneGraphEdge* findEdge(NodeId source, NodeId target) const = 0;
-
-  virtual const SceneGraphNode& getNode(NodeId node_id) const;
-
-  virtual const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
-
-  /**
-   * @brief Get node ids of newly inserted nodes
-   */
-  virtual void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) = 0;
-
-  /**
-   * @brief Get node id of deleted nodes
-   */
-  virtual void getRemovedNodes(std::vector<NodeId>& removed_nodes,
-                               bool clear_removed) = 0;
-
-  /**
-   * @brief Get the source and target of newly inserted edges
-   */
-  virtual void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) = 0;
-
-  /**
-   * @brief Get the source and target of deleted edges
-   */
-  virtual void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
-                               bool clear_removed) = 0;
-
- protected:
-  virtual EdgeContainer& edgeContainer() = 0;
-
-  virtual bool removeNode(NodeId node_id) = 0;
-};
-
-}  // namespace spark_dsg
+#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
+#include "spark_dsg/serialization/file_io.h"

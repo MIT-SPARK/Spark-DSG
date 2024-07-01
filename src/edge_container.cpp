@@ -34,18 +34,41 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/edge_container.h"
 
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/node_symbol.h"
+
 namespace spark_dsg {
 
 using Edge = EdgeContainer::Edge;
 
-SceneGraphEdge::SceneGraphEdge(NodeId source, NodeId target, AttrPtr&& info)
+SceneGraphEdge::SceneGraphEdge(NodeId source,
+                               NodeId target,
+                               std::unique_ptr<EdgeAttributes>&& info)
     : source(source), target(target), info(std::move(info)) {}
 
 SceneGraphEdge::~SceneGraphEdge() = default;
 
+EdgeKey::EdgeKey(NodeId k1, NodeId k2) : k1(std::min(k1, k2)), k2(std::max(k1, k2)) {}
+
+bool EdgeKey::operator==(const EdgeKey& other) const {
+  return k1 == other.k1 && k2 == other.k2;
+}
+
+bool EdgeKey::operator<(const EdgeKey& other) const {
+  if (k1 == other.k1) {
+    return k2 < other.k2;
+  }
+
+  return k1 < other.k1;
+}
+
+std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
+  return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
+}
+
 void EdgeContainer::insert(NodeId source,
                            NodeId target,
-                           EdgeAttributes::Ptr&& edge_info) {
+                           std::unique_ptr<EdgeAttributes>&& edge_info) {
   auto attrs = (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
                                       : std::move(edge_info);
 
@@ -151,6 +174,5 @@ Edge* EdgeContainer::find(const EdgeKey& key) const {
   stale_edges[key] = false;
   return const_cast<SceneGraphEdge*>(&iter->second);
 }
-
 
 }  // namespace spark_dsg

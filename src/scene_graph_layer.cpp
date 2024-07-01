@@ -38,8 +38,10 @@
 #include <sstream>
 
 #include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/graph_utilities.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 
@@ -80,7 +82,7 @@ bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
 
 bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
-                                 EdgeAttributes::Ptr&& edge_info) {
+                                 std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (source == target) {
     SG_LOG(WARNING) << "Attempted to add a self-edge" << std::endl;
     return false;

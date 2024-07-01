@@ -181,7 +181,7 @@ class DynamicSceneGraph {
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributes::Ptr&& edge_info = nullptr);
+                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
 
   /**
    * @brief Insert a parent edge between two nodes
@@ -199,7 +199,7 @@ class DynamicSceneGraph {
    */
   bool insertParentEdge(NodeId source,
                         NodeId target,
-                        EdgeAttributes::Ptr&& edge_info = nullptr);
+                        std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
 
   /**
    * @brief Add an edge to the graph or update an existing edge
@@ -208,7 +208,9 @@ class DynamicSceneGraph {
    * @param target edge target id
    * @param edge_info edge attributes
    */
-  bool addOrUpdateEdge(NodeId source, NodeId target, EdgeAttributes::Ptr&& edge_info);
+  bool addOrUpdateEdge(NodeId source,
+                       NodeId target,
+                       std::unique_ptr<EdgeAttributes>&& edge_info);
 
   /**
    * @brief Set the attributes of an existing node
@@ -225,7 +227,9 @@ class DynamicSceneGraph {
    * @param attrs New attributes for the edge
    * @return Returns true if update was successful
    */
-  bool setEdgeAttributes(NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs);
+  bool setEdgeAttributes(NodeId source,
+                         NodeId target,
+                         std::unique_ptr<EdgeAttributes>&& attrs);
 
   /**
    * @brief Check whether the layer exists and is valid

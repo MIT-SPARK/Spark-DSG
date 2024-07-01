@@ -131,4 +131,10 @@ struct DsgLayers {
   static LayerId StringToLayerId(const std::string& id_str);
 };
 
+namespace graph_utilities {
+// TODO(nathan) make inheritance work
+template <typename Graph>
+struct graph_traits {};
+}  // namespace graph_utilities
+
 }  // namespace spark_dsg

@@ -36,8 +36,6 @@
 #include <Eigen/Core>
 
 #include "spark_dsg/base_layer.h"
-#include "spark_dsg/node_symbol.h"
-#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
@@ -84,11 +82,11 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributes::Ptr&& edge_info = nullptr) override;
+                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr) override;
 
   bool insertEdgeByIndex(size_t source_index,
                          size_t target_index,
-                         EdgeAttributes::Ptr&& edge_info = nullptr);
+                         std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
 
   bool removeEdge(NodeId source, NodeId target) override;
 

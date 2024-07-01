@@ -36,9 +36,8 @@
 #include <map>
 #include <vector>
 
-#include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/scene_graph_types.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
@@ -53,11 +52,8 @@ enum class EdgeStatus { NEW, VISIBLE, DELETED, MERGED, NONEXISTENT };
  * @brief Edge representation
  */
 struct SceneGraphEdge {
-  //! attributes of the edge
-  using AttrPtr = std::unique_ptr<EdgeAttributes>;
-
   //! construct and edge from some info
-  SceneGraphEdge(NodeId source, NodeId target, AttrPtr&& info);
+  SceneGraphEdge(NodeId source, NodeId target, std::unique_ptr<EdgeAttributes>&& info);
 
   ~SceneGraphEdge();
 
@@ -66,7 +62,7 @@ struct SceneGraphEdge {
   //! end of edge (by convention the child)
   const NodeId target;
   //! attributes about the edge
-  AttrPtr info;
+  std::unique_ptr<EdgeAttributes> info;
 
   /**
    * @brief get a reference to the attributes of the node (with an optional
@@ -81,34 +77,24 @@ struct SceneGraphEdge {
 };
 
 struct EdgeKey {
-  EdgeKey(NodeId k1, NodeId k2) : k1(std::min(k1, k2)), k2(std::max(k1, k2)) {}
-
-  inline bool operator==(const EdgeKey& other) const {
-    return k1 == other.k1 && k2 == other.k2;
-  }
-
-  inline bool operator<(const EdgeKey& other) const {
-    if (k1 == other.k1) {
-      return k2 < other.k2;
-    }
-
-    return k1 < other.k1;
-  }
+  EdgeKey(NodeId k1, NodeId k2);
+  bool operator==(const EdgeKey& other) const;
+  bool operator<(const EdgeKey& other) const;
 
   NodeId k1;
   NodeId k2;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
-  return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
-}
+std::ostream& operator<<(std::ostream& out, const EdgeKey& key);
 
 struct EdgeContainer {
   using Edge = SceneGraphEdge;
   using Edges = std::map<EdgeKey, Edge>;
   using EdgeStatusMap = std::map<EdgeKey, EdgeStatus>;
 
-  void insert(NodeId source, NodeId target, EdgeAttributes::Ptr&& edge_info);
+  void insert(NodeId source,
+              NodeId target,
+              std::unique_ptr<EdgeAttributes>&& edge_info);
 
   void remove(NodeId source, NodeId target);
 

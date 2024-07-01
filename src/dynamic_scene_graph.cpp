@@ -39,6 +39,7 @@
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/serialization/file_io.h"
 
 namespace spark_dsg {
@@ -227,7 +228,7 @@ bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
 
 bool DynamicSceneGraph::insertEdge(NodeId source,
                                    NodeId target,
-                                   EdgeAttributes::Ptr&& edge_info) {
+                                   std::unique_ptr<EdgeAttributes>&& edge_info) {
   LayerKey source_key, target_key;
   if (hasEdge(source, target, &source_key, &target_key)) {
     return false;
@@ -258,7 +259,7 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
 
 bool DynamicSceneGraph::insertParentEdge(NodeId source,
                                          NodeId target,
-                                         EdgeAttributes::Ptr&& edge_info) {
+                                         std::unique_ptr<EdgeAttributes>&& edge_info) {
   LayerKey source_key, target_key;
   if (hasEdge(source, target, &source_key, &target_key)) {
     return false;
@@ -289,7 +290,7 @@ bool DynamicSceneGraph::insertParentEdge(NodeId source,
 
 bool DynamicSceneGraph::addOrUpdateEdge(NodeId source,
                                         NodeId target,
-                                        EdgeAttributes::Ptr&& edge_info) {
+                                        std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (hasEdge(source, target)) {
     return setEdgeAttributes(source, target, std::move(edge_info));
   } else {
@@ -310,7 +311,7 @@ bool DynamicSceneGraph::setNodeAttributes(NodeId node,
 
 bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
                                           NodeId target,
-                                          EdgeAttributes::Ptr&& attrs) {
+                                          std::unique_ptr<EdgeAttributes>&& attrs) {
   // defer to layers if it is a intralayer edge
   const auto& source_key = node_lookup_.at(source);
   const auto& target_key = node_lookup_.at(target);

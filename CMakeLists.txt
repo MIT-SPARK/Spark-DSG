@@ -30,6 +30,7 @@ endif()
 add_library(
   ${PROJECT_NAME}
   src/adjacency_matrix.cpp
+  src/base_layer.cpp
   src/bounding_box_extraction.cpp
   src/bounding_box.cpp
   src/color.cpp

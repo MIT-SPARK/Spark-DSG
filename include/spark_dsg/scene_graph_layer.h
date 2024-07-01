@@ -39,7 +39,6 @@
 #include <vector>
 
 #include "spark_dsg/base_layer.h"
-#include "spark_dsg/graph_utilities.h"
 
 namespace spark_dsg {
 
@@ -89,7 +88,7 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributes::Ptr&& edge_attributes = nullptr) override;
+                  std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr) override;
 
   /**
    * @brief Check whether the layer has the specified node
