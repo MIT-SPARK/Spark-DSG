@@ -90,6 +90,22 @@ size_t Mesh::numVertices() const { return points.size(); }
 
 size_t Mesh::numFaces() const { return faces.size(); }
 
+void Mesh::reserveVertices(size_t size) {
+  points.reserve(size);
+  if (has_colors) {
+    colors.reserve(size);
+  }
+  if (has_timestamps) {
+    stamps.reserve(size);
+  }
+  if (has_labels) {
+    labels.reserve(size);
+  }
+  if (has_first_seen_stamps) {
+    first_seen_stamps.reserve(size);
+  }
+}
+
 void Mesh::resizeVertices(size_t size) {
   points.resize(size);
   if (has_colors) {
@@ -141,77 +157,61 @@ const Mesh::Face& Mesh::face(size_t index) const { return faces.at(index); }
 Mesh::Face& Mesh::face(size_t index) { return faces.at(index); }
 
 void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
-  // Map old indices to new indices.
-  std::unordered_map<size_t, size_t> old_to_new;
-
   // Allocating new storage is faster than erasing from all old storages.
-  Positions new_points;
-  Colors new_colors;
-  Timestamps new_stamps;
-  Timestamps new_first_seen_stamps;
-  Labels new_labels;
-
-  const size_t num_new_vertices = numVertices() - indices.size();
-  new_points.reserve(num_new_vertices);
-  if (has_colors) {
-    new_colors.reserve(num_new_vertices);
-  }
-  if (has_timestamps) {
-    new_stamps.reserve(num_new_vertices);
-  }
-  if (has_labels) {
-    new_labels.reserve(num_new_vertices);
-  }
-  if (has_first_seen_stamps) {
-    new_first_seen_stamps.reserve(num_new_vertices);
-  }
+  const auto num_new_vertices = numVertices() - indices.size();
+  Mesh other(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
+  other.reserveVertices(num_new_vertices);
 
   // Copy over the vertices that are not being removed.
   size_t new_index = 0;
+  // Map old indices to new indices.
+  std::unordered_map<size_t, size_t> old_to_new;
   for (size_t old_index = 0; old_index < numVertices(); ++old_index) {
     if (indices.count(old_index)) {
       continue;
     }
+
     old_to_new[old_index] = new_index++;
-    new_points.push_back(points[old_index]);
+    other.points.push_back(points[old_index]);
     if (has_colors) {
-      new_colors.push_back(colors[old_index]);
+      other.colors.push_back(colors[old_index]);
     }
+
     if (has_timestamps) {
-      new_stamps.push_back(stamps[old_index]);
+      other.stamps.push_back(stamps[old_index]);
     }
+
     if (has_labels) {
-      new_labels.push_back(labels[old_index]);
+      other.labels.push_back(labels[old_index]);
     }
+
     if (has_first_seen_stamps) {
-      new_first_seen_stamps.push_back(first_seen_stamps[old_index]);
+      other.first_seen_stamps.push_back(first_seen_stamps[old_index]);
     }
   }
 
-  points = std::move(new_points);
-  colors = std::move(new_colors);
-  stamps = std::move(new_stamps);
-  labels = std::move(new_labels);
-  first_seen_stamps = std::move(new_first_seen_stamps);
-
-  // Update the faces.
-  auto face_it = faces.begin();
-  while (face_it != faces.end()) {
+  // Update and copy over the faces.
+  for (const auto& face : faces) {
+    Face new_face;
     bool erase_face = false;
-    for (size_t& index : *face_it) {
-      const auto new_index = old_to_new.find(index);
-      if (new_index == old_to_new.end()) {
+    for (size_t i = 0; i < 3; ++i) {
+      const auto iter = old_to_new.find(face[i]);
+      if (iter == old_to_new.end()) {
         erase_face = true;
         break;
       }
-      index = new_index->second;
+
+      new_face[i] = iter->second;
     }
+
     if (erase_face) {
-      face_it = faces.erase(face_it);
-    } else {
-      ++face_it;
+      continue;
     }
+
+    other.faces.push_back(new_face);
   }
+
+  *this = std::move(other);
 }
 
 void Mesh::eraseFaces(const std::unordered_set<size_t>& indices,
