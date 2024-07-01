@@ -34,10 +34,21 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/printing.h"
 
+#include "spark_dsg/scene_graph_node.h"
+
 namespace spark_dsg {
 
 std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
   return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
+}
+
+std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
+  out << "Node<id=" << NodeSymbol(node.id).getLabel() << ", layer=" << node.layer;
+  if (node.timestamp) {
+    out << ", timestamp=" << node.timestamp->count() << "[ns]";
+  }
+  out << ">";
+  return out;
 }
 
 Eigen::IOFormat getDefaultVectorFormat() {

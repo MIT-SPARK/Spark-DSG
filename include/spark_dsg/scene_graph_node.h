@@ -36,7 +36,6 @@
 #include <chrono>
 #include <memory>
 #include <optional>
-#include <ostream>
 #include <set>
 #include <vector>
 
@@ -165,21 +164,6 @@ class SceneGraphNode {
   const LayerId layer;
   //! Timestamp of node (if dynamic)
   const std::optional<std::chrono::nanoseconds> timestamp;
-
-  /**
-   * @brief output node information
-   * @param out output stream
-   * @param node node to print
-   * @returns original output stream
-   */
-  friend std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node);
-
- protected:
-  /**
-   * @brief internal function for outputing information to a ostream
-   * @param out ostream to output info to
-   */
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
 
  protected:
   //! pointer to attributes

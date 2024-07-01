@@ -55,19 +55,6 @@ SceneGraphNode::SceneGraphNode(NodeId node_id,
 
 SceneGraphNode::~SceneGraphNode() = default;
 
-std::ostream& SceneGraphNode::fill_ostream(std::ostream& out) const {
-  out << "Node<id=" << NodeSymbol(id).getLabel() << ", layer=" << layer;
-  if (timestamp) {
-    out << ", timestamp=" << timestamp->count() << "[ns]";
-  }
-  out << ">";
-  return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
-  return node.fill_ostream(out);
-}
-
 bool SceneGraphNode::hasParent() const { return parents_.size() == 1; }
 
 bool SceneGraphNode::hasSiblings() const { return not siblings_.empty(); }

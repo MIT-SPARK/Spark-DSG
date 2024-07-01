@@ -35,9 +35,7 @@
 #pragma once
 #include <Eigen/Core>
 #include <map>
-#include <set>
 #include <unordered_set>
-#include <vector>
 
 #include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"

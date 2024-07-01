@@ -39,7 +39,11 @@
 
 namespace spark_dsg {
 
+class SceneGraphNode;
+
 std::ostream& operator<<(std::ostream& out, const EdgeKey& key);
+
+std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node);
 
 Eigen::IOFormat getDefaultVectorFormat();
 

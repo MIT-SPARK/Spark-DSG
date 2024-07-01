@@ -34,8 +34,6 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <Eigen/Core>
-#include <chrono>
-#include <set>
 
 #include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"
