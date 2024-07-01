@@ -76,17 +76,6 @@ struct SceneGraphEdge {
   }
 };
 
-struct EdgeKey {
-  EdgeKey(NodeId k1, NodeId k2);
-  bool operator==(const EdgeKey& other) const;
-  bool operator<(const EdgeKey& other) const;
-
-  NodeId k1;
-  NodeId k2;
-};
-
-std::ostream& operator<<(std::ostream& out, const EdgeKey& key);
-
 struct EdgeContainer {
   using Edge = SceneGraphEdge;
   using Edges = std::map<EdgeKey, Edge>;

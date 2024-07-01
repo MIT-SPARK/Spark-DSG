@@ -46,6 +46,17 @@ namespace spark_dsg {
 using NodeId = uint64_t;   //!< Node label
 using LayerId = uint64_t;  //!< Layer label
 
+struct EdgeKey {
+  EdgeKey(NodeId k1, NodeId k2);
+  bool operator==(const EdgeKey& other) const;
+  bool operator<(const EdgeKey& other) const;
+
+  NodeId k1;
+  NodeId k2;
+};
+
+std::ostream& operator<<(std::ostream& out, const EdgeKey& key);
+
 struct LayerKey {
   static constexpr LayerId UNKNOWN_LAYER = std::numeric_limits<LayerId>::max();
   LayerId layer;
@@ -69,14 +80,7 @@ struct LayerKey {
   inline operator bool() const { return layer != UNKNOWN_LAYER; }
 };
 
-inline std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
-  if (key.dynamic) {
-    out << key.layer << "(" << key.prefix << ")";
-  } else {
-    out << key.layer;
-  }
-  return out;
-}
+std::ostream& operator<<(std::ostream& out, const LayerKey& key);
 
 class LayerPrefix {
  public:

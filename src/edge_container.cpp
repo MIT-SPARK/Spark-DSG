@@ -48,24 +48,6 @@ SceneGraphEdge::SceneGraphEdge(NodeId source,
 
 SceneGraphEdge::~SceneGraphEdge() = default;
 
-EdgeKey::EdgeKey(NodeId k1, NodeId k2) : k1(std::min(k1, k2)), k2(std::max(k1, k2)) {}
-
-bool EdgeKey::operator==(const EdgeKey& other) const {
-  return k1 == other.k1 && k2 == other.k2;
-}
-
-bool EdgeKey::operator<(const EdgeKey& other) const {
-  if (k1 == other.k1) {
-    return k2 < other.k2;
-  }
-
-  return k1 < other.k1;
-}
-
-std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
-  return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
-}
-
 void EdgeContainer::insert(NodeId source,
                            NodeId target,
                            std::unique_ptr<EdgeAttributes>&& edge_info) {

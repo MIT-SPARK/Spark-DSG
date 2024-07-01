@@ -37,7 +37,27 @@
 #include <algorithm>
 #include <sstream>
 
+#include "spark_dsg/node_symbol.h"
+
 namespace spark_dsg {
+
+EdgeKey::EdgeKey(NodeId k1, NodeId k2) : k1(std::min(k1, k2)), k2(std::max(k1, k2)) {}
+
+bool EdgeKey::operator==(const EdgeKey& other) const {
+  return k1 == other.k1 && k2 == other.k2;
+}
+
+bool EdgeKey::operator<(const EdgeKey& other) const {
+  if (k1 == other.k1) {
+    return k2 < other.k2;
+  }
+
+  return k1 < other.k1;
+}
+
+std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
+  return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
+}
 
 LayerPrefix::LayerPrefix(char key) {
   value_.symbol.key = key;
@@ -104,6 +124,15 @@ bool LayerKey::operator==(const LayerKey& other) const {
 }
 
 bool LayerKey::isParent(const LayerKey& other) const { return layer > other.layer; }
+
+std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
+  if (key.dynamic) {
+    out << key.layer << "(" << key.prefix << ")";
+  } else {
+    out << key.layer;
+  }
+  return out;
+}
 
 std::string DsgLayers::LayerIdToString(LayerId id) {
   switch (id) {

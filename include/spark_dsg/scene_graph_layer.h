@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "spark_dsg/base_layer.h"
+#include "spark_dsg/edge_container.h"
 
 namespace spark_dsg {
 
