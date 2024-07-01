@@ -51,6 +51,13 @@ struct GraphMergeConfig {
   NodeId getMergedId(NodeId original) const;
 };
 
+/**
+ * @brief Base node status.
+ *
+ * Mostly for keeping history and status of nodes in a graph
+ */
+enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
+
 class BaseLayer {
  public:
   friend class DynamicSceneGraph;

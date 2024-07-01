@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <Eigen/Core>
+#include <chrono>
+#include <set>
 
 #include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"
@@ -45,7 +47,7 @@ class DynamicSceneGraphLayer : public BaseLayer {
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<DynamicSceneGraphLayer>;
   //! node container for the layer
-  using Nodes = std::vector<SceneGraphNode::Ptr>;
+  using Nodes = std::vector<std::unique_ptr<SceneGraphNode>>;
   //! edge container type for the layer
   using Edges = EdgeContainer::Edges;
 

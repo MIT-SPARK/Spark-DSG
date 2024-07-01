@@ -149,7 +149,7 @@ class DynamicSceneGraph {
    * @param node to add
    * @return true if the node was added successfully
    */
-  bool insertNode(SceneGraphNode::Ptr&& node);
+  bool insertNode(std::unique_ptr<SceneGraphNode>&& node);
 
   /**
    * @brief add a node to the graph or update an existing node

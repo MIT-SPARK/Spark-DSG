@@ -46,13 +46,6 @@
 namespace spark_dsg {
 
 /**
- * @brief Base node status.
- *
- * Mostly for keeping history and status of nodes in a graph
- */
-enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
-
-/**
  * @brief Node in the scene graph
  *
  * Nodes are primarily specialized by their attributes, and not by node type.
