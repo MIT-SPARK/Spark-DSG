@@ -35,7 +35,6 @@
 #include "spark_dsg/scene_graph_node.h"
 
 #include "spark_dsg/node_attributes.h"
-#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 
