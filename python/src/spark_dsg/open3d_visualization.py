@@ -71,7 +71,7 @@ CATEGORY_MAP = {
 def _get_edge_layers(edge):
     source_id = NodeSymbol(edge.source)
     target_id = NodeSymbol(edge.target)
-    return CATEGORY_MAP[source_id.category], CATEGORY_MAP[target_id.category]
+    return CATEGORY_MAP.get(source_id.category), CATEGORY_MAP.get(target_id.category)
 
 
 class RemoteVisualizer:
