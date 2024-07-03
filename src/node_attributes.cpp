@@ -105,7 +105,7 @@ std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs) {
 NodeAttributes::NodeAttributes() : NodeAttributes(Eigen::Vector3d::Zero()) {}
 
 NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)
-    : position(pos), last_update_time_ns(0), is_active(false) {}
+    : position(pos), last_update_time_ns(0), is_active(false), is_predicted(false) {}
 
 NodeAttributes::Ptr NodeAttributes::clone() const {
   return std::make_unique<NodeAttributes>(*this);
@@ -122,6 +122,7 @@ std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
       << (last_update_time_ns == 0 ? "n/a" : std::to_string(last_update_time_ns))
       << "\n";
   out << std::boolalpha << "  - is_active: " << is_active;
+  out << std::boolalpha << "  - is_predicted: " << is_predicted;
   return out;
 }
 
@@ -129,6 +130,7 @@ void NodeAttributes::serialization_info() {
   serialization::field("position", position);
   serialization::field("last_update_time_ns", last_update_time_ns);
   serialization::field("is_active", is_active);
+  serialization::field("is_predicted", is_predicted);
 }
 
 void NodeAttributes::serialization_info() const {
@@ -138,7 +140,8 @@ void NodeAttributes::serialization_info() const {
 bool NodeAttributes::is_equal(const NodeAttributes& other) const {
   return matricesEqual(position, other.position) &&
          last_update_time_ns == other.last_update_time_ns &&
-         is_active == other.is_active;
+         is_active == other.is_active &&
+         is_predicted == other.is_predicted;
 }
 
 SemanticNodeAttributes::SemanticNodeAttributes()
@@ -284,7 +287,6 @@ std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   out << "\n  - distance: " << distance;
   out << "\n  - num basis points: " << num_basis_points;
   out << std::boolalpha << "\n  - real place: " << real_place;
-  out << std::boolalpha << "\n  - predicted place: " << predicted_place;
   out << std::boolalpha << "\n  - need cleanup: " << need_cleanup;
   out << std::boolalpha << "\n  - active frontier: " << active_frontier;
   out << "\n  - num frontier voxels: " << num_frontier_voxels;
@@ -300,7 +302,6 @@ void PlaceNodeAttributes::serialization_info() {
   serialization::field("mesh_vertex_labels", mesh_vertex_labels);
   serialization::field("deformation_connections", deformation_connections);
   serialization::field("real_place", real_place);
-  serialization::field("predicted_place", predicted_place);
   serialization::field("active_frontier", active_frontier);
   serialization::field("frontier_scale", frontier_scale);
   serialization::field("orientation", orientation);
@@ -325,7 +326,6 @@ bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
          mesh_vertex_labels == derived->mesh_vertex_labels &&
          deformation_connections == derived->deformation_connections &&
          real_place == derived->real_place &&
-         predicted_place == derived->predicted_place &&
          active_frontier == derived->active_frontier &&
          frontier_scale == derived->frontier_scale &&
          quaternionsEqual(orientation, derived->orientation) &&

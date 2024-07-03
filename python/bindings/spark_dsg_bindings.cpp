@@ -244,6 +244,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(py::init<>())
       .def_readwrite("position", &NodeAttributes::position)
       .def_readwrite("last_update_time_ns", &NodeAttributes::last_update_time_ns)
+      .def_readwrite("is_predicted", &NodeAttributes::is_predicted)
       .def("__repr__", [](const NodeAttributes& attrs) {
         std::stringstream ss;
         ss << attrs;
@@ -339,7 +340,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                      &PlaceNodeAttributes::deformation_connections)
       .def_readwrite("is_active", &PlaceNodeAttributes::is_active)
       .def_readwrite("real_place", &PlaceNodeAttributes::real_place)
-      .def_readwrite("predicted_place", &PlaceNodeAttributes::predicted_place)
       .def_readwrite("active_frontier", &PlaceNodeAttributes::active_frontier)
       .def_readwrite("frontier_scale", &PlaceNodeAttributes::frontier_scale)
       .def_property(

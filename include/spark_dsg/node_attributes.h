@@ -111,6 +111,8 @@ struct NodeAttributes {
   uint64_t last_update_time_ns;
   //! whether or not the node is in the active window
   bool is_active;
+  //! whether the node was observed by Hydra, or added as a prediction
+  bool is_predicted;
 
   /**
    * @brief output attribute information
@@ -281,7 +283,6 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   std::vector<size_t> deformation_connections;
 
   bool real_place = true;
-  bool predicted_place = false;
   bool need_cleanup = false;
   bool active_frontier = false;
   Eigen::Vector3d frontier_scale;
