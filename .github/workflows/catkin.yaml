@@ -1,0 +1,31 @@
+---
+name: ROS Catkin Build
+on: [push]
+jobs:
+  build:
+    runs-on: ros:noetic-ros-base-focal
+    steps:
+        # checkout the code
+      - uses: actions/checkout@v4
+        path: src/spark_dsg
+        # install necessary dependences
+      - name: Dependencies
+        run: |
+          # sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+          sudo apt install -y python3-wstool python3-catkin-tools python3-vcstool
+          rosdep install --from-paths src --ignore--src -r -y
+      # configure repo
+      - name: Configure
+        run: |
+          catkin init
+          catkin config                       \
+            -DCMAKE_BUILD_TYPE=Release        \
+            -DSPARK_DSG_BUILD_TESTS=ON        \
+            -DSPARK_DSG_BUILD_PYTHON=ON       \
+            -DSPARK_DSG_BUILD_EXAMPLES=ON
+        # build repo
+      - name: Build
+        run: catkin build spark_dsg
+        # run unit tests
+      - name: Test
+        run: catkin test spark_dsg
