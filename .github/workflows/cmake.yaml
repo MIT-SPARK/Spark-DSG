@@ -14,10 +14,10 @@ jobs:
         # configure repo
       - name: Configure
         run: |
-          cmake -B ${{github.workspace}}/build
-              -DCMAKE_BUILD_TYPE=Release
-              -DSPARK_DSG_BUILD_TESTS=ON
-              -DSPARK_DSG_BUILD_PYTHON=ON
+          cmake -B ${{github.workspace}}/build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DSPARK_DSG_BUILD_TESTS=ON \
+              -DSPARK_DSG_BUILD_PYTHON=ON \
               -DSPARK_DSG_BUILD_EXAMPLES=ON
         # build repo
       - name: Build
