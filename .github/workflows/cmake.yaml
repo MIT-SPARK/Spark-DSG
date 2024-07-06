@@ -1,4 +1,5 @@
 ---
+# based on https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: Native CMake Build
 on: [push]
 jobs:
@@ -24,4 +25,5 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config Release
         # run unit tests
       - name: Test
+        working-directory: ${{github.workspace}}/build
         run: ctest -C Release
