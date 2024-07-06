@@ -7,7 +7,8 @@ jobs:
     steps:
         # checkout the code
       - uses: actions/checkout@v4
-        path: src/spark_dsg
+        with:
+          path: src/spark_dsg
         # install necessary dependences
       - name: Dependencies
         run: |
