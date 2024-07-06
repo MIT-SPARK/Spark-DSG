@@ -3,7 +3,8 @@ name: ROS Catkin Build
 on: [push]
 jobs:
   build:
-    runs-on: ros:noetic-ros-base-focal
+    runs-on: ubuntu-latest
+    container: ros:noetic-ros-base-focal
     steps:
         # checkout the code
       - uses: actions/checkout@v4
