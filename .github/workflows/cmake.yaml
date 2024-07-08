@@ -1,6 +1,6 @@
 ---
 # based on https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: ubuntu-latest: Build and Test
+name: "ubuntu-latest: Build and Test"
 on: [push]
 jobs:
   build:

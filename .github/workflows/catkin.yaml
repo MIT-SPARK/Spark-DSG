@@ -1,5 +1,5 @@
 ---
-name: ROS Noetic: Build and Test
+name: "ROS Noetic: Build and Test"
 on: [push]
 jobs:
   build:
