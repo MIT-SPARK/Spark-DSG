@@ -39,6 +39,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>

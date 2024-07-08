@@ -1,3 +1,6 @@
+[![ubuntu-latest: Build and Test](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/cmake.yaml/badge.svg)](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/cmake.yaml)
+[![ROS Noetic: Build and Test](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/catkin.yaml/badge.svg)](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/catkin.yaml)
+
 ## Spark-DSG
 
 This is the core c++ library that contains the dynamic scene graph data-structure used by Hydra. It also has python bindings.

@@ -1,0 +1,33 @@
+---
+name: "ROS Noetic: Build and Test"
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ros:noetic-ros-base-focal
+    steps:
+      # checkout the code
+      - uses: actions/checkout@v4
+        with:
+          path: src/spark_dsg
+      # install necessary dependences
+      - name: Dependencies
+        run: |
+          apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool git
+          rosdep update --rosdistro noetic && rosdep install --rosdistro noetic --from-paths src --ignore-src -r -y
+      # configure repo
+      - name: Configure
+        run: |
+          catkin init
+          catkin config --extend /opt/ros/noetic
+          catkin config                       \
+            -DCMAKE_BUILD_TYPE=Release        \
+            -DSPARK_DSG_BUILD_TESTS=ON        \
+            -DSPARK_DSG_BUILD_PYTHON=ON       \
+            -DSPARK_DSG_BUILD_EXAMPLES=ON
+      # build repo
+      - name: Build
+        run: catkin build spark_dsg
+      # run unit tests
+      - name: Test
+        run: catkin test spark_dsg

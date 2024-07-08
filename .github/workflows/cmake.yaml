@@ -1,0 +1,29 @@
+---
+# based on https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
+name: "ubuntu-latest: Build and Test"
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+        # checkout the code
+      - uses: actions/checkout@v4
+        # setup package dependencies
+      - name: Dependencies
+        run: |
+          sudo apt install libgtest-dev libeigen3-dev nlohmann-json3-dev libzmq3-dev python3-dev
+        # configure repo
+      - name: Configure
+        run: |
+          cmake -B ${{github.workspace}}/build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DSPARK_DSG_BUILD_TESTS=ON \
+              -DSPARK_DSG_BUILD_PYTHON=ON \
+              -DSPARK_DSG_BUILD_EXAMPLES=ON
+        # build repo
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config Release
+        # run unit tests
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C Release
