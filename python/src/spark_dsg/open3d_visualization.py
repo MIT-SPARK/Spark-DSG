@@ -67,6 +67,13 @@ CATEGORY_MAP = {
     "B": DsgLayers.BUILDINGS,
 }
 
+LAYER_NAMES = {
+    DsgLayers.OBJECTS: "objects",
+    DsgLayers.PLACES: "places",
+    DsgLayers.ROOMS: "rooms",
+    DsgLayers.BUILDINGS: "buildings",
+}
+
 
 def _get_edge_layers(edge):
     source_id = NodeSymbol(edge.source)
@@ -82,7 +89,7 @@ class RemoteVisualizer:
         url="tcp://127.0.0.1:8001",
         point_size=7.5,
         num_place_edges_to_skip=5,
-        background_color=(0.1, 0.1, 0.1),
+        background_color=(0.4, 0.4, 0.4),
         use_mesh=True,
         use_mesh_normals=False,
         include_dynamic=True,
@@ -172,7 +179,9 @@ class RemoteVisualizer:
             mesh.compute_vertex_normals()
 
     def _update_bounding_boxes(self, layer):
-        bboxes = self._get_geometry(f"bbox_{layer.id}", o3d.geometry.LineSet)
+        bboxes = self._get_geometry(
+            f"bbox_{LAYER_NAMES[layer.id]}", o3d.geometry.LineSet
+        )
         bboxes.clear()
 
         for node in layer.nodes:
@@ -227,7 +236,9 @@ class RemoteVisualizer:
 
         start_idx = offset
         end_idx = offset + layer.num_nodes()
-        pcd = self._get_geometry(f"nodes_{layer.id}", o3d.geometry.PointCloud)
+        pcd = self._get_geometry(
+            f"nodes_{LAYER_NAMES[layer.id]}", o3d.geometry.PointCloud
+        )
         pcd.points = o3d.utility.Vector3dVector(self._points[start_idx:end_idx, :])
         pcd.colors = o3d.utility.Vector3dVector(self._colors[start_idx:end_idx, :])
 
@@ -239,7 +250,9 @@ class RemoteVisualizer:
             edges[index, 0] = self._id_map[edge.source] - offset
             edges[index, 1] = self._id_map[edge.target] - offset
 
-        edge_set = self._get_geometry(f"edges_{layer.id}", o3d.geometry.LineSet)
+        edge_set = self._get_geometry(
+            f"edges_{LAYER_NAMES[layer.id]}", o3d.geometry.LineSet
+        )
         edge_set.points = pcd.points
         edge_set.lines = o3d.utility.Vector2iVector(edges)
 
@@ -296,23 +309,41 @@ class RemoteVisualizer:
         return np.zeros(3)
 
     def _update_render_geometry(self):
+        mat = o3d.visualization.rendering.MaterialRecord()
+        mat.shader = "defaultUnlit"
+        mat.point_size = self._point_size
         for name, geom in self._geometries.items():
             if name in self._new_geometries:
-                self._viz.add_geometry(geom)
+                self._viz.add_geometry(name, geom, mat)
             else:
-                self._viz.update_geometry(geom)
+                self._viz.update_geometry(name, geom, mat)
 
         self._new_geometries = []
 
+    def _update_names(self, G):
+        self._names = [None] * len(self._id_map)
+        for node_id in self._id_map:
+            node = G.get_node(node_id)
+            if node.layer == DsgLayers.OBJECTS or node.layer == DsgLayers.ROOMS:
+                self._names[self._id_map[node_id]] = node.attributes.name
+
+        for name, point in zip(self._names, self._points):
+            if name is not None:
+                self._viz.add_3d_label(point, name)
+
     def run(self):
         """Open a visualizer window and spin."""
-        self._viz = o3d.visualization.Visualizer()
-        self._viz.create_window()
-        opts = self._viz.get_render_option()
-        opts.point_size = self._point_size
-        opts.background_color = np.array(self._background_color)
+        self._app = o3d.visualization.gui.Application.instance
+        self._app.initialize()
 
-        while self._viz.poll_events():
+        self._viz = o3d.visualization.O3DVisualizer("Scene Graph Visualizer")
+        self._viz.show_settings = True
+        self._viz.scene.show_skybox(False)
+        self._viz.scene.set_background(list(self._background_color + (1.0,)))
+
+        self._app.add_window(self._viz)
+
+        while self._app.run_one_tick():
             new_msg = None
             try:
                 new_msg = self._socket.recv(flags=zmq.NOBLOCK)
@@ -327,10 +358,11 @@ class RemoteVisualizer:
 
             G = DynamicSceneGraph.from_binary(new_msg)
             self._update_geometries(G)
+            self._update_names(G)
             self._update_render_geometry()
-            self._viz.update_renderer()
+            self._viz.reset_camera_to_default()
 
-        self._viz.destroy_window()
+        self._viz.close()
 
 
 def _run_remote_visualizer(**kwargs):
