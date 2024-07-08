@@ -37,6 +37,7 @@
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
@@ -130,7 +131,12 @@ void NodeAttributes::serialization_info() {
   serialization::field("position", position);
   serialization::field("last_update_time_ns", last_update_time_ns);
   serialization::field("is_active", is_active);
-  serialization::field("is_predicted", is_predicted);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 0, 4)) {
+    io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("is_predicted", is_predicted);
+  }
 }
 
 void NodeAttributes::serialization_info() const {
@@ -140,8 +146,7 @@ void NodeAttributes::serialization_info() const {
 bool NodeAttributes::is_equal(const NodeAttributes& other) const {
   return matricesEqual(position, other.position) &&
          last_update_time_ns == other.last_update_time_ns &&
-         is_active == other.is_active &&
-         is_predicted == other.is_predicted;
+         is_active == other.is_active && is_predicted == other.is_predicted;
 }
 
 SemanticNodeAttributes::SemanticNodeAttributes()
