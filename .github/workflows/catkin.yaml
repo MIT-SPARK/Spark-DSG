@@ -1,5 +1,5 @@
 ---
-name: ROS Catkin Build
+name: ROS Noetic: Build and Test
 on: [push]
 jobs:
   build:
