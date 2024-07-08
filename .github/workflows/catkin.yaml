@@ -19,6 +19,7 @@ jobs:
       - name: Configure
         run: |
           catkin init
+          catkin config --extend /opt/ros/noetic
           catkin config                       \
             -DCMAKE_BUILD_TYPE=Release        \
             -DSPARK_DSG_BUILD_TESTS=ON        \
