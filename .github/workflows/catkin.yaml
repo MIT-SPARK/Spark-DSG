@@ -14,7 +14,7 @@ jobs:
       - name: Dependencies
         run: |
           apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool
-          rosdep install --from-paths src --ignore--src -r -y
+          rosdep install --from-paths src --ignore-src -r -y
       # configure repo
       - name: Configure
         run: |
