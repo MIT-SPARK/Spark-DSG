@@ -13,7 +13,7 @@ jobs:
       # install necessary dependences
       - name: Dependencies
         run: |
-          apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool
+          apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool git
           rosdep update --rosdistro noetic && rosdep install --rosdistro noetic --from-paths src --ignore-src -r -y
       # configure repo
       - name: Configure
