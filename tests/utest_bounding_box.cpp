@@ -327,9 +327,9 @@ TEST(BoundingBoxTests, Corners) {
   EXPECT_NEAR(0, corners[0](2), 1.0e-6f);
 
   // Max corner.
-  EXPECT_NEAR(0.433012, corners[7](0), 1.0e-6f);
-  EXPECT_NEAR(2.116025, corners[7](1), 1.0e-6f);
-  EXPECT_NEAR(3, corners[7](2), 1.0e-6f);
+  EXPECT_NEAR(0.433012, corners[6](0), 1.0e-6f);
+  EXPECT_NEAR(2.116025, corners[6](1), 1.0e-6f);
+  EXPECT_NEAR(3, corners[6](2), 1.0e-6f);
 }
 
 TEST(BoundingBoxTests, frameConversions) {
