@@ -46,29 +46,28 @@ NodeSymbol::NodeSymbol(char key, NodeId index) {
 
 NodeSymbol::NodeSymbol(NodeId value) { value_.value = value; }
 
-  NodeSymbol::operator NodeId() const { return value_.value; }
+NodeSymbol::operator NodeId() const { return value_.value; }
 
-  NodeId NodeSymbol::categoryId() const { return value_.symbol.index; }
+NodeId NodeSymbol::categoryId() const { return value_.symbol.index; }
 
-  char NodeSymbol::category() const { return value_.symbol.key; }
+char NodeSymbol::category() const { return value_.symbol.key; }
 
-  NodeSymbol& NodeSymbol::operator++() {
-    value_.symbol.index++;
-    return *this;
-  }
+NodeSymbol& NodeSymbol::operator++() {
+  value_.symbol.index++;
+  return *this;
+}
 
-  NodeSymbol NodeSymbol::operator++(int) {
-    NodeSymbol old = *this;
-    value_.symbol.index++;
-    return old;
-  }
+NodeSymbol NodeSymbol::operator++(int) {
+  NodeSymbol old = *this;
+  value_.symbol.index++;
+  return old;
+}
 
-  std::string NodeSymbol::getLabel() const {
-    std::stringstream ss;
-    ss << *this;
-    return ss.str();
-  }
-
+std::string NodeSymbol::getLabel() const {
+  std::stringstream ss;
+  ss << *this;
+  return ss.str();
+}
 
 NodeSymbol operator"" _id(const char* str, size_t size) {
   if (size < 1) {
@@ -80,24 +79,6 @@ NodeSymbol operator"" _id(const char* str, size_t size) {
   size_t index = std::stoull(number);
   return NodeSymbol(prefix, index);
 }
-
-/*
-template <typename Container>
-std::string displayNodeSymbolContainer(const Container& set) {
-  std::stringstream ss;
-  ss << "[";
-  auto iter = set.begin();
-  while (iter != set.end()) {
-    ss << NodeSymbol(*iter).getLabel();
-    ++iter;
-    if (iter != set.end()) {
-      ss << ", ";
-    }
-  }
-  ss << "]";
-  return ss.str();
-}
-*/
 
 std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol) {
   if (std::isalpha(symbol.value_.symbol.key)) {
