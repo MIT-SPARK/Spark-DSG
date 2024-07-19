@@ -1,5 +1,6 @@
 [![ubuntu-latest: Build and Test](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/cmake.yaml/badge.svg)](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/cmake.yaml)
 [![ROS Noetic: Build and Test](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/catkin.yaml/badge.svg)](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/catkin.yaml)
+[![python: Build and Test](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/python.yaml/badge.svg)](https://github.com/MIT-SPARK/Spark-DSG/actions/workflows/python.yaml)
 
 ## Spark-DSG
 
