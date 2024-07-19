@@ -49,6 +49,6 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh = false
  * @param contents JSON string to parse
  * @returns Resulting parsed scene graph
  */
-DynamicSceneGraphPtr readGraph(const std::string& contents);
+std::shared_ptr<DynamicSceneGraph> readGraph(const std::string& contents);
 
 }  // namespace spark_dsg::io::json

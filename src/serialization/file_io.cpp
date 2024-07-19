@@ -95,7 +95,7 @@ void saveDsgBinary(const DynamicSceneGraph& graph,
   out.write(reinterpret_cast<const char*>(graph_buffer.data()), graph_buffer.size());
 }
 
-DynamicSceneGraphPtr loadDsgBinary(const std::string& filepath) {
+std::shared_ptr<DynamicSceneGraph> loadDsgBinary(const std::string& filepath) {
   // Read the file into a buffer.
   std::ifstream infile(filepath, std::ios::in | std::ios::binary);
   std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(infile)),
@@ -121,7 +121,7 @@ void saveDsgJson(const DynamicSceneGraph& graph,
   outfile << json::writeGraph(graph, include_mesh);
 }
 
-DynamicSceneGraphPtr loadDsgJson(const std::string& filepath) {
+std::shared_ptr<DynamicSceneGraph> loadDsgJson(const std::string& filepath) {
   std::ifstream infile(filepath);
   std::stringstream ss;
   ss << infile.rdbuf();

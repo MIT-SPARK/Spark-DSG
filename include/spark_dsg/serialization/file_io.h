@@ -79,7 +79,7 @@ void saveDsgJson(const DynamicSceneGraph& graph,
  * @param filepath The filepath including extension to load from.
  * @return A pointer to the loaded graph or nullptr if loading failed.
  */
-DynamicSceneGraphPtr loadDsgJson(const std::string& filepath);
+std::shared_ptr<DynamicSceneGraph> loadDsgJson(const std::string& filepath);
 
 /**
  * @brief Save a DynamicSceneGraph to a file in binary serialization.
@@ -96,6 +96,6 @@ void saveDsgBinary(const DynamicSceneGraph& graph,
  * @param filepath The filepath including extension to load from.
  * @return A pointer to the loaded graph or nullptr if loading failed.
  */
-DynamicSceneGraphPtr loadDsgBinary(const std::string& filepath);
+std::shared_ptr<DynamicSceneGraph> loadDsgBinary(const std::string& filepath);
 
 }  // namespace spark_dsg::io

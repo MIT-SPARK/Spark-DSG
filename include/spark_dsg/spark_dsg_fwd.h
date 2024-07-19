@@ -13,6 +13,5 @@ struct EdgeContainer;
 
 class SceneGraphLayer;
 class DynamicSceneGraph;
-using DynamicSceneGraphPtr = std::shared_ptr<DynamicSceneGraph>;
 
 }  // namespace spark_dsg
