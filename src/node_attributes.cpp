@@ -65,6 +65,29 @@ std::string showIterable(const T& iterable, size_t max_length = 80) {
   return ss.str();
 }
 
+template <typename T>
+std::string showMap(const T& iterable, size_t max_length = 80) {
+  std::stringstream ss;
+  ss << "{";
+  auto iter = iterable.begin();
+  while (iter != iterable.end()) {
+    ss << iter->first << ": " << iter->second;
+
+    ++iter;
+    if (iter != iterable.end()) {
+      ss << ", ";
+    }
+
+    if (max_length && ss.str().size() >= max_length) {
+      ss << "...";
+      break;
+    }
+  }
+  ss << "}";
+
+  return ss.str();
+}
+
 template <typename Scalar>
 std::string quatToString(const Eigen::Quaternion<Scalar>& q) {
   std::stringstream ss;
@@ -175,7 +198,8 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
       << "  - bounding box: " << bounding_box << "\n"
       << "  - label: " << std::to_string(semantic_label) << "\n"
       << "  - feature: [" << semantic_feature.rows() << " x " << semantic_feature.cols()
-      << "]";
+      << "]"
+      << "  - likelihoods: " << showMap(semantic_class_probabilities);
   return out;
 }
 
@@ -186,6 +210,12 @@ void SemanticNodeAttributes::serialization_info() {
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
   serialization::field("semantic_feature", semantic_feature);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 0, 5)) {
+    io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("semantic_class_probabilities", semantic_class_probabilities);
+  }
 }
 
 bool SemanticNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -201,7 +231,8 @@ bool SemanticNodeAttributes::is_equal(const NodeAttributes& other) const {
   return name == derived->name && color == derived->color &&
          bounding_box == derived->bounding_box &&
          semantic_label == derived->semantic_label &&
-         semantic_feature == derived->semantic_feature;
+         semantic_feature == derived->semantic_feature &&
+         semantic_class_probabilities == derived->semantic_class_probabilities;
 }
 
 ObjectNodeAttributes::ObjectNodeAttributes()
@@ -263,7 +294,13 @@ std::ostream& RoomNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void RoomNodeAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
-  serialization::field("semantic_class_probabilities", semantic_class_probabilities);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 0, 5)) {
+    std::map<std::string, double> unused;
+    serialization::field("semantic_class_probabilities", unused);
+  } else {
+    io::warnOutdatedHeader(header);
+  }
 }
 
 bool RoomNodeAttributes::is_equal(const NodeAttributes& other) const {

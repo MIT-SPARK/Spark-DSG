@@ -178,6 +178,8 @@ struct SemanticNodeAttributes : public NodeAttributes {
   SemanticLabel semantic_label;
   //! semantic feature of object
   Eigen::MatrixXd semantic_feature;
+  //! optional label probabilities
+  std::map<SemanticLabel, double> semantic_class_probabilities;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
@@ -235,8 +237,6 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   RoomNodeAttributes();
   virtual ~RoomNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
-
-  std::map<std::string, double> semantic_class_probabilities;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
