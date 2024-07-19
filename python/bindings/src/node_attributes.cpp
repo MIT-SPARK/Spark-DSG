@@ -134,6 +134,8 @@ void addBindings(pybind11::module_& module) {
       .def_readwrite("bounding_box", &SemanticNodeAttributes::bounding_box)
       .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label)
       .def_readwrite("semantic_feature", &SemanticNodeAttributes::semantic_feature)
+      .def_readwrite("semantic_class_probabilities",
+                     &RoomNodeAttributes::semantic_class_probabilities)
       .def_readonly_static("NO_SEMANTIC_LABEL",
                            &SemanticNodeAttributes::NO_SEMANTIC_LABEL);
 
@@ -151,9 +153,7 @@ void addBindings(pybind11::module_& module) {
           });
 
   py::class_<RoomNodeAttributes, SemanticNodeAttributes>(module, "RoomNodeAttributes")
-      .def(py::init<>())
-      .def_readwrite("semantic_class_probabilities",
-                     &RoomNodeAttributes::semantic_class_probabilities);
+      .def(py::init<>());
 
   py::class_<NearestVertexInfo>(module, "NearestVertexInfo")
       .def(py::init<>())
