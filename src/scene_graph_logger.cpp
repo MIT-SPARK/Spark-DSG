@@ -37,6 +37,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "spark_dsg/dynamic_scene_graph.h"
+
 namespace spark_dsg {
 
 void writeStatsToCsv(size_t num_active,
@@ -66,10 +68,10 @@ SceneGraphLogger::SceneGraphLogger() {}
 
 SceneGraphLogger::~SceneGraphLogger() {}
 
-void SceneGraphLogger::logGraph(const DynamicSceneGraph::Ptr& graph) {
+void SceneGraphLogger::logGraph(const DynamicSceneGraph& graph) {
   // What I want to log: for each layer, the number of active nodes, number of
   // merged node, number of deleted nodes
-  for (const auto& id_layer : graph->layers_) {
+  for (const auto& id_layer : graph.layers_) {
     if (layer_names_.count(id_layer.first) > 0) {
       if (id_layer.second->numNodes() == 0 && !write_header_) {
         continue;
@@ -84,10 +86,10 @@ void SceneGraphLogger::logGraph(const DynamicSceneGraph::Ptr& graph) {
           case NodeStatus::NEW:
           case NodeStatus::VISIBLE:
             num_active_nodes++;
-            if (graph->getNode(id_node_status.first).hasParent()) {
+            if (graph.getNode(id_node_status.first).hasParent()) {
               num_nodes_with_parents++;
             }
-            if (graph->getNode(id_node_status.first).hasChildren()) {
+            if (graph.getNode(id_node_status.first).hasChildren()) {
               num_nodes_with_children++;
             }
             break;

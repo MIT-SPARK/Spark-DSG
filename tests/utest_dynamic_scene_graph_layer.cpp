@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/dynamic_scene_graph_layer.h>
+#include <spark_dsg/spark_dsg.h>
 
 namespace spark_dsg {
 
@@ -229,40 +229,6 @@ TEST(DynamicSceneGraphLayerTests, BasicEdgeIterationCorrect) {
   EXPECT_EQ(expected_targets, actual_targets);
 }
 
-TEST(DynamicSceneGraphLayerTests, getPositionCorrect) {
-  using namespace std::chrono_literals;
-  Eigen::Vector3d expected;
-  expected << 1.0, 2.0, 3.0;
-  NodeAttributes::Ptr attrs = std::make_unique<NodeAttributes>(expected);
-
-  TestableDynamicLayer layer(1, 0);
-  layer.emplaceNode(1s, std::move(attrs));
-
-  Eigen::Vector3d result = layer.getPosition(NodeSymbol(0, 0));
-  EXPECT_EQ(expected(0), result(0));
-  EXPECT_EQ(expected(1), result(1));
-  EXPECT_EQ(expected(2), result(2));
-
-  result = layer.getPositionByIndex(0);
-  EXPECT_EQ(expected(0), result(0));
-  EXPECT_EQ(expected(1), result(1));
-  EXPECT_EQ(expected(2), result(2));
-
-  try {
-    layer.getPosition(NodeSymbol(0, 5));
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
-  }
-
-  try {
-    layer.getPositionByIndex(1);
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
-  }
-}
-
 // Test that rewiring an edge does what it should
 TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
   TestableDynamicLayer layer_1(1, 0);
@@ -283,22 +249,19 @@ TEST(DynamicSceneGraphLayerTests, MergeLayerCorrect) {
   }
 
   GraphMergeConfig config;
-  std::map<NodeId, LayerKey> node_to_layer;
-  layer_1.mergeLayer(layer_2, config, &node_to_layer);
-
-  EXPECT_EQ(2u, node_to_layer.size());
+  std::vector<NodeId> new_nodes;
+  layer_1.mergeLayer(layer_2, config, &new_nodes);
   EXPECT_EQ(5u, layer_1.numNodes());
   EXPECT_EQ(4u, layer_1.numEdges());
 
+  std::vector<NodeId> expected_new_nodes{3, 4};
+  EXPECT_EQ(new_nodes, expected_new_nodes);
+
   for (size_t i = 0; i < 5; i++) {
-    Eigen::Vector3d result = layer_1.getPosition(i);
+    Eigen::Vector3d result = layer_1.getNode(i).attributes().position;
     EXPECT_EQ(static_cast<double>(i), result(0));
     EXPECT_EQ(0.0, result(1));
     EXPECT_EQ(0.0, result(2));
-    if (i > 2) {
-      EXPECT_EQ(1u, node_to_layer.at(i).layer);
-      EXPECT_EQ(0, node_to_layer.at(i).prefix);
-    }
   }
 }
 

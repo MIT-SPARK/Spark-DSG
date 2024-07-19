@@ -35,9 +35,8 @@
 #pragma once
 
 #include <Eigen/Geometry>
-#include <iostream>
 
-#include "spark_dsg/mesh.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
@@ -251,8 +250,7 @@ struct BoundingBox {
  public:
   // Specialized point adaptors.
   struct MeshAdaptor : PointAdaptor {
-    MeshAdaptor(const Mesh& mesh, const std::vector<size_t>* indices = nullptr)
-        : mesh(mesh), indices(indices) {}
+    MeshAdaptor(const Mesh& mesh, const std::vector<size_t>* indices = nullptr);
     size_t size() const override;
     Eigen::Vector3f get(size_t index) const override;
     const Mesh& mesh;
@@ -260,7 +258,7 @@ struct BoundingBox {
   };
 
   struct PointVectorAdaptor : PointAdaptor {
-    PointVectorAdaptor(const std::vector<Eigen::Vector3f>& points) : points(points) {}
+    PointVectorAdaptor(const std::vector<Eigen::Vector3f>& points);
     size_t size() const override;
     Eigen::Vector3f get(size_t index) const override;
     const std::vector<Eigen::Vector3f>& points;

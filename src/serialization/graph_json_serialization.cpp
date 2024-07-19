@@ -36,7 +36,11 @@
 
 #include <fstream>
 
+#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/json_conversions.h"
@@ -47,9 +51,7 @@ namespace spark_dsg {
 using nlohmann::json;
 
 void to_json(json& record, const SceneGraphNode& node) {
-  record = {{"id", node.id},
-            {"layer", node.layer},
-            {"attributes", node.attributes()}};
+  record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
   if (node.timestamp) {
     record["timestamp"] = node.timestamp->count();
   }

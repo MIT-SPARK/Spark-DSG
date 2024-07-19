@@ -33,14 +33,15 @@
 #
 #
 """Module for reading and writing collections of DSGS."""
-from spark_dsg._dsg_bindings import SceneGraphLayer
-from dataclasses import dataclass
-from typing import Union, Dict
 import functools
-import pathlib
-import mmap
 import json
+import mmap
 import os
+import pathlib
+from dataclasses import dataclass
+from typing import Dict, Union
+
+from spark_dsg._dsg_bindings import SceneGraphLayer
 
 
 @dataclass
@@ -156,7 +157,7 @@ class LayerCollection:
 
         start_byte = info.offset
         end_byte = info.offset + info.size
-        return SceneGraphLayer.from_bson(self._mmap[start_byte:end_byte])
+        return SceneGraphLayer.from_binary(self._mmap[start_byte:end_byte])
 
     @requires_open
     def __getitem__(self, index):
@@ -200,7 +201,7 @@ class LayerCollection:
         offset = 0
         with graph_path.open("wb") as fout:
             for index, graph in collection.items():
-                contents = graph.to_bson()
+                contents = graph.to_binary()
                 fout.write(contents)
                 info = IndexInfo(
                     index=index,

@@ -95,6 +95,12 @@ class Mesh {
   size_t numFaces() const;
 
   /**
+   * @brief Reserve vertices memory
+   * @param size New expected size of mesh vertices
+   */
+  void reserveVertices(size_t size);
+
+  /**
    * @brief Set mesh vertex size
    * @param size New size of mesh vertices
    */

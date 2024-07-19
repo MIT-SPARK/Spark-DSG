@@ -38,7 +38,10 @@
 #include <sstream>
 
 #include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/graph_utilities.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 
@@ -47,13 +50,14 @@ using Edge = SceneGraphEdge;
 
 SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id) {}
 
-bool SceneGraphLayer::emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs) {
+bool SceneGraphLayer::emplaceNode(NodeId node_id,
+                                  std::unique_ptr<NodeAttributes>&& attrs) {
   nodes_status_[node_id] = NodeStatus::NEW;
   return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
       .second;
 }
 
-bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
+bool SceneGraphLayer::insertNode(std::unique_ptr<SceneGraphNode>&& node) {
   if (!node) {
     SG_LOG(ERROR) << "Attempted to add an unitialized node to layer " << id
                   << std::endl;
@@ -78,7 +82,7 @@ bool SceneGraphLayer::insertNode(SceneGraphNode::Ptr&& node) {
 
 bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
-                                 EdgeAttributes::Ptr&& edge_info) {
+                                 std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (source == target) {
     SG_LOG(WARNING) << "Attempted to add a self-edge" << std::endl;
     return false;
@@ -210,9 +214,9 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
   return true;
 }
 
-bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
+void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
                                  const GraphMergeConfig& config,
-                                 std::map<NodeId, LayerKey>* layer_lookup) {
+                                 std::vector<NodeId>* new_nodes) {
   const bool update_attributes =
       (config.update_layer_attributes && config.update_layer_attributes->count(id))
           ? config.update_layer_attributes->at(id)
@@ -242,9 +246,8 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
     auto attrs = other.attributes_->clone();
     nodes_[other.id] = Node::Ptr(new Node(other.id, id, std::move(attrs)));
     nodes_status_[other.id] = NodeStatus::NEW;
-
-    if (layer_lookup) {
-      layer_lookup->insert({other.id, id});
+    if (new_nodes) {
+      new_nodes->push_back(other.id);
     }
   }
 
@@ -263,18 +266,6 @@ bool SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
 
     insertEdge(new_source, new_target, edge.info->clone());
   }
-
-  return true;
-}
-
-Eigen::Vector3d SceneGraphLayer::getPosition(NodeId node) const {
-  if (!hasNode(node)) {
-    std::stringstream ss;
-    ss << "node " << NodeSymbol(node).getLabel() << " not in layer";
-    throw std::out_of_range(ss.str());
-  }
-
-  return nodes_.at(node)->attributes().position;
 }
 
 void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) {
@@ -382,5 +373,45 @@ SceneGraphLayer::Ptr IsolatedSceneGraphLayer::clone(const NodeChecker& is_valid)
   cloneImpl(*new_layer, is_valid);
   return new_layer;
 }
+
+namespace graph_utilities {
+
+using LayerGraphTraits = graph_traits<SceneGraphLayer>;
+
+std::set<NodeId> LayerGraphTraits::neighbors(const SceneGraphLayer& graph,
+                                             NodeId node) {
+  return get_node(graph, node).siblings();
+}
+
+bool LayerGraphTraits::contains(const SceneGraphLayer& graph, NodeId node) {
+  return graph.hasNode(node);
+}
+
+const SceneGraphLayer::Nodes& LayerGraphTraits::nodes(const SceneGraphLayer& graph) {
+  return graph.nodes();
+}
+
+const SceneGraphNode& LayerGraphTraits::unwrap_node(
+    const SceneGraphLayer::Nodes::value_type& container) {
+  return *container.second;
+}
+
+NodeId LayerGraphTraits::unwrap_node_id(
+    const SceneGraphLayer::Nodes::value_type& container) {
+  return container.first;
+}
+
+const SceneGraphNode& LayerGraphTraits::get_node(const SceneGraphLayer& graph,
+                                                 NodeId node_id) {
+  return graph.getNode(node_id);
+}
+
+const SceneGraphEdge& LayerGraphTraits::get_edge(const SceneGraphLayer& graph,
+                                                 NodeId source,
+                                                 NodeId target) {
+  return graph.getEdge(source, target);
+}
+
+}  // namespace graph_utilities
 
 }  // namespace spark_dsg
