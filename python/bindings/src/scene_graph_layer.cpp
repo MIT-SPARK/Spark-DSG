@@ -39,6 +39,7 @@
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_layer.h>
+#include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include "spark_dsg/python/scene_graph_iterators.h"
 
@@ -103,7 +104,18 @@ void addBindings(pybind11::module_& module) {
             return py::make_iterator(EdgeIter(view.edges()), IterSentinel());
           },
           nullptr,
-          py::return_value_policy::reference_internal);
+          py::return_value_policy::reference_internal)
+      .def("to_binary",
+           [](const IsolatedSceneGraphLayer& layer) -> py::bytes {
+             std::vector<uint8_t> buffer;
+             io::binary::writeLayer(layer, buffer);
+             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
+           })
+      .def_static("from_binary", [](const py::bytes& contents) {
+        const auto& view = static_cast<const std::string_view&>(contents);
+        return io::binary::readLayer(reinterpret_cast<const uint8_t*>(view.data()),
+                                     view.size());
+      });
 }
 
 }  // namespace spark_dsg::python::scene_graph_layer

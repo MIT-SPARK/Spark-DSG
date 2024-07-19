@@ -43,12 +43,22 @@ void writeGraph(const DynamicSceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh = false);
 
+void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer);
+
 std::shared_ptr<DynamicSceneGraph> readGraph(const uint8_t* const buffer,
                                              size_t length);
 
 inline std::shared_ptr<DynamicSceneGraph> readGraph(
     const std::vector<uint8_t>& buffer) {
   return readGraph(buffer.data(), buffer.size());
+}
+
+std::shared_ptr<IsolatedSceneGraphLayer> readLayer(const uint8_t* const buffer,
+                                                   size_t length);
+
+inline std::shared_ptr<IsolatedSceneGraphLayer> readLayer(
+    const std::vector<uint8_t>& buffer) {
+  return readLayer(buffer.data(), buffer.size());
 }
 
 bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length);
