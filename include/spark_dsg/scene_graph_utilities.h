@@ -34,7 +34,8 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include "spark_dsg/bounding_box.h"
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/layer_prefix.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 

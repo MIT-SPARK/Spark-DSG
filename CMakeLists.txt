@@ -11,6 +11,7 @@ option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
 option(SPARK_DSG_BUILD_TESTS "Build tests" ON)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
+option(SPARK_DSG_PROFILE_BUILD "Profile build time" OFF)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
@@ -22,9 +23,14 @@ find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(zmq libzmq)
 
+if(SPARK_DSG_PROFILE_BUILD)
+  add_compile_options(-ftime-trace)
+endif()
+
 add_library(
   ${PROJECT_NAME}
   src/adjacency_matrix.cpp
+  src/base_layer.cpp
   src/bounding_box_extraction.cpp
   src/bounding_box.cpp
   src/color.cpp
@@ -32,10 +38,12 @@ add_library(
   src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
+  src/layer_prefix.cpp
   src/layer_view.cpp
   src/mesh.cpp
   src/node_attributes.cpp
   src/node_symbol.cpp
+  src/printing.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_logger.cpp
   src/scene_graph_node.cpp
@@ -48,8 +56,8 @@ add_library(
   src/serialization/graph_binary_serialization.cpp
   src/serialization/graph_json_serialization.cpp
   src/serialization/json_conversions.cpp
-  src/serialization/versioning.cpp
   src/serialization/mesh_serialization.cpp
+  src/serialization/versioning.cpp
 )
 
 if(NOT BUILD_SHARED_LIBS)

@@ -39,18 +39,14 @@ Includes specific conversion functions for both homogeneous and heterogeneous
 graphs. Note that `DynamicSceneGraph.to_torch()` calls into the relevant
 homogeneous or heterogeneous conversion function.
 """
-from spark_dsg._dsg_bindings import (
-    DynamicSceneGraph,
-    SceneGraphLayer,
-    SceneGraphNode,
-    SceneGraphEdge,
-    DsgLayers,
-    LayerView,
-)
-from typing import Callable, Optional, Dict, Union
-import numpy as np
 import importlib
+from typing import Callable, Dict, Optional, Union
 
+import numpy as np
+
+from spark_dsg._dsg_bindings import (DsgLayers, DynamicSceneGraph, LayerView,
+                                     SceneGraphEdge, SceneGraphLayer,
+                                     SceneGraphNode)
 
 NodeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphNode], np.ndarray]
 EdgeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphEdge], np.ndarray]
@@ -136,17 +132,13 @@ def scene_graph_layer_to_torch(
             scene graph layer.
     """
     torch, torch_geometric = _get_torch()
-
     # output torch tensor data types
-    if double_precision:
-        dtype_float = torch.float64
-    else:
-        dtype_float = torch.float32
+    dtype_float = torch.float64 if double_precision else torch.float32
 
     N = G.num_nodes()
 
     node_features = []
-    node_positions = torch.zeros((N, 3), dtype=torch.float64)
+    node_positions = torch.zeros((N, 3), dtype=dtype_float)
     id_map = {}
 
     for node in G.nodes:
@@ -168,7 +160,7 @@ def scene_graph_layer_to_torch(
             edge_features.append(edge_converter(G, edge))
 
     if edge_converter is not None:
-        edge_features = torch.tensor(np.array(edge_features), dtype_float)
+        edge_features = torch.tensor(np.array(edge_features), dtype=dtype_float)
 
     if edge_index.size(dim=1) > 0:
         if edge_converter is None:

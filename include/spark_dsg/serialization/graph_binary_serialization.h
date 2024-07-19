@@ -34,8 +34,8 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::io::binary {
 
@@ -43,10 +43,22 @@ void writeGraph(const DynamicSceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh = false);
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length);
+void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer);
 
-inline DynamicSceneGraph::Ptr readGraph(const std::vector<uint8_t>& buffer) {
+std::shared_ptr<DynamicSceneGraph> readGraph(const uint8_t* const buffer,
+                                             size_t length);
+
+inline std::shared_ptr<DynamicSceneGraph> readGraph(
+    const std::vector<uint8_t>& buffer) {
   return readGraph(buffer.data(), buffer.size());
+}
+
+std::shared_ptr<IsolatedSceneGraphLayer> readLayer(const uint8_t* const buffer,
+                                                   size_t length);
+
+inline std::shared_ptr<IsolatedSceneGraphLayer> readLayer(
+    const std::vector<uint8_t>& buffer) {
+  return readLayer(buffer.data(), buffer.size());
 }
 
 bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length);

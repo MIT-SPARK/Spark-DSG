@@ -34,11 +34,12 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
 
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::io {
 
@@ -78,7 +79,7 @@ void saveDsgJson(const DynamicSceneGraph& graph,
  * @param filepath The filepath including extension to load from.
  * @return A pointer to the loaded graph or nullptr if loading failed.
  */
-DynamicSceneGraph::Ptr loadDsgJson(const std::string& filepath);
+std::shared_ptr<DynamicSceneGraph> loadDsgJson(const std::string& filepath);
 
 /**
  * @brief Save a DynamicSceneGraph to a file in binary serialization.
@@ -95,6 +96,6 @@ void saveDsgBinary(const DynamicSceneGraph& graph,
  * @param filepath The filepath including extension to load from.
  * @return A pointer to the loaded graph or nullptr if loading failed.
  */
-DynamicSceneGraph::Ptr loadDsgBinary(const std::string& filepath);
+std::shared_ptr<DynamicSceneGraph> loadDsgBinary(const std::string& filepath);
 
 }  // namespace spark_dsg::io

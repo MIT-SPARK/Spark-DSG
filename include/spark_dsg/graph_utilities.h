@@ -35,18 +35,14 @@
 #pragma once
 #include <deque>
 #include <functional>
-#include <list>
+#include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
-#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
 namespace graph_utilities {
-
-// TODO(nathan) make inheritance work
-template <typename Graph>
-struct graph_traits {};
 
 template <typename Graph, typename NodeSet>
 void breadthFirstSearch(const Graph& graph,

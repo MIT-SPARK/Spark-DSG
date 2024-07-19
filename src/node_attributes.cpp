@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/node_attributes.h"
 
+#include "spark_dsg/printing.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"

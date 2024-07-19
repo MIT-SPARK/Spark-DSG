@@ -33,13 +33,12 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <map>
-#include <memory>
+#include <Eigen/Core>
 #include <type_traits>
 
 #include "spark_dsg/dynamic_scene_graph_layer.h"
-#include "spark_dsg/mesh.h"
 #include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
@@ -107,7 +106,9 @@ class DynamicSceneGraph {
    * @param attrs node attributes
    * @return true if the node was added successfully
    */
-  bool emplaceNode(LayerId layer_id, NodeId node_id, NodeAttributes::Ptr&& attrs);
+  bool emplaceNode(LayerId layer_id,
+                   NodeId node_id,
+                   std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief construct and add a dynamic node to the specified layer in the graph
@@ -121,7 +122,7 @@ class DynamicSceneGraph {
   bool emplaceNode(LayerId layer_id,
                    LayerPrefix prefix,
                    std::chrono::nanoseconds timestamp,
-                   NodeAttributes::Ptr&& attrs,
+                   std::unique_ptr<NodeAttributes>&& attrs,
                    bool add_edge_to_previous = true);
 
   /**
@@ -135,7 +136,7 @@ class DynamicSceneGraph {
   bool emplacePrevDynamicNode(LayerId layer_id,
                               NodeId prev_node_id,
                               std::chrono::nanoseconds timestamp,
-                              NodeAttributes::Ptr&& attrs);
+                              std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief add a node to the graph
@@ -146,7 +147,7 @@ class DynamicSceneGraph {
    * @param node to add
    * @return true if the node was added successfully
    */
-  bool insertNode(SceneGraphNode::Ptr&& node);
+  bool insertNode(std::unique_ptr<SceneGraphNode>&& node);
 
   /**
    * @brief add a node to the graph or update an existing node
@@ -159,7 +160,7 @@ class DynamicSceneGraph {
   bool addOrUpdateNode(
       LayerId layer_id,
       NodeId node_id,
-      NodeAttributes::Ptr&& attrs,
+      std::unique_ptr<NodeAttributes>&& attrs,
       std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
 
   /**
@@ -178,7 +179,7 @@ class DynamicSceneGraph {
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributes::Ptr&& edge_info = nullptr);
+                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
 
   /**
    * @brief Insert a parent edge between two nodes
@@ -196,7 +197,7 @@ class DynamicSceneGraph {
    */
   bool insertParentEdge(NodeId source,
                         NodeId target,
-                        EdgeAttributes::Ptr&& edge_info = nullptr);
+                        std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
 
   /**
    * @brief Add an edge to the graph or update an existing edge
@@ -205,7 +206,9 @@ class DynamicSceneGraph {
    * @param target edge target id
    * @param edge_info edge attributes
    */
-  bool addOrUpdateEdge(NodeId source, NodeId target, EdgeAttributes::Ptr&& edge_info);
+  bool addOrUpdateEdge(NodeId source,
+                       NodeId target,
+                       std::unique_ptr<EdgeAttributes>&& edge_info);
 
   /**
    * @brief Set the attributes of an existing node
@@ -213,7 +216,7 @@ class DynamicSceneGraph {
    * @param attrs New attributes for the node
    * @return Returns true if update was successful
    */
-  bool setNodeAttributes(NodeId node, NodeAttributes::Ptr&& attrs);
+  bool setNodeAttributes(NodeId node, std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief Set the attributes of an existing edge
@@ -222,7 +225,9 @@ class DynamicSceneGraph {
    * @param attrs New attributes for the edge
    * @return Returns true if update was successful
    */
-  bool setEdgeAttributes(NodeId source, NodeId target, EdgeAttributes::Ptr&& attrs);
+  bool setEdgeAttributes(NodeId source,
+                         NodeId target,
+                         std::unique_ptr<EdgeAttributes>&& attrs);
 
   /**
    * @brief Check whether the layer exists and is valid
@@ -519,7 +524,7 @@ class DynamicSceneGraph {
 
   bool hasMesh() const;
 
-  Mesh::Ptr mesh() const;
+  std::shared_ptr<Mesh> mesh() const;
 
   //! current static layer ids in the graph
   const LayerIds layer_ids;

@@ -12,6 +12,7 @@ add_executable(
   utest_dynamic_scene_graph.cpp
   utest_edge_container.cpp
   utest_graph_utilities_layer.cpp
+  utest_layer_prefix.cpp
   utest_mesh.cpp
   utest_node_attributes.cpp
   utest_node_symbol.cpp

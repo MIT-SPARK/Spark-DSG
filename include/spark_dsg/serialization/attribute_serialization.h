@@ -36,7 +36,6 @@
 
 #include <map>
 #include <nlohmann/json.hpp>
-#include <sstream>
 
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/binary_serialization.h"
