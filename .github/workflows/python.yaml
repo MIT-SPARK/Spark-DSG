@@ -1,0 +1,31 @@
+---
+# https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+name: 'python: Build and Test'
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.10']
+    steps:
+      # checkout the code
+      - uses: actions/checkout@v4
+      # setup python
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # install required deps
+      - name: Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          sudo apt install libgtest-dev libeigen3-dev nlohmann-json3-dev libzmq3-dev python3-dev
+      # build and install code
+      - name: Install
+        run: python -m pip install ${{github.workspace}}
+      - name: Test
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install pytest networkx torch_geometric
+          pytest ${{github.workspace}}/python/tests
