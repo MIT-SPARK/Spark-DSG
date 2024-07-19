@@ -22,9 +22,16 @@ configure_file(
 pybind11_add_module(
   _dsg_bindings
   bindings/src/bounding_box.cpp
+  bindings/src/dynamic_scene_graph.cpp
   bindings/src/edge_attributes.cpp
   bindings/src/mesh.cpp
+  bindings/src/misc_types.cpp
   bindings/src/node_attributes.cpp
+  bindings/src/scene_graph_edge.cpp
+  bindings/src/scene_graph_iterators.cpp
+  bindings/src/scene_graph_layer.cpp
+  bindings/src/scene_graph_node.cpp
+  bindings/src/scene_graph_utilities.cpp
   bindings/src/spark_dsg_bindings.cpp
   bindings/src/zmq_interface.cpp
 )

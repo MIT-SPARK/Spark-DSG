@@ -36,7 +36,12 @@
 
 #include <pybind11/chrono.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <spark_dsg/node_attributes.h>
+#include <spark_dsg/printing.h>
 #include <spark_dsg/scene_graph_node.h>
+
+#include <sstream>
 
 namespace py = pybind11;
 using namespace py::literals;

@@ -36,6 +36,7 @@
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
+#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/scene_graph_utilities.h>
 
 namespace py = pybind11;
@@ -43,11 +44,13 @@ using namespace py::literals;
 
 namespace spark_dsg::python::scene_graph_utilities {
 
-module.def("compute_ancestor_bounding_box",
-           &computeAncestorBoundingBox,
-           "G"_a,
-           "node_id"_a,
-           "child_layer"_a = DsgLayers::PLACES,
-           "bbox_type"_a = BoundingBox::Type::AABB);
+void addBindings(pybind11::module_& module) {
+  module.def("compute_ancestor_bounding_box",
+             &computeAncestorBoundingBox,
+             "G"_a,
+             "node_id"_a,
+             "child_layer"_a = DsgLayers::PLACES,
+             "bbox_type"_a = BoundingBox::Type::AABB);
+}
 
 }  // namespace spark_dsg::python::scene_graph_utilities

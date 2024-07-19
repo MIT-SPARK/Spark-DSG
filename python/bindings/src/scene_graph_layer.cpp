@@ -36,6 +36,8 @@
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
+#include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_layer.h>
 
 #include "spark_dsg/python/scene_graph_iterators.h"
@@ -83,7 +85,10 @@ void addBindings(pybind11::module_& module) {
       .def("remove_edge", &IsolatedSceneGraphLayer::removeEdge)
       .def("num_nodes", &IsolatedSceneGraphLayer::numNodes)
       .def("num_edges", &IsolatedSceneGraphLayer::numEdges)
-      .def("get_position", &IsolatedSceneGraphLayer::getPosition)
+      .def("get_position",
+           [](const IsolatedSceneGraphLayer& layer, NodeId node) {
+             return layer.getNode(node).attributes().position;
+           })
       .def_readonly("id", &IsolatedSceneGraphLayer::id)
       .def_property(
           "nodes",

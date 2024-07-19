@@ -38,6 +38,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl/filesystem.h>
 #include <spark_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/node_attributes.h>
+#include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include "spark_dsg/python/scene_graph_iterators.h"
 
@@ -46,6 +49,141 @@ using namespace py::literals;
 
 namespace spark_dsg::python::dynamic_scene_graph {
 
+class LayerView {
+ public:
+  LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref_(layer) {}
+
+  NodeIter nodes() const { return NodeIter(layer_ref_.nodes()); }
+
+  EdgeIter edges() const { return EdgeIter(layer_ref_.edges()); }
+
+  size_t numNodes() const { return layer_ref_.numNodes(); }
+
+  size_t numEdges() const { return layer_ref_.numEdges(); }
+
+  bool hasNode(NodeId node_id) const { return layer_ref_.hasNode(node_id); }
+
+  bool hasEdge(NodeId source, NodeId target) const {
+    return layer_ref_.hasEdge(source, target);
+  }
+
+  const SceneGraphNode& getNode(NodeId node_id) const {
+    return layer_ref_.getNode(node_id);
+  }
+
+  const SceneGraphEdge& getEdge(NodeId source, NodeId target) const {
+    return layer_ref_.getEdge(source, target);
+  }
+
+  Eigen::Vector3d getPosition(NodeId node_id) const {
+    return layer_ref_.getNode(node_id).attributes().position;
+  }
+
+  const LayerId id;
+
+ private:
+  const SceneGraphLayer& layer_ref_;
+};
+
+class LayerIter {
+ public:
+  LayerIter(const DynamicSceneGraph::Layers& container)
+      : curr_iter_(container.begin()), end_iter_(container.end()) {}
+
+  LayerView operator*() const { return LayerView(*(curr_iter_->second)); }
+
+  LayerIter& operator++() {
+    ++curr_iter_;
+    return *this;
+  }
+
+  bool operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
+
+ private:
+  typename DynamicSceneGraph::Layers::const_iterator curr_iter_;
+  typename DynamicSceneGraph::Layers::const_iterator end_iter_;
+};
+
+class DynamicLayerView {
+ public:
+  DynamicLayerView(const DynamicSceneGraphLayer& layer)
+      : id(layer.id), prefix(layer.prefix), layer_ref_(layer) {}
+
+  DynamicNodeIter nodes() const { return DynamicNodeIter(layer_ref_.nodes()); }
+
+  EdgeIter edges() const { return EdgeIter(layer_ref_.edges()); }
+
+  size_t numNodes() const { return layer_ref_.numNodes(); }
+
+  size_t numEdges() const { return layer_ref_.numEdges(); }
+
+  const LayerId id;
+
+  const LayerPrefix prefix;
+
+ private:
+  const DynamicSceneGraphLayer& layer_ref_;
+};
+
+class DynamicLayerIter {
+ public:
+  using LayerMap = std::map<LayerId, DynamicSceneGraph::DynamicLayers>;
+
+  DynamicLayerIter(const LayerMap& container)
+      : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {
+    setSubIter();
+  }
+
+  void setSubIter() {
+    if (curr_iter_ == end_iter_) {
+      valid_ = false;
+      return;
+    }
+
+    curr_layer_iter_ = curr_iter_->second.begin();
+    end_layer_iter_ = curr_iter_->second.end();
+
+    while (curr_layer_iter_ == end_layer_iter_) {
+      ++curr_iter_;
+      if (curr_iter_ == end_iter_) {
+        valid_ = false;
+        return;
+      }
+
+      curr_layer_iter_ = curr_iter_->second.begin();
+      end_layer_iter_ = curr_iter_->second.end();
+    }
+  }
+
+  DynamicLayerView operator*() const {
+    return DynamicLayerView(*(curr_layer_iter_->second));
+  }
+
+  DynamicLayerIter& operator++() {
+    ++curr_layer_iter_;
+    if (curr_layer_iter_ == end_layer_iter_) {
+      ++curr_iter_;
+      setSubIter();
+    }
+
+    return *this;
+  }
+
+  bool operator==(const IterSentinel&) {
+    if (!valid_) {
+      return true;
+    }
+
+    return curr_layer_iter_ == end_layer_iter_ && curr_iter_ == end_iter_;
+  }
+
+ private:
+  bool valid_;
+  typename LayerMap::const_iterator curr_iter_;
+  typename LayerMap::const_iterator end_iter_;
+  typename DynamicSceneGraph::DynamicLayers::const_iterator curr_layer_iter_;
+  typename DynamicSceneGraph::DynamicLayers::const_iterator end_layer_iter_;
+};
 void addBindings(pybind11::module_& module) {
   py::class_<LayerView>(module, "LayerView")
       .def("has_node", &LayerView::hasNode)

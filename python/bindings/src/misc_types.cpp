@@ -35,6 +35,8 @@
 #include "spark_dsg/python/misc_types.h"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/operators.h>
+#include <spark_dsg/layer_prefix.h>
 #include <spark_dsg/node_symbol.h>
 #include <spark_dsg/scene_graph_types.h>
 

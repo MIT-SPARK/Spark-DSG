@@ -56,8 +56,8 @@ add_library(
   src/serialization/graph_binary_serialization.cpp
   src/serialization/graph_json_serialization.cpp
   src/serialization/json_conversions.cpp
-  src/serialization/versioning.cpp
   src/serialization/mesh_serialization.cpp
+  src/serialization/versioning.cpp
 )
 
 if(NOT BUILD_SHARED_LIBS)

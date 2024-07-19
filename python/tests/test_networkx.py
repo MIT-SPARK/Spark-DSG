@@ -76,7 +76,7 @@ def test_full_graph_conversion(resource_dir):
 
     assert G_nx is not None
     assert len(G_nx) == G.num_nodes(include_mesh=False)
-    assert len(G_nx.edges) == G.num_edges(include_mesh=False)
+    assert len(G_nx.edges) == G.num_edges()
 
     _check_attribute_validity(G_nx)
 
