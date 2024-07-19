@@ -33,12 +33,12 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <functional>
 #include <map>
 #include <unordered_set>
-#include <vector>
 
 #include "spark_dsg/base_layer.h"
-#include "spark_dsg/graph_utilities.h"
+#include "spark_dsg/edge_container.h"
 
 namespace spark_dsg {
 
@@ -56,7 +56,7 @@ class SceneGraphLayer : public BaseLayer {
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<SceneGraphLayer>;
   //! node container for the layer
-  using Nodes = std::map<NodeId, SceneGraphNode::Ptr>;
+  using Nodes = std::map<NodeId, std::unique_ptr<SceneGraphNode>>;
   //! type tracking the status of nodes
   using NodeCheckup = std::map<NodeId, NodeStatus>;
   //! edge container type for the layer
@@ -88,7 +88,7 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributes::Ptr&& edge_attributes = nullptr) override;
+                  std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr) override;
 
   /**
    * @brief Check whether the layer has the specified node
@@ -155,9 +155,9 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool rewireEdge(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
 
-  bool mergeLayer(const SceneGraphLayer& other,
+  void mergeLayer(const SceneGraphLayer& other,
                   const GraphMergeConfig& config,
-                  std::map<NodeId, LayerKey>* layer_lookup = nullptr);
+                  std::vector<NodeId>* new_nodes);
 
   /**
    * @brief Number of nodes in the layer
@@ -168,11 +168,6 @@ class SceneGraphLayer : public BaseLayer {
    * @brief Number of edges in the layer
    */
   inline size_t numEdges() const { return edges_.size(); }
-
-  /**
-   * @brief Get the position of a node in the layer with bounds checking
-   */
-  Eigen::Vector3d getPosition(NodeId node) const;
 
   /**
    * @brief Get node ids of newly inserted nodes
@@ -246,7 +241,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param attrs node attributes
    * @returns true if emplace into internal map was successful
    */
-  bool emplaceNode(NodeId node_id, NodeAttributes::Ptr&& attrs);
+  bool emplaceNode(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief add a node to the layer
@@ -257,7 +252,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param node to add
    * @returns true if the node was added successfully
    */
-  bool insertNode(SceneGraphNode::Ptr&& node);
+  bool insertNode(std::unique_ptr<SceneGraphNode>&& node);
 
   /**
    * @brief merge a node into the other if both nodes exist
@@ -310,12 +305,9 @@ class IsolatedSceneGraphLayer : public SceneGraphLayer {
   virtual SceneGraphLayer::Ptr clone(const NodeChecker& is_valid = {}) const override;
 
   using SceneGraphLayer::emplaceNode;
-
   using SceneGraphLayer::insertNode;
-
-  using SceneGraphLayer::removeNode;
-
   using SceneGraphLayer::mergeNodes;
+  using SceneGraphLayer::removeNode;
 };
 
 namespace graph_utilities {
@@ -326,38 +318,16 @@ struct graph_traits<SceneGraphLayer> {
   using node_valid_func = const std::function<bool(const SceneGraphNode&)>&;
   using edge_valid_func = const std::function<bool(const SceneGraphEdge&)>&;
 
-  static inline std::set<NodeId> neighbors(const SceneGraphLayer& graph, NodeId node) {
-    return get_node(graph, node).siblings();
-  }
-
-  static inline bool contains(const SceneGraphLayer& graph, NodeId node) {
-    return graph.hasNode(node);
-  }
-
-  static inline const SceneGraphLayer::Nodes& nodes(const SceneGraphLayer& graph) {
-    return graph.nodes();
-  }
-
-  static inline const SceneGraphNode& unwrap_node(
-      const SceneGraphLayer::Nodes::value_type& container) {
-    return *container.second;
-  }
-
-  static inline NodeId unwrap_node_id(
-      const SceneGraphLayer::Nodes::value_type& container) {
-    return container.first;
-  }
-
-  static inline const SceneGraphNode& get_node(const SceneGraphLayer& graph,
-                                               NodeId node_id) {
-    return graph.getNode(node_id);
-  }
-
-  static inline const SceneGraphEdge& get_edge(const SceneGraphLayer& graph,
-                                               NodeId source,
-                                               NodeId target) {
-    return graph.getEdge(source, target);
-  }
+  static std::set<NodeId> neighbors(const SceneGraphLayer& graph, NodeId node);
+  static bool contains(const SceneGraphLayer& graph, NodeId node);
+  static const SceneGraphLayer::Nodes& nodes(const SceneGraphLayer& graph);
+  static const SceneGraphNode& unwrap_node(
+      const SceneGraphLayer::Nodes::value_type& container);
+  static NodeId unwrap_node_id(const SceneGraphLayer::Nodes::value_type& container);
+  static const SceneGraphNode& get_node(const SceneGraphLayer& graph, NodeId node_id);
+  static const SceneGraphEdge& get_edge(const SceneGraphLayer& graph,
+                                        NodeId source,
+                                        NodeId target);
 };
 
 }  // namespace graph_utilities
