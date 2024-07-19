@@ -34,7 +34,8 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include "spark_dsg/base_layer.h"
-#include "spark_dsg/node_symbol.h"
+#include "spark_dsg/edge_container.h"
+#include "spark_dsg/layer_prefix.h"
 
 namespace spark_dsg {
 
@@ -43,7 +44,7 @@ class DynamicSceneGraphLayer : public BaseLayer {
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<DynamicSceneGraphLayer>;
   //! node container for the layer
-  using Nodes = std::vector<SceneGraphNode::Ptr>;
+  using Nodes = std::vector<std::unique_ptr<SceneGraphNode>>;
   //! edge container type for the layer
   using Edges = EdgeContainer::Edges;
 
@@ -81,27 +82,19 @@ class DynamicSceneGraphLayer : public BaseLayer {
 
   bool insertEdge(NodeId source,
                   NodeId target,
-                  EdgeAttributes::Ptr&& edge_info = nullptr) override;
+                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr) override;
 
   bool insertEdgeByIndex(size_t source_index,
                          size_t target_index,
-                         EdgeAttributes::Ptr&& edge_info = nullptr);
+                         std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
 
   bool removeEdge(NodeId source, NodeId target) override;
 
   bool removeEdgeByIndex(size_t source_index, size_t target_index);
 
-  Eigen::Vector3d getPosition(NodeId node) const;
-
-  Eigen::Vector3d getPositionByIndex(size_t node_index) const;
-
-  const LayerId id;
-
-  const LayerPrefix prefix;
-
-  bool mergeLayer(const DynamicSceneGraphLayer& other,
+  void mergeLayer(const DynamicSceneGraphLayer& other,
                   const GraphMergeConfig& config,
-                  std::map<NodeId, LayerKey>* layer_lookup = nullptr);
+                  std::vector<NodeId>* new_nodes = nullptr);
 
   void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) override;
 
@@ -112,14 +105,18 @@ class DynamicSceneGraphLayer : public BaseLayer {
   void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
                        bool clear_removed) override;
 
+  const LayerId id;
+
+  const LayerPrefix prefix;
+
  protected:
   bool emplaceNode(std::chrono::nanoseconds timestamp,
-                   NodeAttributes::Ptr&& attrs,
+                   std::unique_ptr<NodeAttributes>&& attrs,
                    bool add_edge = true);
 
   bool emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
                           size_t index,
-                          NodeAttributes::Ptr&& attrs);
+                          std::unique_ptr<NodeAttributes>&& attrs);
 
   bool removeNode(NodeId node) override;
 

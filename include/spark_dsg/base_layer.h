@@ -33,9 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/edge_container.h"
+#include <map>
+
 #include "spark_dsg/scene_graph_node.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
@@ -47,15 +48,15 @@ struct GraphMergeConfig {
   bool clear_removed = false;
   bool enforce_parent_constraints = true;
 
-  NodeId getMergedId(NodeId original) const {
-    if (!previous_merges) {
-      return original;
-    }
-
-    auto iter = previous_merges->find(original);
-    return iter == previous_merges->end() ? original : iter->second;
-  }
+  NodeId getMergedId(NodeId original) const;
 };
+
+/**
+ * @brief Base node status.
+ *
+ * Mostly for keeping history and status of nodes in a graph
+ */
+enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
 
 class BaseLayer {
  public:
@@ -67,7 +68,9 @@ class BaseLayer {
 
   virtual bool removeEdge(NodeId source, NodeId target) = 0;
 
-  virtual bool insertEdge(NodeId source, NodeId target, EdgeAttributes::Ptr&& info) = 0;
+  virtual bool insertEdge(NodeId source,
+                          NodeId target,
+                          std::unique_ptr<EdgeAttributes>&& info) = 0;
 
   virtual NodeStatus checkNode(NodeId node_id) const = 0;
 
@@ -75,25 +78,9 @@ class BaseLayer {
 
   virtual const SceneGraphEdge* findEdge(NodeId source, NodeId target) const = 0;
 
-  virtual const SceneGraphNode& getNode(NodeId node_id) const {
-    const auto node = findNode(node_id);
-    if (!node) {
-      throw std::out_of_range("missing node '" + NodeSymbol(node_id).getLabel() + "'");
-    }
+  virtual const SceneGraphNode& getNode(NodeId node_id) const;
 
-    return *node;
-  }
-
-  virtual const SceneGraphEdge& getEdge(NodeId source, NodeId target) const {
-    const auto edge = findEdge(source, target);
-    if (!edge) {
-      std::stringstream ss;
-      ss << "Missing edge '" << EdgeKey(source, target) << "'";
-      throw std::out_of_range(ss.str());
-    }
-
-    return *edge;
-  }
+  virtual const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
 
   /**
    * @brief Get node ids of newly inserted nodes

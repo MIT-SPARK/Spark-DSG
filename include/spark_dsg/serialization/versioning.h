@@ -37,8 +37,8 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-
-#include "spark_dsg/dynamic_scene_graph.h"
+#include <unordered_set>
+#include <vector>
 
 namespace spark_dsg::io {
 

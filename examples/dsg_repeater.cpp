@@ -1,6 +1,8 @@
+#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/zmq_interface.h>
 
 #include <chrono>
+#include <iostream>
 #include <thread>
 
 auto main(int argc, char* argv[]) -> int {

@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/scene_graph_layer.h>
+#include <spark_dsg/spark_dsg.h>
 
 namespace spark_dsg {
 
@@ -353,43 +353,21 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
     EXPECT_TRUE(layer_2.insertEdge(i - 1, i));
   }
 
-  std::map<NodeId, LayerKey> node_to_layer;
-  layer_1.mergeLayer(layer_2, {}, &node_to_layer);
+  std::vector<NodeId> new_nodes;
+  layer_1.mergeLayer(layer_2, {}, &new_nodes);
 
-  EXPECT_EQ(2u, node_to_layer.size());
   EXPECT_EQ(5u, layer_1.numNodes());
   EXPECT_EQ(4u, layer_1.numEdges());
 
+  std::vector<NodeId> expected_new_nodes{3, 4};
+  EXPECT_EQ(new_nodes, expected_new_nodes);
+
   for (size_t i = 0; i < 5; i++) {
-    Eigen::Vector3d result = layer_1.getPosition(i);
+    Eigen::Vector3d result = layer_1.getNode(i).attributes().position;
     EXPECT_NEAR(static_cast<double>(i) + 10, result(0), 1.0e-9);
     EXPECT_NEAR(0.0, result(1), 1.0e-9);
     EXPECT_NEAR(0.0, result(2), 1.0e-9);
     EXPECT_EQ(NodeStatus::NEW, layer_1.checkNode(i));
-    if (i > 2) {
-      EXPECT_EQ(LayerKey(1), node_to_layer.at(i));
-    }
-  }
-}
-
-TEST(SceneGraphLayerTests, getPositionCorrect) {
-  Eigen::Vector3d expected;
-  expected << 1.0, 2.0, 3.0;
-  NodeAttributes::Ptr attrs = std::make_unique<NodeAttributes>(expected);
-
-  IsolatedSceneGraphLayer layer(1);
-  layer.emplaceNode(NodeSymbol('x', 0), std::move(attrs));
-
-  Eigen::Vector3d result = layer.getPosition(NodeSymbol('x', 0));
-  EXPECT_EQ(expected(0), result(0));
-  EXPECT_EQ(expected(1), result(1));
-  EXPECT_EQ(expected(2), result(2));
-
-  try {
-    layer.getPosition(NodeSymbol('x', 5));
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
   }
 }
 

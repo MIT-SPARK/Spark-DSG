@@ -34,8 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
-#include "spark_dsg/serialization/file_io.h"
 #include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/spark_dsg.h"
 #include "spark_dsg_tests/temp_file.h"
 #include "spark_dsg_tests/type_comparisons.h"
 

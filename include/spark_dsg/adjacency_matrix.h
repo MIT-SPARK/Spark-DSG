@@ -36,7 +36,8 @@
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 
-#include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/scene_graph_types.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 

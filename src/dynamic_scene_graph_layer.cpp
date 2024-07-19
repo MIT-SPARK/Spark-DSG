@@ -36,6 +36,8 @@
 
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
+#include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 
@@ -45,10 +47,9 @@ using Edge = SceneGraphEdge;
 DynamicSceneGraphLayer::DynamicSceneGraphLayer(LayerId layer, LayerPrefix node_prefix)
     : id(layer), prefix(node_prefix), next_node_(0) {}
 
-bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
+void DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
                                         const GraphMergeConfig& config,
-                                        std::map<NodeId, LayerKey>* layer_lookup) {
-  LayerKey layer_key{id, prefix};
+                                        std::vector<NodeId>* new_nodes) {
   Eigen::Vector3d last_update_delta = Eigen::Vector3d::Zero();
 
   for (size_t i = 0; i < other.nodes_.size(); i++) {
@@ -68,8 +69,8 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
     } else {
       emplaceNode(other_node.timestamp.value(), other_node.attributes_->clone(), false);
       nodes_.back()->attributes_->position += last_update_delta;
-      if (layer_lookup) {
-        layer_lookup->insert({nodes_.back()->id, layer_key});
+      if (new_nodes) {
+        new_nodes->push_back(nodes_.back()->id);
       }
     }
   }
@@ -83,12 +84,10 @@ bool DynamicSceneGraphLayer::mergeLayer(const DynamicSceneGraphLayer& other,
 
     insertEdge(edge.source, edge.target, edge.info->clone());
   }
-
-  return true;
 }
 
 bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
-                                         NodeAttributes::Ptr&& attrs,
+                                         std::unique_ptr<NodeAttributes>&& attrs,
                                          bool add_edge) {
   if (times_.count(stamp.count())) {
     return false;
@@ -112,7 +111,7 @@ bool DynamicSceneGraphLayer::emplaceNode(std::chrono::nanoseconds stamp,
 
 bool DynamicSceneGraphLayer::emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
                                                 size_t index,
-                                                NodeAttributes::Ptr&& attrs) {
+                                                std::unique_ptr<NodeAttributes>&& a) {
   if (hasNodeByIndex(index)) {
     return false;
   }
@@ -127,7 +126,7 @@ bool DynamicSceneGraphLayer::emplaceNodeAtIndex(std::chrono::nanoseconds stamp,
 
   const NodeId new_id = prefix.makeId(index);
   times_.insert(stamp.count());
-  nodes_[index] = std::make_unique<Node>(new_id, id, stamp, std::move(attrs));
+  nodes_[index] = std::make_unique<Node>(new_id, id, stamp, std::move(a));
   node_status_[index] = NodeStatus::NEW;
   return true;
 }
@@ -194,7 +193,7 @@ const Edge& DynamicSceneGraphLayer::getEdgeByIndex(size_t source_idx,
 
 bool DynamicSceneGraphLayer::insertEdge(NodeId source,
                                         NodeId target,
-                                        EdgeAttributes::Ptr&& edge_info) {
+                                        std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (source == target) {
     SG_LOG(WARNING) << "Attempted to add a self-edge for "
                     << NodeSymbol(source).getLabel() << std::endl;
@@ -218,8 +217,8 @@ bool DynamicSceneGraphLayer::insertEdge(NodeId source,
 
 bool DynamicSceneGraphLayer::insertEdgeByIndex(size_t source,
                                                size_t target,
-                                               EdgeAttributes::Ptr&& edge_info) {
-  return insertEdge(prefix.makeId(source), prefix.makeId(target), std::move(edge_info));
+                                               std::unique_ptr<EdgeAttributes>&& info) {
+  return insertEdge(prefix.makeId(source), prefix.makeId(target), std::move(info));
 }
 
 bool DynamicSceneGraphLayer::removeEdge(NodeId source, NodeId target) {
@@ -267,26 +266,6 @@ bool DynamicSceneGraphLayer::removeNode(NodeId node) {
   times_.erase(nodes_.at(index)->timestamp->count());
   nodes_[index].reset();
   return true;
-}
-
-Eigen::Vector3d DynamicSceneGraphLayer::getPosition(NodeId node) const {
-  if (!hasNode(node)) {
-    std::stringstream ss;
-    ss << "node " << NodeSymbol(node).getLabel() << " is missing";
-    throw std::out_of_range(ss.str());
-  }
-
-  return getPositionByIndex(prefix.index(node));
-}
-
-Eigen::Vector3d DynamicSceneGraphLayer::getPositionByIndex(size_t node_index) const {
-  if (!hasNodeByIndex(node_index)) {
-    std::stringstream ss;
-    ss << "node index" << node_index << " >= " << nodes_.size();
-    throw std::out_of_range(ss.str());
-  }
-
-  return nodes_.at(node_index)->attributes().position;
 }
 
 void DynamicSceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes,

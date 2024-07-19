@@ -34,7 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/adjacency_matrix.h"
 
-#include <Eigen/Dense>
+#include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg {
 
