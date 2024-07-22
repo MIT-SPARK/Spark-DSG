@@ -309,6 +309,7 @@ std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   out << std::boolalpha << "\n  - real place: " << real_place;
   out << std::boolalpha << "\n  - need cleanup: " << need_cleanup;
   out << std::boolalpha << "\n  - active frontier: " << active_frontier;
+  out << std::boolalpha << "\n  - anti frontier: " << anti_frontier;
   out << "\n  - num frontier voxels: " << num_frontier_voxels;
   return out;
 }
@@ -327,6 +328,13 @@ void PlaceNodeAttributes::serialization_info() {
   serialization::field("orientation", orientation);
   serialization::field("need_cleanup", need_cleanup);
   serialization::field("num_frontier_voxels", num_frontier_voxels);
+
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 0, 5)) {
+    io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("anti_frontier", anti_frontier);
+  }
 }
 
 bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -347,6 +355,7 @@ bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
          deformation_connections == derived->deformation_connections &&
          real_place == derived->real_place &&
          active_frontier == derived->active_frontier &&
+         anti_frontier == derived->anti_frontier &&
          frontier_scale == derived->frontier_scale &&
          quaternionsEqual(orientation, derived->orientation) &&
          need_cleanup == derived->need_cleanup &&
