@@ -143,12 +143,11 @@ Color Color::rainbowId(size_t id, size_t ids_per_revolution) {
 }
 
 const std::vector<Color> Color::ironbow_colors_ = {
-    {0, 0, 0}, {145, 20, 145}, {255, 138, 0}, {255, 230, 40}, {255, 240, 200}};
+    {0, 0, 0}, {145, 20, 145}, {255, 138, 0}, {255, 230, 40}, {255, 255, 255}};
 
 std::ostream& operator<<(std::ostream& out, const Color& color) {
-  out << "[r: " << static_cast<int>(color.r) << ", g: " << static_cast<int>(color.g)
-      << ", b: " << static_cast<int>(color.b) << ", a: " << static_cast<int>(color.a)
-      << "]";
+  out << "[RGBA: " << static_cast<int>(color.r) << ", " << static_cast<int>(color.g)
+      << ", " << static_cast<int>(color.b) << ", " << static_cast<int>(color.a) << "]";
   return out;
 }
 
