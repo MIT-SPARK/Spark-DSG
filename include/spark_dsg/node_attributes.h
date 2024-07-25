@@ -177,7 +177,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   //! semantic label of object
   SemanticLabel semantic_label;
   //! semantic feature of object
-  Eigen::MatrixXd semantic_feature;
+  Eigen::MatrixXf semantic_feature;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(spark_dsg VERSION 1.0.4)
+project(spark_dsg VERSION 1.0.5)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
