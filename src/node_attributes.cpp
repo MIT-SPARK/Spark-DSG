@@ -193,7 +193,7 @@ void SemanticNodeAttributes::serialization_info() {
   }
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
-  if (header.version < io::Version(1, 0, 4)) {
+  if (header.version <= io::Version(1, 0, 4)) {
     Eigen::MatrixXd feature;
     serialization::field("semantic_feature", feature);
     semantic_feature = feature.cast<float>();
