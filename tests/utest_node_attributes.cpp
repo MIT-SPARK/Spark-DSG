@@ -47,13 +47,13 @@ TEST(NodeAttributes, SemanticNodeAttributes) {
   EXPECT_TRUE(attrs.hasLabel());
   EXPECT_FALSE(attrs.hasFeature());
   // empty matrices should not be registered
-  attrs.semantic_feature = Eigen::MatrixXd(0, 1);
+  attrs.semantic_feature = Eigen::MatrixXf(0, 1);
   EXPECT_FALSE(attrs.hasFeature());
   // vectors should be registered
-  attrs.semantic_feature = Eigen::MatrixXd(5, 1);
+  attrs.semantic_feature = Eigen::MatrixXf(5, 1);
   EXPECT_TRUE(attrs.hasFeature());
   // matrices should be registered
-  attrs.semantic_feature = Eigen::MatrixXd(5, 3);
+  attrs.semantic_feature = Eigen::MatrixXf(5, 3);
   EXPECT_TRUE(attrs.hasFeature());
 }
 
