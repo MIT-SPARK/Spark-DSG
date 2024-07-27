@@ -144,8 +144,12 @@ struct Color {
    */
   static Color rainbowId(size_t id, size_t ids_per_revolution = 16);
 
- private:
-  static const std::vector<Color> ironbow_colors_;
+  /**
+   * @brief Pick a color from https://colorbrewer2.org/#type=qualitative&scheme=Paired&n=12
+   * @param id The id of the color in the sequence
+   * @note Indices outside of the 0-11 range will get remapped to be inside the range
+   */
+  static Color colorbrewer(size_t id);
 };
 
 }  // namespace spark_dsg

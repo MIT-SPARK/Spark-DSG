@@ -5,6 +5,33 @@
 
 namespace spark_dsg {
 
+namespace colormaps {
+
+static const std::vector<Color> ironbow = {
+    {0, 0, 0},
+    {145, 20, 145},
+    {255, 138, 0},
+    {255, 230, 40},
+    {255, 255, 255},
+};
+
+static const std::vector<Color> color_brewer_paired{
+    {166, 206, 227},
+    {31, 120, 180},
+    {178, 223, 138},
+    {51, 160, 44},
+    {251, 154, 153},
+    {227, 26, 28},
+    {253, 191, 111},
+    {255, 127, 0},
+    {202, 178, 214},
+    {106, 61, 154},
+    {255, 255, 153},
+    {177, 89, 40},
+};
+
+}  // namespace colormaps
+
 std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_int_distribution<uint8_t> dis(0, 255);
@@ -113,7 +140,7 @@ Color Color::spectrum(float value, const std::vector<Color>& colors) {
   return colors.at(index).blend(colors.at(index + 1), weight);
 }
 
-Color Color::ironbow(float value) { return spectrum(value, ironbow_colors_); }
+Color Color::ironbow(float value) { return spectrum(value, colormaps::ironbow); }
 
 Color Color::rainbow(float value) {
   return fromHLS(std::clamp(value, 0.0f, 1.0f), 0.5f, 1.0f);
@@ -142,8 +169,10 @@ Color Color::rainbowId(size_t id, size_t ids_per_revolution) {
   return Color::rainbow(exponentialOffsetId(id, ids_per_revolution));
 }
 
-const std::vector<Color> Color::ironbow_colors_ = {
-    {0, 0, 0}, {145, 20, 145}, {255, 138, 0}, {255, 230, 40}, {255, 255, 255}};
+Color Color::colorbrewer(size_t id) {
+  const auto& cmap = colormaps::color_brewer_paired;
+  return cmap.at(id % cmap.size());
+}
 
 std::ostream& operator<<(std::ostream& out, const Color& color) {
   out << "[RGBA: " << static_cast<int>(color.r) << ", " << static_cast<int>(color.g)
