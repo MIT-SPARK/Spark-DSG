@@ -36,6 +36,7 @@
 
 #include <cstdint>
 #include <ostream>
+#include <array>
 #include <vector>
 
 namespace spark_dsg {
@@ -99,8 +100,11 @@ struct Color {
   static Color random();
 
   // Conversions.
+  std::array<float, 4> toUnitRange() const;
   static Color fromHSV(float hue, float saturation, float value);
+  std::array<float, 3> toHSV() const;
   static Color fromHLS(float hue, float luminance, float saturation);
+  std::array<float, 3> toHLS() const;
 
   // Color maps.
   /**
