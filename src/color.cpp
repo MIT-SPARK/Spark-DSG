@@ -5,33 +5,6 @@
 
 namespace spark_dsg {
 
-namespace colormaps {
-
-static const std::vector<Color> ironbow = {
-    {0, 0, 0},
-    {145, 20, 145},
-    {255, 138, 0},
-    {255, 230, 40},
-    {255, 255, 255},
-};
-
-static const std::vector<Color> color_brewer_paired{
-    {166, 206, 227},
-    {31, 120, 180},
-    {178, 223, 138},
-    {51, 160, 44},
-    {251, 154, 153},
-    {227, 26, 28},
-    {253, 191, 111},
-    {255, 127, 0},
-    {202, 178, 214},
-    {106, 61, 154},
-    {255, 255, 153},
-    {177, 89, 40},
-};
-
-}  // namespace colormaps
-
 std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_int_distribution<uint8_t> dis(0, 255);
@@ -214,12 +187,43 @@ std::array<float, 3> Color::toHLS() const {
   return hls;
 }
 
-Color Color::gray(float value) {
+std::ostream& operator<<(std::ostream& out, const Color& color) {
+  out << "[RGBA: " << static_cast<int>(color.r) << ", " << static_cast<int>(color.g)
+      << ", " << static_cast<int>(color.b) << ", " << static_cast<int>(color.a) << "]";
+  return out;
+}
+
+namespace colormaps {
+
+static const std::vector<Color> ironbow_palette = {
+    {0, 0, 0},
+    {145, 20, 145},
+    {255, 138, 0},
+    {255, 230, 40},
+    {255, 255, 255},
+};
+
+static const std::vector<Color> colorbrewer_palette{
+    {166, 206, 227},
+    {31, 120, 180},
+    {178, 223, 138},
+    {51, 160, 44},
+    {251, 154, 153},
+    {227, 26, 28},
+    {253, 191, 111},
+    {255, 127, 0},
+    {202, 178, 214},
+    {106, 61, 154},
+    {255, 255, 153},
+    {177, 89, 40},
+};
+
+Color gray(float value) {
   const auto char_value = fromUnitRange(std::clamp(value, 0.0f, 1.0f));
   return Color(char_value, char_value, char_value);
 }
 
-Color Color::quality(float value) {
+Color quality(float value) {
   value = std::clamp(value, 0.0f, 1.0f);
   Color color;
   if (value > 0.5f) {
@@ -233,7 +237,7 @@ Color Color::quality(float value) {
   return color;
 }
 
-Color Color::spectrum(float value, const std::vector<Color>& colors) {
+Color spectrum(float value, const std::vector<Color>& colors) {
   if (colors.empty()) {
     return Color::black();
   }
@@ -249,25 +253,38 @@ Color Color::spectrum(float value, const std::vector<Color>& colors) {
   return colors.at(index).blend(colors.at(index + 1), weight);
 }
 
-Color Color::ironbow(float value) { return spectrum(value, colormaps::ironbow); }
-
-Color Color::rainbow(float value) {
-  return fromHLS(std::clamp(value, 0.0f, 1.0f), 0.5f, 1.0f);
+Color hls(float value, const Color& start, const Color& end) {
+  const auto start_hls = start.toHLS();
+  const auto end_hls = end.toHLS();
+  return hls(value, start_hls, end_hls);
 }
 
-Color Color::rainbowId(size_t id, size_t ids_per_revolution) {
-  return Color::rainbow(exponentialOffsetId(id, ids_per_revolution));
+Color hls(float value,
+          const std::array<float, 3>& start,
+          const std::array<float, 3>& end) {
+  const auto& [h1, l1, s1] = start;
+  const auto& [h2, l2, s2] = end;
+  const auto w = std::clamp(value, 0.0f, 1.0f);
+  const auto w_inv = 1.0f - w;
+  // interpolation is convex combination of hls values
+  return Color::fromHLS(w * h1 + w_inv * h2, w * l1 + w_inv * l2, w * s1 + w_inv * s2);
 }
 
-Color Color::colorbrewer(size_t id) {
-  const auto& cmap = colormaps::color_brewer_paired;
+Color ironbow(float value) { return spectrum(value, ironbow_palette); }
+
+Color rainbow(float value) {
+  return Color::fromHLS(std::clamp(value, 0.0f, 1.0f), 0.5f, 1.0f);
+}
+
+Color rainbowId(size_t id, size_t ids_per_revolution) {
+  return rainbow(exponentialOffsetId(id, ids_per_revolution));
+}
+
+Color colorbrewer(size_t id) {
+  const auto& cmap = colorbrewer_palette;
   return cmap.at(id % cmap.size());
 }
 
-std::ostream& operator<<(std::ostream& out, const Color& color) {
-  out << "[RGBA: " << static_cast<int>(color.r) << ", " << static_cast<int>(color.g)
-      << ", " << static_cast<int>(color.b) << ", " << static_cast<int>(color.a) << "]";
-  return out;
-}
+}  // namespace colormaps
 
 }  // namespace spark_dsg

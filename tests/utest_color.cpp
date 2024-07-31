@@ -96,31 +96,6 @@ TEST(Color, Blend) {
   EXPECT_EQ(rg, Color(191, 63, 0));
 }
 
-TEST(Color, Rainbow) {
-  EXPECT_EQ(Color::rainbow(0), Color::red());
-  EXPECT_EQ(Color::rainbow(0.1), Color(255, 153, 0));
-  EXPECT_EQ(Color::rainbow(0.2), Color(204, 255, 0));
-  EXPECT_EQ(Color::rainbow(0.3), Color(51, 255, 0));
-  EXPECT_EQ(Color::rainbow(0.4), Color(0, 255, 102));
-  EXPECT_EQ(Color::rainbow(0.5), Color::cyan());
-  EXPECT_EQ(Color::rainbow(0.6), Color(0, 102, 255));
-  EXPECT_EQ(Color::rainbow(0.7), Color(51, 0, 255));
-  EXPECT_EQ(Color::rainbow(0.8), Color(204, 0, 255));
-  EXPECT_EQ(Color::rainbow(0.9), Color(255, 0, 153));
-  EXPECT_EQ(Color::rainbow(1), Color::red());
-}
-
-TEST(Color, RainbowID) {
-  EXPECT_EQ(Color::rainbowId(0, 16), Color::red());
-  EXPECT_EQ(Color::rainbowId(1, 16), Color(255, 96, 0));
-  EXPECT_EQ(Color::rainbowId(8, 16), Color::cyan());
-  EXPECT_EQ(Color::rainbowId(15, 16), Color(255, 0, 96));
-  EXPECT_EQ(Color::rainbowId(16, 16), Color(255, 48, 0));
-  EXPECT_EQ(Color::rainbowId(17, 16), Color(255, 143, 0));
-  EXPECT_EQ(Color::rainbowId(32, 16), Color(255, 24, 0));
-  EXPECT_EQ(Color::rainbowId(33, 16), Color(255, 120, 0));
-}
-
 TEST(Color, fromHSV) {
   EXPECT_EQ(Color::fromHSV(0.0f, 0.0f, 0.0f), Color::black());
   EXPECT_EQ(Color::fromHSV(0.0f, 0.0f, 1.0f), Color::white());
@@ -165,6 +140,31 @@ TEST(Color, HSVConversion) {
     const auto result = Color::fromHSV(hue, luminance, saturation);
     ASSERT_EQ(expected, result);
   }
+}
+
+TEST(Color, Rainbow) {
+  EXPECT_EQ(colormaps::rainbow(0), Color::red());
+  EXPECT_EQ(colormaps::rainbow(0.1), Color(255, 153, 0));
+  EXPECT_EQ(colormaps::rainbow(0.2), Color(204, 255, 0));
+  EXPECT_EQ(colormaps::rainbow(0.3), Color(51, 255, 0));
+  EXPECT_EQ(colormaps::rainbow(0.4), Color(0, 255, 102));
+  EXPECT_EQ(colormaps::rainbow(0.5), Color::cyan());
+  EXPECT_EQ(colormaps::rainbow(0.6), Color(0, 102, 255));
+  EXPECT_EQ(colormaps::rainbow(0.7), Color(51, 0, 255));
+  EXPECT_EQ(colormaps::rainbow(0.8), Color(204, 0, 255));
+  EXPECT_EQ(colormaps::rainbow(0.9), Color(255, 0, 153));
+  EXPECT_EQ(colormaps::rainbow(1), Color::red());
+}
+
+TEST(Color, RainbowID) {
+  EXPECT_EQ(colormaps::rainbowId(0, 16), Color::red());
+  EXPECT_EQ(colormaps::rainbowId(1, 16), Color(255, 96, 0));
+  EXPECT_EQ(colormaps::rainbowId(8, 16), Color::cyan());
+  EXPECT_EQ(colormaps::rainbowId(15, 16), Color(255, 0, 96));
+  EXPECT_EQ(colormaps::rainbowId(16, 16), Color(255, 48, 0));
+  EXPECT_EQ(colormaps::rainbowId(17, 16), Color(255, 143, 0));
+  EXPECT_EQ(colormaps::rainbowId(32, 16), Color(255, 24, 0));
+  EXPECT_EQ(colormaps::rainbowId(33, 16), Color(255, 120, 0));
 }
 
 }  // namespace spark_dsg
