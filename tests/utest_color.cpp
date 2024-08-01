@@ -38,6 +38,7 @@
 #include <unordered_map>
 
 #include "spark_dsg/color.h"
+#include "spark_dsg/colormaps.h"
 
 namespace spark_dsg {
 
