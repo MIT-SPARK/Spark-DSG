@@ -42,9 +42,9 @@ namespace spark_dsg::colormaps {
 
 /**
  * @brief Generate a gray-scale color.
- * @param value The value of the gray [0,1, where 0 is black and 1 is white].
+ * @param value The value of the gray [0,1], where 0 is black and 1 is white.
  */
-Color gray(float value = 0.5f);
+Color gray(float value);
 
 /**
  * @brief Generate a color based on a quality value.
@@ -93,6 +93,18 @@ Color ironbow(float value);
 Color rainbow(float value);
 
 /**
+ * @brief Generate a color from a general divergent colormap
+ * @param value A value in [0, 1]. 0 results in one color, 1 in the other, and 0.5 in a
+ * neutral color
+ */
+Color divergent(float value,
+                float hue_low = 0.66,
+                float hue_high = 0.0,
+                float saturation = 0.9,
+                float luminance = 0.9,
+                bool dark = true);
+
+/**
  * @brief Generate a sequence of never repeating colors in the rainbow spectrum.
  * @param id The id of the color in the sequence.
  * @param ids_per_revolution The number of colors per revolution of the hue.
@@ -106,5 +118,11 @@ Color rainbowId(size_t id, size_t ids_per_revolution = 16);
  * @note Indices outside of the 0-11 range will get remapped to be inside the range
  */
 Color colorbrewer(size_t id);
+
+/**
+ * @brief Pick a color from a custom palette from distinctipy with 150 colors
+ * @param id The id to pick from the sequence
+ */
+Color distrinct_150(size_t id);
 
 }  // namespace spark_dsg::colormaps

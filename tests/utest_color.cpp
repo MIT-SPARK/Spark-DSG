@@ -168,4 +168,22 @@ TEST(Color, RainbowID) {
   EXPECT_EQ(colormaps::rainbowId(33, 16), Color(255, 120, 0));
 }
 
+TEST(Color, Divergent) {
+  const auto dark_cmap = [](float value) {
+    return colormaps::divergent(value, 0.0f, 2.0f / 3.0f, 1.0f, 0.5f, true);
+  };
+
+  EXPECT_EQ(dark_cmap(0.0f), Color::red());
+  EXPECT_EQ(dark_cmap(0.5f), Color::black());
+  EXPECT_EQ(dark_cmap(1.0f), Color::blue());
+
+  const auto light_cmap = [](float value) {
+    return colormaps::divergent(value, 0.0f, 2.0f / 3.0f, 1.0f, 0.5f, false);
+  };
+
+  EXPECT_EQ(light_cmap(0.0f), Color::red());
+  EXPECT_EQ(light_cmap(0.5f), Color::white());
+  EXPECT_EQ(light_cmap(1.0f), Color::blue());
+}
+
 }  // namespace spark_dsg
