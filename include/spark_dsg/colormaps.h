@@ -117,12 +117,22 @@ Color rainbowId(size_t id, size_t ids_per_revolution = 16);
  * @param id The id of the color in the sequence
  * @note Indices outside of the 0-11 range will get remapped to be inside the range
  */
-Color colorbrewer(size_t id);
+Color colorbrewerId(size_t id);
+
+/**
+ * @brief Get the underlying color palette for the distinct150 colormap
+ */
+const std::vector<Color>& colorbrewerPalette();
 
 /**
  * @brief Pick a color from a custom palette from distinctipy with 150 colors
  * @param id The id to pick from the sequence
  */
-Color distrinct_150(size_t id);
+Color distinct150Id(size_t id);
+
+/**
+ * @brief Get the underlying color palette for the distinct150 colormap
+ */
+const std::vector<Color>& distinct150Palette();
 
 }  // namespace spark_dsg::colormaps

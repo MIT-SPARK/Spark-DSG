@@ -164,9 +164,18 @@ Color rainbowId(size_t id, size_t ids_per_revolution) {
   return rainbow(exponentialOffsetId(id, ids_per_revolution));
 }
 
-Color colorbrewer(size_t id) {
+Color colorbrewerId(size_t id) {
   const auto& cmap = colorbrewer_palette;
   return cmap.at(id % cmap.size());
 }
+
+const std::vector<Color>& colorbrewerPalette() { return colorbrewer_palette; }
+
+Color distinct150Id(size_t id) {
+  const auto& cmap = custom_150_palette;
+  return cmap.at(id % cmap.size());
+}
+
+const std::vector<Color>& distinct150Palette() { return custom_150_palette; }
 
 }  // namespace spark_dsg::colormaps
