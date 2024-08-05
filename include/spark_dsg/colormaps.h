@@ -54,6 +54,19 @@ Color gray(float value);
 Color quality(float value);
 
 /**
+ * @brief Generate a color based on a ironbow value.
+ * @param value The temperature value [0,1], where 0 is dark and 1 is light.
+ */
+Color ironbow(float value);
+
+/**
+ * @brief Generate a color based on a rainbow value.
+ * @param value The rainbow value [0,1], where 0 is red, 0.5 is green, and 1 is
+ * blue.
+ */
+Color rainbow(float value);
+
+/**
  * @brief Generate a color based on a spectrum of colors.
  * @param value The spectrum value [0,1], where 0 is the first color and 1 is the
  * last color.
@@ -78,19 +91,6 @@ Color hls(float value, const Color& start, const Color& end);
 Color hls(float value,
           const std::array<float, 3>& start,
           const std::array<float, 3>& end);
-
-/**
- * @brief Generate a color based on a ironbow value.
- * @param value The temperature value [0,1], where 0 is dark and 1 is light.
- */
-Color ironbow(float value);
-
-/**
- * @brief Generate a color based on a rainbow value.
- * @param value The rainbow value [0,1], where 0 is red, 0.5 is green, and 1 is
- * blue.
- */
-Color rainbow(float value);
 
 /**
  * @brief Generate a color from a general divergent colormap
@@ -120,15 +120,15 @@ Color rainbowId(size_t id, size_t ids_per_revolution = 16);
 Color colorbrewerId(size_t id);
 
 /**
- * @brief Get the underlying color palette for the distinct150 colormap
- */
-const std::vector<Color>& colorbrewerPalette();
-
-/**
  * @brief Pick a color from a custom palette from distinctipy with 150 colors
  * @param id The id to pick from the sequence
  */
 Color distinct150Id(size_t id);
+
+/**
+ * @brief Get the underlying color palette for the distinct150 colormap
+ */
+const std::vector<Color>& colorbrewerPalette();
 
 /**
  * @brief Get the underlying color palette for the distinct150 colormap

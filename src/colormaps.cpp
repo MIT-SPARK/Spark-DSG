@@ -108,6 +108,12 @@ Color quality(float value) {
   return color;
 }
 
+Color ironbow(float value) { return spectrum(value, ironbow_palette); }
+
+Color rainbow(float value) {
+  return Color::fromHLS(std::clamp(value, 0.0f, 1.0f), 0.5f, 1.0f);
+}
+
 Color spectrum(float value, const std::vector<Color>& colors) {
   if (colors.empty()) {
     return Color::black();
@@ -141,12 +147,6 @@ Color hls(float value,
   return Color::fromHLS(w * h1 + w_inv * h2, w * l1 + w_inv * l2, w * s1 + w_inv * s2);
 }
 
-Color ironbow(float value) { return spectrum(value, ironbow_palette); }
-
-Color rainbow(float value) {
-  return Color::fromHLS(std::clamp(value, 0.0f, 1.0f), 0.5f, 1.0f);
-}
-
 Color divergent(float value,
                 float hue_low,
                 float hue_high,
@@ -169,12 +169,12 @@ Color colorbrewerId(size_t id) {
   return cmap.at(id % cmap.size());
 }
 
-const std::vector<Color>& colorbrewerPalette() { return colorbrewer_palette; }
-
 Color distinct150Id(size_t id) {
   const auto& cmap = custom_150_palette;
   return cmap.at(id % cmap.size());
 }
+
+const std::vector<Color>& colorbrewerPalette() { return colorbrewer_palette; }
 
 const std::vector<Color>& distinct150Palette() { return custom_150_palette; }
 
