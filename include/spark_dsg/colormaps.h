@@ -94,8 +94,19 @@ Color hls(float value,
 
 /**
  * @brief Generate a color from a general divergent colormap
- * @param value A value in [0, 1]. 0 results in one color, 1 in the other, and 0.5 in a
- * neutral color
+ * @param value A value in [0, 1]. 0 results in hue_low, 0.5 in a neutral color, and 1.0
+ * in hue_high
+ * @param hue_low The hue value to use for colors in the 0 to 0.5 range
+ * @param hue_high The hue value to use for colors in the 0.5 to 1 range
+ * @param saturation The starting saturation for both endpoints in the colormap
+ * @param luminance The starting luminance for both endpoints in the colormap
+ * @param dark Whether the midpoint goes to black (true) or white (false)
+ *
+ * @note This colormap is created by interpolating the endpoint luminance and saturation
+ * and either 0 (dark) or 1 (white). Setting saturation to be high creates more color
+ * constrast while luminance changes the intensity gradient between the endpoints and
+ * the midpoint. When using dark = false, please note that luminance should be set on
+ * the lower side for the endpoints.
  */
 Color divergent(float value,
                 float hue_low = 0.66,
