@@ -34,9 +34,9 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <ostream>
-#include <vector>
 
 namespace spark_dsg {
 
@@ -96,56 +96,15 @@ struct Color {
   static Color cyan() { return Color(0, 255, 255); }
   static Color magenta() { return Color(255, 0, 255); }
   static Color pink() { return Color(255, 127, 127); }
+  static Color gray() { return Color(128, 128, 128); }
   static Color random();
 
   // Conversions.
+  std::array<float, 4> toUnitRange() const;
   static Color fromHSV(float hue, float saturation, float value);
+  std::array<float, 3> toHSV() const;
   static Color fromHLS(float hue, float luminance, float saturation);
-
-  // Color maps.
-  /**
-   * @brief Generate a gray-scale color.
-   * @param value The value of the gray [0,1, where 0 is black and 1 is white].
-   */
-  static Color gray(float value = 0.5f);
-
-  /**
-   * @brief Generate a color based on a quality value.
-   * @param value The quality value [0,1], where 0 is red, 0.5 is yellow, and 1 is
-   * green.
-   */
-  static Color quality(float value);
-
-  /**
-   * @brief Generate a color based on a spectrum of colors.
-   * @param value The spectrum value [0,1], where 0 is the first color and 1 is the
-   * last color.
-   * @param colors The list of colors in the spectrum. Colors are assumed equidistant.
-   */
-  static Color spectrum(float value, const std::vector<Color>& colors);
-
-  /**
-   * @brief Generate a color based on a ironbow value.
-   * @param value The temperature value [0,1], where 0 is dark and 1 is light.
-   */
-  static Color ironbow(float value);
-
-  /**
-   * @brief Generate a color based on a rainbow value.
-   * @param value The rainbow value [0,1], where 0 is red, 0.5 is green, and 1 is
-   * blue.
-   */
-  static Color rainbow(float value);
-
-  /**
-   * @brief Generate a sequence of never repeating colors in the rainbow spectrum.
-   * @param id The id of the color in the sequence.
-   * @param ids_per_revolution The number of colors per revolution of the hue.
-   */
-  static Color rainbowId(size_t id, size_t ids_per_revolution = 16);
-
- private:
-  static const std::vector<Color> ironbow_colors_;
+  std::array<float, 3> toHLS() const;
 };
 
 }  // namespace spark_dsg
