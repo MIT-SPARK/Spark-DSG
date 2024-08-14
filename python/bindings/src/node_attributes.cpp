@@ -153,19 +153,19 @@ void addBindings(pybind11::module_& module) {
   py::class_<KhronosObjectAttributes, ObjectNodeAttributes>(module,
                                                             "KhronosObjectAttributes")
       .def(py::init<>())
-      .def_readwrite("first_observed_ns", &KhronosObjectAttributes::first_observed_ns)
-      .def_readwrite("last_observed_ns", &KhronosObjectAttributes::last_observed_ns)
+      .def_readonly("first_observed_ns", &KhronosObjectAttributes::first_observed_ns)
+      .def_readonly("last_observed_ns", &KhronosObjectAttributes::last_observed_ns)
       .def(
           "mesh",
           [](const KhronosObjectAttributes& attrs) { return &attrs.mesh; },
           py::return_value_policy::reference_internal)
-      .def_readwrite("trajectory_timestamps",
+      .def_readonly("trajectory_timestamps",
                      &KhronosObjectAttributes::trajectory_timestamps)
-      .def_readwrite("trajectory_positions",
+      .def_readonly("trajectory_positions",
                      &KhronosObjectAttributes::trajectory_positions)
-      .def_readwrite("dynamic_object_points",
+      .def_readonly("dynamic_object_points",
                      &KhronosObjectAttributes::dynamic_object_points)
-      .def_readwrite("details", &KhronosObjectAttributes::details);
+      .def_readonly("details", &KhronosObjectAttributes::details);
 
   py::class_<RoomNodeAttributes, SemanticNodeAttributes>(module, "RoomNodeAttributes")
       .def(py::init<>())
