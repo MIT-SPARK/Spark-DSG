@@ -150,6 +150,23 @@ void addBindings(pybind11::module_& module) {
             attrs.world_R_object = rot;
           });
 
+  py::class_<KhronosObjectAttributes, ObjectNodeAttributes>(module,
+                                                            "KhronosObjectAttributes")
+      .def(py::init<>())
+      .def_readonly("first_observed_ns", &KhronosObjectAttributes::first_observed_ns)
+      .def_readonly("last_observed_ns", &KhronosObjectAttributes::last_observed_ns)
+      .def(
+          "mesh",
+          [](const KhronosObjectAttributes& attrs) { return &attrs.mesh; },
+          py::return_value_policy::reference_internal)
+      .def_readonly("trajectory_timestamps",
+                     &KhronosObjectAttributes::trajectory_timestamps)
+      .def_readonly("trajectory_positions",
+                     &KhronosObjectAttributes::trajectory_positions)
+      .def_readonly("dynamic_object_points",
+                     &KhronosObjectAttributes::dynamic_object_points)
+      .def_readonly("details", &KhronosObjectAttributes::details);
+
   py::class_<RoomNodeAttributes, SemanticNodeAttributes>(module, "RoomNodeAttributes")
       .def(py::init<>())
       .def_readwrite("semantic_class_probabilities",
