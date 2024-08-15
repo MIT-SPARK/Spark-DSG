@@ -480,11 +480,44 @@ void KhronosObjectAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
-  serialization::field("mesh", mesh);
   serialization::field("trajectory_positions", trajectory_positions);
   serialization::field("trajectory_timestamps", trajectory_timestamps);
   serialization::field("dynamic_object_points", dynamic_object_points);
   serialization::field("details", details);
+
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version <= io::Version(1, 0, 1)) {
+    io::warnOutdatedHeader(header);
+    std::vector<float> xyz;
+    serialization::field("vertices", xyz);
+    std::vector<uint8_t> rgb;
+    serialization::field("colors", rgb);
+    std::vector<uint32_t> faces;
+    serialization::field("faces", faces);
+    const auto num_vertices = xyz.size() / 3;
+    const auto num_colors = rgb.size() / 4;
+    const auto num_faces = faces.size();
+    if (num_vertices != num_colors || num_vertices != num_faces) {
+      return;
+    }
+
+    mesh = Mesh(true, false, false, false);
+    mesh.resizeVertices(num_vertices);
+    for (size_t i = 0; i < num_vertices; ++i) {
+      mesh.setPos(i, {xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]});
+      mesh.setColor(i, {rgb[4 * i], rgb[4 * i + 1], rgb[4 * i + 2], rgb[4 * i + 3]});
+    }
+
+    mesh.resizeFaces(num_faces);
+    for (size_t i = 0; i < num_faces; ++i) {
+      auto& face = mesh.face(i);
+      for (size_t j = 0; j < 3; ++j) {
+        face[j] = faces[3 * i + j];
+      }
+    }
+  } else {
+    serialization::field("mesh", mesh);
+  }
 }
 
 bool KhronosObjectAttributes::is_equal(const NodeAttributes& other) const {
