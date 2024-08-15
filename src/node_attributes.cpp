@@ -487,6 +487,7 @@ void KhronosObjectAttributes::serialization_info() {
 
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version <= io::Version(1, 0, 1)) {
+    io::warnOutdatedHeader(header);
     std::vector<float> xyz;
     serialization::field("vertices", xyz);
     std::vector<uint8_t> rgb;
