@@ -248,6 +248,22 @@ class Mesh {
    */
   void transform(const Eigen::Isometry3f& transform);
 
+  /**
+   * @brief Append the other mesh to this one
+   * @param other Mesh to append to the current mesh
+   * @note Fails when the available fields don't match
+   * @returns Whether the append was possible
+   */
+  bool append(const Mesh& other);
+
+  /**
+   * @brief append the mesh on the right hand side to this one
+   * @param other Mesh to append to the current mesh
+   * @note Silently fails to append the other mesh if the available fields don't match
+   * @returns The current mesh
+   */
+  Mesh& operator+=(const Mesh& other);
+
  public:
   const bool has_colors;
   const bool has_timestamps;
