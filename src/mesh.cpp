@@ -248,6 +248,34 @@ void Mesh::transform(const Eigen::Isometry3f& transform) {
   }
 }
 
+bool Mesh::append(const Mesh& other) {
+  if (has_colors != other.has_colors && has_timestamps != other.has_timestamps &&
+      has_labels != other.has_labels &&
+      has_first_seen_stamps != other.has_first_seen_stamps) {
+    return false;
+  }
+
+  size_t offset = points.size();
+  points.insert(points.end(), other.points.begin(), other.points.end());
+  colors.insert(colors.end(), other.colors.begin(), other.colors.end());
+  stamps.insert(stamps.end(), other.stamps.begin(), other.stamps.end());
+  first_seen_stamps.insert(first_seen_stamps.end(),
+                           other.first_seen_stamps.begin(),
+                           other.first_seen_stamps.end());
+  labels.insert(labels.end(), other.labels.begin(), other.labels.end());
+
+  for (const auto& face : other.faces) {
+    faces.push_back({face[0] + offset, face[1] + offset, face[2] + offset});
+  }
+
+  return true;
+}
+
+Mesh& Mesh::operator+=(const Mesh& other) {
+  append(other);
+  return *this;
+}
+
 bool operator==(const Mesh& lhs, const Mesh& rhs) {
   return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
          lhs.has_labels == rhs.has_labels &&

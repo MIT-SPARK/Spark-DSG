@@ -35,6 +35,7 @@
 #include "spark_dsg/python/mesh.h"
 
 #include <pybind11/eigen.h>
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl/filesystem.h>
 #include <spark_dsg/mesh.h>
@@ -117,11 +118,13 @@ void setEigenFaces(Mesh& mesh, const Eigen::MatrixXi& indices) {
 
 void addBindings(pybind11::module_& module) {
   py::class_<Mesh, std::shared_ptr<Mesh>>(module, "Mesh")
-      .def(py::init<bool, bool, bool>(),
+      .def(py::init<bool, bool, bool, bool>(),
            "has_colors"_a = true,
            "has_timestamps"_a = true,
-           "has_labels"_a = "true")
+           "has_labels"_a = true,
+           "has_first_seen_stamps"_a = true)
       .def("empty", &Mesh::empty)
+      .def("clear", &Mesh::clear)
       .def("num_vertices", &Mesh::numVertices)
       .def("num_faces", &Mesh::numFaces)
       .def("resize_vertices", &Mesh::resizeVertices)
@@ -133,6 +136,8 @@ void addBindings(pybind11::module_& module) {
       .def("set_color", &Mesh::setColor)
       .def("timestamp", &Mesh::timestamp)
       .def("set_timestamp", &Mesh::setTimestamp)
+      .def("first_seen_timestamp", &Mesh::firstSeenTimestamp)
+      .def("set_first_seen_timestamp", &Mesh::setFirstSeenTimestamp)
       .def("label", &Mesh::label)
       .def("set_label", &Mesh::setLabel)
       .def("face", py::overload_cast<size_t>(&Mesh::face, py::const_))
@@ -141,22 +146,22 @@ void addBindings(pybind11::module_& module) {
              mesh.face(index) = face;
            })
       .def("to_json", &Mesh::serializeToJson)
+      .def_static("from_json", &Mesh::deserializeFromJson)
       .def("to_binary",
            [](const Mesh& mesh) {
              std::vector<uint8_t> buffer;
              mesh.serializeToBinary(buffer);
              return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
            })
-      .def("save", &Mesh::save)
-      .def("save",
-           [](const Mesh& mesh, const std::filesystem::path& path) { mesh.save(path); })
-      .def_static("from_json", &Mesh::deserializeFromJson)
       .def_static("from_binary",
                   [](const py::bytes& contents) {
                     const auto& view = static_cast<const std::string_view&>(contents);
                     return Mesh::deserializeFromBinary(
                         reinterpret_cast<const uint8_t*>(view.data()), view.size());
                   })
+      .def("save", &Mesh::save)
+      .def("save",
+           [](const Mesh& mesh, const std::filesystem::path& path) { mesh.save(path); })
       .def_static("load", &Mesh::load)
       .def_static("load",
                   [](const std::filesystem::path& path) { return Mesh::load(path); })
@@ -167,9 +172,21 @@ void addBindings(pybind11::module_& module) {
            [](Mesh& mesh, const Eigen::MatrixXd& points) {
              setEigenVertices(mesh, points);
            })
-      .def("set_faces", [](Mesh& mesh, const Eigen::MatrixXi& faces) {
-        setEigenFaces(mesh, faces);
-      });
+      .def("set_faces",
+           [](Mesh& mesh, const Eigen::MatrixXi& faces) { setEigenFaces(mesh, faces); })
+      .def(
+          "transform",
+          [](Mesh& mesh,
+             const Eigen::Matrix3d& rotation,
+             const Eigen::Vector3d& translation) {
+            const Eigen::Isometry3d transform =
+                Eigen::Translation3d(translation) * Eigen::Quaterniond(rotation);
+            mesh.transform(transform.cast<float>());
+          },
+          "rotation"_a = Eigen::Matrix3d::Identity(),
+          "translation"_a = Eigen::Vector3d::Zero())
+      .def("append", &Mesh::append)
+      .def(py::self += py::self);
 }
 
 }  // namespace spark_dsg::python::mesh
