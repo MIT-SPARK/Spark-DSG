@@ -121,4 +121,29 @@ TEST(MeshTests, transform) {
   }
 }
 
+TEST(MeshTests, append) {
+  Mesh mesh = createDummyMesh();
+  const auto original_vertices = mesh.numVertices();
+  const auto original_faces = mesh.numFaces();
+  mesh.append(createDummyMesh());
+  ASSERT_EQ(mesh.numVertices(), 2 * original_vertices);
+  ASSERT_EQ(mesh.numFaces(), 2 * original_faces);
+  for (size_t i = 0; i < original_vertices; ++i) {
+    EXPECT_EQ(mesh.pos(i), mesh.pos(i + original_vertices));
+    EXPECT_EQ(mesh.color(i), mesh.color(i + original_vertices));
+    EXPECT_EQ(mesh.timestamp(i), mesh.timestamp(i + original_vertices));
+  }
+
+  for (size_t i = 0; i < original_faces; ++i) {
+    const auto& orig = mesh.face(i);
+    const auto& appended = mesh.face(i + original_faces);
+    Mesh::Face expected{
+        orig[0] + original_vertices, orig[1] + original_vertices, orig[2] + original_vertices};
+    EXPECT_EQ(expected, appended);
+    EXPECT_LT(appended[0], mesh.numVertices());
+    EXPECT_LT(appended[1], mesh.numVertices());
+    EXPECT_LT(appended[2], mesh.numVertices());
+  }
+}
+
 }  // namespace spark_dsg
