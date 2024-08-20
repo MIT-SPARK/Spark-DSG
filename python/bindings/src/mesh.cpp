@@ -174,14 +174,17 @@ void addBindings(pybind11::module_& module) {
            })
       .def("set_faces",
            [](Mesh& mesh, const Eigen::MatrixXi& faces) { setEigenFaces(mesh, faces); })
-      .def("transform",
-           [](Mesh& mesh,
-              const Eigen::Matrix3d& rotation,
-              const Eigen::Vector3d& translation) {
-             const Eigen::Isometry3d transform =
-                 Eigen::Translation3d(translation) * Eigen::Quaterniond(rotation);
-             mesh.transform(transform.cast<float>());
-           })
+      .def(
+          "transform",
+          [](Mesh& mesh,
+             const Eigen::Matrix3d& rotation,
+             const Eigen::Vector3d& translation) {
+            const Eigen::Isometry3d transform =
+                Eigen::Translation3d(translation) * Eigen::Quaterniond(rotation);
+            mesh.transform(transform.cast<float>());
+          },
+          "rotation"_a = Eigen::Matrix3d::Identity(),
+          "translation"_a = Eigen::Vector3d::Zero())
       .def("append", &Mesh::append)
       .def(py::self += py::self);
 }
