@@ -14,8 +14,6 @@ option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 option(SPARK_DSG_PROFILE_BUILD "Profile build time" OFF)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
-configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
-
 find_package(nlohmann_json REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Threads REQUIRED)
@@ -26,6 +24,13 @@ pkg_check_modules(zmq libzmq)
 if(SPARK_DSG_PROFILE_BUILD)
   add_compile_options(-ftime-trace)
 endif()
+
+if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
+  set(SPARK_DSG_USE_ZMQ 1)
+else()
+  set(SPARK_DSG_USE_ZMQ 0)
+endif()
+configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
 
 add_library(
   ${PROJECT_NAME}
@@ -81,10 +86,10 @@ if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
   # TODO(nathan) configure_file
   target_link_libraries(${PROJECT_NAME} PRIVATE ${zmq_LIBRARIES})
   target_include_directories(${PROJECT_NAME} PRIVATE ${zmq_INCLUDE_DIRS})
+endif()
 
-  if(SPARK_DSG_BUILD_EXAMPLES)
-    add_subdirectory(examples)
-  endif()
+if(SPARK_DSG_BUILD_EXAMPLES)
+  add_subdirectory(examples)
 endif()
 
 if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
@@ -103,20 +108,6 @@ add_library(
   spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME}
 )
 
-install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT spark_dsg-targets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(
-  EXPORT spark_dsg-targets
-  FILE spark_dsgTargets.cmake
-  NAMESPACE spark_dsg::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
-)
-
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}
   COMPATIBILITY AnyNewerVersion
@@ -126,6 +117,22 @@ configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/spark_dsgConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
+)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT spark_dsg-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(
+  EXPORT spark_dsg-targets
+  FILE spark_dsgTargets.cmake
+  NAMESPACE spark_dsg::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
 )
 
 install(

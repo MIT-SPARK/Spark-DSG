@@ -37,13 +37,18 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
-#include <zmq.hpp>
 
 #include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/serialization/graph_binary_serialization.h"
+#include "spark_dsg_version.h"
+
+#if defined(SPARK_DSG_USE_ZMQ) && SPARK_DSG_USE_ZMQ
+#include <zmq.hpp>
+#endif
 
 namespace spark_dsg {
 
+#if defined(SPARK_DSG_USE_ZMQ) && SPARK_DSG_USE_ZMQ
 class ZmqContextHolder {
  public:
   zmq::context_t& context() { return *context_; }
@@ -91,15 +96,6 @@ struct ZmqSender::Detail {
 
   std::unique_ptr<zmq::socket_t> socket;
 };
-
-ZmqSender::ZmqSender(const std::string& url, size_t num_threads)
-    : internals_(new ZmqSender::Detail(url, num_threads)) {}
-
-ZmqSender::~ZmqSender() {}
-
-void ZmqSender::send(const DynamicSceneGraph& graph, bool include_mesh) {
-  internals_->send(graph, include_mesh);
-}
 
 struct ZmqReceiver::Detail {
   Detail(const std::string& url, size_t, bool conflate) {
@@ -149,25 +145,6 @@ struct ZmqReceiver::Detail {
   std::unique_ptr<zmq::socket_t> socket;
   DynamicSceneGraph::Ptr graph;
 };
-
-ZmqReceiver::ZmqReceiver(const std::string& url, size_t num_threads, bool conflate)
-    : internals_(new ZmqReceiver::Detail(url, num_threads, conflate)) {}
-
-ZmqReceiver::~ZmqReceiver() {}
-
-bool ZmqReceiver::recv(size_t timeout_ms, bool recv_all) {
-  const auto have_data = internals_->recv(timeout_ms);
-  if (!have_data || !recv_all) {
-    return have_data;
-  }
-
-  // spin while we still have messages
-  while (internals_->recv(1)) {
-  }
-  return true;
-}
-
-DynamicSceneGraph::Ptr ZmqReceiver::graph() const { return internals_->graph; }
 
 struct ZmqGraph::Detail {
  public:
@@ -223,6 +200,56 @@ struct ZmqGraph::Detail {
   DynamicSceneGraph::Ptr graph_;
   std::unique_ptr<std::thread> recv_thread_;
 };
+#else
+static const std::string error_message =
+    "ZMQ not found or disabled! Check that zmq is installed and SPARK_DSG_BUILD_ZMQ=ON "
+    "is set in CMake!";
+
+struct ZmqSender::Detail {
+  Detail(const std::string&, size_t) { throw std::runtime_error(error_message); }
+  void send(const DynamicSceneGraph&, bool) { throw std::runtime_error(error_message); }
+};
+
+struct ZmqReceiver::Detail {
+  Detail(const std::string&, size_t, bool) { throw std::runtime_error(error_message); }
+  bool recv(size_t) { throw std::runtime_error(error_message); }
+  DynamicSceneGraph::Ptr graph;
+};
+
+struct ZmqGraph::Detail {
+  Detail(const std::string&, size_t, bool) { throw std::runtime_error(error_message); }
+  bool hasChange() { throw std::runtime_error(error_message); }
+  DynamicSceneGraph::Ptr graph() { throw std::runtime_error(error_message); }
+};
+#endif
+
+ZmqSender::ZmqSender(const std::string& url, size_t num_threads)
+    : internals_(new ZmqSender::Detail(url, num_threads)) {}
+
+ZmqSender::~ZmqSender() {}
+
+void ZmqSender::send(const DynamicSceneGraph& graph, bool include_mesh) {
+  internals_->send(graph, include_mesh);
+}
+
+ZmqReceiver::ZmqReceiver(const std::string& url, size_t num_threads, bool conflate)
+    : internals_(new ZmqReceiver::Detail(url, num_threads, conflate)) {}
+
+ZmqReceiver::~ZmqReceiver() {}
+
+bool ZmqReceiver::recv(size_t timeout_ms, bool recv_all) {
+  const auto have_data = internals_->recv(timeout_ms);
+  if (!have_data || !recv_all) {
+    return have_data;
+  }
+
+  // spin while we still have messages
+  while (internals_->recv(1)) {
+  }
+  return true;
+}
+
+DynamicSceneGraph::Ptr ZmqReceiver::graph() const { return internals_->graph; }
 
 ZmqGraph::ZmqGraph(const std::string& url, size_t num_threads, size_t poll_time_ms)
     : internals_(new ZmqGraph::Detail(url, num_threads, poll_time_ms)) {}
