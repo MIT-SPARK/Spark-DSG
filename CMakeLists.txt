@@ -83,7 +83,6 @@ target_link_libraries(
 )
 
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
-  # TODO(nathan) configure_file
   target_link_libraries(${PROJECT_NAME} PRIVATE ${zmq_LIBRARIES})
   target_include_directories(${PROJECT_NAME} PRIVATE ${zmq_INCLUDE_DIRS})
 endif()

@@ -15,7 +15,6 @@
   <depend>eigen</depend>
   <depend>libzmqpp-dev</depend>
   <depend>nlohmann-json-dev</depend>
-  <depend>pybind11-dev</depend>
   <depend>python3-dev</depend>
 
   <export>
