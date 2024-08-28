@@ -60,8 +60,8 @@
 #include <iomanip>
 #include <sstream>
 
-#include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/mesh_helpers.h"
+#include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/quaternion.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
 
@@ -199,6 +199,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("b", &Color::b)
       .def_readwrite("a", &Color::a);
 
+  py::enum_<BoundingBox::Type>(module, "BoundingBoxType")
+      .value("INVALID", BoundingBox::Type::INVALID)
+      .value("AABB", BoundingBox::Type::AABB)
+      .value("OBB", BoundingBox::Type::OBB)
+      .value("RAABB", BoundingBox::Type::RAABB);
+
   module.def("compute_ancestor_bounding_box",
              &computeAncestorBoundingBox,
              "G"_a,
@@ -209,12 +215,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   /**************************************************************************************
    * Bounding Box
    *************************************************************************************/
-
-  py::enum_<BoundingBox::Type>(module, "BoundingBoxType")
-      .value("INVALID", BoundingBox::Type::INVALID)
-      .value("AABB", BoundingBox::Type::AABB)
-      .value("OBB", BoundingBox::Type::OBB)
-      .value("RAABB", BoundingBox::Type::RAABB);
 
   py::class_<BoundingBox>(module, "BoundingBox")
       .def(py::init<>())
