@@ -37,9 +37,7 @@
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <pybind11/stl/filesystem.h>
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
+#include <pybind11/stl/filesystem.h>
 #include <spark_dsg/bounding_box.h>
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
@@ -480,7 +478,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
            })
       .def_static("from_binary",
                   [](const py::bytes& contents) {
-                    const auto view = static_cast<const std::string>(contents);
+                    const auto view = static_cast<std::string_view>(contents);
                     return Mesh::deserializeFromBinary(
                         reinterpret_cast<const uint8_t*>(view.data()), view.size());
                   })
@@ -583,7 +581,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
            })
       .def_static("from_binary", [](const py::bytes& contents) {
-        const auto view = static_cast<const std::string>(contents);
+        const auto view = static_cast<std::string_view>(contents);
         return io::binary::readLayer(reinterpret_cast<const uint8_t*>(view.data()),
                                      view.size());
       });
@@ -824,13 +822,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(
           "update_from_binary",
           [](DynamicSceneGraph& graph, const py::bytes& contents) {
-            const auto view = static_cast<std::string>(contents);
+            const auto view = static_cast<std::string_view>(contents);
             return io::binary::updateGraph(
                 graph, reinterpret_cast<const uint8_t*>(view.data()), view.size());
           },
           "contents"_a)
       .def_static("from_binary", [](const py::bytes& contents) {
-        const auto view = static_cast<std::string>(contents);
+        const auto view = static_cast<std::string_view>(contents);
         return io::binary::readGraph(reinterpret_cast<const uint8_t*>(view.data()),
                                      view.size());
       });
