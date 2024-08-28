@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 project(spark_dsg_python)
 
-find_package(pybind11 REQUIRED)
+include(FetchContent)
+FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git)
+FetchContent_GetProperties(pybind11)
+if(NOT pybind11_POPULATED)
+  FetchContent_Populate(pybind11)
+endif()
+
+add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR} EXCLUDE_FROM_ALL)
 
 pybind11_add_module(
   _dsg_bindings
@@ -11,8 +18,6 @@ pybind11_add_module(
   bindings/src/spark_dsg_bindings.cpp
 )
 target_link_libraries(_dsg_bindings PRIVATE spark_dsg)
-# NOTE(nathan) required on 20.04 when compiling with clang
-target_compile_options(_dsg_bindings PRIVATE -fsized-deallocation)
 target_include_directories(
   _dsg_bindings PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/bindings/include
 )

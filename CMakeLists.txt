@@ -50,6 +50,7 @@ add_library(
   src/scene_graph_node.cpp
   src/scene_graph_types.cpp
   src/scene_graph_utilities.cpp
+  src/zmq_interface.cpp
   src/serialization/attribute_serialization.cpp
   src/serialization/binary_conversions.cpp
   src/serialization/binary_serialization.cpp
@@ -66,8 +67,9 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>
-                         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  ${PROJECT_NAME}
+  PUBLIC $<INSTALL_INTERFACE:include>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
 target_link_libraries(
@@ -76,12 +78,9 @@ target_link_libraries(
 )
 
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
+  # TODO(nathan) configure_file
   target_link_libraries(${PROJECT_NAME} PRIVATE ${zmq_LIBRARIES})
   target_include_directories(${PROJECT_NAME} PRIVATE ${zmq_INCLUDE_DIRS})
-  target_sources(
-    ${PROJECT_NAME}
-    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zmq_interface.cpp>"
-  )
 
   if(SPARK_DSG_BUILD_EXAMPLES)
     add_subdirectory(examples)
@@ -104,13 +103,18 @@ add_library(
   spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME}
 )
 
-install(TARGETS ${PROJECT_NAME} EXPORT spark_dsg-targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT spark_dsg-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(EXPORT spark_dsg-targets FILE spark_dsgTargets.cmake NAMESPACE spark_dsg::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
+install(
+  EXPORT spark_dsg-targets
+  FILE spark_dsgTargets.cmake
+  NAMESPACE spark_dsg::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
 )
 
 write_basic_package_version_file(
@@ -124,7 +128,8 @@ configure_package_config_file(
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
 )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
 )
