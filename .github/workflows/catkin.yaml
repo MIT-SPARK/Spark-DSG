@@ -6,6 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     container: ros:noetic-ros-base-focal
     steps:
+      - name: Install Git
+        run: apt update && apt install -y git
       # checkout the code
       - uses: actions/checkout@v4
         with:
@@ -14,7 +16,7 @@ jobs:
       # install necessary dependences
       - name: Dependencies
         run: |
-          apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool git
+          apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool
           rosdep update --rosdistro noetic && rosdep install --rosdistro noetic --from-paths src --ignore-src -r -y
       # configure repo
       - name: Configure
