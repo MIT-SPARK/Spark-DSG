@@ -1,5 +1,5 @@
 ---
-name: "ROS Noetic: Build and Test"
+name: 'ROS Noetic: Build and Test'
 on: [push]
 jobs:
   build:
@@ -10,6 +10,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: src/spark_dsg
+          submodules: true
       # install necessary dependences
       - name: Dependencies
         run: |
@@ -27,7 +28,7 @@ jobs:
             -DSPARK_DSG_BUILD_EXAMPLES=ON
       # build repo
       - name: Build
-        run: catkin build spark_dsg -v
+        run: catkin build spark_dsg
       # run unit tests
       - name: Test
         run: catkin test spark_dsg

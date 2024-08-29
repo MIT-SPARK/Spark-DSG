@@ -94,8 +94,6 @@ endif()
 if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
   if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/.git)
     find_package(Git REQUIRED)
-    message(STATUS "Git: ${GIT_EXECUTABLE}")
-    message(STATUS "Path: ${CMAKE_CURRENT_SOURCE_DIR}")
     execute_process(
       COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
