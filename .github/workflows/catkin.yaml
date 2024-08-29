@@ -27,7 +27,7 @@ jobs:
             -DSPARK_DSG_BUILD_EXAMPLES=ON
       # build repo
       - name: Build
-        run: catkin build spark_dsg
+        run: catkin build spark_dsg -v
       # run unit tests
       - name: Test
         run: catkin test spark_dsg
