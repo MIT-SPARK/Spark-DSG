@@ -92,6 +92,15 @@ if(SPARK_DSG_BUILD_EXAMPLES)
 endif()
 
 if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
+  if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/.git)
+    find_package(Git REQUIRED)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+  endif()
+
+  add_subdirectory(third_party/pybind11 EXCLUDE_FROM_ALL)
   add_subdirectory(python)
 endif()
 

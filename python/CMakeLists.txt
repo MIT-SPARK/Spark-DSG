@@ -1,15 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(spark_dsg_python)
 
-include(FetchContent)
-FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git)
-FetchContent_GetProperties(pybind11)
-if(NOT pybind11_POPULATED)
-  FetchContent_Populate(pybind11)
-endif()
-
-add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR} EXCLUDE_FROM_ALL)
-
 pybind11_add_module(
   _dsg_bindings
   bindings/src/mesh_helpers.cpp
