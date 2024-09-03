@@ -33,11 +33,74 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <spark_dsg/dynamic_scene_graph.h>
 
-namespace pybind11 {
-class module_;
-}
+#include "spark_dsg/python/scene_graph_iterators.h"
 
-namespace spark_dsg::python::edge_attributes {
-void addBindings(pybind11::module_& m);
-}
+namespace spark_dsg::python {
+
+class LayerView {
+ public:
+  LayerView(const SceneGraphLayer& layer);
+  NodeIter nodes() const;
+  EdgeIter edges() const;
+  size_t numNodes() const;
+  size_t numEdges() const;
+  bool hasNode(NodeId node_id) const;
+  bool hasEdge(NodeId source, NodeId target) const;
+  const SceneGraphNode& getNode(NodeId node_id) const;
+  const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
+  Eigen::Vector3d getPosition(NodeId node_id) const;
+
+  const LayerId id;
+
+ private:
+  const SceneGraphLayer& layer_ref_;
+};
+
+class LayerIter {
+ public:
+  LayerIter(const DynamicSceneGraph::Layers& container);
+  LayerView operator*() const;
+  LayerIter& operator++();
+  bool operator==(const IterSentinel&);
+
+ private:
+  DynamicSceneGraph::Layers::const_iterator curr_iter_;
+  DynamicSceneGraph::Layers::const_iterator end_iter_;
+};
+
+class DynamicLayerView {
+ public:
+  DynamicLayerView(const DynamicSceneGraphLayer& layer);
+  DynamicNodeIter nodes() const;
+  EdgeIter edges() const;
+  size_t numNodes() const;
+  size_t numEdges() const;
+
+  const LayerId id;
+  const LayerPrefix prefix;
+
+ private:
+  const DynamicSceneGraphLayer& layer_ref_;
+};
+
+class DynamicLayerIter {
+ public:
+  using LayerMap = std::map<LayerId, DynamicSceneGraph::DynamicLayers>;
+
+  DynamicLayerIter(const LayerMap& container);
+  void setSubIter();
+  DynamicLayerView operator*() const;
+  DynamicLayerIter& operator++();
+  bool operator==(const IterSentinel&);
+
+ private:
+  bool valid_;
+  LayerMap::const_iterator curr_iter_;
+  LayerMap::const_iterator end_iter_;
+  DynamicSceneGraph::DynamicLayers::const_iterator curr_layer_iter_;
+  DynamicSceneGraph::DynamicLayers::const_iterator end_layer_iter_;
+};
+
+}  // namespace spark_dsg::python

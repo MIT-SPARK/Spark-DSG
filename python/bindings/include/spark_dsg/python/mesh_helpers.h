@@ -32,12 +32,13 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
+#include <spark_dsg/mesh.h>
 
-namespace pybind11 {
-class module_;
-}
+namespace spark_dsg::python {
 
-namespace spark_dsg::python::bounding_box {
-void addBindings(pybind11::module_& m);
-}
+Eigen::MatrixXd getEigenVertices(const Mesh& mesh);
+void setEigenVertices(Mesh& mesh, const Eigen::MatrixXd& points);
+Eigen::MatrixXi getEigenFaces(const Mesh& mesh);
+void setEigenFaces(Mesh& mesh, const Eigen::MatrixXi& indices);
+
+}  // namespace spark_dsg::python
