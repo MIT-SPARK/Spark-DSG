@@ -47,8 +47,8 @@ class NodeIter {
   bool operator==(const IterSentinel&);
 
  private:
-  typename SceneGraphLayer::Nodes::const_iterator curr_iter_;
-  typename SceneGraphLayer::Nodes::const_iterator end_iter_;
+  SceneGraphLayer::Nodes::const_iterator curr_iter_;
+  SceneGraphLayer::Nodes::const_iterator end_iter_;
 };
 
 class DynamicNodeIter {
@@ -59,8 +59,8 @@ class DynamicNodeIter {
   bool operator==(const IterSentinel&);
 
  private:
-  typename DynamicSceneGraphLayer::Nodes::const_iterator curr_iter_;
-  typename DynamicSceneGraphLayer::Nodes::const_iterator end_iter_;
+  DynamicSceneGraphLayer::Nodes::const_iterator curr_iter_;
+  DynamicSceneGraphLayer::Nodes::const_iterator end_iter_;
 };
 
 class EdgeIter {
@@ -71,8 +71,8 @@ class EdgeIter {
   bool operator==(const IterSentinel&);
 
  private:
-  typename SceneGraphLayer::Edges::const_iterator curr_iter_;
-  typename SceneGraphLayer::Edges::const_iterator end_iter_;
+  SceneGraphLayer::Edges::const_iterator curr_iter_;
+  SceneGraphLayer::Edges::const_iterator end_iter_;
 };
 
 class GlobalNodeIter {
@@ -85,10 +85,10 @@ class GlobalNodeIter {
 
  private:
   bool valid_;
-  typename SceneGraphLayer::Nodes::const_iterator curr_node_iter_;
-  typename SceneGraphLayer::Nodes::const_iterator end_node_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
+  SceneGraphLayer::Nodes::const_iterator curr_node_iter_;
+  SceneGraphLayer::Nodes::const_iterator end_node_iter_;
+  DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
+  DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
 };
 
 class GlobalEdgeIter {
@@ -101,12 +101,12 @@ class GlobalEdgeIter {
 
  private:
   bool started_interlayer_;
-  typename SceneGraphLayer::Edges::const_iterator curr_edge_iter_;
-  typename SceneGraphLayer::Edges::const_iterator end_edge_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
-  typename DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
-  typename SceneGraphLayer::Edges::const_iterator curr_interlayer_iter_;
-  typename SceneGraphLayer::Edges::const_iterator end_interlayer_iter_;
+  SceneGraphLayer::Edges::const_iterator curr_edge_iter_;
+  SceneGraphLayer::Edges::const_iterator end_edge_iter_;
+  DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
+  DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
+  SceneGraphLayer::Edges::const_iterator curr_interlayer_iter_;
+  SceneGraphLayer::Edges::const_iterator end_interlayer_iter_;
 };
 
 }  // namespace spark_dsg::python
