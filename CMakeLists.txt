@@ -14,8 +14,6 @@ option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 option(SPARK_DSG_PROFILE_BUILD "Profile build time" OFF)
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
-configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
-
 find_package(nlohmann_json REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Threads REQUIRED)
@@ -26,6 +24,13 @@ pkg_check_modules(zmq libzmq)
 if(SPARK_DSG_PROFILE_BUILD)
   add_compile_options(-ftime-trace)
 endif()
+
+if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
+  set(SPARK_DSG_USE_ZMQ 1)
+else()
+  set(SPARK_DSG_USE_ZMQ 0)
+endif()
+configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
 
 add_library(
   ${PROJECT_NAME}
@@ -50,6 +55,7 @@ add_library(
   src/scene_graph_node.cpp
   src/scene_graph_types.cpp
   src/scene_graph_utilities.cpp
+  src/zmq_interface.cpp
   src/serialization/attribute_serialization.cpp
   src/serialization/binary_conversions.cpp
   src/serialization/binary_serialization.cpp
@@ -66,8 +72,9 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:include>
-                         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  ${PROJECT_NAME}
+  PUBLIC $<INSTALL_INTERFACE:include>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
 target_link_libraries(
@@ -78,17 +85,22 @@ target_link_libraries(
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${zmq_LIBRARIES})
   target_include_directories(${PROJECT_NAME} PRIVATE ${zmq_INCLUDE_DIRS})
-  target_sources(
-    ${PROJECT_NAME}
-    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zmq_interface.cpp>"
-  )
+endif()
 
-  if(SPARK_DSG_BUILD_EXAMPLES)
-    add_subdirectory(examples)
-  endif()
+if(SPARK_DSG_BUILD_EXAMPLES)
+  add_subdirectory(examples)
 endif()
 
 if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
+  if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/.git)
+    find_package(Git REQUIRED)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+  endif()
+
+  add_subdirectory(third_party/pybind11 EXCLUDE_FROM_ALL)
   add_subdirectory(python)
 endif()
 
@@ -104,15 +116,6 @@ add_library(
   spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME}
 )
 
-install(TARGETS ${PROJECT_NAME} EXPORT spark_dsg-targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(EXPORT spark_dsg-targets FILE spark_dsgTargets.cmake NAMESPACE spark_dsg::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
-)
-
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}
   COMPATIBILITY AnyNewerVersion
@@ -124,7 +127,24 @@ configure_package_config_file(
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
 )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT spark_dsg-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(
+  EXPORT spark_dsg-targets
+  FILE spark_dsgTargets.cmake
+  NAMESPACE spark_dsg::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg
 )

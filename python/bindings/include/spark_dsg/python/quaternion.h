@@ -32,50 +32,40 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/python/scene_graph_node.h"
+#pragma once
+#include <Eigen/Geometry>
+#include <iostream>
 
-#include <pybind11/chrono.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <spark_dsg/node_attributes.h>
-#include <spark_dsg/printing.h>
-#include <spark_dsg/scene_graph_node.h>
+namespace spark_dsg::python {
 
-#include <sstream>
+template <typename Scalar>
+struct Quaternion {
+  Quaternion() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) {}
 
-namespace py = pybind11;
-using namespace py::literals;
+  Quaternion(Scalar w, Scalar x, Scalar y, Scalar z) : w(w), x(x), y(y), z(z) {}
 
-namespace spark_dsg::python::scene_graph_node {
+  explicit Quaternion(const Eigen::Quaternion<Scalar> other) {
+    w = other.w();
+    x = other.x();
+    y = other.y();
+    z = other.z();
+  }
 
-void addBindings(pybind11::module_& module) {
-  py::class_<SceneGraphNode>(module, "SceneGraphNode")
-      .def("has_parent", &SceneGraphNode::hasParent)
-      .def("has_siblings", &SceneGraphNode::hasSiblings)
-      .def("has_children", &SceneGraphNode::hasChildren)
-      .def("get_parent", &SceneGraphNode::getParent)
-      .def("siblings", &SceneGraphNode::siblings)
-      .def("children", &SceneGraphNode::children)
-      .def_property_readonly("timestamp",
-                             [](const SceneGraphNode& node) -> std::optional<uint64_t> {
-                               if (node.timestamp) {
-                                 return node.timestamp.value().count();
-                               } else {
-                                 return std::nullopt;
-                               }
-                             })
-      .def_property("attributes",
-                    &SceneGraphNode::getAttributesPtr,
-                    &SceneGraphNode::getAttributesPtr,
-                    py::return_value_policy::reference_internal)
-      .def_property_readonly(
-          "id", [](const SceneGraphNode& node) { return NodeSymbol(node.id); })
-      .def_readonly("layer", &SceneGraphNode::layer)
-      .def("__repr__", [](const SceneGraphNode& node) {
-        std::stringstream ss;
-        ss << node;
-        return ss.str();
-      });
+  operator Eigen::Quaternion<Scalar>() const {
+    return Eigen::Quaternion<Scalar>(w, x, y, z);
+  }
+
+  Scalar w;
+  Scalar x;
+  Scalar y;
+  Scalar z;
+};
+
+template <typename Scalar>
+std::ostream& operator<<(std::ostream& out, const Quaternion<Scalar>& q) {
+  out << "Quaternion<w=" << q.w << ", x=" << q.x << ", y=" << q.y << ", z=" << q.z
+      << ">";
+  return out;
 }
 
-}  // namespace spark_dsg::python::scene_graph_node
+}  // namespace spark_dsg::python
