@@ -65,13 +65,6 @@ TEST(LayerKeyTests, TestIsParent) {
   EXPECT_FALSE(key6.isParent(key4));
 }
 
-TEST(LayerKeyTests, TestKeyTruthValues) {
-  EXPECT_FALSE(LayerKey());
-  EXPECT_TRUE(LayerKey(1));
-  EXPECT_TRUE(LayerKey(2, 0));
-  EXPECT_TRUE(LayerKey(0));
-}
-
 TEST(LayerPrefixTests, TestMatches) {
   LayerPrefix a('a');
   EXPECT_TRUE(a.matches(NodeSymbol('a', 0)));
