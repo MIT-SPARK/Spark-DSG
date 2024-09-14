@@ -57,6 +57,12 @@ DynamicSceneGraph::LayerIds getDefaultLayerIds() {
 DynamicSceneGraph::DynamicSceneGraph() : DynamicSceneGraph(getDefaultLayerIds()) {}
 
 DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids) : layer_ids(layer_ids) {
+  for (const auto layer_id : layer_ids) {
+    if (layer_id == DsgLayers::UNKNOWN) {
+      throw std::domain_error("cannot instantiate layer with unknown layer id!");
+    }
+  }
+
   if (layer_ids.empty()) {
     throw std::domain_error("scene graph cannot be initialized without layers");
   }
@@ -236,7 +242,7 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
     return false;
   }
 
-  if (!source_key || !target_key) {
+  if (!source_key.valid() || !target_key.valid()) {
     return false;
   }
 
@@ -267,7 +273,7 @@ bool DynamicSceneGraph::insertParentEdge(NodeId source,
     return false;
   }
 
-  if (!source_key || !target_key) {
+  if (!source_key.valid() || !target_key.valid()) {
     return false;
   }
 
@@ -467,7 +473,7 @@ bool DynamicSceneGraph::removeEdge(NodeId source, NodeId target) {
     return false;
   }
 
-  if (!source_key || !target_key) {
+  if (!source_key.valid() || !target_key.valid()) {
     return false;
   }
 

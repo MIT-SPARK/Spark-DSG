@@ -48,7 +48,7 @@ void getAncestorsOfLayer(const DynamicSceneGraph& graph,
     return;
   }
 
-  if (node->layer <= child_layer) {
+  if (node->layer <= child_layer.layer) {
     return;
   }
 
