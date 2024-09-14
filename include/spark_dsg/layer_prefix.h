@@ -43,7 +43,6 @@
 namespace spark_dsg {
 
 struct LayerKey {
-  static constexpr LayerId UNKNOWN_LAYER = DsgLayers::UNKNOWN;
   LayerId layer;
   uint32_t prefix = 0;
   bool dynamic = false;
@@ -56,13 +55,13 @@ struct LayerKey {
 
   bool isParent(const LayerKey& other) const;
 
+  bool valid() const;
+
   bool operator==(const LayerKey& other) const;
 
   inline bool operator!=(const LayerKey& other) const {
     return !this->operator==(other);
   }
-
-  inline operator bool() const { return layer != UNKNOWN_LAYER; }
 };
 
 std::ostream& operator<<(std::ostream& out, const LayerKey& key);
