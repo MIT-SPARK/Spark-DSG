@@ -81,6 +81,7 @@ struct LayerView {
   LayerView(const SceneGraphLayer& layer, const Filter& filter = Filter());
   Iter begin() const;
   Iter end() const;
+  inline operator bool() const { return layer_ != nullptr; }
 
  private:
   const SceneGraphLayer* layer_;
