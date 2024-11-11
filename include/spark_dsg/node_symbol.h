@@ -123,7 +123,7 @@ inline NodeSymbol operator"" _id(const char* str, size_t size) {
 }
 
 template <typename Container>
-std::string displayNodeSymbolContainer(const Container& set) {
+inline std::string displayNodeSymbolContainer(const Container& set) {
   std::stringstream ss;
   ss << "[";
   auto iter = set.begin();
