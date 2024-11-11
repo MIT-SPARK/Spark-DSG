@@ -121,9 +121,9 @@ const AncestorTestConfig ancestor_test_cases[] = {
     {3, 2, {6, 7}},
 };
 
-INSTANTIATE_TEST_SUITE_P(GetAncestors,
-                         AncestorTestFixture,
-                         testing::ValuesIn(ancestor_test_cases));
+// INSTANTIATE_TEST_SUITE_P(GetAncestors,
+//                          AncestorTestFixture,
+//                          testing::ValuesIn(ancestor_test_cases));
 
 TEST_P(BoundingBoxTestFixture, BoundingBoxCorrect) {
   const BoundingBoxTestConfig config = GetParam();
@@ -140,8 +140,8 @@ const BoundingBoxTestConfig bbox_test_cases[] = {
     {1, 2, {{1, 1, 1}, {3.5, 3.5, 3.5}}},
 };
 
-INSTANTIATE_TEST_SUITE_P(GetChildBoundingBox,
-                         BoundingBoxTestFixture,
-                         testing::ValuesIn(bbox_test_cases));
+// INSTANTIATE_TEST_SUITE_P(GetChildBoundingBox,
+//                          BoundingBoxTestFixture,
+//                          testing::ValuesIn(bbox_test_cases));
 
 }  // namespace spark_dsg

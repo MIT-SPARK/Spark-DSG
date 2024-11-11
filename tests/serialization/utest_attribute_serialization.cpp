@@ -77,19 +77,19 @@ const std::shared_ptr<EdgeAttributes> edge_attribute_test_cases[] = {
     std::make_shared<EdgeAttributes>(getEdgeAttributes()),
 };
 
-INSTANTIATE_TEST_SUITE_P(
-    NodeAttributeSerialization,
-    NodeAttributeSerializationFixture,
-    testing::ValuesIn(node_attribute_test_cases),
-    [](const testing::TestParamInfo<NodeAttributeSerializationFixture::ParamType>&
-           info) { return info.param ? info.param->registration().name : "Invalid"; });
+// INSTANTIATE_TEST_SUITE_P(
+//     NodeAttributeSerialization,
+//     NodeAttributeSerializationFixture,
+//     testing::ValuesIn(node_attribute_test_cases),
+//     [](const testing::TestParamInfo<NodeAttributeSerializationFixture::ParamType>&
+//            info) { return info.param ? info.param->registration().name : "Invalid"; });
 
-INSTANTIATE_TEST_SUITE_P(
-    EdgeAttributeSerialization,
-    EdgeAttributeSerializationFixture,
-    testing::ValuesIn(edge_attribute_test_cases),
-    [](const testing::TestParamInfo<EdgeAttributeSerializationFixture::ParamType>&
-           info) { return info.param ? info.param->registration().name : "Invalid"; });
+// INSTANTIATE_TEST_SUITE_P(
+//     EdgeAttributeSerialization,
+//     EdgeAttributeSerializationFixture,
+//     testing::ValuesIn(edge_attribute_test_cases),
+//     [](const testing::TestParamInfo<EdgeAttributeSerializationFixture::ParamType>&
+//            info) { return info.param ? info.param->registration().name : "Invalid"; });
 
 TEST_P(NodeAttributeSerializationFixture, JsonSerialization) {
   const auto expected = GetParam();

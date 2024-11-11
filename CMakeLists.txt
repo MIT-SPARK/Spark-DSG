@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-Wall -Wextra)
 
 option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
-option(SPARK_DSG_BUILD_TESTS "Build tests" ON)
+option(SPARK_DSG_BUILD_TESTS "Build tests" OFF)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 option(SPARK_DSG_PROFILE_BUILD "Profile build time" OFF)

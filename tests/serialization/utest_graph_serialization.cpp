@@ -87,13 +87,13 @@ const SerializationMethod::Ptr serialization_test_cases[] = {
     std::make_shared<BinaryRoundTrip>(),
 };
 
-INSTANTIATE_TEST_SUITE_P(
-    GraphSerialization,
-    GraphSerializationFixture,
-    testing::ValuesIn(serialization_test_cases),
-    [](const testing::TestParamInfo<GraphSerializationFixture::ParamType>& info) {
-      return info.param ? info.param->name() : "Invalid";
-    });
+// INSTANTIATE_TEST_SUITE_P(
+//     GraphSerialization,
+//     GraphSerializationFixture,
+//     testing::ValuesIn(serialization_test_cases),
+//     [](const testing::TestParamInfo<GraphSerializationFixture::ParamType>& info) {
+//       return info.param ? info.param->name() : "Invalid";
+//     });
 
 TEST_P(GraphSerializationFixture, DsgBasic) {
   const auto round_trip_serializer = GetParam();

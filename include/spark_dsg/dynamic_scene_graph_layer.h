@@ -36,6 +36,7 @@
 #include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"
 #include "spark_dsg/layer_prefix.h"
+#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 
@@ -108,6 +109,14 @@ class DynamicSceneGraphLayer : public BaseLayer {
   const LayerId id;
 
   const LayerPrefix prefix;
+
+  Eigen::Vector3d getPosition(NodeId node) const {
+    return nodes_.at(node)->attributes().position;
+  }
+
+  Eigen::Vector3d getPositionByIndex(size_t index) const {
+    return getNodeByIndex(index).attributes().position;
+  }
 
  protected:
   bool emplaceNode(std::chrono::nanoseconds timestamp,

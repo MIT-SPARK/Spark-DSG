@@ -39,6 +39,7 @@
 
 #include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"
+#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 
@@ -217,6 +218,10 @@ class SceneGraphLayer : public BaseLayer {
 
   //! ID of the layer
   const LayerId id;
+
+  Eigen::Vector3d getPosition(NodeId node) const {
+    return nodes_.at(node)->attributes().position;
+  }
 
  protected:
   void reset();

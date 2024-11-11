@@ -33,6 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <sstream>
+
 #include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
