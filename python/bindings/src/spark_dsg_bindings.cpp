@@ -759,6 +759,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                   [](const std::filesystem::path& filepath) {
                     return DynamicSceneGraph::load(filepath);
                   })
+      .def("_get_metadata",
+           [](const DynamicSceneGraph& graph) {
+             std::stringstream ss;
+             ss << graph.metadata;
+             return ss.str();
+           })
+      .def("_set_metadata",
+           [](DynamicSceneGraph& graph, const std::string& data) {
+             graph.metadata = nlohmann::json::parse(data);
+           })
       .def_property(
           "layers",
           [](const DynamicSceneGraph& graph) {

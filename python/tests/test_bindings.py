@@ -33,8 +33,10 @@
 #
 #
 """Test that the bindings are working appropriately."""
-import spark_dsg as dsg
+import json
+
 import numpy as np
+import spark_dsg as dsg
 
 
 def test_empty_graph():
@@ -302,3 +304,28 @@ def test_node_counts(resource_dir):
     assert node_type_counts["R"] == G.get_layer(dsg.DsgLayers.ROOMS).num_nodes()
     assert "B" in node_type_counts
     assert node_type_counts["B"] == G.get_layer(dsg.DsgLayers.BUILDINGS).num_nodes()
+
+
+def test_graph_metadata(tmp_path):
+    """Test that graph metadat works as expected."""
+    G = dsg.DynamicSceneGraph()
+    G.add_metadata({"foo": 5})
+    G.add_metadata({"bar": [1, 2, 3, 4, 5]})
+    G.add_metadata({"something": {"a": 13, "b": 42.0, "c": "world"}})
+
+    graph_path = tmp_path / "graph.json"
+    G.save(graph_path)
+    G_new = dsg.DynamicSceneGraph.load(graph_path)
+    assert G_new.metadata == {
+        "foo": 5,
+        "bar": [1, 2, 3, 4, 5],
+        "something": {"a": 13, "b": 42.0, "c": "world"},
+    }
+
+    G.add_metadata({"something": {"b": 643.0, "other": "foo"}})
+    print(G.metadata)
+    assert G.metadata == {
+        "foo": 5,
+        "bar": [1, 2, 3, 4, 5],
+        "something": {"a": 13, "b": 643.0, "c": "world", "other": "foo"},
+    }
