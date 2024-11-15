@@ -260,6 +260,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("last_update_time_ns", &NodeAttributes::last_update_time_ns)
       .def_readwrite("is_active", &NodeAttributes::is_active)
       .def_readwrite("is_predicted", &NodeAttributes::is_predicted)
+      .def("_get_metadata",
+           [](const NodeAttributes& node) {
+             std::stringstream ss;
+             ss << node.metadata;
+             return ss.str();
+           })
+      .def("_set_metadata",
+           [](NodeAttributes& node, const std::string& data) {
+             node.metadata = nlohmann::json::parse(data);
+           })
       .def("__repr__", [](const NodeAttributes& attrs) {
         std::stringstream ss;
         ss << attrs;
@@ -386,7 +396,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<EdgeAttributes>(module, "EdgeAttributes")
       .def(py::init<>())
       .def_readwrite("weighted", &EdgeAttributes::weighted)
-      .def_readwrite("weight", &EdgeAttributes::weight);
+      .def_readwrite("weight", &EdgeAttributes::weight)
+      .def("_get_metadata",
+           [](const EdgeAttributes& edge) {
+             std::stringstream ss;
+             ss << edge.metadata;
+             return ss.str();
+           })
+      .def("_set_metadata", [](EdgeAttributes& edge, const std::string& data) {
+        edge.metadata = nlohmann::json::parse(data);
+      });
 
   /**************************************************************************************
    * Scene graph node

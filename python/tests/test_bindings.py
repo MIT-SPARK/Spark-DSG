@@ -33,8 +33,6 @@
 #
 #
 """Test that the bindings are working appropriately."""
-import json
-
 import numpy as np
 import spark_dsg as dsg
 
@@ -307,7 +305,7 @@ def test_node_counts(resource_dir):
 
 
 def test_graph_metadata(tmp_path):
-    """Test that graph metadat works as expected."""
+    """Test that graph metadata works as expected."""
     G = dsg.DynamicSceneGraph()
     G.add_metadata({"foo": 5})
     G.add_metadata({"bar": [1, 2, 3, 4, 5]})
@@ -323,9 +321,24 @@ def test_graph_metadata(tmp_path):
     }
 
     G.add_metadata({"something": {"b": 643.0, "other": "foo"}})
-    print(G.metadata)
     assert G.metadata == {
         "foo": 5,
         "bar": [1, 2, 3, 4, 5],
         "something": {"a": 13, "b": 643.0, "c": "world", "other": "foo"},
     }
+
+
+def test_attribute_metadata(tmp_path):
+    """Test that attribute metadata works as expected."""
+    G = dsg.DynamicSceneGraph()
+
+    attrs = dsg.ObjectNodeAttributes()
+    attrs.add_metadata({"test": {"a": 5, "c": "hello"}})
+    attrs.add_metadata({"test": {"a": 6, "b": 42.0}})
+    G.add_node(dsg.DsgLayers.OBJECTS, dsg.NodeSymbol("O", 1), attrs)
+
+    graph_path = tmp_path / "graph.json"
+    G.save(graph_path)
+    G_new = dsg.DynamicSceneGraph.load(graph_path)
+    new_attrs = G_new.get_node(dsg.NodeSymbol("O", 1)).attributes
+    assert new_attrs.metadata == {"test": {"a": 6, "b": 42.0, "c": "hello"}}
