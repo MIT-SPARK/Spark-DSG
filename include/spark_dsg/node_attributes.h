@@ -38,6 +38,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -113,6 +114,8 @@ struct NodeAttributes {
   bool is_active;
   //! whether the node was observed by Hydra, or added as a prediction
   bool is_predicted;
+  //! Arbitrary node metadata
+  nlohmann::json metadata;
 
   /**
    * @brief output attribute information

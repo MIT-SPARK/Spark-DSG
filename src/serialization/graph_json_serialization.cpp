@@ -116,6 +116,7 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
   record["nodes"] = nlohmann::json::array();
   record["edges"] = nlohmann::json::array();
   record["layer_ids"] = graph.layer_ids;
+  record["metadata"] = graph.metadata;
 
   for (const auto& id_layer_pair : graph.layers()) {
     for (const auto& id_node_pair : id_layer_pair.second->nodes()) {
@@ -177,6 +178,10 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
 
   const auto layer_ids = record.at("layer_ids").get<DynamicSceneGraph::LayerIds>();
   auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
+
+  if (record.contains("metadata")) {
+    graph->metadata = record["metadata"];
+  }
 
   for (const auto& node : record.at("nodes")) {
     read_node_from_json(node_factory, node, *graph);

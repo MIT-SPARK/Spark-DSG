@@ -33,18 +33,19 @@
 #
 #
 """The Spark-DSG package."""
-from spark_dsg._dsg_bindings import *  # NOQA
-from spark_dsg._dsg_bindings import (
-    compute_ancestor_bounding_box,
-    DsgLayers,
-    BoundingBoxType,
-    DynamicSceneGraph,
-    SceneGraphLayer,
-    LayerView,
-)
-from spark_dsg.torch_conversion import scene_graph_to_torch, scene_graph_layer_to_torch
-from spark_dsg.visualization import plot_scene_graph  # NOQA
-from spark_dsg.open3d_visualization import render_to_open3d  # NOQA
+import json
+import types
+
+from spark_dsg._dsg_bindings import *
+from spark_dsg._dsg_bindings import (BoundingBoxType, DsgLayers,
+                                     DynamicSceneGraph, EdgeAttributes,
+                                     LayerView, NodeAttributes,
+                                     SceneGraphLayer,
+                                     compute_ancestor_bounding_box)
+from spark_dsg.open3d_visualization import render_to_open3d
+from spark_dsg.torch_conversion import (scene_graph_layer_to_torch,
+                                        scene_graph_to_torch)
+from spark_dsg.visualization import plot_scene_graph
 
 
 def add_bounding_boxes_to_layer(
@@ -67,6 +68,49 @@ def add_bounding_boxes_to_layer(
         )
         node.attributes.bounding_box = bbox
 
+
+def _get_metadata(obj):
+    """Get graph metadata."""
+    data_str = obj._get_metadata()
+    metadata = json.loads(data_str)
+    metadata = dict() if metadata is None else metadata
+    return types.MappingProxyType(metadata)
+
+
+def _set_metadata(obj, data):
+    """Serialize and set graph metadata."""
+    obj._set_metadata(json.dumps(data))
+
+
+def _update_nested(contents, other):
+    for key, value in other.items():
+        if key not in contents:
+            contents[key] = {}
+
+        if isinstance(value, dict):
+            _update_nested(contents[key], value)
+        else:
+            contents[key] = value
+
+
+def _add_metadata(obj, data):
+    """Serialize and update metadata from passed object."""
+    data_str = obj._get_metadata()
+    metadata = json.loads(data_str)
+    metadata = dict() if metadata is None else metadata
+    _update_nested(metadata, data)
+    obj._set_metadata(json.dumps(metadata))
+
+
+def _add_metadata_interface(obj):
+    obj.metadata = property(_get_metadata)
+    obj.set_metadata = _set_metadata
+    obj.add_metadata = _add_metadata
+
+
+_add_metadata_interface(DynamicSceneGraph)
+_add_metadata_interface(NodeAttributes)
+_add_metadata_interface(EdgeAttributes)
 
 DynamicSceneGraph.to_torch = scene_graph_to_torch
 SceneGraphLayer.to_torch = scene_graph_layer_to_torch

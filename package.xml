@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>spark_dsg</name>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
   <description>Dynamic Scene Graph (DSG) type definitions and core library code</description>
 
   <author email="na26933@mit.edu">Nathan Hughes</author>

@@ -48,21 +48,21 @@ size_t LayerView::numNodes() const { return layer_ref_.numNodes(); }
 
 size_t LayerView::numEdges() const { return layer_ref_.numEdges(); }
 
-bool LayerView::hasNode(NodeId node_id) const { return layer_ref_.hasNode(node_id); }
+bool LayerView::hasNode(NodeSymbol node_id) const { return layer_ref_.hasNode(node_id); }
 
-bool LayerView::hasEdge(NodeId source, NodeId target) const {
+bool LayerView::hasEdge(NodeSymbol source, NodeSymbol target) const {
   return layer_ref_.hasEdge(source, target);
 }
 
-const SceneGraphNode& LayerView::getNode(NodeId node_id) const {
+const SceneGraphNode& LayerView::getNode(NodeSymbol node_id) const {
   return layer_ref_.getNode(node_id);
 }
 
-const SceneGraphEdge& LayerView::getEdge(NodeId source, NodeId target) const {
+const SceneGraphEdge& LayerView::getEdge(NodeSymbol source, NodeSymbol target) const {
   return layer_ref_.getEdge(source, target);
 }
 
-Eigen::Vector3d LayerView::getPosition(NodeId node_id) const {
+Eigen::Vector3d LayerView::getPosition(NodeSymbol node_id) const {
   return layer_ref_.getNode(node_id).attributes().position;
 }
 

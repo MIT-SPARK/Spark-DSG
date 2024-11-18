@@ -154,6 +154,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(pybind11::self == pybind11::self)
       .def(pybind11::self != pybind11::self);
 
+  py::implicitly_convertible<NodeId, NodeSymbol>();
+
   py::class_<NearestVertexInfo>(module, "NearestVertexInfo")
       .def(py::init<>())
       .def_property(
@@ -267,6 +269,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("last_update_time_ns", &NodeAttributes::last_update_time_ns)
       .def_readwrite("is_active", &NodeAttributes::is_active)
       .def_readwrite("is_predicted", &NodeAttributes::is_predicted)
+      .def("_get_metadata",
+           [](const NodeAttributes& node) {
+             std::stringstream ss;
+             ss << node.metadata;
+             return ss.str();
+           })
+      .def("_set_metadata",
+           [](NodeAttributes& node, const std::string& data) {
+             node.metadata = nlohmann::json::parse(data);
+           })
       .def("__repr__", [](const NodeAttributes& attrs) {
         std::stringstream ss;
         ss << attrs;
@@ -393,7 +405,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<EdgeAttributes>(module, "EdgeAttributes")
       .def(py::init<>())
       .def_readwrite("weighted", &EdgeAttributes::weighted)
-      .def_readwrite("weight", &EdgeAttributes::weight);
+      .def_readwrite("weight", &EdgeAttributes::weight)
+      .def("_get_metadata",
+           [](const EdgeAttributes& edge) {
+             std::stringstream ss;
+             ss << edge.metadata;
+             return ss.str();
+           })
+      .def("_set_metadata", [](EdgeAttributes& edge, const std::string& data) {
+        edge.metadata = nlohmann::json::parse(data);
+      });
 
   /**************************************************************************************
    * Scene graph node
@@ -531,19 +552,18 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<IsolatedSceneGraphLayer, std::shared_ptr<IsolatedSceneGraphLayer>>(
       module, "SceneGraphLayer")
       .def(py::init<LayerId>())
-      .def(
-          "add_node",
-          [](IsolatedSceneGraphLayer& layer, NodeId node, const NodeAttributes& attrs) {
-            layer.emplaceNode(node, attrs.clone());
-          })
+      .def("add_node",
+           [](IsolatedSceneGraphLayer& layer,
+              NodeSymbol node,
+              const NodeAttributes& attrs) { layer.emplaceNode(node, attrs.clone()); })
       .def("insert_edge",
-           [](IsolatedSceneGraphLayer& layer, NodeId source, NodeId target) {
+           [](IsolatedSceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) {
              return layer.insertEdge(source, target);
            })
       .def("insert_edge",
            [](IsolatedSceneGraphLayer& layer,
-              NodeId source,
-              NodeId target,
+              NodeSymbol source,
+              NodeSymbol target,
               const EdgeAttributes& info) {
              return layer.insertEdge(source, target, info.clone());
            })
@@ -565,7 +585,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("num_nodes", &IsolatedSceneGraphLayer::numNodes)
       .def("num_edges", &IsolatedSceneGraphLayer::numEdges)
       .def("get_position",
-           [](const IsolatedSceneGraphLayer& layer, NodeId node) {
+           [](const IsolatedSceneGraphLayer& layer, NodeSymbol node) {
              return layer.getNode(node).attributes().position;
            })
       .def_readonly("id", &IsolatedSceneGraphLayer::id)
@@ -648,9 +668,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("add_node",
            [](DynamicSceneGraph& graph,
               LayerId layer_id,
-              NodeId node_id,
+              NodeSymbol node_id,
               const NodeAttributes& attrs) {
-             graph.emplaceNode(layer_id, node_id, attrs.clone());
+             return graph.emplaceNode(layer_id, node_id, attrs.clone());
            })
       .def(
           "add_node",
@@ -660,7 +680,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              std::chrono::nanoseconds timestamp,
              const NodeAttributes& attrs,
              bool add_edge_to_previous) {
-            graph.emplaceNode(
+            return graph.emplaceNode(
                 layer_id, prefix, timestamp, attrs.clone(), add_edge_to_previous);
           },
           "layer_id"_a,
@@ -671,8 +691,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(
           "insert_edge",
           [](DynamicSceneGraph& graph,
-             NodeId source,
-             NodeId target,
+             NodeSymbol source,
+             NodeSymbol target,
              bool enforce_single_parent) {
             return enforce_single_parent ? graph.insertParentEdge(source, target)
                                          : graph.insertEdge(source, target);
@@ -683,8 +703,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(
           "insert_edge",
           [](DynamicSceneGraph& graph,
-             NodeId source,
-             NodeId target,
+             NodeSymbol source,
+             NodeSymbol target,
              const EdgeAttributes& info,
              bool enforce_single_parent) {
             return enforce_single_parent
@@ -701,9 +721,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("has_layer",
            static_cast<bool (DynamicSceneGraph::*)(LayerId, LayerPrefix) const>(
                &DynamicSceneGraph::hasLayer))
-      .def("has_node", &DynamicSceneGraph::hasNode)
+      .def("has_node",
+           [](const DynamicSceneGraph& graph, NodeSymbol node_id) {
+             return graph.hasNode(node_id);
+           })
       .def("has_edge",
-           py::overload_cast<NodeId, NodeId>(&DynamicSceneGraph::hasEdge, py::const_))
+           [](const DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target) {
+             return graph.hasEdge(source, target);
+           })
       .def("has_mesh", &DynamicSceneGraph::hasMesh)
       .def(
           "get_layer",
@@ -723,20 +748,36 @@ PYBIND11_MODULE(_dsg_bindings, module) {
             return DynamicLayerView(graph.getLayer(layer_id, prefix));
           },
           py::return_value_policy::reference_internal)
-      .def("get_node",
-           &DynamicSceneGraph::getNode,
-           py::return_value_policy::reference_internal)
-      .def("find_node",
-           &DynamicSceneGraph::findNode,
-           py::return_value_policy::reference_internal)
-      .def("get_edge",
-           &DynamicSceneGraph::getEdge,
-           py::return_value_policy::reference_internal)
-      .def("find_edge",
-           &DynamicSceneGraph::findEdge,
-           py::return_value_policy::reference_internal)
-      .def("remove_node", &DynamicSceneGraph::removeNode)
-      .def("remove_edge", &DynamicSceneGraph::removeEdge)
+      .def(
+          "get_node",
+          [](const DynamicSceneGraph& graph, NodeSymbol node) -> const SceneGraphNode& {
+            return graph.getNode(node);
+          },
+          py::return_value_policy::reference_internal)
+      .def(
+          "find_node",
+          [](const DynamicSceneGraph& graph, NodeSymbol node) -> const SceneGraphNode* {
+            return graph.findNode(node);
+          },
+          py::return_value_policy::reference_internal)
+      .def(
+          "get_edge",
+          [](const DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target)
+              -> const SceneGraphEdge& { return graph.getEdge(source, target); },
+          py::return_value_policy::reference_internal)
+      .def(
+          "find_edge",
+          [](const DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target)
+              -> const SceneGraphEdge* { return graph.findEdge(source, target); },
+          py::return_value_policy::reference_internal)
+      .def("remove_node",
+           [](DynamicSceneGraph& graph, NodeSymbol node) -> bool {
+             return graph.removeNode(node);
+           })
+      .def("remove_edge",
+           [](DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target) -> bool {
+             return graph.removeEdge(source, target);
+           })
       .def("is_dynamic", &DynamicSceneGraph::isDynamic)
       .def("num_layers", &DynamicSceneGraph::numLayers)
       .def("num_dynamic_layers_of_type", &DynamicSceneGraph::numDynamicLayersOfType)
@@ -768,6 +809,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                   [](const std::filesystem::path& filepath) {
                     return DynamicSceneGraph::load(filepath);
                   })
+      .def("_get_metadata",
+           [](const DynamicSceneGraph& graph) {
+             std::stringstream ss;
+             ss << graph.metadata;
+             return ss.str();
+           })
+      .def("_set_metadata",
+           [](DynamicSceneGraph& graph, const std::string& data) {
+             graph.metadata = nlohmann::json::parse(data);
+           })
       .def_property(
           "layers",
           [](const DynamicSceneGraph& graph) {
