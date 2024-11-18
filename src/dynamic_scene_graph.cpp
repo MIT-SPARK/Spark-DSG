@@ -56,7 +56,8 @@ DynamicSceneGraph::LayerIds getDefaultLayerIds() {
 
 DynamicSceneGraph::DynamicSceneGraph() : DynamicSceneGraph(getDefaultLayerIds()) {}
 
-DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids) : layer_ids(layer_ids) {
+DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids)
+    : layer_ids(layer_ids), metadata(nlohmann::json::object()) {
   for (const auto layer_id : layer_ids) {
     if (layer_id == DsgLayers::UNKNOWN) {
       throw std::domain_error("cannot instantiate layer with unknown layer id!");

@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <spark_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/node_symbol.h>
 
 #include "spark_dsg/python/scene_graph_iterators.h"
 
@@ -46,11 +47,11 @@ class LayerView {
   EdgeIter edges() const;
   size_t numNodes() const;
   size_t numEdges() const;
-  bool hasNode(NodeId node_id) const;
-  bool hasEdge(NodeId source, NodeId target) const;
-  const SceneGraphNode& getNode(NodeId node_id) const;
-  const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
-  Eigen::Vector3d getPosition(NodeId node_id) const;
+  bool hasNode(NodeSymbol node_id) const;
+  bool hasEdge(NodeSymbol source, NodeSymbol target) const;
+  const SceneGraphNode& getNode(NodeSymbol node_id) const;
+  const SceneGraphEdge& getEdge(NodeSymbol source, NodeSymbol target) const;
+  Eigen::Vector3d getPosition(NodeSymbol node_id) const;
 
   const LayerId id;
 

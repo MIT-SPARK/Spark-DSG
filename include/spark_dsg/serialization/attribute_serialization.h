@@ -36,9 +36,11 @@
 
 #include <map>
 #include <nlohmann/json.hpp>
+#include <sstream>
 
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/binary_serialization.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg::serialization {
 
@@ -170,6 +172,7 @@ void Visitor::to(nlohmann::json& record, const Attrs& attrs) {
   visitor.type_ = Type::JSON_WRITE;
   visitor.impl_ = std::make_unique<JsonWriter>(&record);
   record["type"] = attrs.registration().name;
+  record["metadata"] = attrs.metadata;
   attrs.serialization_info();
   visitor.impl_.reset();
 }
@@ -180,6 +183,12 @@ void Visitor::to(BinarySerializer& serializer, const Attrs& attrs) {
   visitor.type_ = Type::BINARY_WRITE;
   visitor.impl_ = std::make_unique<BinaryWriter>(&serializer);
   serializer.write(attrs.registration().type_id);
+
+  // serialize metadata
+  std::stringstream ss;
+  ss << attrs.metadata;
+  serializer.write(ss.str());
+
   attrs.serialization_info();
   visitor.impl_.reset();
 }
@@ -194,6 +203,10 @@ std::unique_ptr<Attrs> Visitor::from(const AttributeFactory<Attrs>& factory,
   auto attrs = factory.create(record.at("type").get<std::string>());
   if (!attrs) {
     return nullptr;
+  }
+
+  if (record.contains("metadata")) {
+    attrs->metadata = record["metadata"];
   }
 
   attrs->serialization_info();
@@ -213,6 +226,13 @@ std::unique_ptr<Attrs> Visitor::from(const AttributeFactory<Attrs>& factory,
   auto attrs = factory.create(type);
   if (!attrs) {
     return nullptr;
+  }
+
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version >= io::Version(1, 0, 6)) {
+    std::string metadata_json;
+    deserializer.read(metadata_json);
+    attrs->metadata = nlohmann::json::parse(metadata_json);
   }
 
   attrs->serialization_info();

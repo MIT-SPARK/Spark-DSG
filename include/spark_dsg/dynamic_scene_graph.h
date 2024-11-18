@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <Eigen/Core>
+#include <nlohmann/json.hpp>
 #include <type_traits>
 
 #include "spark_dsg/dynamic_scene_graph_layer.h"
@@ -410,20 +411,20 @@ class DynamicSceneGraph {
 
   /**
    * @brief Get number of static edges in the graph
-   * @return number of static edges in the graph
+   * @return Number of static edges in the graph
    */
   size_t numStaticEdges() const;
 
   /**
    * @brief Get number of dynamic edges in the graph
-   * @return number of dynamic edges in the graph
+   * @return Number of dynamic edges in the graph
    */
   size_t numDynamicEdges() const;
 
   /**
    * @brief Get whether or not the scene graph is empty
-   * @note the scene graph invariants make it so only nodes have to be checked
-   * @return true if the scene graph is empty
+   * @note The scene graph invariants make it so only nodes have to be checked
+   * @return True if the scene graph is empty
    */
   bool empty() const;
 
@@ -435,10 +436,10 @@ class DynamicSceneGraph {
   Eigen::Vector3d getPosition(NodeId node) const;
 
   /**
-   * @brief merge two nodes
-   * @param node_from node to remove
-   * @param node_to node to merge to
-   * @returns true if operation succeeded
+   * @brief Merge two nodes
+   * @param node_from Node to remove
+   * @param node_to Node to merge to
+   * @returns True if operation succeeded
    */
   bool mergeNodes(NodeId node_from, NodeId node_to);
 
@@ -457,7 +458,7 @@ class DynamicSceneGraph {
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
    * @param config Configuration controlling merge behavior
-   * @returns true if merge was successful
+   * @returns True if merge was successful
    */
   bool mergeGraph(const DynamicSceneGraph& other, const GraphMergeConfig& config = {});
 
@@ -471,7 +472,7 @@ class DynamicSceneGraph {
   /**
    * @brief Get all new nodes in the graph
    * @param clear_new Clear new status for all new nodes up until this point
-   * @returns list of all new nodes
+   * @returns List of all new nodes
    */
   std::vector<NodeId> getNewNodes(bool clear_new = false);
 
@@ -490,12 +491,12 @@ class DynamicSceneGraph {
   std::vector<EdgeKey> getNewEdges(bool clear_new = false);
 
   /**
-   * @brief track which edges get used during a serialization update
+   * @brief Track which edges get used during a serialization update
    */
   void markEdgesAsStale();
 
   /**
-   * @brief remove edges that do not appear in serialization update
+   * @brief Remove edges that do not appear in serialization update
    */
   void removeAllStaleEdges();
 
@@ -514,7 +515,7 @@ class DynamicSceneGraph {
   void save(std::string filepath, bool include_mesh = true) const;
 
   /**
-   * @brief parse graph from binary or JSON file
+   * @brief Parse graph from binary or JSON file
    * @param filepath Complete path to file to read, including extension.
    * @returns Resulting parsed scene graph
    */
@@ -526,8 +527,11 @@ class DynamicSceneGraph {
 
   std::shared_ptr<Mesh> mesh() const;
 
-  //! current static layer ids in the graph
+  //! Current static layer ids in the graph
   const LayerIds layer_ids;
+
+  //! Any extra information about the graph
+  nlohmann::json metadata;
 
  protected:
   BaseLayer& layerFromKey(const LayerKey& key);
