@@ -33,9 +33,20 @@
 #
 #
 """Test that networkx conversion works as expected."""
+import importlib
+
+import numpy as np
+import pytest
 import spark_dsg as dsg
 import spark_dsg.networkx as dsg_nx
-import numpy as np
+
+
+def _has_networkx():
+    try:
+        importlib.import_module("networkx")
+        return True
+    except ImportError:
+        return False
 
 
 def _check_attribute_validity(G_nx):
@@ -49,6 +60,7 @@ def _check_attribute_validity(G_nx):
         assert "weighted" in G_nx[edge[0]][edge[1]]
 
 
+@pytest.mark.skipif(not _has_networkx(), reason="requires networkx")
 def test_static_graph_conversion(resource_dir):
     """Test that graph conversion is exact."""
     dsg_path = resource_dir / "apartment_dsg.json"
@@ -62,6 +74,7 @@ def test_static_graph_conversion(resource_dir):
     _check_attribute_validity(G_nx)
 
 
+@pytest.mark.skipif(not _has_networkx(), reason="requires networkx")
 def test_full_graph_conversion(resource_dir):
     """Test that graph conversion is exact."""
     dsg_path = resource_dir / "apartment_dsg.json"
@@ -81,6 +94,7 @@ def test_full_graph_conversion(resource_dir):
     _check_attribute_validity(G_nx)
 
 
+@pytest.mark.skipif(not _has_networkx(), reason="requires networkx")
 def test_layer_conversion(resource_dir):
     """Test that layer conversion is exact."""
     dsg_path = resource_dir / "apartment_dsg.json"

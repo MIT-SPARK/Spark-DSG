@@ -36,6 +36,7 @@
 
 #include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
@@ -136,6 +137,11 @@ void writeGraph(const DynamicSceneGraph& graph,
   serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
   serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
 
+  // dump metadata to serialized json and write
+  std::stringstream ss;
+  ss << graph.metadata;
+  serializer.write(ss.str());
+
   serializer.startDynamicArray();
   for (const auto& id_layer_pair : graph.layers()) {
     for (const auto& id_node_pair : id_layer_pair.second->nodes()) {
@@ -210,6 +216,16 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   // load name to type index mapping if present
   const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);
   const auto edge_factory = loadFactory<EdgeAttributes>(header, deserializer);
+
+  if (header.version >= io::Version(1, 0, 6)) {
+    std::string metadata_json;
+    deserializer.read(metadata_json);
+    try {
+      graph.metadata = nlohmann::json::parse(metadata_json);
+    } catch (const std::exception& e) {
+      SG_LOG(WARNING) << "Invalid json metadata: " << e.what();
+    }
+  }
 
   std::unordered_set<NodeId> stale_nodes;
   for (const auto& id_key_pair : graph.node_lookup()) {
