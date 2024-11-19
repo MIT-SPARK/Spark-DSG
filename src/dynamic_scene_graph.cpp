@@ -98,6 +98,7 @@ DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids,
     : metadata(nlohmann::json::object()),
       layer_ids_(layer_ids),
       layer_names_(layer_names) {
+  // TODO(nathan) fill layer_ids_ from layer_names
   clear();
 }
 
@@ -120,6 +121,76 @@ void DynamicSceneGraph::clear() {
 void DynamicSceneGraph::reset(const LayerIds& new_layer_ids) {
   layer_ids_ = new_layer_ids;
   clear();
+}
+
+bool DynamicSceneGraph::hasLayer(LayerId layer_id,
+                                 std::optional<LayerPrefix> layer_prefix) const {
+  if (!layer_prefix) {
+    return findLayer(layer_id) != nullptr;
+  }
+
+  if (!dynamic_layers_.count(layer_id)) {
+    return 0;
+  }
+
+  return dynamic_layers_.at(layer_id).count(*layer_prefix) != 0;
+}
+
+bool DynamicSceneGraph::hasLayer(const std::string& layer_name,
+                                 std::optional<LayerPrefix> layer_prefix) const {
+  auto iter = layer_names_.find(layer_name);
+  if (iter == layer_names_.end()) {
+    return false;
+  }
+
+  return hasLayer(iter->second, layer_prefix);
+}
+
+const SceneGraphLayer* DynamicSceneGraph::findLayer(LayerId layer) const {
+  auto iter = layers_.find(layer);
+  return iter == layers_.end() ? nullptr : iter->second.get();
+}
+
+const SceneGraphLayer* DynamicSceneGraph::findLayer(const std::string& name) const {
+  auto iter = layer_names_.find(name);
+  if (iter == layer_names_.end()) {
+    return nullptr;
+  }
+
+  return findLayer(iter->second);
+}
+
+const DynamicSceneGraphLayer& DynamicSceneGraph::getLayer(LayerId layer,
+                                                          LayerPrefix prefix) const {
+  if (!hasLayer(layer, prefix)) {
+    std::stringstream ss;
+    ss << "missing dynamic layer " << layer << "(" << prefix.str() << ")";
+    throw std::out_of_range(ss.str());
+  }
+
+  return *dynamic_layers_.at(layer).at(prefix);
+}
+
+const SceneGraphLayer& DynamicSceneGraph::getLayer(LayerId layer_id) const {
+  auto layer = findLayer(layer_id);
+  if (!layer) {
+    std::stringstream ss;
+    ss << "missing layer " << layer;
+    throw std::out_of_range(ss.str());
+  }
+
+  return *layer;
+}
+
+const DynamicSceneGraphLayer& DynamicSceneGraph::getLayer(LayerId layer,
+                                                          LayerPrefix prefix) const {
+  if (!hasLayer(layer, prefix)) {
+    std::stringstream ss;
+    ss << "missing dynamic layer " << layer << "(" << prefix.str() << ")";
+    throw std::out_of_range(ss.str());
+  }
+
+  return *dynamic_layers_.at(layer).at(prefix);
 }
 
 // TODO(nathan) consider refactoring to use operator[]
@@ -373,18 +444,6 @@ bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
   return true;
 }
 
-bool DynamicSceneGraph::hasLayer(LayerId layer_id) const {
-  return layers_.count(layer_id) != 0;
-}
-
-bool DynamicSceneGraph::hasLayer(LayerId layer, LayerPrefix layer_prefix) const {
-  if (!dynamic_layers_.count(layer)) {
-    return 0;
-  }
-
-  return dynamic_layers_.at(layer).count(layer_prefix) != 0;
-}
-
 bool DynamicSceneGraph::hasNode(NodeId node_id) const {
   return node_lookup_.count(node_id) != 0;
 }
@@ -402,26 +461,6 @@ bool DynamicSceneGraph::hasEdge(NodeId source, NodeId target) const {
   return hasEdge(source, target, nullptr, nullptr);
 }
 
-const SceneGraphLayer& DynamicSceneGraph::getLayer(LayerId layer) const {
-  if (!hasLayer(layer)) {
-    std::stringstream ss;
-    ss << "missing layer " << layer;
-    throw std::out_of_range(ss.str());
-  }
-
-  return *layers_.at(layer);
-}
-
-const DynamicSceneGraphLayer& DynamicSceneGraph::getLayer(LayerId layer,
-                                                          LayerPrefix prefix) const {
-  if (!hasLayer(layer, prefix)) {
-    std::stringstream ss;
-    ss << "missing dynamic layer " << layer << "(" << prefix.str() << ")";
-    throw std::out_of_range(ss.str());
-  }
-
-  return *dynamic_layers_.at(layer).at(prefix);
-}
 const Node& DynamicSceneGraph::getNode(NodeId node_id) const {
   const auto node = findNode(node_id);
   if (!node) {

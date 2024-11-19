@@ -114,6 +114,62 @@ class DynamicSceneGraph {
   void reset(const LayerIds& layer_ids);
 
   /**
+   * @brief Check whether the layer exists and is valid
+   * @param layer_id Layer id to check
+   * @param layer_prefix Dynamic layer prefix to check (if specified)
+   * @returns Returns true if the layer exists and is valid
+   */
+  bool hasLayer(LayerId layer_id,
+                std::optional<LayerPrefix> layer_prefix = std::nullopt) const;
+
+  /**
+   * @brief Check whether the layer exists and is valid
+   * @param layer_name Layer name to check
+   * @returns Returns true if the layer exists and is valid
+   */
+  bool hasLayer(const std::string& layer_name,
+                std::optional<LayerPrefix> layer_prefix = std::nullopt) const;
+
+  /**
+   * @brief Attempt to retrieve the specified layer
+   * @param layer_id Layer ID to check
+   * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
+   */
+  const SceneGraphLayer* findLayer(LayerId layer_id) const;
+
+  /**
+   * @brief Attempt to retrieve the specified layer
+   * @param layer_name Layer name to check
+   * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
+   */
+  const SceneGraphLayer* findLayer(const std::string& layer_name) const;
+
+  /**
+   * @brief Get a layer if the layer exists
+   * @param layer_id layer to get
+   * @returns a constant reference to the requested layer
+   * @throws std::out_of_range if the layer doesn't exist
+   */
+  const SceneGraphLayer& getLayer(LayerId layer_id) const;
+
+  /**
+   * @brief Get a layer if the layer exists
+   * @param layer_name layer to get
+   * @returns a constant reference to the requested layer
+   * @throws std::out_of_range if the layer doesn't exist
+   */
+  const SceneGraphLayer& getLayer(const std::string& layer_name) const;
+
+  /**
+   * @brief Get a dynamic layer if the layer exists
+   * @param layer_id layer to get
+   * @param prefix layer prefix to get
+   * @returns a constant reference to the requested layer
+   * @throws std::out_of_range if the layer doesn't exist
+   */
+  const DynamicSceneGraphLayer& getLayer(LayerId layer_id, LayerPrefix prefix) const;
+
+  /**
    * @brief Add a new dynamic layer to the graph if it doesn't exist already
    *
    * @param layer dynamic layer id
@@ -253,21 +309,6 @@ class DynamicSceneGraph {
                          std::unique_ptr<EdgeAttributes>&& attrs);
 
   /**
-   * @brief Check whether the layer exists and is valid
-   * @param layer_id Layer id to check
-   * @returns Returns true if the layer exists and is valid
-   */
-  bool hasLayer(LayerId layer_id) const;
-
-  /**
-   * @brief Check whether the dynamic layer exists and is valid
-   * @param layer layer id to check
-   * @param prefix dynamic layer prefix
-   * @returns returns true if the layer exists
-   */
-  bool hasLayer(LayerId layer, LayerPrefix prefix) const;
-
-  /**
    * @brief check if a given node exists
    * @param node_id node to check for
    * @returns true if the given node exists
@@ -292,23 +333,6 @@ class DynamicSceneGraph {
    * @returns true if the given edge exists
    */
   bool hasEdge(NodeId source, NodeId target) const;
-
-  /**
-   * @brief Get a layer if the layer exists
-   * @param layer_id layer to get
-   * @returns a constant reference to the requested layer
-   * @throws std::out_of_range if the layer doesn't exist
-   */
-  const SceneGraphLayer& getLayer(LayerId layer_id) const;
-
-  /**
-   * @brief Get a dynamic layer if the layer exists
-   * @param layer_id layer to get
-   * @param prefix layer prefix to get
-   * @returns a constant reference to the requested layer
-   * @throws std::out_of_range if the layer doesn't exist
-   */
-  const DynamicSceneGraphLayer& getLayer(LayerId layer_id, LayerPrefix prefix) const;
 
   /**
    * @brief Get a particular node in the graph
