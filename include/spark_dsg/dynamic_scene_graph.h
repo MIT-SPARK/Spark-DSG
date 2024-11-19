@@ -579,10 +579,11 @@ class DynamicSceneGraph {
 
  protected:
   LayerIds layer_ids_;
+  std::map<std::string, LayerId> layer_lookup_;
+  std::map<NodeId, LayerKey> node_lookup_;
+
   Layers layers_;
   std::map<LayerId, DynamicLayers> dynamic_layers_;
-
-  std::map<NodeId, LayerKey> node_lookup_;
 
   EdgeContainer interlayer_edges_;
   EdgeContainer dynamic_interlayer_edges_;
