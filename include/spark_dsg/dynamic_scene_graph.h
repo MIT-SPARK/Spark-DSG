@@ -52,8 +52,10 @@ class DynamicSceneGraph {
  public:
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<DynamicSceneGraph>;
-  //! container type for the layer ids
+  //! Container type for the layer ids
   using LayerIds = std::vector<LayerId>;
+  //! Container type for the layer name to ID mapping
+  using LayerNames = std::map<std::string, LayerId>;
   //! Edge container
   using Edges = EdgeContainer::Edges;
   //! Layer container
@@ -84,15 +86,17 @@ class DynamicSceneGraph {
   using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
 
   /**
-   * @brief Construct the scene graph (with a default layer factory)
+   * @brief Construct the scene graph
+   * @param empty Whether or not to skip the default layer 2-5 initialization
    */
-  DynamicSceneGraph();
+  explicit DynamicSceneGraph(bool empty = false);
 
   /**
    * @brief Construct the scene graph (with a provided layer factory)
-   * @param factor List of layer ids
+   * @param factory List of layer ids
+   * @param layer_names Names for each layer ID
    */
-  explicit DynamicSceneGraph(const LayerIds& factory);
+  DynamicSceneGraph(const LayerIds& factory, const LayerNames& layer_names = {});
 
   /**
    * @brief Default destructor
@@ -579,7 +583,7 @@ class DynamicSceneGraph {
 
  protected:
   LayerIds layer_ids_;
-  std::map<std::string, LayerId> layer_lookup_;
+  LayerNames layer_names_;
   std::map<NodeId, LayerKey> node_lookup_;
 
   Layers layers_;
@@ -632,11 +636,6 @@ class DynamicSceneGraph {
     return dynamic_interlayer_edges_.edges;
   };
 };
-
-/**
- * @brief Return a container of the layer hierarchy from #spark_dsg::DsgLayers
- */
-DynamicSceneGraph::LayerIds getDefaultLayerIds();
 
 std::ostream& operator<<(std::ostream& out, const DynamicSceneGraph::LayerKey& key);
 

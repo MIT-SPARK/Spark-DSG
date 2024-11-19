@@ -84,13 +84,20 @@ bool LayerKey::operator==(const LayerKey& other) const {
   return same_layer && prefix == other.prefix;
 }
 
-// corresponds to old default of objects, places, rooms, and buildings
-DynamicSceneGraph::LayerIds getDefaultLayerIds() { return {2, 3, 4, 5}; }
+DynamicSceneGraph::DynamicSceneGraph(bool empty)
+    : DynamicSceneGraph(empty ? LayerIds{} : LayerIds{2, 3, 4, 5},
+                        empty ? LayerNames{}
+                              : LayerNames{{DsgLayers::OBJECTS, 2},
+                                           {DsgLayers::AGENTS, 2},
+                                           {DsgLayers::PLACES, 3},
+                                           {DsgLayers::ROOMS, 4},
+                                           {DsgLayers::BUILDINGS, 5}}) {}
 
-DynamicSceneGraph::DynamicSceneGraph() : DynamicSceneGraph(getDefaultLayerIds()) {}
-
-DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids)
-    : metadata(nlohmann::json::object()), layer_ids_(layer_ids) {
+DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids,
+                                     const std::map<std::string, LayerId>& layer_names)
+    : metadata(nlohmann::json::object()),
+      layer_ids_(layer_ids),
+      layer_names_(layer_names) {
   clear();
 }
 
