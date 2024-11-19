@@ -42,6 +42,7 @@
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
+#include "spark_dsg/printing.h"
 
 namespace spark_dsg {
 
@@ -55,6 +56,15 @@ bool SceneGraphLayer::emplaceNode(NodeId node_id,
   nodes_status_[node_id] = NodeStatus::NEW;
   return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
       .second;
+}
+
+NodeId GraphMergeConfig::getMergedId(NodeId original) const {
+  if (!previous_merges) {
+    return original;
+  }
+
+  auto iter = previous_merges->find(original);
+  return iter == previous_merges->end() ? original : iter->second;
 }
 
 bool SceneGraphLayer::insertNode(std::unique_ptr<SceneGraphNode>&& node) {
@@ -129,8 +139,28 @@ const Node* SceneGraphLayer::findNode(NodeId node_id) const {
   return iter == nodes_.end() ? nullptr : iter->second.get();
 }
 
+const SceneGraphNode& SceneGraphLayer::getNode(NodeId node_id) const {
+  const auto node = findNode(node_id);
+  if (!node) {
+    throw std::out_of_range("missing node '" + NodeSymbol(node_id).getLabel() + "'");
+  }
+
+  return *node;
+}
+
 const Edge* SceneGraphLayer::findEdge(NodeId source, NodeId target) const {
   return edges_.find(source, target);
+}
+
+const SceneGraphEdge& SceneGraphLayer::getEdge(NodeId source, NodeId target) const {
+  const auto edge = findEdge(source, target);
+  if (!edge) {
+    std::stringstream ss;
+    ss << "Missing edge '" << EdgeKey(source, target) << "'";
+    throw std::out_of_range(ss.str());
+  }
+
+  return *edge;
 }
 
 bool SceneGraphLayer::removeNode(NodeId node_id) {

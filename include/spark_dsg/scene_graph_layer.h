@@ -37,10 +37,29 @@
 #include <map>
 #include <unordered_set>
 
-#include "spark_dsg/base_layer.h"
 #include "spark_dsg/edge_container.h"
+#include "spark_dsg/scene_graph_node.h"
 
 namespace spark_dsg {
+
+//! Brief Configuration controlling graph merges
+struct GraphMergeConfig {
+  const std::map<NodeId, NodeId>* previous_merges = nullptr;
+  const std::map<LayerId, bool>* update_layer_attributes = nullptr;
+  bool update_dynamic_attributes = true;
+  bool update_archived_attributes = false;
+  bool clear_removed = false;
+  bool enforce_parent_constraints = true;
+
+  NodeId getMergedId(NodeId original) const;
+};
+
+/**
+ * @brief Base node status.
+ *
+ * Mostly for keeping history and status of nodes in a graph
+ */
+enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
 
 /**
  * @brief A layer in the scene graph (which is a graph itself)
@@ -51,7 +70,7 @@ namespace spark_dsg {
  * but it is probably preferable to use the scene graph as much as
  * possible to also handle parent child relationships.
  */
-class SceneGraphLayer : public BaseLayer {
+class SceneGraphLayer {
  public:
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<SceneGraphLayer>;
@@ -76,6 +95,40 @@ class SceneGraphLayer : public BaseLayer {
   virtual ~SceneGraphLayer() = default;
 
   /**
+   * @brief Check whether the layer has the specificied edge
+   * @param source first node to check for
+   * @param target second node to check for
+   * @returns true if the requested edge exists in the layer
+   */
+  bool hasEdge(NodeId source, NodeId target) const;
+
+  /**
+   * @brief Get a particular edge in the layer
+   *
+   * This can be used to update the edge "info", though
+   * information about the edge (i.e. source and target) cannot
+   * be modified
+   *
+   * @param source source of edge to get
+   * @param target target of edge to get
+   * @returns a potentially valid edge constant reference
+   */
+  const SceneGraphEdge* findEdge(NodeId source, NodeId target) const;
+
+  /**
+   * @brief Get a particular edge in the layer
+   *
+   * This can be used to update the edge "info", though
+   * information about the edge (i.e. source and target) cannot
+   * be modified
+   *
+   * @param source source of edge to get
+   * @param target target of edge to get
+   * @returns the edge
+   */
+  const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
+
+  /**
    * @brief Add an edge to the layer
    *
    * Checks that the edge doesn't already exist and
@@ -88,7 +141,15 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr) override;
+                  std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr);
+
+  /**
+   * @brief remove an edge if it exists
+   * @param source source of edge to remove
+   * @param target target of edge to remove
+   * @returns true if the edge existed prior to removal
+   */
+  bool removeEdge(NodeId source, NodeId target);
 
   /**
    * @brief Check whether the layer has the specified node
@@ -102,15 +163,7 @@ class SceneGraphLayer : public BaseLayer {
    * @param node_id node to check for
    * @returns status of type NodeStatus
    */
-  NodeStatus checkNode(NodeId node_id) const override;
-
-  /**
-   * @brief Check whether the layer has the specificied edge
-   * @param source first node to check for
-   * @param target second node to check for
-   * @returns true if the requested edge exists in the layer
-   */
-  bool hasEdge(NodeId source, NodeId target) const override;
+  NodeStatus checkNode(NodeId node_id) const;
 
   /**
    * @brief Get a particular node in the layer
@@ -122,28 +175,14 @@ class SceneGraphLayer : public BaseLayer {
    * @param node_id node to get
    * @returns a potentially valid node constant reference
    */
-  const SceneGraphNode* findNode(NodeId node_id) const override;
+  const SceneGraphNode* findNode(NodeId node_id) const;
 
   /**
-   * @brief Get a particular edge in the layer
-   *
-   * This can be used to update the edge "info", though
-   * information about the edge (i.e. source and target) cannot
-   * be modified
-   *
-   * @param source source of edge to get
-   * @param target target of edge to get
-   * @returns a potentially valid edge constant reference
+   * @brief Get a particular node in the layer
+   * @param node_id node to get
+   * @returns a potentially valid node constant reference
    */
-  const SceneGraphEdge* findEdge(NodeId source, NodeId target) const override;
-
-  /**
-   * @brief remove an edge if it exists
-   * @param source source of edge to remove
-   * @param target target of edge to remove
-   * @returns true if the edge existed prior to removal
-   */
-  bool removeEdge(NodeId source, NodeId target) override;
+  const SceneGraphNode& getNode(NodeId node_id) const;
 
   /**
    * @brief remove an edge if it exists
@@ -155,29 +194,25 @@ class SceneGraphLayer : public BaseLayer {
    */
   bool rewireEdge(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
 
+  /**
+   * @brief Add the other layer into this one
+   * @param other Layer to merge into this layer
+   * @param config Merge configuration controlling contraction and attributes
+   * @param new_nodes Optional output to register new nodes
+   */
   void mergeLayer(const SceneGraphLayer& other,
                   const GraphMergeConfig& config,
                   std::vector<NodeId>* new_nodes);
 
   /**
-   * @brief Number of nodes in the layer
-   */
-  inline size_t numNodes() const { return nodes_.size(); }
-
-  /**
-   * @brief Number of edges in the layer
-   */
-  inline size_t numEdges() const { return edges_.size(); }
-
-  /**
    * @brief Get node ids of newly inserted nodes
    */
-  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) override;
+  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new);
 
   /**
    * @brief Get node id of deleted nodes
    */
-  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed) override;
+  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed);
 
   /**
    * @brief Get node id of deleted nodes
@@ -187,13 +222,12 @@ class SceneGraphLayer : public BaseLayer {
   /**
    * @brief Get the source and target of newly inserted edges
    */
-  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) override;
+  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new);
 
   /**
    * @brief Get the source and target of deleted edges
    */
-  void getRemovedEdges(std::vector<EdgeKey>& removed_edges,
-                       bool clear_removed) override;
+  void getRemovedEdges(std::vector<EdgeKey>& removed_edges, bool clear_removed);
 
   /**
    * @brief Get copy of the layer
@@ -218,6 +252,16 @@ class SceneGraphLayer : public BaseLayer {
   //! ID of the layer
   const LayerId id;
 
+  /**
+   * @brief Number of nodes in the layer
+   */
+  inline size_t numNodes() const { return nodes_.size(); }
+
+  /**
+   * @brief Number of edges in the layer
+   */
+  inline size_t numEdges() const { return edges_.size(); }
+
  protected:
   void reset();
 
@@ -226,14 +270,12 @@ class SceneGraphLayer : public BaseLayer {
                                std::unordered_set<NodeId>& result,
                                std::map<NodeId, size_t>& costs) const;
 
-  inline EdgeContainer& edgeContainer() override { return edges_; }
-
   /**
    * @brief remove a node if it exists
    * @param node_id node to remove
    * @returns true if the node existed prior to removal
    */
-  bool removeNode(NodeId node_id) override;
+  bool removeNode(NodeId node_id);
 
   /**
    * @brief construct and add a node to the layer
