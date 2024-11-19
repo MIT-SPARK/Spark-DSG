@@ -331,13 +331,6 @@ class DynamicSceneGraph {
   const SceneGraphNode* findNode(NodeId node_id) const;
 
   /**
-   * @brief Get node layer information (if the node exists)
-   * @param node_id Node ID to get
-   * @returns A potentially valid Layer ID and prefix
-   */
-  std::optional<LayerKey> getLayerForNode(NodeId node_id) const;
-
-  /**
    * @brief Get a particular edge in the graph
    *
    * This can be used to update the edge "info", though
