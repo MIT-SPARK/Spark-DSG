@@ -382,13 +382,6 @@ class DynamicSceneGraph {
   size_t numLayers() const;
 
   /**
-   * @brief Get the number of dynamic layers of a specific type
-   * @param layer LayerId to count
-   * @return number dynamic layers
-   */
-  size_t numDynamicLayersOfType(LayerId layer) const;
-
-  /**
    * @brief Get the total number of dynamic layers
    * @return number dynamic layers
    */

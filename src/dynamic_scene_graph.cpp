@@ -520,14 +520,6 @@ size_t DynamicSceneGraph::numLayers() const {
   return static_size + unique_dynamic_layers;
 }
 
-size_t DynamicSceneGraph::numDynamicLayersOfType(LayerId layer) const {
-  if (!dynamic_layers_.count(layer)) {
-    return 0;
-  }
-
-  return dynamic_layers_.at(layer).size();
-}
-
 size_t DynamicSceneGraph::numDynamicLayers() const {
   size_t num_layers = 0;
   for (const auto& id_layer_group : dynamic_layers_) {
