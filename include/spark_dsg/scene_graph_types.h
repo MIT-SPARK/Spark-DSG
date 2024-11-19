@@ -42,8 +42,8 @@
  */
 namespace spark_dsg {
 
-using NodeId = uint64_t;   //!< Node label
-using LayerId = uint64_t;  //!< Layer label
+using NodeId = uint64_t;  //!< Node label
+using LayerId = int64_t;  //!< Layer label
 
 struct EdgeKey {
   EdgeKey(NodeId k1, NodeId k2);
@@ -54,24 +54,21 @@ struct EdgeKey {
   NodeId k2;
 };
 
-/**
- * @brief Layer enum hierarchy corresponding to original DSG paper(s)
- * @note A higher layer id corresponds to parents for interlayer edges
- */
+//! @brief Common layer names
 struct DsgLayers {
-  //< Pre-Object node layer (static)
+  //! Pre-Object node layer (static)
   inline const static std::string SEGMENTS = "SEGMENTS";
-  //< Object node layer (static)
+  //! Object node layer (static)
   inline const static std::string OBJECTS = "OBJECTS";
-  //< Agents layer (dynamic)
+  //! Agents layer (dynamic)
   inline const static std::string AGENTS = "AGENTS";
-  //< Places node layer
+  //! Places node layer
   inline const static std::string PLACES = "PLACES";
-  //  //< Mesh (2D) Places node layer
+  //! Mesh (2D) Places node layer
   inline const static std::string MESH_PLACES = "MESH_PLACES";
-  //< Room node layer
+  //! Room node layer
   inline const static std::string ROOMS = "ROOMS";
-  //< Building node layer
+  //! Building node layer
   inline const static std::string BUILDINGS = "BUILDINGS";
 };
 
