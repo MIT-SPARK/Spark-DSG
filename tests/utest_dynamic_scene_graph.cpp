@@ -640,7 +640,7 @@ TEST(DynamicSceneGraphTests, updateFromLayerCorrect) {
 }
 
 TEST(DynamicSceneGraphTests, updateFromLayerWithSiblings) {
-  DynamicSceneGraph graph({1});
+  DynamicSceneGraph graph({1}, {});
   graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   graph.emplaceNode(1, 2, std::make_unique<NodeAttributes>());
   graph.insertEdge(1, 2);
