@@ -433,15 +433,6 @@ const Node* DynamicSceneGraph::findNode(NodeId node_id) const {
   return getNodePtr(node_id, iter->second);
 }
 
-std::optional<LayerKey> DynamicSceneGraph::getLayerForNode(NodeId node_id) const {
-  auto iter = node_lookup_.find(node_id);
-  if (iter == node_lookup_.end()) {
-    return std::nullopt;
-  }
-
-  return iter->second;
-}
-
 const Edge& DynamicSceneGraph::getEdge(NodeId source, NodeId target) const {
   const auto edge = findEdge(source, target);
   if (!edge) {
