@@ -34,35 +34,32 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include <iostream>
+#include <spdlog/spdlog.h>
 
-#define ENABLE_LOGGING() 0
+#include <sstream>
 
-// To log use the macro SG_LOG(SEVERITY) << "message"; If available, this will use glog, otherwise it will use std::cout.
+// To log use the macro SG_LOG(SEVERITY) << "message";
 
 namespace spark_dsg {
 
-struct DefaultLogger {
-  DefaultLogger() = default;
-  virtual ~DefaultLogger() {
-    // Flush the log after invoking the macro.
-    std::cout << std::endl;
+struct LogEntry {
+  const spdlog::level::level_enum level;
+  std::stringstream ss;
+
+  LogEntry(spdlog::level::level_enum level) : level(level) {}
+  ~LogEntry() { spdlog::log(level, ss.str()); }
+
+  template <typename T>
+  LogEntry& operator<<(const T& rhs) {
+    ss << rhs;
+    return *this;
   }
 };
 
 }  // namespace spark_dsg
 
-
-#if ENABLE_LOGGING()
-  #ifdef GLOG_LOGGING_H
-    #define SG_LOG(SEVERITY) LOG(#SEVERITY)
-  #else
-    #define SG_LOG(SEVERITY) \
-      (spark_dsg::DefaultLogger(), std::cout << "["<< #SEVERITY << "] [" << __FILE__ << ":" << __LINE__ << "]: ")
-  #endif
-#else
-  #define SG_LOG(SEVERITY) std::ostream(nullptr)
-#endif
-
-// Always log dev messages, i.e. about loading deprecated files.
-#define SG_LOG_DEV (spark_dsg::DefaultLogger(), std::cout)
+// constructs temporary log entry that prepends filename and line before handing message
+// to spdlog
+#define SG_LOG(SEVERITY)                                                    \
+  LogEntry(static_cast<spdlog::level::level_enum>(SPDLOG_LEVEL_##SEVERITY)) \
+      << __FILE__ << ":" << __LINE__ << "]: "

@@ -239,7 +239,7 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
     try {
       graph.metadata = nlohmann::json::parse(metadata_json);
     } catch (const std::exception& e) {
-      SG_LOG(WARNING) << "Invalid json metadata: " << e.what();
+      SG_LOG(WARN) << "Invalid json metadata: " << e.what();
     }
   }
 

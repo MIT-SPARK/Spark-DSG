@@ -32,6 +32,7 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+#include <spdlog/spdlog.h>
 #include <gtest/gtest.h>
 #include <spark_dsg/printing.h>
 #include <spark_dsg/spark_dsg.h>

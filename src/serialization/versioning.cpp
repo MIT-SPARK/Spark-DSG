@@ -154,12 +154,12 @@ void warnOutdatedHeader(const FileHeader& header) {
   if (GlobalInfo::warnedLegacy()) {
     return;
   }
-  SG_LOG_DEV << "[SPARK-DSG] [WARNING] Loading file with outdated encoding ("
-             << header.toString()
-             << "). This format may be discontinued in the future. For optimal "
-                "preservation and performance load the file "
-                "and save it again to update to the current encoding ("
-             << FileHeader::current().toString() << ").";
+
+  SG_LOG(WARN) << "Loading file with outdated encoding (" << header.toString()
+               << "). This format may be discontinued in the future. For optimal "
+                  "preservation and performance load the file "
+                  "and save it again to update to the current encoding ("
+               << FileHeader::current().toString() << ").";
 }
 
 // TODO(nathan) this and the header write might belong in file_io instead

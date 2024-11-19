@@ -16,6 +16,7 @@
   <depend>libzmqpp-dev</depend>
   <depend>nlohmann-json-dev</depend>
   <depend>python3-dev</depend>
+  <depend>spdlog</depend>
 
   <export>
       <build_type>cmake</build_type>
