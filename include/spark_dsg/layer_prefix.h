@@ -42,30 +42,6 @@
  */
 namespace spark_dsg {
 
-struct LayerKey {
-  LayerId layer;
-  uint32_t prefix = 0;
-  bool dynamic = false;
-
-  LayerKey();
-
-  LayerKey(LayerId layer_id);
-
-  LayerKey(LayerId layer_id, uint32_t prefix);
-
-  bool isParent(const LayerKey& other) const;
-
-  bool valid() const;
-
-  bool operator==(const LayerKey& other) const;
-
-  inline bool operator!=(const LayerKey& other) const {
-    return !this->operator==(other);
-  }
-};
-
-std::ostream& operator<<(std::ostream& out, const LayerKey& key);
-
 class LayerPrefix {
  public:
   LayerPrefix(char key);
@@ -99,7 +75,5 @@ class LayerPrefix {
     } symbol;
   } value_;
 };
-
-std::ostream& operator<<(std::ostream& out, const LayerKey& key);
 
 }  // namespace spark_dsg

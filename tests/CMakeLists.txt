@@ -18,7 +18,6 @@ add_executable(
   utest_node_symbol.cpp
   utest_scene_graph_layer.cpp
   utest_scene_graph_node.cpp
-  utest_scene_graph_types.cpp
   utest_scene_graph_utilities.cpp
   serialization/utest_attribute_serialization.cpp
   serialization/utest_binary_serialization.cpp

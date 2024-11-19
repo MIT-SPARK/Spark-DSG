@@ -52,46 +52,4 @@ bool EdgeKey::operator<(const EdgeKey& other) const {
   return k1 < other.k1;
 }
 
-std::string DsgLayers::LayerIdToString(LayerId id) {
-  switch (id) {
-    case SEGMENTS:
-      return "SEGMENTS";
-    case OBJECTS:
-      return "OBJECTS";  // we default to the static labels
-    case PLACES:
-      return "PLACES";
-    case ROOMS:
-      return "ROOMS";
-    case BUILDINGS:
-      return "BUILDINGS";
-    case MESH_PLACES:
-      return "MESH_PLACES";
-    default:
-      return "UNKNOWN";
-  }
-}
-
-LayerId DsgLayers::StringToLayerId(const std::string& id_str) {
-  std::string to_check = id_str;
-  std::transform(
-      to_check.begin(), to_check.end(), to_check.begin(), [](unsigned char c) {
-        return std::toupper(c);
-      });
-  if (to_check == "SEGMENTS") {
-    return DsgLayers::SEGMENTS;
-  } else if (to_check == "OBJECTS" || to_check == "AGENTS") {
-    return DsgLayers::OBJECTS;
-  } else if (to_check == "PLACES" || to_check == "STRUCTURE") {
-    return DsgLayers::PLACES;
-  } else if (to_check == "ROOMS") {
-    return DsgLayers::ROOMS;
-  } else if (to_check == "BUILDINGS") {
-    return DsgLayers::BUILDINGS;
-  } else if (to_check == "MESH_PLACES") {
-    return DsgLayers::MESH_PLACES;
-  }
-
-  return DsgLayers::UNKNOWN;
-}
-
 }  // namespace spark_dsg

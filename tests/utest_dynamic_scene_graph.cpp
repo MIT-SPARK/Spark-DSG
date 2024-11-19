@@ -37,6 +37,8 @@
 
 namespace spark_dsg {
 
+using LayerKey = DynamicSceneGraph::LayerKey;
+
 std::shared_ptr<Mesh> makeMesh(size_t num_points) {
   auto mesh = std::make_shared<Mesh>();
 
@@ -45,6 +47,33 @@ std::shared_ptr<Mesh> makeMesh(size_t num_points) {
   }
 
   return mesh;
+}
+
+TEST(LayerKeyTests, TestEquality) {
+  EXPECT_EQ(LayerKey(1), LayerKey(1));
+  EXPECT_NE(LayerKey(1), LayerKey(2));
+  EXPECT_NE(LayerKey(1), LayerKey(1, 0));
+  EXPECT_EQ(LayerKey(2, 0), LayerKey(2, 0));
+  EXPECT_NE(LayerKey(2, 0), LayerKey(2, 1));
+}
+
+TEST(LayerKeyTests, TestIsParent) {
+  LayerKey key1{1};
+  LayerKey key2{1};
+  LayerKey key3{2};
+  LayerKey key4{2, 0};
+  LayerKey key5{3, 0};
+  LayerKey key6{2, 1};
+
+  // static
+  EXPECT_TRUE(key3.isParent(key1));
+  EXPECT_FALSE(key1.isParent(key2));
+  EXPECT_FALSE(key1.isParent(key3));
+
+  // dynamic
+  EXPECT_TRUE(key4.isParent(key1));
+  EXPECT_TRUE(key5.isParent(key6));
+  EXPECT_FALSE(key6.isParent(key4));
 }
 
 TEST(DynamicSceneGraphTests, DefaultConstructorInvariants) {
@@ -59,15 +88,6 @@ TEST(DynamicSceneGraphTests, CustomLayerInvariants) {
   EXPECT_EQ(0u, graph.numNodes());
   EXPECT_EQ(0u, graph.numEdges());
   EXPECT_EQ(6u, graph.numLayers());
-}
-
-TEST(DynamicSceneGraphTests, EmptyLayerFails) {
-  try {
-    DynamicSceneGraph graph(std::vector<LayerId>{});
-    FAIL();
-  } catch (const std::domain_error&) {
-    SUCCEED();
-  }
 }
 
 TEST(DynamicSceneGraphTests, NumNodesAndEdges) {
@@ -732,7 +752,7 @@ TEST(DynamicSceneGraphTests, MergeDynamicGraphCorrect) {
   EXPECT_EQ(graph_1.numNodes(), graph_2.numNodes());
   EXPECT_EQ(graph_1.numEdges(), graph_2.numEdges());
 
-  EXPECT_TRUE(graph_1.hasLayer(DsgLayers::AGENTS, 'a'));
+  EXPECT_TRUE(graph_1.hasLayer(2, 'a'));
   EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 0)));
   EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 1)));
   EXPECT_TRUE(graph_1.hasNode(NodeSymbol('a', 2)));
