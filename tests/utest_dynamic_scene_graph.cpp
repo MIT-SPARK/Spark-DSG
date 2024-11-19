@@ -512,8 +512,6 @@ TEST(DynamicSceneGraphTests, InsertDynamicLayerCorrect) {
   graph.createDynamicLayer(1, 'a');
   EXPECT_EQ(5u, graph.numLayers());
   EXPECT_EQ(1u, graph.numDynamicLayers());
-  EXPECT_EQ(1u, graph.numDynamicLayersOfType(1));
-  EXPECT_EQ(0u, graph.numDynamicLayersOfType(2));
   EXPECT_TRUE(graph.hasLayer(1, 'a'));
   EXPECT_FALSE(graph.hasLayer(2, 'a'));
   EXPECT_FALSE(graph.hasLayer(1, 'b'));
@@ -521,8 +519,6 @@ TEST(DynamicSceneGraphTests, InsertDynamicLayerCorrect) {
   graph.createDynamicLayer(1, 'b');
   EXPECT_EQ(5u, graph.numLayers());
   EXPECT_EQ(2u, graph.numDynamicLayers());
-  EXPECT_EQ(2u, graph.numDynamicLayersOfType(1));
-  EXPECT_EQ(0u, graph.numDynamicLayersOfType(2));
   EXPECT_TRUE(graph.hasLayer(1, 'a'));
   EXPECT_FALSE(graph.hasLayer(2, 'a'));
   EXPECT_TRUE(graph.hasLayer(1, 'b'));
@@ -531,8 +527,6 @@ TEST(DynamicSceneGraphTests, InsertDynamicLayerCorrect) {
   graph.createDynamicLayer(2, 'a');
   EXPECT_EQ(5u, graph.numLayers());
   EXPECT_EQ(3u, graph.numDynamicLayers());
-  EXPECT_EQ(2u, graph.numDynamicLayersOfType(1));
-  EXPECT_EQ(1u, graph.numDynamicLayersOfType(2));
   EXPECT_TRUE(graph.hasLayer(1, 'a'));
   EXPECT_TRUE(graph.hasLayer(2, 'a'));
   EXPECT_TRUE(graph.hasLayer(1, 'b'));
@@ -541,9 +535,6 @@ TEST(DynamicSceneGraphTests, InsertDynamicLayerCorrect) {
   graph.createDynamicLayer(7, 'a');
   EXPECT_EQ(6u, graph.numLayers());
   EXPECT_EQ(4u, graph.numDynamicLayers());
-  EXPECT_EQ(2u, graph.numDynamicLayersOfType(1));
-  EXPECT_EQ(1u, graph.numDynamicLayersOfType(2));
-  EXPECT_EQ(1u, graph.numDynamicLayersOfType(7));
   EXPECT_TRUE(graph.hasLayer(1, 'a'));
   EXPECT_TRUE(graph.hasLayer(2, 'a'));
   EXPECT_TRUE(graph.hasLayer(1, 'b'));

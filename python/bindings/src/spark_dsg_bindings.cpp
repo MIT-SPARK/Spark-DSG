@@ -778,7 +778,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              return graph.removeEdge(source, target);
            })
       .def("num_layers", &DynamicSceneGraph::numLayers)
-      .def("num_dynamic_layers_of_type", &DynamicSceneGraph::numDynamicLayersOfType)
       .def("num_dynamic_layers", &DynamicSceneGraph::numDynamicLayers)
       .def("num_nodes", &DynamicSceneGraph::numNodes, "include_mesh"_a = false)
       .def("num_static_nodes", &DynamicSceneGraph::numStaticNodes)
