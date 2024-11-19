@@ -59,19 +59,20 @@ struct EdgeKey {
  * @note A higher layer id corresponds to parents for interlayer edges
  */
 struct DsgLayers {
-  inline const static LayerId SEGMENTS = 1;  //< Pre-Object node layer (static)
-  inline const static LayerId OBJECTS = 2;   //< Object node layer (static)
-  inline const static LayerId AGENTS = 2;    //< Agents layer (dynamic)
-  inline const static LayerId PLACES = 3;  //< Places node layer (as well as structure)
-  inline const static LayerId STRUCTURE = 3;  //< Struct node layer (as well as places)
-  inline const static LayerId ROOMS = 4;      //< Room node layer
-  inline const static LayerId BUILDINGS = 5;  //< Building node layer
-  inline const static LayerId MESH_PLACES = 20;  //< Mesh (2D) Places node layer
-  inline const static LayerId UNKNOWN =
-      std::numeric_limits<LayerId>::max();  //< Catchall layer ID
-
-  static std::string LayerIdToString(LayerId id);
-  static LayerId StringToLayerId(const std::string& id_str);
+  //< Pre-Object node layer (static)
+  inline const static std::string SEGMENTS = "SEGMENTS";
+  //< Object node layer (static)
+  inline const static std::string OBJECTS = "OBJECTS";
+  //< Agents layer (dynamic)
+  inline const static std::string AGENTS = "AGENTS";
+  //< Places node layer
+  inline const static std::string PLACES = "PLACES";
+  //  //< Mesh (2D) Places node layer
+  inline const static std::string MESH_PLACES = "MESH_PLACES";
+  //< Room node layer
+  inline const static std::string ROOMS = "ROOMS";
+  //< Building node layer
+  inline const static std::string BUILDINGS = "BUILDINGS";
 };
 
 namespace graph_utilities {

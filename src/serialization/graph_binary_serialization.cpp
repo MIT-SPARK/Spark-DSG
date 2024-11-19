@@ -131,7 +131,7 @@ void writeGraph(const DynamicSceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh) {
   BinarySerializer serializer(&buffer);
-  serializer.write(graph.layer_ids);
+  serializer.write(graph.layer_ids());
 
   // saves names to type index mapping
   serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
@@ -332,7 +332,7 @@ bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t l
   std::vector<LayerId> layer_ids;
   deserializer.read(layer_ids);
 
-  if (graph.layer_ids != layer_ids) {
+  if (graph.layer_ids() != layer_ids) {
     // TODO(nathan) maybe warn about mismatch
     graph.reset(layer_ids);
   }

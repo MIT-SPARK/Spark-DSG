@@ -60,10 +60,28 @@ class DynamicSceneGraph {
   using Layers = std::map<LayerId, SceneGraphLayer::Ptr>;
   //! Dynamic layer container
   using DynamicLayers = std::map<uint32_t, DynamicSceneGraphLayer::Ptr>;
-  //! Callback type
-  using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
 
   friend class SceneGraphLogger;
+
+  struct LayerKey {
+    std::optional<LayerId> layer;
+    uint32_t prefix = 0;
+    bool dynamic = false;
+
+    LayerKey() = default;
+    LayerKey(LayerId layer_id);
+    LayerKey(LayerId layer_id, uint32_t prefix);
+    bool isParent(const LayerKey& other) const;
+    bool isValid() const { return layer.has_value(); }
+    operator bool() const { return isValid(); }
+    bool operator==(const LayerKey& other) const;
+    inline bool operator!=(const LayerKey& other) const {
+      return !this->operator==(other);
+    }
+  };
+
+  //! Callback type
+  using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
 
   /**
    * @brief Construct the scene graph (with a default layer factory)
@@ -361,13 +379,6 @@ class DynamicSceneGraph {
   bool removeEdge(NodeId source, NodeId target);
 
   /**
-   * @brief check if a particular node id is a dynamic node
-   * @param source Node to check
-   * @returns Return true if the node is a dynamic node
-   */
-  bool isDynamic(NodeId source) const;
-
-  /**
    * @brief Get the number of layers in the graph
    * @return number of layers in the graph
    */
@@ -528,7 +539,7 @@ class DynamicSceneGraph {
   std::shared_ptr<Mesh> mesh() const;
 
   //! Current static layer ids in the graph
-  const LayerIds layer_ids;
+  const LayerIds& layer_ids() const;
 
   //! Any extra information about the graph
   nlohmann::json metadata;
@@ -574,6 +585,7 @@ class DynamicSceneGraph {
   void visitLayers(const LayerVisitor& cb);
 
  protected:
+  LayerIds layer_ids_;
   Layers layers_;
   std::map<LayerId, DynamicLayers> dynamic_layers_;
 
@@ -631,5 +643,7 @@ class DynamicSceneGraph {
  * @brief Return a container of the layer hierarchy from #spark_dsg::DsgLayers
  */
 DynamicSceneGraph::LayerIds getDefaultLayerIds();
+
+std::ostream& operator<<(std::ostream& out, const DynamicSceneGraph::LayerKey& key);
 
 }  // namespace spark_dsg

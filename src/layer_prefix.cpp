@@ -39,39 +39,6 @@
 
 namespace spark_dsg {
 
-LayerKey::LayerKey() : layer(DsgLayers::UNKNOWN) {}
-
-LayerKey::LayerKey(LayerId layer_id) : layer(layer_id) {}
-
-LayerKey::LayerKey(LayerId layer_id, uint32_t prefix)
-    : layer(layer_id), prefix(prefix), dynamic(true) {}
-
-bool LayerKey::isParent(const LayerKey& other) const { return layer > other.layer; }
-
-bool LayerKey::valid() const { return layer != DsgLayers::UNKNOWN; }
-
-bool LayerKey::operator==(const LayerKey& other) const {
-  if (dynamic != other.dynamic) {
-    return false;
-  }
-
-  const bool same_layer = layer == other.layer;
-  if (!dynamic && same_layer) {
-    return true;
-  }
-
-  return same_layer && prefix == other.prefix;
-}
-
-std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
-  if (key.dynamic) {
-    out << key.layer << "(" << key.prefix << ")";
-  } else {
-    out << key.layer;
-  }
-  return out;
-}
-
 LayerPrefix::LayerPrefix(char key) {
   value_.symbol.key = key;
   value_.symbol.index = 0;

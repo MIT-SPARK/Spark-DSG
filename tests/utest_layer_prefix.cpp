@@ -38,33 +38,6 @@
 
 namespace spark_dsg {
 
-TEST(LayerKeyTests, TestEquality) {
-  EXPECT_EQ(LayerKey(1), LayerKey(1));
-  EXPECT_NE(LayerKey(1), LayerKey(2));
-  EXPECT_NE(LayerKey(1), LayerKey(1, 0));
-  EXPECT_EQ(LayerKey(2, 0), LayerKey(2, 0));
-  EXPECT_NE(LayerKey(2, 0), LayerKey(2, 1));
-}
-
-TEST(LayerKeyTests, TestIsParent) {
-  LayerKey key1{1};
-  LayerKey key2{1};
-  LayerKey key3{2};
-  LayerKey key4{2, 0};
-  LayerKey key5{3, 0};
-  LayerKey key6{2, 1};
-
-  // static
-  EXPECT_TRUE(key3.isParent(key1));
-  EXPECT_FALSE(key1.isParent(key2));
-  EXPECT_FALSE(key1.isParent(key3));
-
-  // dynamic
-  EXPECT_TRUE(key4.isParent(key1));
-  EXPECT_TRUE(key5.isParent(key6));
-  EXPECT_FALSE(key6.isParent(key4));
-}
-
 TEST(LayerPrefixTests, TestMatches) {
   LayerPrefix a('a');
   EXPECT_TRUE(a.matches(NodeSymbol('a', 0)));
