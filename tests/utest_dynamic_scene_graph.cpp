@@ -50,18 +50,18 @@ std::shared_ptr<Mesh> makeMesh(size_t num_points) {
 TEST(LayerKeyTests, TestEquality) {
   EXPECT_EQ(LayerKey(1), LayerKey(1));
   EXPECT_NE(LayerKey(1), LayerKey(2));
-  EXPECT_NE(LayerKey(1), LayerKey(1, 0));
-  EXPECT_EQ(LayerKey(2, 0), LayerKey(2, 0));
-  EXPECT_NE(LayerKey(2, 0), LayerKey(2, 1));
+  EXPECT_NE(LayerKey(1), LayerKey(1, 0u));
+  EXPECT_EQ(LayerKey(2, 0u), LayerKey(2, 0u));
+  EXPECT_NE(LayerKey(2, 0u), LayerKey(2, 1u));
 }
 
 TEST(LayerKeyTests, TestIsParent) {
   LayerKey key1{1};
   LayerKey key2{1};
   LayerKey key3{2};
-  LayerKey key4{2, 0};
-  LayerKey key5{3, 0};
-  LayerKey key6{2, 1};
+  LayerKey key4{2, 0u};
+  LayerKey key5{3, 0u};
+  LayerKey key6{2, 1u};
 
   // static
   EXPECT_TRUE(key3.isParent(key1));
@@ -693,6 +693,10 @@ TEST(DynamicSceneGraph, MergeDynamicGraphCorrect) {
   EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a3"_id, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a4"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(G_2.insertEdge("a0"_id, "a1"_id));
+  EXPECT_TRUE(G_2.insertEdge("a1"_id, "a2"_id));
+  EXPECT_TRUE(G_2.insertEdge("a2"_id, "a3"_id));
+  EXPECT_TRUE(G_2.insertEdge("a3"_id, "a4"_id));
 
   EXPECT_EQ(0u, G_1.numNodes());
   EXPECT_EQ(0u, G_1.numEdges());

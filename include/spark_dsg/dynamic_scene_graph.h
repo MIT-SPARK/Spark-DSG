@@ -51,7 +51,7 @@ struct LayerKey {
 
   LayerKey() = default;
   LayerKey(LayerId layer_id);
-  LayerKey(LayerId layer_id, uint32_t prefix);
+  LayerKey(LayerId layer_id, LayerPrefix prefix);
   bool isParent(const LayerKey& other) const;
   operator bool() const { return valid; }
   bool operator==(const LayerKey& other) const;
