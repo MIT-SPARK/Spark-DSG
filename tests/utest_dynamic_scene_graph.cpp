@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <spark_dsg/printing.h>
 #include <spark_dsg/spark_dsg.h>
 
 namespace spark_dsg {
@@ -46,6 +47,8 @@ std::shared_ptr<Mesh> makeMesh(size_t num_points) {
 
   return mesh;
 }
+
+void PrintTo(const EdgeKey& edge, std::ostream* os) { *os << edge; }
 
 TEST(LayerKeyTests, TestEquality) {
   EXPECT_EQ(LayerKey(1), LayerKey(1));
@@ -488,7 +491,6 @@ TEST(DynamicSceneGraph, InsertDynamicLayerCorrect) {
   EXPECT_FALSE(graph.hasLayer(2, 'a'));
   EXPECT_TRUE(graph.hasLayer(1, 'b'));
 
-  // TODO(nathan) we may rule this out: conflicting node symbols
   graph.addLayer(2, 'a');
   EXPECT_EQ(5u, graph.numLayers());
   EXPECT_EQ(3u, graph.numDynamicLayers());
@@ -496,7 +498,6 @@ TEST(DynamicSceneGraph, InsertDynamicLayerCorrect) {
   EXPECT_TRUE(graph.hasLayer(2, 'a'));
   EXPECT_TRUE(graph.hasLayer(1, 'b'));
 
-  // TODO(nathan) we may rule this out: conflicting node symbols
   graph.addLayer(7, 'a');
   EXPECT_EQ(6u, graph.numLayers());
   EXPECT_EQ(4u, graph.numDynamicLayers());
@@ -728,24 +729,12 @@ TEST(DynamicSceneGraph, ClearWithDynamicLayersCorrect) {
   EXPECT_FALSE(graph.hasNode("a0"_id));
 }
 
-TEST(DynamicSceneGraph, HasDynamicEdgeCorrect) {
+TEST(DynamicSceneGraph, InsertDynamicEdgeCorrect) {
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a3"_id, std::make_unique<NodeAttributes>());
-
-  EXPECT_TRUE(graph.hasEdge("a0"_id, "a1"_id));
-  EXPECT_FALSE(graph.hasEdge("a1"_id, "a2"_id));
-  EXPECT_TRUE(graph.hasEdge("a2"_id, "a3"_id));
-}
-
-TEST(DynamicSceneGraph, InsertDynamicEdgeCorrect) {
-  DynamicSceneGraph graph;
-  graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
 
   EXPECT_EQ(0u, graph.numEdges());
 
@@ -863,14 +852,14 @@ TEST(DynamicSceneGraph, RemovedAndNewNodesCorrect) {
 
   {
     std::vector<NodeId> expected{"x0"_id, "a0"_id};
-    std::vector<NodeId> removed = graph.getNewNodes(true);
-    EXPECT_EQ(expected, removed);
+    std::vector<NodeId> new_nodes = graph.getNewNodes(true);
+    EXPECT_EQ(expected, new_nodes);
   }
 
   {
     std::vector<NodeId> expected;
-    std::vector<NodeId> removed = graph.getNewNodes(true);
-    EXPECT_EQ(expected, removed);
+    std::vector<NodeId> new_nodes = graph.getNewNodes(true);
+    EXPECT_EQ(expected, new_nodes);
   }
 
   graph.removeNode("a0"_id);
@@ -897,6 +886,7 @@ TEST(DynamicSceneGraph, RemovedAndNewEdgesCorrect) {
   graph.emplaceNode(4, "y1"_id, std::make_unique<NodeAttributes>());
   graph.insertEdge("x0"_id, "y1"_id);
   graph.insertEdge("a1"_id, "x0"_id);
+  graph.insertEdge("a0"_id, "a1"_id);
 
   {
     std::vector<EdgeKey> new_expected{
@@ -972,6 +962,7 @@ TEST(DynamicSceneGraph, CloneCorrect) {
   graph.insertEdge("x0"_id, "x1"_id);
   graph.insertEdge("x0"_id, "y1"_id);
   graph.insertEdge("a1"_id, "x0"_id);
+  graph.insertEdge("a0"_id, "a1"_id);
 
   auto clone = graph.clone();
   ASSERT_TRUE(clone != nullptr);
