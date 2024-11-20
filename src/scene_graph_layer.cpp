@@ -86,11 +86,9 @@ const SceneGraphNode& SceneGraphLayer::getNode(NodeId node_id) const {
 }
 
 bool SceneGraphLayer::emplaceNode(NodeId node_id,
-                                  std::unique_ptr<NodeAttributes>&& attrs,
-                                  std::optional<std::chrono::nanoseconds> stamp) {
+                                  std::unique_ptr<NodeAttributes>&& attrs) {
   nodes_status_[node_id] = NodeStatus::NEW;
-  return nodes_
-      .emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs), stamp))
+  return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
       .second;
 }
 

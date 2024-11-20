@@ -74,8 +74,7 @@ class SceneGraphNode {
    */
   SceneGraphNode(NodeId id,
                  LayerId layer,
-                 std::unique_ptr<NodeAttributes>&& attrs,
-                 std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
+                 std::unique_ptr<NodeAttributes>&& attrs);
 
   SceneGraphNode(const SceneGraphNode& other) = delete;
   SceneGraphNode& operator=(const SceneGraphNode& other) = delete;
@@ -149,8 +148,6 @@ class SceneGraphNode {
   const NodeId id;
   //! ID of the layer the node belongs to
   const LayerId layer;
-  //! Timestamp of node (if dynamic)
-  const std::optional<std::chrono::nanoseconds> timestamp;
 
  protected:
   //! pointer to attributes
