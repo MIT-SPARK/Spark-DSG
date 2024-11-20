@@ -52,9 +52,6 @@ using nlohmann::json;
 
 void to_json(json& record, const SceneGraphNode& node) {
   record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
-  if (node.timestamp) {
-    record["timestamp"] = node.timestamp->count();
-  }
 }
 
 void to_json(json& record, const SceneGraphEdge& edge) {
@@ -74,16 +71,7 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
     throw std::runtime_error(ss.str());
   }
 
-  bool added = false;
-  if (record.contains("timestamp")) {
-    auto time = record.at("timestamp").get<uint64_t>();
-    added = graph.addOrUpdateNode(
-        layer, node_id, std::move(attrs), std::chrono::nanoseconds(time));
-  } else {
-    added = graph.emplaceNode(layer, node_id, std::move(attrs));
-  }
-
-  if (!added) {
+  if (!graph.emplaceNode(layer, node_id, std::move(attrs))) {
     std::stringstream ss;
     ss << "failed to add " << NodeSymbol(node_id).getLabel();
     throw std::runtime_error(ss.str());

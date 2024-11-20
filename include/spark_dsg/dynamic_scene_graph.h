@@ -44,16 +44,16 @@
 namespace spark_dsg {
 
 struct LayerKey {
-  std::optional<LayerId> layer;
+  LayerId layer;
   uint32_t prefix = 0;
   bool dynamic = false;
+  bool valid = false;
 
   LayerKey() = default;
   LayerKey(LayerId layer_id);
   LayerKey(LayerId layer_id, uint32_t prefix);
   bool isParent(const LayerKey& other) const;
-  bool isValid() const { return layer.has_value(); }
-  operator bool() const { return isValid(); }
+  operator bool() const { return valid; }
   bool operator==(const LayerKey& other) const;
   inline bool operator!=(const LayerKey& other) const {
     return !this->operator==(other);
