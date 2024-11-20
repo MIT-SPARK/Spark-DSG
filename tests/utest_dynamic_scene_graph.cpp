@@ -507,7 +507,6 @@ TEST(DynamicSceneGraph, InsertDynamicLayerCorrect) {
 }
 
 TEST(DynamicSceneGraph, EmplaceDynamicNodeCorrect) {
-  using namespace std::chrono_literals;
   DynamicSceneGraph G;
   EXPECT_EQ(4u, G.numLayers());
 
@@ -619,7 +618,6 @@ TEST(DynamicSceneGraph, updateFromLayerWithSiblings) {
 }
 
 TEST(DynamicSceneGraph, MergeGraphCorrect) {
-  using namespace std::chrono_literals;
   const Eigen::Vector3d pos_1(1.0, 1.0, 1.0);
   const Eigen::Vector3d pos_2(2.0, 2.0, 2.0);
 
@@ -684,7 +682,6 @@ TEST(DynamicSceneGraph, MergeGraphCorrect) {
 }
 
 TEST(DynamicSceneGraph, MergeDynamicGraphCorrect) {
-  using namespace std::chrono_literals;
   DynamicSceneGraph G_1;
 
   DynamicSceneGraph G_2;
@@ -732,7 +729,6 @@ TEST(DynamicSceneGraph, ClearWithDynamicLayersCorrect) {
 }
 
 TEST(DynamicSceneGraph, HasDynamicEdgeCorrect) {
-  using namespace std::chrono_literals;
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
@@ -745,7 +741,6 @@ TEST(DynamicSceneGraph, HasDynamicEdgeCorrect) {
 }
 
 TEST(DynamicSceneGraph, InsertDynamicEdgeCorrect) {
-  using namespace std::chrono_literals;
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
@@ -765,8 +760,6 @@ TEST(DynamicSceneGraph, InsertDynamicEdgeCorrect) {
 }
 
 TEST(DynamicSceneGraph, getPositionCorrect) {
-  using namespace std::chrono_literals;
-
   Eigen::Vector3d expected1(1.0, 2.0, 3.0);
   Eigen::Vector3d expected2(2.0, 3.0, 4.0);
 
@@ -831,7 +824,6 @@ void testSiblingRelationship(const DynamicSceneGraph& graph,
 }
 
 TEST(DynamicSceneGraph, InsertMixedEdgeCorrect) {
-  using namespace std::chrono_literals;
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
@@ -865,7 +857,6 @@ TEST(DynamicSceneGraph, InsertMixedEdgeCorrect) {
 }
 
 TEST(DynamicSceneGraph, RemovedAndNewNodesCorrect) {
-  using namespace std::chrono_literals;
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
@@ -899,7 +890,6 @@ TEST(DynamicSceneGraph, RemovedAndNewNodesCorrect) {
 }
 
 TEST(DynamicSceneGraph, RemovedAndNewEdgesCorrect) {
-  using namespace std::chrono_literals;
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
@@ -973,8 +963,6 @@ TEST(DynamicSceneGraph, MergeGraphCorrectWithPrevMerges) {
 }
 
 TEST(DynamicSceneGraph, CloneCorrect) {
-  using namespace std::chrono_literals;
-
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
