@@ -70,29 +70,16 @@ class SceneGraphNode {
    * @param id the id of the node to create
    * @param layer the layer that the node will belong to
    * @param attrs attributes for the node
-   */
-  SceneGraphNode(NodeId id, LayerId layer, std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief Make a scene graph node (with a timestamp)
-   *
-   *
-   * @param id the id of the node to create
-   * @param layer the layer that the node will belong to
-   * @param attrs attributes for the node
-   * @param timestamp node timestamp in nanoseconds
+   * @param timestamp Optional node timestamp in nanoseconds
    */
   SceneGraphNode(NodeId id,
                  LayerId layer,
-                 std::chrono::nanoseconds timestamp,
-                 std::unique_ptr<NodeAttributes>&& attrs);
+                 std::unique_ptr<NodeAttributes>&& attrs,
+                 std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
 
   SceneGraphNode(const SceneGraphNode& other) = delete;
-
   SceneGraphNode& operator=(const SceneGraphNode& other) = delete;
-
   SceneGraphNode(SceneGraphNode&& other) = default;
-
   SceneGraphNode& operator=(SceneGraphNode&& other) = delete;
 
   virtual ~SceneGraphNode();

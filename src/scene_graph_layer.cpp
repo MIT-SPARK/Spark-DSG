@@ -49,15 +49,6 @@ namespace spark_dsg {
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
 
-SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id) {}
-
-bool SceneGraphLayer::emplaceNode(NodeId node_id,
-                                  std::unique_ptr<NodeAttributes>&& attrs) {
-  nodes_status_[node_id] = NodeStatus::NEW;
-  return nodes_.emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs)))
-      .second;
-}
-
 NodeId GraphMergeConfig::getMergedId(NodeId original) const {
   if (!previous_merges) {
     return original;
@@ -67,57 +58,7 @@ NodeId GraphMergeConfig::getMergedId(NodeId original) const {
   return iter == previous_merges->end() ? original : iter->second;
 }
 
-bool SceneGraphLayer::insertNode(std::unique_ptr<SceneGraphNode>&& node) {
-  if (!node) {
-    SG_LOG(ERROR) << "Attempted to add an unitialized node to layer " << id
-                  << std::endl;
-    return false;
-  }
-
-  if (node->layer != id) {
-    SG_LOG(WARNING) << "Attempted to add a node with layer " << node->layer
-                    << " to layer " << id << std::endl;
-    return false;
-  }
-
-  if (hasNode(node->id)) {
-    return false;
-  }
-
-  NodeId to_insert = node->id;
-  nodes_status_[to_insert] = NodeStatus::NEW;
-  nodes_[to_insert] = std::move(node);
-  return true;
-}
-
-bool SceneGraphLayer::insertEdge(NodeId source,
-                                 NodeId target,
-                                 std::unique_ptr<EdgeAttributes>&& edge_info) {
-  if (source == target) {
-    SG_LOG(WARNING) << "Attempted to add a self-edge" << std::endl;
-    return false;
-  }
-
-  if (hasEdge(source, target)) {
-    return false;
-  }
-
-  if (!hasNode(source)) {
-    // TODO(nathan) maybe consider logging here
-    return false;
-  }
-
-  if (!hasNode(target)) {
-    // TODO(nathan) maybe consider logging here
-    return false;
-  }
-
-  nodes_[source]->siblings_.insert(target);
-  nodes_[target]->siblings_.insert(source);
-
-  edges_.insert(source, target, std::move(edge_info));
-  return true;
-}
+SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id) {}
 
 bool SceneGraphLayer::hasNode(NodeId node_id) const {
   return nodes_.count(node_id) != 0;
@@ -128,10 +69,6 @@ NodeStatus SceneGraphLayer::checkNode(NodeId node_id) const {
     return NodeStatus::NONEXISTENT;
   }
   return nodes_status_.at(node_id);
-}
-
-bool SceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
-  return edges_.contains(source, target);
 }
 
 const Node* SceneGraphLayer::findNode(NodeId node_id) const {
@@ -148,19 +85,13 @@ const SceneGraphNode& SceneGraphLayer::getNode(NodeId node_id) const {
   return *node;
 }
 
-const Edge* SceneGraphLayer::findEdge(NodeId source, NodeId target) const {
-  return edges_.find(source, target);
-}
-
-const SceneGraphEdge& SceneGraphLayer::getEdge(NodeId source, NodeId target) const {
-  const auto edge = findEdge(source, target);
-  if (!edge) {
-    std::stringstream ss;
-    ss << "Missing edge '" << EdgeKey(source, target) << "'";
-    throw std::out_of_range(ss.str());
-  }
-
-  return *edge;
+bool SceneGraphLayer::emplaceNode(NodeId node_id,
+                                  std::unique_ptr<NodeAttributes>&& attrs,
+                                  std::optional<std::chrono::nanoseconds> stamp) {
+  nodes_status_[node_id] = NodeStatus::NEW;
+  return nodes_
+      .emplace(node_id, std::make_unique<Node>(node_id, id, std::move(attrs), stamp))
+      .second;
 }
 
 bool SceneGraphLayer::removeNode(NodeId node_id) {
@@ -198,6 +129,54 @@ bool SceneGraphLayer::mergeNodes(NodeId node_from, NodeId node_to) {
   // remove the actual node
   nodes_.erase(node_from);
   nodes_status_[node_from] = NodeStatus::MERGED;
+  return true;
+}
+
+bool SceneGraphLayer::hasEdge(NodeId source, NodeId target) const {
+  return edges_.contains(source, target);
+}
+
+const Edge* SceneGraphLayer::findEdge(NodeId source, NodeId target) const {
+  return edges_.find(source, target);
+}
+
+const SceneGraphEdge& SceneGraphLayer::getEdge(NodeId source, NodeId target) const {
+  const auto edge = findEdge(source, target);
+  if (!edge) {
+    std::stringstream ss;
+    ss << "Missing edge '" << EdgeKey(source, target) << "'";
+    throw std::out_of_range(ss.str());
+  }
+
+  return *edge;
+}
+
+bool SceneGraphLayer::insertEdge(NodeId source,
+                                 NodeId target,
+                                 std::unique_ptr<EdgeAttributes>&& edge_info) {
+  if (source == target) {
+    SG_LOG(WARNING) << "Attempted to add a self-edge" << std::endl;
+    return false;
+  }
+
+  if (hasEdge(source, target)) {
+    return false;
+  }
+
+  if (!hasNode(source)) {
+    // TODO(nathan) maybe consider logging here
+    return false;
+  }
+
+  if (!hasNode(target)) {
+    // TODO(nathan) maybe consider logging here
+    return false;
+  }
+
+  nodes_[source]->siblings_.insert(target);
+  nodes_[target]->siblings_.insert(source);
+
+  edges_.insert(source, target, std::move(edge_info));
   return true;
 }
 
@@ -312,15 +291,6 @@ void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new
   }
 }
 
-void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes) const {
-  for (const auto& id_status_pair : nodes_status_) {
-    if (id_status_pair.second == NodeStatus::DELETED ||
-        id_status_pair.second == NodeStatus::MERGED) {
-      removed_nodes.push_back(id_status_pair.first);
-    }
-  }
-}
-
 void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
                                       bool clear_removed) {
   auto iter = nodes_status_.begin();
@@ -394,12 +364,6 @@ void SceneGraphLayer::cloneImpl(SceneGraphLayer& other,
 
 SceneGraphLayer::Ptr SceneGraphLayer::clone(const NodeChecker& is_valid) const {
   SceneGraphLayer::Ptr new_layer(new SceneGraphLayer(id));
-  cloneImpl(*new_layer, is_valid);
-  return new_layer;
-}
-
-SceneGraphLayer::Ptr IsolatedSceneGraphLayer::clone(const NodeChecker& is_valid) const {
-  SceneGraphLayer::Ptr new_layer(new IsolatedSceneGraphLayer(id));
   cloneImpl(*new_layer, is_valid);
   return new_layer;
 }

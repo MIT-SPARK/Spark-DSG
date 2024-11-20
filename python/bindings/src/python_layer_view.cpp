@@ -48,7 +48,9 @@ size_t LayerView::numNodes() const { return layer_ref_.numNodes(); }
 
 size_t LayerView::numEdges() const { return layer_ref_.numEdges(); }
 
-bool LayerView::hasNode(NodeSymbol node_id) const { return layer_ref_.hasNode(node_id); }
+bool LayerView::hasNode(NodeSymbol node_id) const {
+  return layer_ref_.hasNode(node_id);
+}
 
 bool LayerView::hasEdge(NodeSymbol source, NodeSymbol target) const {
   return layer_ref_.hasEdge(source, target);
@@ -78,19 +80,6 @@ LayerIter& LayerIter::operator++() {
 
 bool LayerIter::operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
 
-DynamicLayerView::DynamicLayerView(const DynamicSceneGraphLayer& layer)
-    : id(layer.id), prefix(layer.prefix), layer_ref_(layer) {}
-
-DynamicNodeIter DynamicLayerView::nodes() const {
-  return DynamicNodeIter(layer_ref_.nodes());
-}
-
-EdgeIter DynamicLayerView::edges() const { return EdgeIter(layer_ref_.edges()); }
-
-size_t DynamicLayerView::numNodes() const { return layer_ref_.numNodes(); }
-
-size_t DynamicLayerView::numEdges() const { return layer_ref_.numEdges(); }
-
 DynamicLayerIter::DynamicLayerIter(const LayerMap& container)
     : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {
   setSubIter();
@@ -117,8 +106,8 @@ void DynamicLayerIter::setSubIter() {
   }
 }
 
-DynamicLayerView DynamicLayerIter::operator*() const {
-  return DynamicLayerView(*(curr_layer_iter_->second));
+LayerView DynamicLayerIter::operator*() const {
+  return LayerView(*(curr_layer_iter_->second));
 }
 
 DynamicLayerIter& DynamicLayerIter::operator++() {

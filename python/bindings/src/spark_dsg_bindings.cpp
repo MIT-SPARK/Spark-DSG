@@ -69,7 +69,6 @@ using namespace py::literals;
 
 using namespace spark_dsg;
 using spark_dsg::python::DynamicLayerIter;
-using spark_dsg::python::DynamicLayerView;
 using spark_dsg::python::EdgeIter;
 using spark_dsg::python::GlobalEdgeIter;
 using spark_dsg::python::GlobalNodeIter;
@@ -548,62 +547,62 @@ PYBIND11_MODULE(_dsg_bindings, module) {
    * Scene graph layer
    *************************************************************************************/
 
-  py::class_<IsolatedSceneGraphLayer, std::shared_ptr<IsolatedSceneGraphLayer>>(
-      module, "SceneGraphLayer")
+  py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(module,
+                                                                "SceneGraphLayer")
       .def(py::init<LayerId>())
       .def("add_node",
-           [](IsolatedSceneGraphLayer& layer,
-              NodeSymbol node,
-              const NodeAttributes& attrs) { layer.emplaceNode(node, attrs.clone()); })
+           [](SceneGraphLayer& layer, NodeSymbol node, const NodeAttributes& attrs) {
+             layer.emplaceNode(node, attrs.clone());
+           })
       .def("insert_edge",
-           [](IsolatedSceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) {
+           [](SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) {
              return layer.insertEdge(source, target);
            })
       .def("insert_edge",
-           [](IsolatedSceneGraphLayer& layer,
+           [](SceneGraphLayer& layer,
               NodeSymbol source,
               NodeSymbol target,
               const EdgeAttributes& info) {
              return layer.insertEdge(source, target, info.clone());
            })
-      .def("has_node", &IsolatedSceneGraphLayer::hasNode)
-      .def("has_edge", &IsolatedSceneGraphLayer::hasEdge)
+      .def("has_node", &SceneGraphLayer::hasNode)
+      .def("has_edge", &SceneGraphLayer::hasEdge)
       .def("get_node",
-           &IsolatedSceneGraphLayer::getNode,
+           &SceneGraphLayer::getNode,
            py::return_value_policy::reference_internal)
       .def("find_node",
-           &IsolatedSceneGraphLayer::findNode,
+           &SceneGraphLayer::findNode,
            py::return_value_policy::reference_internal)
       .def("get_edge",
-           &IsolatedSceneGraphLayer::getEdge,
+           &SceneGraphLayer::getEdge,
            py::return_value_policy::reference_internal)
       .def("find_edge",
-           &IsolatedSceneGraphLayer::findEdge,
+           &SceneGraphLayer::findEdge,
            py::return_value_policy::reference_internal)
-      .def("remove_edge", &IsolatedSceneGraphLayer::removeEdge)
-      .def("num_nodes", &IsolatedSceneGraphLayer::numNodes)
-      .def("num_edges", &IsolatedSceneGraphLayer::numEdges)
+      .def("remove_edge", &SceneGraphLayer::removeEdge)
+      .def("num_nodes", &SceneGraphLayer::numNodes)
+      .def("num_edges", &SceneGraphLayer::numEdges)
       .def("get_position",
-           [](const IsolatedSceneGraphLayer& layer, NodeSymbol node) {
+           [](const SceneGraphLayer& layer, NodeSymbol node) {
              return layer.getNode(node).attributes().position;
            })
-      .def_readonly("id", &IsolatedSceneGraphLayer::id)
+      .def_readonly("id", &SceneGraphLayer::id)
       .def_property(
           "nodes",
-          [](const IsolatedSceneGraphLayer& view) {
+          [](const SceneGraphLayer& view) {
             return py::make_iterator(NodeIter(view.nodes()), IterSentinel());
           },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const IsolatedSceneGraphLayer& view) {
+          [](const SceneGraphLayer& view) {
             return py::make_iterator(EdgeIter(view.edges()), IterSentinel());
           },
           nullptr,
           py::return_value_policy::reference_internal)
       .def("to_binary",
-           [](const IsolatedSceneGraphLayer& layer) -> py::bytes {
+           [](const SceneGraphLayer& layer) -> py::bytes {
              std::vector<uint8_t> buffer;
              io::binary::writeLayer(layer, buffer);
              return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
@@ -638,32 +637,15 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           nullptr,
           py::return_value_policy::reference_internal);
 
-  py::class_<DynamicLayerView>(module, "DynamicLayerView")
-      .def_readonly("id", &DynamicLayerView::id)
-      .def_readonly("prefix", &DynamicLayerView::prefix)
-      .def("num_nodes", &DynamicLayerView::numNodes)
-      .def("num_edges", &DynamicLayerView::numEdges)
-      .def_property(
-          "nodes",
-          [](const DynamicLayerView& view) {
-            return py::make_iterator(view.nodes(), IterSentinel());
-          },
-          nullptr,
-          py::return_value_policy::reference_internal)
-      .def_property(
-          "edges",
-          [](const DynamicLayerView& view) {
-            return py::make_iterator(view.edges(), IterSentinel());
-          },
-          nullptr,
-          py::return_value_policy::reference_internal);
-
   py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(
       module, "DynamicSceneGraph", py::dynamic_attr())
       .def(py::init<>())
       .def(py::init<const DynamicSceneGraph::LayerIds&>())
       .def("clear", &DynamicSceneGraph::clear)
-      .def("create_dynamic_layer", &DynamicSceneGraph::createDynamicLayer)
+      .def("add_layer",
+           [](DynamicSceneGraph& graph, LayerId layer, LayerPrefix prefix) {
+             graph.addLayer(layer, prefix);
+           })
       .def("add_node",
            [](DynamicSceneGraph& graph,
               LayerId layer_id,
@@ -677,16 +659,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              LayerId layer_id,
              LayerPrefix prefix,
              std::chrono::nanoseconds timestamp,
-             const NodeAttributes& attrs,
-             bool add_edge_to_previous) {
-            return graph.emplaceNode(
-                layer_id, prefix, timestamp, attrs.clone(), add_edge_to_previous);
+             const NodeAttributes& attrs) {
+            return graph.emplaceNode(layer_id, prefix, timestamp, attrs.clone());
           },
           "layer_id"_a,
           "prefix"_a,
           "timestamp"_a,
-          "attrs"_a,
-          "add_edge_to_previous"_a = true)
+          "attrs"_a)
       .def(
           "insert_edge",
           [](DynamicSceneGraph& graph,
@@ -714,12 +693,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "target"_a,
           "info"_a,
           "enforce_single_parent"_a = false)
-      .def("has_layer",
-           static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(
-               &DynamicSceneGraph::hasLayer))
-      .def("has_layer",
-           static_cast<bool (DynamicSceneGraph::*)(LayerId, LayerPrefix) const>(
-               &DynamicSceneGraph::hasLayer))
+/*      .def("has_layer",*/
+           /*static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(*/
+               /*&DynamicSceneGraph::hasLayer))*/
+      /*.def("has_layer",*/
+           /*static_cast<bool (DynamicSceneGraph::*)(LayerId, LayerPrefix) const>(*/
+               /*&DynamicSceneGraph::hasLayer))*/
       .def("has_node",
            [](const DynamicSceneGraph& graph, NodeSymbol node_id) {
              return graph.hasNode(node_id);
@@ -731,20 +710,10 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("has_mesh", &DynamicSceneGraph::hasMesh)
       .def(
           "get_layer",
-          [](const DynamicSceneGraph& graph, LayerId layer_id) {
-            if (!graph.hasLayer(layer_id)) {
-              throw std::out_of_range("layer doesn't exist");
-            }
-            return LayerView(graph.getLayer(layer_id));
-          },
-          py::return_value_policy::reference_internal)
-      .def(
-          "get_dynamic_layer",
-          [](const DynamicSceneGraph& graph, LayerId layer_id, LayerPrefix prefix) {
-            if (!graph.hasLayer(layer_id, prefix)) {
-              throw std::out_of_range("layer doesn't exist");
-            }
-            return DynamicLayerView(graph.getLayer(layer_id, prefix));
+          [](const DynamicSceneGraph& graph,
+             LayerId layer_id,
+             std::optional<LayerPrefix> prefix) {
+            return LayerView(graph.getLayer(layer_id, prefix));
           },
           py::return_value_policy::reference_internal)
       .def(

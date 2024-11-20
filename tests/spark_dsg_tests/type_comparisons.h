@@ -98,26 +98,6 @@ inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
   return isSubset(lhs.edges(), rhs.edges());
 }
 
-inline bool isSubset(const DynamicSceneGraphLayer& lhs,
-                     const DynamicSceneGraphLayer& rhs) {
-  for (const auto& node : lhs.nodes()) {
-    if (!node) {
-      continue;
-    }
-
-    const auto rhs_node = rhs.findNode(node->id);
-    if (!rhs_node) {
-      return false;
-    }
-
-    if (*rhs_node != *node) {
-      return false;
-    }
-  }
-
-  return isSubset(lhs.edges(), rhs.edges());
-}
-
 inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rhs) {
   for (const auto& [layer_id, layer] : lhs.layers()) {
     if (!rhs.hasLayer(layer_id)) {

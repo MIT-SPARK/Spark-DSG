@@ -151,9 +151,9 @@ void writeGraph(const DynamicSceneGraph& graph,
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& id_layer_group_pair : graph.dynamicLayers()) {
-    for (const auto& prefix_layer_pair : id_layer_group_pair.second) {
-      for (const auto& node : prefix_layer_pair.second->nodes()) {
+  for (const auto& [layer_id, group] : graph.dynamicLayers()) {
+    for (const auto& [prefix, layer] : group) {
+      for (const auto& [node_id, node] : layer->nodes()) {
         serializer.write(*node);
       }
     }
@@ -291,15 +291,14 @@ DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
   return graph;
 }
 
-std::shared_ptr<IsolatedSceneGraphLayer> readLayer(const uint8_t* const buffer,
-                                                   size_t length) {
+std::shared_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length) {
   const auto& header = io::GlobalInfo::loadedHeader();
 
   BinaryDeserializer deserializer(buffer, length);
   LayerId layer_id;
   deserializer.read(layer_id);
 
-  auto graph = std::make_shared<IsolatedSceneGraphLayer>(layer_id);
+  auto graph = std::make_shared<SceneGraphLayer>(layer_id);
 
   // load name to type index mapping if present
   const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);

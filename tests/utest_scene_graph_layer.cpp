@@ -41,14 +41,14 @@ using NodeSet = std::unordered_set<NodeId>;
 
 // Test that an empty layer has no nodes and edges
 TEST(SceneGraphLayerTests, DefaultLayerInvariants) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numNodes());
   EXPECT_EQ(0u, layer.numEdges());
 }
 
 // Test that we only have nodes that we add, and we can't add the same node
 TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numNodes());
   EXPECT_FALSE(layer.hasNode(0));
   EXPECT_EQ(NodeStatus::NONEXISTENT, layer.checkNode(0));
@@ -68,43 +68,12 @@ TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
   EXPECT_FALSE(layer.emplaceNode(0, std::make_unique<NodeAttributes>()));
 }
 
-// Test that we only have nodes that we add, and we can't add the same node
-TEST(SceneGraphLayerTests, InsertNodeInvariants) {
-  IsolatedSceneGraphLayer layer(1);
-  EXPECT_EQ(0u, layer.numNodes());
-  EXPECT_FALSE(layer.hasNode(0));
-  EXPECT_EQ(NodeStatus::NONEXISTENT, layer.checkNode(0));
-
-  auto valid_node =
-      std::make_unique<SceneGraphNode>(0, 1, std::make_unique<NodeAttributes>());
-  EXPECT_TRUE(layer.insertNode(std::move(valid_node)));
-  EXPECT_EQ(1u, layer.numNodes());
-  EXPECT_TRUE(layer.hasNode(0));
-  EXPECT_EQ(NodeStatus::NEW, layer.checkNode(0));
-
-  // we already have this node, so we should fail
-  auto repeat_node =
-      std::make_unique<SceneGraphNode>(0, 1, std::make_unique<NodeAttributes>());
-  EXPECT_FALSE(layer.insertNode(std::move(repeat_node)));
-
-  // invalid layers should also get rejected
-  auto invalid_node =
-      std::make_unique<SceneGraphNode>(1, 0, std::make_unique<NodeAttributes>());
-  EXPECT_FALSE(layer.insertNode(std::move(invalid_node)));
-  EXPECT_EQ(1u, layer.numNodes());
-
-  // null nodes should also get rejected
-  std::unique_ptr<SceneGraphNode> null_node(nullptr);
-  EXPECT_FALSE(layer.insertNode(std::move(null_node)));
-  EXPECT_EQ(1u, layer.numNodes());
-}
-
 // Test that we only have edges that we add, and that edges added respect:
 //   - That the source and target must exist
 //   - That the edge must not already exist
 //   - That edges are bidirectional
 TEST(SceneGraphLayerTests, InsertEdgeInvariants) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
   EXPECT_EQ(0u, layer.numEdges());
   EXPECT_FALSE(layer.hasEdge(0, 1));
 
@@ -132,7 +101,7 @@ TEST(SceneGraphLayerTests, InsertEdgeInvariants) {
 
 // Test that inserting specific edge attributes works
 TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
   // source and target nodes
   EXPECT_TRUE(layer.emplaceNode(0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(layer.emplaceNode(1, std::make_unique<NodeAttributes>()));
@@ -170,7 +139,7 @@ TEST(SceneGraphLayerTests, EdgeAttributesCorrect) {
 
 // Test that nodes we see via the public iterator match up with what we added
 TEST(SceneGraphLayerTests, BasicNodeIterationCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
   size_t num_nodes = 5;
   std::set<int64_t> expected_ids;
   for (size_t i = 0; i < num_nodes; ++i) {
@@ -192,7 +161,7 @@ TEST(SceneGraphLayerTests, BasicNodeIterationCorrect) {
 
 // Test that edges we see via the public iterator match up with what we added
 TEST(SceneGraphLayerTests, BasicEdgeIterationCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
   size_t num_nodes = 5;
   for (size_t i = 0; i < num_nodes; ++i) {
     EXPECT_TRUE(layer.emplaceNode(i, std::make_unique<NodeAttributes>()));
@@ -220,7 +189,7 @@ TEST(SceneGraphLayerTests, BasicEdgeIterationCorrect) {
 //   - we don't do anything if it doesn't exist
 //   - we remove all edges related to the node if it does
 TEST(SceneGraphLayerTests, RemoveNodeSound) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(layer.removeNode(0));
@@ -246,7 +215,7 @@ TEST(SceneGraphLayerTests, RemoveNodeSound) {
 //   - we don't do anything if either nodes doesn't exist
 //   - we rewire all edges to the merged nodes if we do
 TEST(SceneGraphLayerTests, MergeNodesCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(layer.mergeNodes(0, 1));
@@ -280,7 +249,7 @@ TEST(SceneGraphLayerTests, MergeNodesCorrect) {
 
 // Test that removing a edge does what it should
 TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   // we can't remove a node that doesn't exist
   EXPECT_FALSE(layer.removeEdge(0, 1));
@@ -299,7 +268,7 @@ TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
 
 // Test that rewiring an edge does what it should
 TEST(SceneGraphLayerTests, RewireEdgeCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   size_t num_nodes = 5;
   for (size_t i = 0; i < num_nodes; ++i) {
@@ -331,8 +300,8 @@ TEST(SceneGraphLayerTests, RewireEdgeCorrect) {
 }
 
 TEST(SceneGraphLayerTests, MergeLayerCorrect) {
-  IsolatedSceneGraphLayer layer_1(1);
-  IsolatedSceneGraphLayer layer_2(1);
+  SceneGraphLayer layer_1(1);
+  SceneGraphLayer layer_2(1);
 
   for (size_t i = 0; i < 3; ++i) {
     Eigen::Vector3d node_pos;
@@ -372,7 +341,7 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
 }
 
 TEST(SceneGraphLayerTests, GetNeighborhoodCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   layer.emplaceNode(0, std::make_unique<NodeAttributes>());
   for (size_t i = 1; i < 7; ++i) {
@@ -400,7 +369,7 @@ TEST(SceneGraphLayerTests, GetNeighborhoodCorrect) {
 }
 
 TEST(SceneGraphLayerTests, GetNeighborhoodFromSetCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   layer.emplaceNode(0, std::make_unique<NodeAttributes>());
   for (size_t i = 1; i < 7; ++i) {
@@ -452,7 +421,7 @@ TEST(SceneGraphLayerTests, GetNeighborhoodFromSetCorrect) {
 }
 
 TEST(SceneGraphLayerTests, TestRemovedNodes) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   for (size_t i = 0; i < 5; ++i) {
     layer.emplaceNode(i, std::make_unique<NodeAttributes>());
@@ -496,7 +465,7 @@ TEST(SceneGraphLayerTests, TestRemovedNodes) {
 }
 
 TEST(SceneGraphLayerTests, TestNewNodes) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   for (size_t i = 0; i < 5; ++i) {
     layer.emplaceNode(i, std::make_unique<NodeAttributes>());
@@ -529,7 +498,7 @@ TEST(SceneGraphLayerTests, TestNewNodes) {
 }
 
 TEST(SceneGraphLayerTests, NewRemovedEdgesCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   layer.emplaceNode(0, std::make_unique<NodeAttributes>());
   for (size_t i = 1; i < 5; ++i) {
@@ -567,7 +536,7 @@ TEST(SceneGraphLayerTests, NewRemovedEdgesCorrect) {
 }
 
 TEST(SceneGraphLayerTests, CloneCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   layer.emplaceNode(0, std::make_unique<NodeAttributes>());
   for (size_t i = 1; i < 5; ++i) {

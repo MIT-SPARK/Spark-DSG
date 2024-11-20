@@ -51,18 +51,6 @@ class NodeIter {
   SceneGraphLayer::Nodes::const_iterator end_iter_;
 };
 
-class DynamicNodeIter {
- public:
-  DynamicNodeIter(const DynamicSceneGraphLayer::Nodes& container);
-  const SceneGraphNode* operator*() const;
-  DynamicNodeIter& operator++();
-  bool operator==(const IterSentinel&);
-
- private:
-  DynamicSceneGraphLayer::Nodes::const_iterator curr_iter_;
-  DynamicSceneGraphLayer::Nodes::const_iterator end_iter_;
-};
-
 class EdgeIter {
  public:
   EdgeIter(const SceneGraphLayer::Edges& container);
