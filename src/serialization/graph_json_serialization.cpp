@@ -106,22 +106,22 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
   record["layer_ids"] = graph.layer_ids();
   record["metadata"] = graph.metadata;
 
-  for (const auto& id_layer_pair : graph.layers()) {
-    for (const auto& id_node_pair : id_layer_pair.second->nodes()) {
-      record["nodes"].push_back(*id_node_pair.second);
+  for (const auto& [layer_id, layer] : graph.layers()) {
+    for (const auto& [node_id, node] : layer->nodes()) {
+      record["nodes"].push_back(*node);
     }
 
-    for (const auto& id_edge_pair : id_layer_pair.second->edges()) {
-      record["edges"].push_back(id_edge_pair.second);
+    for (const auto& [edge_id, edge] : layer->edges()) {
+      record["edges"].push_back(edge);
     }
   }
 
-  for (const auto& id_edge_pair : graph.interlayer_edges()) {
-    record["edges"].push_back(id_edge_pair.second);
+  for (const auto& [edge_id, edge] : graph.interlayer_edges()) {
+    record["edges"].push_back(edge);
   }
 
-  for (const auto& id_edge_pair : graph.dynamic_interlayer_edges()) {
-    record["edges"].push_back(id_edge_pair.second);
+  for (const auto& [edge_id, edge] : graph.dynamic_interlayer_edges()) {
+    record["edges"].push_back(edge);
   }
 
   for (const auto& [layer_id, group] : graph.dynamicLayers()) {
