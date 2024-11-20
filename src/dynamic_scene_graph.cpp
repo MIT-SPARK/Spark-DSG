@@ -56,7 +56,7 @@ std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
   } else {
     out << key.layer;
     if (key.dynamic) {
-      out << "(" << key.prefix << ")";
+      out << "[prefix=" << LayerPrefix(key.prefix).str(true) << "]";
     }
   }
 
@@ -66,7 +66,7 @@ std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
 LayerKey::LayerKey(LayerId layer_id)
     : layer(layer_id), prefix(0), dynamic(false), valid(true) {}
 
-LayerKey::LayerKey(LayerId layer_id, uint32_t prefix)
+LayerKey::LayerKey(LayerId layer_id, LayerPrefix prefix)
     : layer(layer_id), prefix(prefix), dynamic(true), valid(true) {}
 
 bool LayerKey::isParent(const LayerKey& other) const { return layer > other.layer; }
@@ -628,8 +628,8 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const GraphMergeConfig& config) {
   for (auto&& [l_id, other_layers] : other.dynamicLayers()) {
     for (auto&& [prefix, other_layer] : other_layers) {
-      auto& layer = const_cast<Layer&>(addLayer(l_id, prefix));
       const LayerKey layer_key(l_id, prefix);
+      auto& layer = layerFromKey(layer_key);
 
       std::vector<NodeId> new_nodes;
       layer.mergeLayer(*other_layer, config, &new_nodes);
@@ -640,7 +640,7 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
   }
 
   for (auto&& [l_id, other_layer] : other.layers()) {
-    auto& layer = const_cast<Layer&>(addLayer(l_id));
+    auto& layer = layerFromKey(l_id);
 
     std::vector<NodeId> removed_nodes;
     other_layer->getRemovedNodes(removed_nodes, config.clear_removed);
