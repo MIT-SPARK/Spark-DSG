@@ -140,10 +140,10 @@ TEST_P(GraphSerializationFixture, DsgDynamic) {
   DynamicSceneGraph expected;
   expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
 
-  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a3"_id, std::make_unique<NodeAttributes>());
 
   const auto result = round_trip_serializer->compute(expected);
   ASSERT_TRUE(result);
@@ -157,10 +157,10 @@ TEST_P(GraphSerializationFixture, DsgWithMesh) {
   DynamicSceneGraph expected;
   expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
 
-  expected.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>());
-  expected.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>());
+  expected.emplaceNode({2, 'a'}, "a3"_id, std::make_unique<NodeAttributes>());
 
   auto mesh = std::make_shared<Mesh>();
   mesh->points.push_back(Eigen::Vector3f::Zero());
@@ -188,10 +188,10 @@ TEST(GraphSerialization, UpdateDsgFromBinaryWithCorrection) {
   original.emplaceNode(3, 1, std::make_unique<NodeAttributes>());
   original.emplaceNode(4, 3, std::make_unique<NodeAttributes>());
 
-  original.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  original.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  original.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>());
-  original.emplaceNode(2, 'a', 40ns, std::make_unique<NodeAttributes>());
+  original.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
+  original.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
+  original.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>());
+  original.emplaceNode({2, 'a'}, "a3"_id, std::make_unique<NodeAttributes>());
 
   DynamicSceneGraph updated;
   updated.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
@@ -202,10 +202,10 @@ TEST(GraphSerialization, UpdateDsgFromBinaryWithCorrection) {
   updated.insertEdge(0, 1);
   updated.insertEdge(0, 3);
 
-  updated.emplaceNode(2, 'a', 10ns, std::make_unique<NodeAttributes>());
-  updated.emplaceNode(2, 'a', 20ns, std::make_unique<NodeAttributes>());
-  updated.emplaceNode(2, 'a', 30ns, std::make_unique<NodeAttributes>());
-  updated.emplaceNode(3, 'b', 40ns, std::make_unique<NodeAttributes>());
+  updated.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
+  updated.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
+  updated.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>());
+  updated.emplaceNode({3, 'b'}, "b0"_id, std::make_unique<NodeAttributes>());
   updated.insertEdge(0, "a0"_id);
 
   std::vector<uint8_t> buffer;

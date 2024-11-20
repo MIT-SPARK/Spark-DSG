@@ -425,14 +425,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("get_parent", &SceneGraphNode::getParent)
       .def("siblings", &SceneGraphNode::siblings)
       .def("children", &SceneGraphNode::children)
-      .def_property_readonly("timestamp",
-                             [](const SceneGraphNode& node) -> std::optional<uint64_t> {
-                               if (node.timestamp) {
-                                 return node.timestamp.value().count();
-                               } else {
-                                 return std::nullopt;
-                               }
-                             })
       .def_property("attributes",
                     &SceneGraphNode::getAttributesPtr,
                     &SceneGraphNode::getAttributesPtr,
@@ -658,13 +650,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           [](DynamicSceneGraph& graph,
              LayerId layer_id,
              LayerPrefix prefix,
-             std::chrono::nanoseconds timestamp,
+             NodeSymbol node_id,
              const NodeAttributes& attrs) {
-            return graph.emplaceNode(layer_id, prefix, timestamp, attrs.clone());
+            return graph.emplaceNode({layer_id, prefix}, node_id, attrs.clone());
           },
           "layer_id"_a,
           "prefix"_a,
-          "timestamp"_a,
+          "node_id"_a,
           "attrs"_a)
       .def(
           "insert_edge",
@@ -693,12 +685,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "target"_a,
           "info"_a,
           "enforce_single_parent"_a = false)
-/*      .def("has_layer",*/
-           /*static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(*/
-               /*&DynamicSceneGraph::hasLayer))*/
+      /*      .def("has_layer",*/
+      /*static_cast<bool (DynamicSceneGraph::*)(LayerId) const>(*/
+      /*&DynamicSceneGraph::hasLayer))*/
       /*.def("has_layer",*/
-           /*static_cast<bool (DynamicSceneGraph::*)(LayerId, LayerPrefix) const>(*/
-               /*&DynamicSceneGraph::hasLayer))*/
+      /*static_cast<bool (DynamicSceneGraph::*)(LayerId, LayerPrefix) const>(*/
+      /*&DynamicSceneGraph::hasLayer))*/
       .def("has_node",
            [](const DynamicSceneGraph& graph, NodeSymbol node_id) {
              return graph.hasNode(node_id);

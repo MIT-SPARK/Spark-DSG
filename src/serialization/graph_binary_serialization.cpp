@@ -48,7 +48,6 @@ void write_binary(serialization::BinarySerializer& s, const SceneGraphNode& node
   s.startFixedArray(4);
   s.write(node.layer);
   s.write(node.id);
-  s.write(node.timestamp);
   s.write(node.attributes());
 }
 
@@ -65,10 +64,8 @@ using spark_dsg::serialization::AttributeFactory;
 using spark_dsg::serialization::BinaryDeserializer;
 using spark_dsg::serialization::BinarySerializer;
 
-using NodeCallback = std::function<void(LayerId,
-                                        NodeId,
-                                        std::unique_ptr<NodeAttributes>&&,
-                                        std::optional<std::chrono::nanoseconds>)>;
+using NodeCallback =
+    std::function<void(LayerId, NodeId, std::unique_ptr<NodeAttributes>&&)>;
 using EdgeCallback =
     std::function<void(NodeId, NodeId, std::unique_ptr<EdgeAttributes>&&)>;
 
@@ -80,15 +77,19 @@ NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
   deserializer.read(layer);
   NodeId node;
   deserializer.read(node);
-  std::optional<std::chrono::nanoseconds> stamp;
-  deserializer.read(stamp);
+
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 0, 6)) {
+    std::optional<std::chrono::nanoseconds> stamp;
+    deserializer.read(stamp);
+  }
 
   auto attrs = serialization::Visitor::from(factory, deserializer);
   if (!attrs) {
     return node;
   }
 
-  callback(layer, node, std::move(attrs), stamp);
+  callback(layer, node, std::move(attrs));
   return node;
 }
 
@@ -234,22 +235,22 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
 
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
-    stale_nodes.erase(parseNode(
-        node_factory,
-        deserializer,
-        [&graph](const auto& layer, const auto& node, auto&& attrs, const auto& stamp) {
-          graph.addOrUpdateNode(layer, node, std::move(attrs), stamp);
-        }));
+    stale_nodes.erase(
+        parseNode(node_factory,
+                  deserializer,
+                  [&graph](const auto& layer, const auto& node, auto&& attrs) {
+                    graph.addOrUpdateNode(layer, node, std::move(attrs));
+                  }));
   }
 
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
-    stale_nodes.erase(parseNode(
-        node_factory,
-        deserializer,
-        [&graph](const auto& layer, const auto& node, auto&& attrs, const auto& stamp) {
-          graph.addOrUpdateNode(layer, node, std::move(attrs), stamp);
-        }));
+    stale_nodes.erase(
+        parseNode(node_factory,
+                  deserializer,
+                  [&graph](const auto& layer, const auto& node, auto&& attrs) {
+                    graph.addOrUpdateNode(layer, node, std::move(attrs));
+                  }));
   }
 
   for (const auto& node_id : stale_nodes) {
@@ -308,7 +309,7 @@ std::shared_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t l
   while (!deserializer.isDynamicArrayEnd()) {
     parseNode(node_factory,
               deserializer,
-              [&graph](const auto&, const auto& node, auto&& attrs, const auto&) {
+              [&graph](const auto&, const auto& node, auto&& attrs) {
                 graph->emplaceNode(node, std::move(attrs));
               });
   }

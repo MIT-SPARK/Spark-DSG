@@ -51,23 +51,23 @@ using Edge = SceneGraphEdge;
 using Layer = SceneGraphLayer;
 
 std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
-  if (!key.layer) {
+  if (!key) {
     out << "UNKNOWN";
   } else {
+    out << key.layer;
     if (key.dynamic) {
-      out << *key.layer << "(" << key.prefix << ")";
-    } else {
-      out << *key.layer;
+      out << "(" << key.prefix << ")";
     }
   }
 
   return out;
 }
 
-LayerKey::LayerKey(LayerId layer_id) : layer(layer_id), prefix(0), dynamic(false) {}
+LayerKey::LayerKey(LayerId layer_id)
+    : layer(layer_id), prefix(0), dynamic(false), valid(true) {}
 
 LayerKey::LayerKey(LayerId layer_id, uint32_t prefix)
-    : layer(layer_id), prefix(prefix), dynamic(true) {}
+    : layer(layer_id), prefix(prefix), dynamic(true), valid(true) {}
 
 bool LayerKey::isParent(const LayerKey& other) const { return layer > other.layer; }
 
@@ -198,7 +198,7 @@ const Layer& DynamicSceneGraph::getLayer(const std::string& name,
 
 const Layer& DynamicSceneGraph::addLayer(LayerId layer,
                                          std::optional<LayerPrefix> prefix) {
-  return layerFromKey(prefix ? LayerKey(layer) : LayerKey(layer, *prefix));
+  return layerFromKey(prefix ? LayerKey(layer, *prefix) : LayerKey(layer));
 }
 
 void DynamicSceneGraph::removeLayer(LayerId layer, std::optional<LayerPrefix> prefix) {
@@ -217,21 +217,17 @@ void DynamicSceneGraph::removeLayer(LayerId layer, std::optional<LayerPrefix> pr
   }
 }
 
-bool DynamicSceneGraph::emplaceNode(LayerKey layer_id,
+bool DynamicSceneGraph::emplaceNode(LayerKey layer_key,
                                     NodeId node_id,
                                     std::unique_ptr<NodeAttributes>&& attrs) {
   if (node_lookup_.count(node_id)) {
     return false;
   }
 
-  if (!layers_.count(layer_id)) {
-    SG_LOG(WARNING) << "Invalid layer: " << layer_id << std::endl;
-    return false;
-  }
-
-  const bool successful = layers_[layer_id]->emplaceNode(node_id, std::move(attrs));
+  auto& layer = layerFromKey(layer_key);
+  const auto successful = layer.emplaceNode(node_id, std::move(attrs));
   if (successful) {
-    node_lookup_.emplace(node_id, layer_id);
+    node_lookup_.emplace(node_id, layer_key);
   }
 
   return successful;
@@ -246,10 +242,10 @@ bool DynamicSceneGraph::addOrUpdateNode(LayerKey layer_key,
     return true;
   }
 
-  bool successful = false;
-  auto& layer = layerFromKey(layer_id);
-  if (layer.emplaceNode(node_id, std::move(attrs))) {
-    node_lookup_.emplace(node_id, layer_id);
+  auto& layer = layerFromKey(layer_key);
+  const auto successful = layer.emplaceNode(node_id, std::move(attrs));
+  if (successful) {
+    node_lookup_.emplace(node_id, layer_key);
   }
 
   return successful;
@@ -563,7 +559,7 @@ bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
     return false;  // Cannot merge nodes of different layers
   }
 
-  Node* node = layers_[*info.layer]->nodes_.at(node_from).get();
+  Node* node = layers_[info.layer]->nodes_.at(node_from).get();
 
   // Remove parent
   const auto parents_to_rewire = node->parents_;
@@ -578,7 +574,7 @@ bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
   }
 
   // TODO(nathan) dynamic merge
-  layers_[*info.layer]->mergeNodes(node_from, node_to);
+  layers_[info.layer]->mergeNodes(node_from, node_to);
   node_lookup_.erase(node_from);
   return true;
 }
@@ -761,35 +757,30 @@ void DynamicSceneGraph::removeAllStaleEdges() {
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
   auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids_);
-  for (const auto id_layer_pair : node_lookup_) {
-    auto node = getNodePtr(id_layer_pair.first, id_layer_pair.second);
-    to_return->addOrUpdateNode(
-        node->layer, node->id, node->attributes_->clone(), node->timestamp);
+  for (const auto [node_id, layer_key] : node_lookup_) {
+    auto node = getNodePtr(node_id, layer_key);
+    to_return->addOrUpdateNode(node->layer, node->id, node->attributes_->clone());
   }
 
-  for (const auto& id_layer_pair : layers_) {
-    for (const auto& id_edge_pair : id_layer_pair.second->edges()) {
-      const auto& edge = id_edge_pair.second;
+  for (const auto& [layer_id, layer] : layers_) {
+    for (const auto& [edge_id, edge] : layer->edges()) {
       to_return->insertEdge(edge.source, edge.target, edge.info->clone());
     }
   }
 
-  for (const auto& id_layer_group : dynamic_layers_) {
-    for (const auto& prefix_layer_pair : id_layer_group.second) {
-      for (const auto& id_edge_pair : prefix_layer_pair.second->edges()) {
-        const auto& edge = id_edge_pair.second;
+  for (const auto& [layer_id, group] : dynamic_layers_) {
+    for (const auto& [prefix, layer] : group) {
+      for (const auto& [edge_id, edge] : layer->edges()) {
         to_return->insertEdge(edge.source, edge.target, edge.info->clone());
       }
     }
   }
 
-  for (const auto& id_edge_pair : interlayer_edges()) {
-    const auto& edge = id_edge_pair.second;
+  for (const auto& [edge_id, edge] : interlayer_edges()) {
     to_return->insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
-  for (const auto& id_edge_pair : dynamic_interlayer_edges()) {
-    const auto& edge = id_edge_pair.second;
+  for (const auto& [edge_id, edge] : dynamic_interlayer_edges()) {
     to_return->insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
@@ -840,18 +831,17 @@ Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) {
     throw std::out_of_range("invalid layer key!");
   }
 
-  const auto layer_id = key.layer.value();
   if (!key.dynamic) {
-    auto iter = layers_.emplace(layer_id, std::make_unique<Layer>(layer_id)).first;
+    auto iter = layers_.emplace(key.layer, std::make_unique<Layer>(key.layer)).first;
     return *iter->second;
   }
 
-  auto iter = dynamic_layers_.find(layer_id);
+  auto iter = dynamic_layers_.find(key.layer);
   if (iter == dynamic_layers_.end()) {
-    iter = dynamic_layers_.emplace(layer_id, DynamicLayers()).first;
+    iter = dynamic_layers_.emplace(key.layer, DynamicLayers()).first;
   }
 
-  return *iter->second.emplace(key.prefix, std::make_unique<Layer>(layer_id))
+  return *iter->second.emplace(key.prefix, std::make_unique<Layer>(key.layer))
               .first->second;
 }
 
@@ -860,12 +850,7 @@ const Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) const {
 }
 
 SceneGraphNode* DynamicSceneGraph::getNodePtr(NodeId node, const LayerKey& info) const {
-  if (info.dynamic) {
-    const auto idx = NodeSymbol(node).categoryId();
-    return dynamic_layers_.at(info.layer.value()).at(info.prefix)->nodes_.at(idx).get();
-  } else {
-    return layers_.at(info.layer.value())->nodes_.at(node).get();
-  }
+  return layerFromKey(info).nodes_.at(node).get();
 }
 
 bool DynamicSceneGraph::hasEdge(NodeId source,

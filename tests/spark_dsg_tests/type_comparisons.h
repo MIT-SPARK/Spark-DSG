@@ -34,8 +34,8 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <spark_dsg/dynamic_scene_graph.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/node_attributes.h>
 
 namespace spark_dsg {
 namespace test {
@@ -51,7 +51,7 @@ bool quaternionsEqual(const Eigen::Quaternion<Scalar>& lhs,
 
 inline bool operator==(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
   return lhs.id == rhs.id && lhs.layer == rhs.layer &&
-         lhs.attributes() == rhs.attributes() && lhs.timestamp == rhs.timestamp;
+         lhs.attributes() == rhs.attributes();
 }
 
 inline bool operator!=(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
