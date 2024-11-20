@@ -194,22 +194,8 @@ class DynamicSceneGraph {
    * @param attrs node attributes
    * @return true if the node was added successfully
    */
-  bool emplaceNode(LayerId layer_id,
+  bool emplaceNode(LayerKey layer_id,
                    NodeId node_id,
-                   std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief construct and add a dynamic node to the specified layer in the graph
-   * @param layer_id layer to add to
-   * @param prefix dynamic layer prefix to add to
-   * @param timestamp dynamic node timestamp in nanoseconds
-   * @param attrs node attributes
-   * @param add_edge_to_previous add edge to previous dynamic node (if it exists)
-   * @return true if the node was added successfully
-   */
-  bool emplaceNode(LayerId layer_id,
-                   LayerPrefix prefix,
-                   std::chrono::nanoseconds timestamp,
                    std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
@@ -218,13 +204,10 @@ class DynamicSceneGraph {
    * @param layer_id layer to add to
    * @param node_id node to add
    * @param attrs attributes to add
-   * @param timestamp timestamp to use (if dynamic)
    */
-  bool addOrUpdateNode(
-      LayerId layer_id,
-      NodeId node_id,
-      std::unique_ptr<NodeAttributes>&& attrs,
-      std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
+  bool addOrUpdateNode(LayerKey layer_id,
+                       NodeId node_id,
+                       std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief Add an edge to the graph

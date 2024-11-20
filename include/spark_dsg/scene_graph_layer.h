@@ -131,12 +131,9 @@ class SceneGraphLayer {
    * @brief construct and add a node to the layer
    * @param node_id node to create
    * @param attrs node attributes
-   * @param timestamp Optional node timestamp
    * @returns true if emplace into internal map was successful
    */
-  bool emplaceNode(NodeId node_id,
-                   std::unique_ptr<NodeAttributes>&& attrs,
-                   std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
+  bool emplaceNode(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief remove a node if it exists
