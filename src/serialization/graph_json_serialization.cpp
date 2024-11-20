@@ -77,8 +77,8 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
   bool added = false;
   if (record.contains("timestamp")) {
     auto time = record.at("timestamp").get<uint64_t>();
-    added = graph.emplacePrevDynamicNode(
-        layer, node_id, std::chrono::nanoseconds(time), std::move(attrs));
+    added = graph.addOrUpdateNode(
+        layer, node_id, std::move(attrs), std::chrono::nanoseconds(time));
   } else {
     added = graph.emplaceNode(layer, node_id, std::move(attrs));
   }
@@ -136,19 +136,13 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
     record["edges"].push_back(id_edge_pair.second);
   }
 
-  for (const auto& id_layer_group_pair : graph.dynamicLayers()) {
-    for (const auto& prefix_layer_pair : id_layer_group_pair.second) {
-      const auto& layer = *prefix_layer_pair.second;
-
-      for (size_t i = 0; i < layer.nodes().size(); ++i) {
-        if (!layer.hasNodeByIndex(i)) {
-          continue;
-        }
-
-        record["nodes"].push_back(layer.getNodeByIndex(i));
+  for (const auto& [layer_id, group] : graph.dynamicLayers()) {
+    for (const auto& [prefix, layer] : group) {
+      for (const auto& [node_id, node] : layer->nodes()) {
+        record["nodes"].push_back(*node);
       }
 
-      for (const auto& id_edge_pair : layer.edges()) {
+      for (const auto& id_edge_pair : layer->edges()) {
         record["edges"].push_back(id_edge_pair.second);
       }
     }

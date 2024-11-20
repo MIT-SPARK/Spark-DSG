@@ -53,11 +53,9 @@ inline std::shared_ptr<DynamicSceneGraph> readGraph(
   return readGraph(buffer.data(), buffer.size());
 }
 
-std::shared_ptr<IsolatedSceneGraphLayer> readLayer(const uint8_t* const buffer,
-                                                   size_t length);
+std::shared_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length);
 
-inline std::shared_ptr<IsolatedSceneGraphLayer> readLayer(
-    const std::vector<uint8_t>& buffer) {
+inline std::shared_ptr<SceneGraphLayer> readLayer(const std::vector<uint8_t>& buffer) {
   return readLayer(buffer.data(), buffer.size());
 }
 

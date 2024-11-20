@@ -67,7 +67,7 @@ struct AdjacencyMatrixFixture
     layer.insertEdge(1, 3, std::make_unique<EdgeAttributes>(0.4));
   }
 
-  IsolatedSceneGraphLayer layer;
+  SceneGraphLayer layer;
 };
 
 TEST_P(AdjacencyMatrixFixture, AdjacencyMatrixCorrect) {

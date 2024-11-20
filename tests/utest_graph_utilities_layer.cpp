@@ -99,7 +99,7 @@ struct ConnectedComponentFixture
     layer.insertEdge(4, 5);
   }
 
-  IsolatedSceneGraphLayer layer;
+  SceneGraphLayer layer;
 };
 
 TEST_P(ConnectedComponentFixture, ResultCorrect) {
@@ -161,7 +161,7 @@ struct DepthLimitedCCFixture : public testing::TestWithParam<DepthLimitedCCTestC
     }
   }
 
-  IsolatedSceneGraphLayer layer;
+  SceneGraphLayer layer;
 };
 
 TEST_P(DepthLimitedCCFixture, ResultCorrect) {
@@ -244,7 +244,7 @@ struct FilteredCCFixture : public testing::TestWithParam<FilteredCCTestConfig> {
     }
   }
 
-  IsolatedSceneGraphLayer layer;
+  SceneGraphLayer layer;
 };
 
 TEST_P(FilteredCCFixture, ResultCorrect) {
@@ -276,7 +276,7 @@ INSTANTIATE_TEST_SUITE_P(GetConnectedComponentWithFilters,
                          testing::ValuesIn(filtered_cc_test_cases));
 
 TEST(ConnectedComponentTests, NormalEmptyCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   NodeSet query;
   Components result = getConnectedComponents<SceneGraphLayer>(layer, query, false);
@@ -289,7 +289,7 @@ TEST(ConnectedComponentTests, NormalEmptyCorrect) {
 }
 
 TEST(ConnectedComponentTests, FilteredEmptyCorrect) {
-  IsolatedSceneGraphLayer layer(1);
+  SceneGraphLayer layer(1);
 
   NodeSet query;
   Components result = getConnectedComponents<SceneGraphLayer>(

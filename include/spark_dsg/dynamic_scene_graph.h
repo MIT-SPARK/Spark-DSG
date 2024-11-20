@@ -37,11 +37,30 @@
 #include <nlohmann/json.hpp>
 #include <type_traits>
 
-#include "spark_dsg/dynamic_scene_graph_layer.h"
+#include "spark_dsg/layer_prefix.h"
 #include "spark_dsg/scene_graph_layer.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
+
+struct LayerKey {
+  std::optional<LayerId> layer;
+  uint32_t prefix = 0;
+  bool dynamic = false;
+
+  LayerKey() = default;
+  LayerKey(LayerId layer_id);
+  LayerKey(LayerId layer_id, uint32_t prefix);
+  bool isParent(const LayerKey& other) const;
+  bool isValid() const { return layer.has_value(); }
+  operator bool() const { return isValid(); }
+  bool operator==(const LayerKey& other) const;
+  inline bool operator!=(const LayerKey& other) const {
+    return !this->operator==(other);
+  }
+};
+
+std::ostream& operator<<(std::ostream& out, const LayerKey& key);
 
 /**
  * @brief Dynamic Scene Graph class
@@ -58,32 +77,14 @@ class DynamicSceneGraph {
   using LayerNames = std::map<std::string, LayerId>;
   //! Edge container
   using Edges = EdgeContainer::Edges;
+  //! Scene graph layer
+  using Layer = SceneGraphLayer;
   //! Layer container
-  using Layers = std::map<LayerId, SceneGraphLayer::Ptr>;
+  using Layers = std::map<LayerId, Layer::Ptr>;
   //! Dynamic layer container
-  using DynamicLayers = std::map<uint32_t, DynamicSceneGraphLayer::Ptr>;
+  using DynamicLayers = std::map<uint32_t, Layer::Ptr>;
 
   friend class SceneGraphLogger;
-
-  struct LayerKey {
-    std::optional<LayerId> layer;
-    uint32_t prefix = 0;
-    bool dynamic = false;
-
-    LayerKey() = default;
-    LayerKey(LayerId layer_id);
-    LayerKey(LayerId layer_id, uint32_t prefix);
-    bool isParent(const LayerKey& other) const;
-    bool isValid() const { return layer.has_value(); }
-    operator bool() const { return isValid(); }
-    bool operator==(const LayerKey& other) const;
-    inline bool operator!=(const LayerKey& other) const {
-      return !this->operator==(other);
-    }
-  };
-
-  //! Callback type
-  using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
 
   /**
    * @brief Construct the scene graph
@@ -116,67 +117,75 @@ class DynamicSceneGraph {
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_id Layer id to check
-   * @param layer_prefix Dynamic layer prefix to check (if specified)
+   * @param prefix Dynamic layer prefix to check (if specified)
    * @returns Returns true if the layer exists and is valid
    */
   bool hasLayer(LayerId layer_id,
-                std::optional<LayerPrefix> layer_prefix = std::nullopt) const;
+                std::optional<LayerPrefix> prefix = std::nullopt) const;
 
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_name Layer name to check
+   * @param prefix Dynamic layer prefix to check (if specified)
    * @returns Returns true if the layer exists and is valid
    */
   bool hasLayer(const std::string& layer_name,
-                std::optional<LayerPrefix> layer_prefix = std::nullopt) const;
+                std::optional<LayerPrefix> prefix = std::nullopt) const;
 
   /**
    * @brief Attempt to retrieve the specified layer
    * @param layer_id Layer ID to check
+   * @param prefix Dynamic layer prefix to get (if specified)
    * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
    */
-  const SceneGraphLayer* findLayer(LayerId layer_id) const;
+  const Layer* findLayer(LayerId layer_id,
+                         std::optional<LayerPrefix> prefix = std::nullopt) const;
 
   /**
    * @brief Attempt to retrieve the specified layer
    * @param layer_name Layer name to check
+   * @param prefix Dynamic layer prefix to get (if specified)
    * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
    */
-  const SceneGraphLayer* findLayer(const std::string& layer_name) const;
+  const Layer* findLayer(const std::string& layer_name,
+                         std::optional<LayerPrefix> prefix = std::nullopt) const;
 
   /**
    * @brief Get a layer if the layer exists
    * @param layer_id layer to get
+   * @param prefix Dynamic layer prefix to get (if specified)
    * @returns a constant reference to the requested layer
    * @throws std::out_of_range if the layer doesn't exist
    */
-  const SceneGraphLayer& getLayer(LayerId layer_id) const;
+  const Layer& getLayer(LayerId layer_id,
+                        std::optional<LayerPrefix> prefix = std::nullopt) const;
 
   /**
    * @brief Get a layer if the layer exists
    * @param layer_name layer to get
+   * @param prefix Dynamic layer prefix to get (if specified)
    * @returns a constant reference to the requested layer
    * @throws std::out_of_range if the layer doesn't exist
    */
-  const SceneGraphLayer& getLayer(const std::string& layer_name) const;
+  const Layer& getLayer(const std::string& layer_name,
+                        std::optional<LayerPrefix> prefix = std::nullopt) const;
 
   /**
-   * @brief Get a dynamic layer if the layer exists
-   * @param layer_id layer to get
-   * @param prefix layer prefix to get
-   * @returns a constant reference to the requested layer
-   * @throws std::out_of_range if the layer doesn't exist
+   * @brief Add a new layer to the graph if it doesn't exist already
+   * @param layer Layer ID
+   * @param prefix Optional dynamic layer prefix
+   * @return Layer that was created or existed previously
    */
-  const DynamicSceneGraphLayer& getLayer(LayerId layer_id, LayerPrefix prefix) const;
+  const Layer& addLayer(LayerId layer,
+                        std::optional<LayerPrefix> prefix = std::nullopt);
 
   /**
-   * @brief Add a new dynamic layer to the graph if it doesn't exist already
-   *
-   * @param layer dynamic layer id
-   * @param layer_prefix prefix for the dynamic layer (i.e. id within layer)
+   * @brief Remove a layer from the graph if it exists
+   * @param layer Layer ID
+   * @param prefix Optional dynamic layer prefix
    * @return true if the layer was created
    */
-  bool createDynamicLayer(LayerId layer, LayerPrefix layer_prefix);
+  void removeLayer(LayerId layer, std::optional<LayerPrefix> prefix = std::nullopt);
 
   /**
    * @brief construct and add a node to the specified layer in the graph
@@ -201,32 +210,7 @@ class DynamicSceneGraph {
   bool emplaceNode(LayerId layer_id,
                    LayerPrefix prefix,
                    std::chrono::nanoseconds timestamp,
-                   std::unique_ptr<NodeAttributes>&& attrs,
-                   bool add_edge_to_previous = true);
-
-  /**
-   * @brief Add a dynamic node with a specific node id
-   * @param layer_id layer to add to
-   * @param prev_node_id Node id to insert with
-   * @param timestamp dynamic node timestamp
-   * @param attrs node attributes to use
-   * @returns true if the node was added successfully
-   */
-  bool emplacePrevDynamicNode(LayerId layer_id,
-                              NodeId prev_node_id,
-                              std::chrono::nanoseconds timestamp,
-                              std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief add a node to the graph
-   *
-   * Checks that the layer id matches a current layer, that the node
-   * is not null and the node doesn't already exist
-   *
-   * @param node to add
-   * @return true if the node was added successfully
-   */
-  bool insertNode(std::unique_ptr<SceneGraphNode>&& node);
+                   std::unique_ptr<NodeAttributes>&& attrs);
 
   /**
    * @brief add a node to the graph or update an existing node
@@ -559,9 +543,9 @@ class DynamicSceneGraph {
   nlohmann::json metadata;
 
  protected:
-  BaseLayer& layerFromKey(const LayerKey& key);
+  Layer& layerFromKey(const LayerKey& key);
 
-  const BaseLayer& layerFromKey(const LayerKey& key) const;
+  const Layer& layerFromKey(const LayerKey& key) const;
 
   SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
 
@@ -596,7 +580,7 @@ class DynamicSceneGraph {
 
   void removeStaleEdges(EdgeContainer& edges);
 
-  void visitLayers(const LayerVisitor& cb);
+  void visitLayers(const std::function<void(LayerKey, Layer&)>& cb);
 
  protected:
   LayerIds layer_ids_;
@@ -653,7 +637,5 @@ class DynamicSceneGraph {
     return dynamic_interlayer_edges_.edges;
   };
 };
-
-std::ostream& operator<<(std::ostream& out, const DynamicSceneGraph::LayerKey& key);
 
 }  // namespace spark_dsg

@@ -71,28 +71,13 @@ class LayerIter {
   DynamicSceneGraph::Layers::const_iterator end_iter_;
 };
 
-class DynamicLayerView {
- public:
-  DynamicLayerView(const DynamicSceneGraphLayer& layer);
-  DynamicNodeIter nodes() const;
-  EdgeIter edges() const;
-  size_t numNodes() const;
-  size_t numEdges() const;
-
-  const LayerId id;
-  const LayerPrefix prefix;
-
- private:
-  const DynamicSceneGraphLayer& layer_ref_;
-};
-
 class DynamicLayerIter {
  public:
   using LayerMap = std::map<LayerId, DynamicSceneGraph::DynamicLayers>;
 
   DynamicLayerIter(const LayerMap& container);
   void setSubIter();
-  DynamicLayerView operator*() const;
+  LayerView operator*() const;
   DynamicLayerIter& operator++();
   bool operator==(const IterSentinel&);
 
