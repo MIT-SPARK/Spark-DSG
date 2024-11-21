@@ -284,7 +284,8 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
   }
 }
 
-void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) {
+void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes,
+                                  bool clear_new) const {
   auto iter = nodes_status_.begin();
   while (iter != nodes_status_.end()) {
     if (iter->second == NodeStatus::NEW) {
@@ -299,7 +300,7 @@ void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new
 }
 
 void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
-                                      bool clear_removed) {
+                                      bool clear_removed) const {
   auto iter = nodes_status_.begin();
   while (iter != nodes_status_.end()) {
     if (iter->second != NodeStatus::DELETED && iter->second != NodeStatus::MERGED) {
@@ -317,12 +318,13 @@ void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
   }
 }
 
-void SceneGraphLayer::getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) {
+void SceneGraphLayer::getNewEdges(std::vector<EdgeKey>& new_edges,
+                                  bool clear_new) const {
   return edges_.getNew(new_edges, clear_new);
 }
 
 void SceneGraphLayer::getRemovedEdges(std::vector<EdgeKey>& removed_edges,
-                                      bool clear_removed) {
+                                      bool clear_removed) const {
   return edges_.getRemoved(removed_edges, clear_removed);
 }
 
