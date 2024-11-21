@@ -74,7 +74,7 @@ DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids,
 
 void DynamicSceneGraph::clear() {
   layers_.clear();
-  intralayer_groups_.clear();
+  layer_partitions_.clear();
 
   node_lookup_.clear();
 
@@ -92,52 +92,51 @@ void DynamicSceneGraph::reset(const LayerIds& new_layer_ids) {
   clear();
 }
 
-bool DynamicSceneGraph::hasLayer(LayerId layer_id, IntralayerId intralayer_id) const {
-  return findLayer(layer_id, intralayer_id) != nullptr;
+bool DynamicSceneGraph::hasLayer(LayerId layer_id, PartitionId partition) const {
+  return findLayer(layer_id, partition) != nullptr;
 }
 
 bool DynamicSceneGraph::hasLayer(const std::string& layer_name,
-                                 IntralayerId intralayer_id) const {
+                                 PartitionId partition) const {
   auto iter = layer_names_.find(layer_name);
   if (iter == layer_names_.end()) {
     return false;
   }
 
-  return hasLayer(iter->second, intralayer_id);
+  return hasLayer(iter->second, partition);
 }
 
-const Layer* DynamicSceneGraph::findLayer(LayerId layer,
-                                          IntralayerId intralayer_id) const {
-  if (!intralayer_id) {
+const Layer* DynamicSceneGraph::findLayer(LayerId layer, PartitionId partition) const {
+  if (!partition) {
     auto iter = layers_.find(layer);
     return iter == layers_.end() ? nullptr : iter->second.get();
   }
 
-  auto group = intralayer_groups_.find(layer);
-  if (group == intralayer_groups_.end()) {
+  auto partitions = layer_partitions_.find(layer);
+  if (partitions == layer_partitions_.end()) {
     return nullptr;
   }
 
-  auto iter = group->second.find(intralayer_id);
-  return iter == group->second.end() ? nullptr : iter->second.get();
+  auto iter = partitions->second.find(partition);
+  return iter == partitions->second.end() ? nullptr : iter->second.get();
 }
 
 const Layer* DynamicSceneGraph::findLayer(const std::string& name,
-                                          IntralayerId intralayer_id) const {
+                                          PartitionId partition) const {
   auto iter = layer_names_.find(name);
   if (iter == layer_names_.end()) {
     return nullptr;
   }
 
-  return findLayer(iter->second, intralayer_id);
+  return findLayer(iter->second, partition);
 }
 
 const Layer& DynamicSceneGraph::getLayer(LayerId layer_id,
-                                         IntralayerId intralayer_id) const {
-  auto layer = findLayer(layer_id, intralayer_id);
+                                         PartitionId partition) const {
+  auto layer = findLayer(layer_id, partition);
   if (!layer) {
     std::stringstream ss;
-    ss << "missing layer " << LayerKey{layer_id, intralayer_id};
+    ss << "missing layer " << LayerKey{layer_id, partition};
     throw std::out_of_range(ss.str());
   }
 
@@ -145,38 +144,38 @@ const Layer& DynamicSceneGraph::getLayer(LayerId layer_id,
 }
 
 const Layer& DynamicSceneGraph::getLayer(const std::string& name,
-                                         IntralayerId intralayer_id) const {
+                                         PartitionId partition) const {
   auto iter = layer_names_.find(name);
   if (iter == layer_names_.end()) {
     std::stringstream ss;
     ss << "missing layer '" << name << "'";
-    if (intralayer_id) {
-      ss << " [intralayer_id: " << intralayer_id << "]";
+    if (partition) {
+      ss << " [" << partition << "]";
     }
 
     throw std::out_of_range(ss.str());
   }
 
-  return getLayer(name, intralayer_id);
+  return getLayer(name, partition);
 }
 
-const Layer& DynamicSceneGraph::addLayer(LayerId layer, IntralayerId intralayer_id) {
-  return layerFromKey({layer, intralayer_id});
+const Layer& DynamicSceneGraph::addLayer(LayerId layer, PartitionId partition) {
+  return layerFromKey({layer, partition});
 }
 
-void DynamicSceneGraph::removeLayer(LayerId layer, IntralayerId intralayer_id) {
-  if (!intralayer_id) {
+void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
+  if (!partition) {
     layers_.erase(layer);
   }
 
-  auto iter = intralayer_groups_.find(layer);
-  if (iter == intralayer_groups_.end()) {
+  auto iter = layer_partitions_.find(layer);
+  if (iter == layer_partitions_.end()) {
     return;
   }
 
-  iter->second.erase(intralayer_id);
+  iter->second.erase(partition);
   if (iter->second.empty()) {
-    intralayer_groups_.erase(iter);
+    layer_partitions_.erase(iter);
   }
 }
 
@@ -352,7 +351,7 @@ size_t DynamicSceneGraph::numLayers() const {
   const size_t static_size = layers_.size();
 
   size_t unique_layer_groups = 0;
-  for (const auto& [layer_id, group] : intralayer_groups_) {
+  for (const auto& [layer_id, partitions] : layer_partitions_) {
     if (!layers_.count(layer_id)) {
       ++unique_layer_groups;
     }
@@ -367,9 +366,9 @@ size_t DynamicSceneGraph::numNodes() const {
     total_nodes += layer->numNodes();
   }
 
-  for (const auto& [layer_id, group] : intralayer_groups_) {
-    for (const auto& [intralayer_id, layer] : group) {
-      total_nodes += layer->numNodes();
+  for (const auto& [layer_id, partitions] : layer_partitions_) {
+    for (const auto& [partition_id, partition] : partitions) {
+      total_nodes += partition->numNodes();
     }
   }
 
@@ -382,9 +381,9 @@ size_t DynamicSceneGraph::numEdges() const {
     total_edges += layer->numEdges();
   }
 
-  for (const auto& [layer_id, group] : intralayer_groups_) {
-    for (const auto& [intralayer_id, layer] : group) {
-      total_edges += layer->numEdges();
+  for (const auto& [layer_id, partitions] : layer_partitions_) {
+    for (const auto& [partition_id, partition] : partitions) {
+      total_edges += partition->numEdges();
     }
   }
 
@@ -524,9 +523,9 @@ void DynamicSceneGraph::markEdgesAsStale() {
   for (auto& [layer_id, layer] : layers_) {
     layer->edges_.setStale();
   }
-  for (auto& [layer_id, groups] : intralayer_groups_) {
-    for (auto& [intralayer_id, layer] : groups) {
-      layer->edges_.setStale();
+  for (auto& [layer_id, partitions] : layer_partitions_) {
+    for (auto& [partition_id, partition] : partitions) {
+      partition->edges_.setStale();
     }
   }
 
@@ -538,9 +537,9 @@ void DynamicSceneGraph::removeAllStaleEdges() {
     removeStaleEdges(layer->edges_);
   }
 
-  for (auto& [layer_id, group] : intralayer_groups_) {
-    for (auto& [intralayer_id, layer] : group) {
-      removeStaleEdges(layer->edges_);
+  for (auto& [layer_id, partitions] : layer_partitions_) {
+    for (auto& [partition_id, partition] : partitions) {
+      removeStaleEdges(partition->edges_);
     }
   }
 
@@ -560,9 +559,9 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
     }
   }
 
-  for (const auto& [layer_id, group] : intralayer_groups_) {
-    for (const auto& [prefix, layer] : group) {
-      for (const auto& [edge_id, edge] : layer->edges()) {
+  for (const auto& [layer_id, partitions] : layer_partitions_) {
+    for (const auto& [partition_id, partition] : partitions) {
+      for (const auto& [edge_id, edge] : partition->edges()) {
         to_return->insertEdge(edge.source, edge.target, edge.info->clone());
       }
     }
@@ -615,18 +614,18 @@ const DynamicSceneGraph::LayerIds& DynamicSceneGraph::layer_ids() const {
 }
 
 Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) {
-  if (!key.intralayer_id) {
+  if (!key.partition) {
     auto iter = layers_.emplace(key.layer, std::make_unique<Layer>(key.layer)).first;
     return *iter->second;
   }
 
-  auto iter = intralayer_groups_.find(key.layer);
-  if (iter == intralayer_groups_.end()) {
-    iter = intralayer_groups_.emplace(key.layer, IntralayerGroup()).first;
+  auto iter = layer_partitions_.find(key.layer);
+  if (iter == layer_partitions_.end()) {
+    iter = layer_partitions_.emplace(key.layer, Partitions()).first;
   }
 
   auto id_layer_pair =
-      iter->second.emplace(key.intralayer_id, std::make_unique<Layer>(key.layer)).first;
+      iter->second.emplace(key.partition, std::make_unique<Layer>(key.layer)).first;
   return *id_layer_pair->second;
 }
 
@@ -774,9 +773,9 @@ void DynamicSceneGraph::visitLayers(const LayerCallback& cb) {
     cb(layer_id, *layer);
   }
 
-  for (auto& [layer_id, group] : intralayer_groups_) {
-    for (auto& [intralayer_id, layer] : group) {
-      cb(LayerKey(layer_id, intralayer_id), *layer);
+  for (auto& [layer_id, partitions] : layer_partitions_) {
+    for (auto& [partition_id, partition] : partitions) {
+      cb(LayerKey(layer_id, partition_id), *partition);
     }
   }
 }

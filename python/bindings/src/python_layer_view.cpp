@@ -80,12 +80,12 @@ LayerIter& LayerIter::operator++() {
 
 bool LayerIter::operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
 
-IntralayerGroupIter::IntralayerGroupIter(const LayerMap& container)
+PartitionIter::PartitionIter(const LayerMap& container)
     : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {
   setSubIter();
 }
 
-void IntralayerGroupIter::setSubIter() {
+void PartitionIter::setSubIter() {
   if (curr_iter_ == end_iter_) {
     valid_ = false;
     return;
@@ -106,11 +106,11 @@ void IntralayerGroupIter::setSubIter() {
   }
 }
 
-LayerView IntralayerGroupIter::operator*() const {
+LayerView PartitionIter::operator*() const {
   return LayerView(*(curr_layer_iter_->second));
 }
 
-IntralayerGroupIter& IntralayerGroupIter::operator++() {
+PartitionIter& PartitionIter::operator++() {
   ++curr_layer_iter_;
   if (curr_layer_iter_ == end_layer_iter_) {
     ++curr_iter_;
@@ -120,7 +120,7 @@ IntralayerGroupIter& IntralayerGroupIter::operator++() {
   return *this;
 }
 
-bool IntralayerGroupIter::operator==(const IterSentinel&) {
+bool PartitionIter::operator==(const IterSentinel&) {
   if (!valid_) {
     return true;
   }

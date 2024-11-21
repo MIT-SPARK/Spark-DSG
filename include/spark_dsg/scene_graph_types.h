@@ -46,8 +46,8 @@ namespace spark_dsg {
 using NodeId = uint64_t;
 //! Layer ID representation
 using LayerId = int64_t;
-//! Interlayer group ID
-using IntralayerId = uint32_t;
+//! Partition ID within layer. 0 is reserved for the primary partition
+using PartitionId = uint32_t;
 
 //! Key type for edges
 struct EdgeKey {
@@ -59,14 +59,14 @@ struct EdgeKey {
   NodeId k2;
 };
 
-//! Layer key specifying primary layer and interlayer group
+//! Layer key specifying primary layer and optional partition
 struct LayerKey {
   LayerId layer = 0;
-  uint32_t intralayer_id = 0;
+  uint32_t partition = 0;
 
   LayerKey() = default;
-  LayerKey(LayerId layer_id);
-  LayerKey(LayerId layer_id, IntralayerId intralayer_id);
+  LayerKey(LayerId layer);
+  LayerKey(LayerId layer, PartitionId partition);
   bool isParentOf(const LayerKey& other) const;
   bool operator==(const LayerKey& other) const;
   inline bool operator!=(const LayerKey& other) const {
