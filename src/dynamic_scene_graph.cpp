@@ -625,7 +625,7 @@ Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) {
   }
 
   auto id_layer_pair =
-      iter->second.emplace(key.partition, std::make_unique<Layer>(key.layer)).first;
+      iter->second.emplace(key.partition, std::make_unique<Layer>(key)).first;
   return *id_layer_pair->second;
 }
 
