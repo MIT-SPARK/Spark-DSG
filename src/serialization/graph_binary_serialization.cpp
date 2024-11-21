@@ -48,8 +48,10 @@ namespace spark_dsg {
 void write_binary(serialization::BinarySerializer& s, const SceneGraphNode& node) {
   s.startFixedArray(4);
   s.write(node.layer.layer);
-  s.write(node.layer.partition);
   s.write(node.id);
+  // for parsing reasons for old files, this needs to be in roughly the same order as
+  // the timestamp field
+  s.write(node.layer.partition);
   s.write(node.attributes());
 }
 
