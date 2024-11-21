@@ -39,16 +39,6 @@
 namespace spark_dsg {
 namespace {
 
-std::shared_ptr<Mesh> makeMesh(size_t num_points) {
-  auto mesh = std::make_shared<Mesh>();
-
-  for (size_t i = 0; i < num_points; ++i) {
-    mesh->points.push_back(Eigen::Vector3f());
-  }
-
-  return mesh;
-}
-
 void testParentRelationship(const DynamicSceneGraph& graph,
                             NodeId parent,
                             NodeId child) {
@@ -103,13 +93,7 @@ TEST(DynamicSceneGraph, numNodesAndEdges) {
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 1, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.insertEdge(0, 1));
-
-  auto mesh = makeMesh(5);
-
   EXPECT_EQ(2u, graph.numNodes());
-  EXPECT_EQ(1u, graph.numEdges());
-  graph.setMesh(mesh);
-  EXPECT_EQ(7u, graph.numNodes());
   EXPECT_EQ(1u, graph.numEdges());
 }
 
@@ -539,11 +523,11 @@ TEST(DynamicSceneGraph, emplaceGroupNodeCorrect) {
   EXPECT_FALSE(G.hasLayer(2, 'o'));
 }
 
-TEST(DynamicSceneGraph, updateFromInvalidLayerCorrect) {
+TEST(DynamicSceneGraph, updateFromEmptyLayerCorrect) {
   DynamicSceneGraph graph({1, 2});
 
   SceneGraphLayer separate_layer(5);
-  EXPECT_FALSE(graph.updateFromLayer(separate_layer));
+  EXPECT_TRUE(graph.updateFromLayer(separate_layer));
   EXPECT_EQ(0u, graph.numNodes());
   EXPECT_EQ(0u, graph.numEdges());
   EXPECT_EQ(0u, separate_layer.numNodes());
@@ -840,7 +824,7 @@ TEST(DynamicSceneGraph, removedAndNewEdgesCorrect) {
 
   {
     std::vector<EdgeKey> new_expected{
-        {"a0"_id, "a1"_id}, {"x0"_id, "y1"_id}, {"a1"_id, "x0"_id}};
+        {"a0"_id, "a1"_id}, {"a1"_id, "x0"_id}, {"x0"_id, "y1"_id}};
     std::vector<EdgeKey> new_edges = graph.getNewEdges(false);
     EXPECT_EQ(new_expected, new_edges);
 
