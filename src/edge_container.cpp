@@ -108,7 +108,7 @@ Edge* EdgeContainer::find(NodeId source, NodeId target) {
   return find(key);
 }
 
-void EdgeContainer::getNew(std::vector<EdgeKey>& new_edges, bool clear_new) {
+void EdgeContainer::getNew(std::vector<EdgeKey>& new_edges, bool clear_new) const {
   auto iter = edge_status.begin();
   while (iter != edge_status.end()) {
     if (iter->second == EdgeStatus::NEW) {
@@ -123,7 +123,7 @@ void EdgeContainer::getNew(std::vector<EdgeKey>& new_edges, bool clear_new) {
 }
 
 void EdgeContainer::getRemoved(std::vector<EdgeKey>& removed_edges,
-                               bool clear_removed) {
+                               bool clear_removed) const {
   auto iter = edge_status.begin();
   while (iter != edge_status.end()) {
     if (iter->second != EdgeStatus::DELETED) {

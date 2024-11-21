@@ -231,22 +231,22 @@ class SceneGraphLayer {
   /**
    * @brief Get node ids of newly inserted nodes
    */
-  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new);
+  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) const;
 
   /**
    * @brief Get node id of deleted nodes
    */
-  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed);
+  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed) const;
 
   /**
    * @brief Get the source and target of newly inserted edges
    */
-  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new);
+  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) const;
 
   /**
    * @brief Get the source and target of deleted edges
    */
-  void getRemovedEdges(std::vector<EdgeKey>& removed_edges, bool clear_removed);
+  void getRemovedEdges(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
 
   /**
    * @brief Get copy of the layer
@@ -284,7 +284,7 @@ class SceneGraphLayer {
   //! internal node container
   Nodes nodes_;
   //! internal node status tracking
-  NodeCheckup nodes_status_;
+  mutable NodeCheckup nodes_status_;
   //! internal edge container
   EdgeContainer edges_;
 

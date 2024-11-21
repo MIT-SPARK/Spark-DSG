@@ -508,6 +508,8 @@ class DynamicSceneGraph {
 
   void visitLayers(const std::function<void(LayerKey, Layer&)>& cb);
 
+  void visitLayers(const std::function<void(LayerKey, const Layer&)>& cb) const;
+
  protected:
   LayerIds layer_ids_;
   LayerNames layer_names_;

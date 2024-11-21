@@ -49,6 +49,8 @@ namespace spark_dsg {
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
 using Layer = SceneGraphLayer;
+using LayerCallback = std::function<void(LayerKey, Layer&)>;
+using ConstLayerCallback = std::function<void(LayerKey, const Layer&)>;
 
 DynamicSceneGraph::DynamicSceneGraph(bool empty)
     : DynamicSceneGraph(empty ? LayerIds{} : LayerIds{2, 3, 4, 5},
@@ -494,53 +496,39 @@ bool DynamicSceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const GraphMergeConfig& config) {
-  for (auto&& [l_id, other_layers] : other.intralayer_groups_) {
-    for (auto&& [intralayer_id, other_layer] : other_layers) {
-      const LayerKey layer_key(l_id, intralayer_id);
-      auto& layer = layerFromKey(layer_key);
-
-      std::vector<NodeId> new_nodes;
-      layer.mergeLayer(*other_layer, config, &new_nodes);
-      for (const auto node_id : new_nodes) {
-        node_lookup_[node_id] = layer_key;
-      }
-    }
-  }
-
-  for (auto&& [l_id, other_layer] : other.layers()) {
-    auto& layer = layerFromKey(l_id);
+  other.visitLayers([&](LayerKey layer_key, const SceneGraphLayer& other_layer) {
+    auto& layer = layerFromKey(layer_key);
 
     std::vector<NodeId> removed_nodes;
-    other_layer->getRemovedNodes(removed_nodes, config.clear_removed);
+    other_layer.getRemovedNodes(removed_nodes, config.clear_removed);
     for (const auto& removed_id : removed_nodes) {
       removeNode(removed_id);
     }
 
     std::vector<EdgeKey> removed_edges;
-    other_layer->edges_.getRemoved(removed_edges, config.clear_removed);
+    other_layer.edges_.getRemoved(removed_edges, config.clear_removed);
     for (const auto& removed_edge : removed_edges) {
       layer.removeEdge(removed_edge.k1, removed_edge.k2);
     }
 
     std::vector<NodeId> new_nodes;
-    layer.mergeLayer(*other_layer, config, &new_nodes);
+    layer.mergeLayer(other_layer, config, &new_nodes);
     for (const auto node_id : new_nodes) {
-      node_lookup_[node_id] = l_id;
+      node_lookup_[node_id] = layer_key;
     }
-  }
+  });
 
-  for (const auto& id_edge_pair : other.interlayer_edges()) {
-    const auto& edge = id_edge_pair.second;
-    NodeId new_source = config.getMergedId(edge.source);
-    NodeId new_target = config.getMergedId(edge.target);
-    if (new_source == new_target) {
+  for (const auto& [edge_id, edge] : other.interlayer_edges()) {
+    NodeId source = config.getMergedId(edge.source);
+    NodeId target = config.getMergedId(edge.target);
+    if (source == target) {
       continue;
     }
 
     if (config.enforce_parent_constraints) {
-      insertParentEdge(new_source, new_target, edge.info->clone());
+      insertParentEdge(source, target, edge.info->clone());
     } else {
-      insertEdge(new_source, new_target, edge.info->clone());
+      insertEdge(source, target, edge.info->clone());
     }
   }
 
@@ -830,7 +818,7 @@ void DynamicSceneGraph::removeStaleEdges(EdgeContainer& edges) {
   }
 }
 
-void DynamicSceneGraph::visitLayers(const std::function<void(LayerKey, Layer&)>& cb) {
+void DynamicSceneGraph::visitLayers(const LayerCallback& cb) {
   for (auto& [layer_id, layer] : layers_) {
     cb(layer_id, *layer);
   }
@@ -840,6 +828,11 @@ void DynamicSceneGraph::visitLayers(const std::function<void(LayerKey, Layer&)>&
       cb(LayerKey(layer_id, intralayer_id), *layer);
     }
   }
+}
+
+void DynamicSceneGraph::visitLayers(const ConstLayerCallback& cb) const {
+  const_cast<DynamicSceneGraph*>(this)->visitLayers(
+      [&cb](LayerKey key, Layer& layer) { cb(key, layer); });
 }
 
 }  // namespace spark_dsg
