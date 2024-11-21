@@ -613,7 +613,10 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("num_nodes", &LayerView::numNodes)
       .def("num_edges", &LayerView::numEdges)
       .def("get_position", &LayerView::getPosition)
-      .def_readonly("id", &LayerView::id)
+      .def_property(
+          "id", [](const LayerView& view) { return view.id.layer; }, nullptr)
+      .def_property(
+          "partition", [](const LayerView& view) { return view.id.partition; }, nullptr)
       .def_property(
           "nodes",
           [](const LayerView& view) {
