@@ -150,17 +150,33 @@ class DynamicSceneGraph {
    * @param layer_name layer to get
    * @param partition Partition to get if specified
    * @returns a constant reference to the requested layer
-   * @throws std::out_of_range if the layer doesn't exist
+   * @throws std::out_of_range if the layer name doesn't exist
    */
   const Layer& getLayer(const std::string& layer_name, PartitionId partition = 0) const;
 
   /**
-   * @brief Add a new layer to the graph if it doesn't exist already
-   * @param layer Layer ID
-   * @param partition Partition to get if specified
+   * @brief Add a new layer with an optional name
+   * @param layer_id Layer ID
+   * @param name Optional layer name
+   */
+  const Layer& addLayer(LayerId layer_id, const std::string& name = "");
+
+  /**
+   * @brief Add a new partition to a layer
+   * @param layer_id Layer to add partition to
+   * @param partition Partition to add
    * @return Layer that was created or existed previously
    */
-  const Layer& addLayer(LayerId layer, PartitionId partition = 0);
+  const Layer& addLayer(LayerId layer_id, PartitionId partition);
+
+  /**
+   * @brief Add a new partition to a layer
+   * @param name Layer name to add
+   * @param partition Partition to add
+   * @return Layer that was created or existed previously
+   * @throws std::out_of_range if the layer name doesn't exist
+   */
+  const Layer& addLayer(const std::string& name, PartitionId partition);
 
   /**
    * @brief Remove a layer from the graph if it exists
@@ -437,9 +453,6 @@ class DynamicSceneGraph {
 
   std::shared_ptr<Mesh> mesh() const;
 
-  //! Current static layer ids in the graph
-  const LayerIds& layer_ids() const;
-
   //! Any extra information about the graph
   nlohmann::json metadata;
 
@@ -495,6 +508,12 @@ class DynamicSceneGraph {
   std::shared_ptr<Mesh> mesh_;
 
  public:
+  //! Current static layer ids in the graph
+  const LayerIds& layer_ids() const { return layer_ids_; }
+
+  //! Current name to layer mapping
+  const LayerNames layer_names() const { return layer_names_; }
+
   /**
    * @brief constant iterator around the layers
    */

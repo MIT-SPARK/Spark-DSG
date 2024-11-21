@@ -159,8 +159,26 @@ const Layer& DynamicSceneGraph::getLayer(const std::string& name,
   return getLayer(name, partition);
 }
 
-const Layer& DynamicSceneGraph::addLayer(LayerId layer, PartitionId partition) {
-  return layerFromKey({layer, partition});
+const Layer& DynamicSceneGraph::addLayer(LayerId layer_id, const std::string& name) {
+  if (!name.empty()) {
+    layer_names_.emplace(name, layer_id);
+  }
+
+  return layerFromKey(layer_id);
+}
+
+const Layer& DynamicSceneGraph::addLayer(LayerId layer_id, PartitionId partition) {
+  return layerFromKey({layer_id, partition});
+}
+
+const Layer& DynamicSceneGraph::addLayer(const std::string& name,
+                                         PartitionId partition) {
+  auto iter = layer_names_.find(name);
+  if (iter == layer_names_.end()) {
+    throw std::out_of_range("no layer is named '" + name + "'");
+  }
+
+  return layerFromKey({iter->second, partition});
 }
 
 void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
@@ -608,10 +626,6 @@ void DynamicSceneGraph::setMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mes
 bool DynamicSceneGraph::hasMesh() const { return mesh_ != nullptr; }
 
 Mesh::Ptr DynamicSceneGraph::mesh() const { return mesh_; }
-
-const DynamicSceneGraph::LayerIds& DynamicSceneGraph::layer_ids() const {
-  return layer_ids_;
-}
 
 Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) {
   if (!key.partition) {
