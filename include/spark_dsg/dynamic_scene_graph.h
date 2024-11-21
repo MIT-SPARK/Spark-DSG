@@ -42,6 +42,15 @@
 
 namespace spark_dsg {
 
+struct EdgeLayerInfo {
+  LayerKey source;
+  LayerKey target;
+  bool valid = false;
+  bool exists = false;
+
+  bool isSameLayer() const;
+};
+
 /**
  * @brief Dynamic Scene Graph class
  *
@@ -196,29 +205,13 @@ class DynamicSceneGraph {
    * @param target end node
    * @param edge_info optional edge attributes (will use
    *        default edge attributes if not supplied)
+   * @param enforce_parent_constraints Ensure that edge is only parent of node
    * @return true if the edge was successfully added
    */
   bool insertEdge(NodeId source,
                   NodeId target,
-                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
-
-  /**
-   * @brief Insert a parent edge between two nodes
-   *
-   * Adds an edge between the two nodes, potentially removing previous edges that
-   * pointed to old parents. Checks that the edge doesn't already exist and that the
-   * source and target already exist. Will return false if the nodes exist on the same
-   * layer.
-   *
-   * @param source start node
-   * @param target end node
-   * @param edge_info optional edge attributes (will use
-   *        default edge attributes if not supplied)
-   * @return true if the edge was successfully added
-   */
-  bool insertParentEdge(NodeId source,
-                        NodeId target,
-                        std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
+                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr,
+                  bool enforce_parent_constraints = false);
 
   /**
    * @brief Add an edge to the graph or update an existing edge
@@ -226,29 +219,12 @@ class DynamicSceneGraph {
    * @param source edge source id
    * @param target edge target id
    * @param edge_info edge attributes
+   * @param enforce_parent_constraints Ensure that edge is only parent of node
    */
   bool addOrUpdateEdge(NodeId source,
                        NodeId target,
-                       std::unique_ptr<EdgeAttributes>&& edge_info);
-
-  /**
-   * @brief Set the attributes of an existing node
-   * @param node Node ID to set the attributes for
-   * @param attrs New attributes for the node
-   * @return Returns true if update was successful
-   */
-  bool setNodeAttributes(NodeId node, std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief Set the attributes of an existing edge
-   * @param source Source ID to set the attributes for
-   * @param target Target ID to set the attributes for
-   * @param attrs New attributes for the edge
-   * @return Returns true if update was successful
-   */
-  bool setEdgeAttributes(NodeId source,
-                         NodeId target,
-                         std::unique_ptr<EdgeAttributes>&& attrs);
+                       std::unique_ptr<EdgeAttributes>&& edge_info,
+                       bool enforce_parent_constraints = false);
 
   /**
    * @brief check if a given node exists
@@ -475,10 +451,7 @@ class DynamicSceneGraph {
 
   SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
 
-  bool hasEdge(NodeId source,
-               NodeId target,
-               LayerKey* source_key,
-               LayerKey* target_key) const;
+  EdgeLayerInfo lookupEdge(NodeId source, NodeId target) const;
 
   void addAncestry(NodeId source,
                    NodeId target,
