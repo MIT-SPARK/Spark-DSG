@@ -118,6 +118,7 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
   record["nodes"] = nlohmann::json::array();
   record["edges"] = nlohmann::json::array();
   record["layer_ids"] = graph.layer_ids();
+  record["layer_names"] = graph.layer_names();
   record["metadata"] = graph.metadata;
 
   for (const auto& [layer_id, layer] : graph.layers()) {
@@ -169,7 +170,18 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
   const auto edge_factory = serialization::AttributeRegistry<EdgeAttributes>::current();
 
   const auto layer_ids = record.at("layer_ids").get<DynamicSceneGraph::LayerIds>();
-  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
+  DynamicSceneGraph::LayerNames layer_names;
+  if (record.contains("layer_names")) {
+    layer_names = record.at("layer_names").get<DynamicSceneGraph::LayerNames>();
+  } else {
+    layer_names = {{DsgLayers::OBJECTS, 2},
+                   {DsgLayers::AGENTS, 2},
+                   {DsgLayers::PLACES, 3},
+                   {DsgLayers::ROOMS, 4},
+                   {DsgLayers::BUILDINGS, 5}};
+  }
+
+  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids, layer_names);
 
   if (record.contains("metadata")) {
     graph->metadata = record["metadata"];
