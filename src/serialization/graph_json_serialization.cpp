@@ -51,7 +51,10 @@ namespace spark_dsg {
 using nlohmann::json;
 
 void to_json(json& record, const SceneGraphNode& node) {
-  record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
+  record = {{"id", node.id},
+            {"layer", node.layer.layer},
+            {"intralayer_id", node.layer.intralayer_id},
+            {"attributes", node.attributes()}};
 }
 
 void to_json(json& record, const SceneGraphEdge& edge) {
@@ -64,6 +67,17 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
                          DynamicSceneGraph& graph) {
   auto node_id = record.at("id").get<NodeId>();
   auto layer = record.at("layer").get<LayerId>();
+
+  IntralayerId intralayer_id = 0;
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 0)) {
+    if (record.contains("timestamp")) {
+      intralayer_id = NodeSymbol(node_id).category();
+    }
+  } else {
+    intralayer_id = record.at("intralayer_id").get<IntralayerId>();
+  }
+
   auto attrs = serialization::Visitor::from(factory, record.at("attributes"));
   if (!attrs) {
     std::stringstream ss;
@@ -71,7 +85,7 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
     throw std::runtime_error(ss.str());
   }
 
-  if (!graph.emplaceNode(layer, node_id, std::move(attrs))) {
+  if (!graph.emplaceNode({layer, intralayer_id}, node_id, std::move(attrs))) {
     std::stringstream ss;
     ss << "failed to add " << NodeSymbol(node_id).getLabel();
     throw std::runtime_error(ss.str());
@@ -120,11 +134,7 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
     record["edges"].push_back(edge);
   }
 
-  for (const auto& [edge_id, edge] : graph.dynamic_interlayer_edges()) {
-    record["edges"].push_back(edge);
-  }
-
-  for (const auto& [layer_id, group] : graph.dynamicLayers()) {
+  for (const auto& [layer_id, group] : graph.intralayer_groups()) {
     for (const auto& [prefix, layer] : group) {
       for (const auto& [node_id, node] : layer->nodes()) {
         record["nodes"].push_back(*node);

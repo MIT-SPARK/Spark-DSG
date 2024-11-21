@@ -42,7 +42,6 @@
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/edge_container.h>
-#include <spark_dsg/layer_prefix.h>
 #include <spark_dsg/mesh.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
@@ -68,10 +67,10 @@ namespace py = pybind11;
 using namespace py::literals;
 
 using namespace spark_dsg;
-using spark_dsg::python::DynamicLayerIter;
 using spark_dsg::python::EdgeIter;
 using spark_dsg::python::GlobalEdgeIter;
 using spark_dsg::python::GlobalNodeIter;
+using spark_dsg::python::IntralayerGroupIter;
 using spark_dsg::python::IterSentinel;
 using spark_dsg::python::LayerIter;
 using spark_dsg::python::LayerView;
@@ -125,17 +124,18 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readonly_static("ROOMS", &DsgLayers::ROOMS)
       .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS);
 
-  py::class_<LayerPrefix>(module, "LayerPrefix")
-      .def(py::init([](char key) { return LayerPrefix(key); }))
-      .def(py::init([](char key, uint32_t index) { return LayerPrefix(key, index); }))
-      .def(py::init([](uint32_t index) { return LayerPrefix(index); }))
-      .def_property(
-          "value",
-          [](const LayerPrefix& prefix) { return static_cast<uint32_t>(prefix); },
-          nullptr)
-      .def("__repr__", [](const LayerPrefix& prefix) { return prefix.str(true); });
+  py::class_<LayerKey>(module, "LayerKey")
+      .def(py::init<LayerId>())
+      .def(py::init<LayerId, IntralayerId>())
+      .def_readonly("layer", &LayerKey::layer)
+      .def_readonly("intralayer_id", &LayerKey::intralayer_id)
+      .def("__repr__", [](const LayerKey& key) {
+        std::stringstream ss;
+        ss << key;
+        return ss.str();
+      });
 
-  py::implicitly_convertible<char, LayerPrefix>();
+  py::implicitly_convertible<LayerId, LayerKey>();
 
   py::class_<NodeSymbol>(module, "NodeSymbol")
       .def(py::init([](char key, size_t index) { return NodeSymbol(key, index); }))
@@ -634,10 +634,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(py::init<>())
       .def(py::init<const DynamicSceneGraph::LayerIds&>())
       .def("clear", &DynamicSceneGraph::clear)
-      .def("add_layer",
-           [](DynamicSceneGraph& graph, LayerId layer, LayerPrefix prefix) {
-             graph.addLayer(layer, prefix);
-           })
+      .def(
+          "add_layer",
+          [](DynamicSceneGraph& graph, LayerId layer, IntralayerId group) {
+            graph.addLayer(layer, group);
+          },
+          "layer"_a,
+          "group"_a = 0)
       .def("add_node",
            [](DynamicSceneGraph& graph,
               LayerId layer_id,
@@ -649,10 +652,10 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "add_node",
           [](DynamicSceneGraph& graph,
              LayerId layer_id,
-             LayerPrefix prefix,
+             IntralayerId group,
              NodeSymbol node_id,
              const NodeAttributes& attrs) {
-            return graph.emplaceNode({layer_id, prefix}, node_id, attrs.clone());
+            return graph.emplaceNode({layer_id, group}, node_id, attrs.clone());
           },
           "layer_id"_a,
           "prefix"_a,
@@ -702,11 +705,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("has_mesh", &DynamicSceneGraph::hasMesh)
       .def(
           "get_layer",
-          [](const DynamicSceneGraph& graph,
-             LayerId layer_id,
-             std::optional<LayerPrefix> prefix) {
-            return LayerView(graph.getLayer(layer_id, prefix));
+          [](const DynamicSceneGraph& graph, LayerId layer_id, IntralayerId group) {
+            return LayerView(graph.getLayer(layer_id, group));
           },
+          "layer_id"_a,
+          "group"_a = 0,
           py::return_value_policy::reference_internal)
       .def(
           "get_node",
@@ -739,14 +742,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              return graph.removeEdge(source, target);
            })
       .def("num_layers", &DynamicSceneGraph::numLayers)
-      .def("num_dynamic_layers", &DynamicSceneGraph::numDynamicLayers)
-      .def("num_nodes", &DynamicSceneGraph::numNodes, "include_mesh"_a = false)
-      .def("num_static_nodes", &DynamicSceneGraph::numStaticNodes)
-      .def("num_dynamic_nodes", &DynamicSceneGraph::numDynamicNodes)
+      .def("num_nodes", &DynamicSceneGraph::numNodes)
       .def("empty", &DynamicSceneGraph::empty)
       .def("num_edges", &DynamicSceneGraph::numEdges)
-      .def("num_static_edges", &DynamicSceneGraph::numStaticEdges)
-      .def("num_dynamic_edges", &DynamicSceneGraph::numDynamicEdges)
       .def("get_position", &DynamicSceneGraph::getPosition)
       .def(
           "save",
@@ -785,9 +783,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
-          "dynamic_layers",
+          "intralayer_groups",
           [](const DynamicSceneGraph& graph) {
-            return py::make_iterator(DynamicLayerIter(graph.dynamicLayers()),
+            return py::make_iterator(IntralayerGroupIter(graph.intralayer_groups()),
                                      IterSentinel());
           },
           nullptr,
@@ -810,14 +808,6 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "interlayer_edges",
           [](const DynamicSceneGraph& graph) {
             return py::make_iterator(EdgeIter(graph.interlayer_edges()),
-                                     IterSentinel());
-          },
-          nullptr,
-          py::return_value_policy::reference_internal)
-      .def_property(
-          "dynamic_interlayer_edges",
-          [](const DynamicSceneGraph& graph) {
-            return py::make_iterator(EdgeIter(graph.dynamic_interlayer_edges()),
                                      IterSentinel());
           },
           nullptr,

@@ -39,7 +39,7 @@
 namespace spark_dsg {
 
 SceneGraphNode::SceneGraphNode(NodeId node_id,
-                               LayerId layer_id,
+                               LayerKey layer_id,
                                std::unique_ptr<NodeAttributes>&& attrs)
     : id(node_id),
       layer(layer_id),

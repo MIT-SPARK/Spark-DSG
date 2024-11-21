@@ -52,4 +52,15 @@ bool EdgeKey::operator<(const EdgeKey& other) const {
   return k1 < other.k1;
 }
 
+LayerKey::LayerKey(LayerId layer_id) : LayerKey(layer_id, 0) {}
+
+LayerKey::LayerKey(LayerId layer_id, IntralayerId intralayer_id)
+    : layer(layer_id), intralayer_id(intralayer_id) {}
+
+bool LayerKey::isParentOf(const LayerKey& other) const { return layer > other.layer; }
+
+bool LayerKey::operator==(const LayerKey& other) const {
+  return layer == other.layer && intralayer_id == other.intralayer_id;
+}
+
 }  // namespace spark_dsg

@@ -37,30 +37,10 @@
 #include <nlohmann/json.hpp>
 #include <type_traits>
 
-#include "spark_dsg/layer_prefix.h"
 #include "spark_dsg/scene_graph_layer.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
-
-struct LayerKey {
-  LayerId layer;
-  uint32_t prefix = 0;
-  bool dynamic = false;
-  bool valid = false;
-
-  LayerKey() = default;
-  LayerKey(LayerId layer_id);
-  LayerKey(LayerId layer_id, LayerPrefix prefix);
-  bool isParent(const LayerKey& other) const;
-  operator bool() const { return valid; }
-  bool operator==(const LayerKey& other) const;
-  inline bool operator!=(const LayerKey& other) const {
-    return !this->operator==(other);
-  }
-};
-
-std::ostream& operator<<(std::ostream& out, const LayerKey& key);
 
 /**
  * @brief Dynamic Scene Graph class
@@ -82,7 +62,7 @@ class DynamicSceneGraph {
   //! Layer container
   using Layers = std::map<LayerId, Layer::Ptr>;
   //! Dynamic layer container
-  using DynamicLayers = std::map<uint32_t, Layer::Ptr>;
+  using IntralayerGroup = std::map<IntralayerId, Layer::Ptr>;
 
   friend class SceneGraphLogger;
 
@@ -117,75 +97,70 @@ class DynamicSceneGraph {
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_id Layer id to check
-   * @param prefix Dynamic layer prefix to check (if specified)
+   * @param intralayer_id Intralayer id to check if specified
    * @returns Returns true if the layer exists and is valid
    */
-  bool hasLayer(LayerId layer_id,
-                std::optional<LayerPrefix> prefix = std::nullopt) const;
+  bool hasLayer(LayerId layer_id, IntralayerId intralayer_id = 0) const;
 
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_name Layer name to check
-   * @param prefix Dynamic layer prefix to check (if specified)
+   * @param intralayer_id Intralayer id to check if specified
    * @returns Returns true if the layer exists and is valid
    */
-  bool hasLayer(const std::string& layer_name,
-                std::optional<LayerPrefix> prefix = std::nullopt) const;
+  bool hasLayer(const std::string& layer_name, IntralayerId intralayer_id = 0) const;
 
   /**
    * @brief Attempt to retrieve the specified layer
-   * @param layer_id Layer ID to check
-   * @param prefix Dynamic layer prefix to get (if specified)
+   * @param layer_id Layer ID to find
+   * @param intralayer_id Intralayer id to find if specified
    * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
    */
-  const Layer* findLayer(LayerId layer_id,
-                         std::optional<LayerPrefix> prefix = std::nullopt) const;
+  const Layer* findLayer(LayerId layer_id, IntralayerId intralayer_id = 0) const;
 
   /**
    * @brief Attempt to retrieve the specified layer
-   * @param layer_name Layer name to check
-   * @param prefix Dynamic layer prefix to get (if specified)
+   * @param layer_name Layer name to find
+   * @param intralayer_id Intralayer id to find if specified
    * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
    */
   const Layer* findLayer(const std::string& layer_name,
-                         std::optional<LayerPrefix> prefix = std::nullopt) const;
+                         IntralayerId intralayer_id = 0) const;
 
   /**
    * @brief Get a layer if the layer exists
    * @param layer_id layer to get
-   * @param prefix Dynamic layer prefix to get (if specified)
+   * @param intralayer_id Intralayer id to get if specified
    * @returns a constant reference to the requested layer
    * @throws std::out_of_range if the layer doesn't exist
    */
-  const Layer& getLayer(LayerId layer_id,
-                        std::optional<LayerPrefix> prefix = std::nullopt) const;
+  const Layer& getLayer(LayerId layer_id, IntralayerId intralayer_id = 0) const;
 
   /**
    * @brief Get a layer if the layer exists
    * @param layer_name layer to get
-   * @param prefix Dynamic layer prefix to get (if specified)
+   * @param intralayer_id Intralayer id to get if specified
    * @returns a constant reference to the requested layer
    * @throws std::out_of_range if the layer doesn't exist
    */
   const Layer& getLayer(const std::string& layer_name,
-                        std::optional<LayerPrefix> prefix = std::nullopt) const;
+                        IntralayerId intralayer_id = 0) const;
 
   /**
    * @brief Add a new layer to the graph if it doesn't exist already
    * @param layer Layer ID
-   * @param prefix Optional dynamic layer prefix
+   * @param intralayer_id Intralayer id to get if specified
    * @return Layer that was created or existed previously
    */
-  const Layer& addLayer(LayerId layer,
-                        std::optional<LayerPrefix> prefix = std::nullopt);
+  const Layer& addLayer(LayerId layer, IntralayerId intralayer_id = 0);
 
   /**
    * @brief Remove a layer from the graph if it exists
    * @param layer Layer ID
-   * @param prefix Optional dynamic layer prefix
+   * @param intralayer_id Intralayer id to get if specified
    * @return true if the layer was created
    */
-  void removeLayer(LayerId layer, std::optional<LayerPrefix> prefix = std::nullopt);
+  void removeLayer(LayerId layer, IntralayerId intralayer_id = 0);
 
   /**
    * @brief construct and add a node to the specified layer in the graph
@@ -373,45 +348,15 @@ class DynamicSceneGraph {
   size_t numLayers() const;
 
   /**
-   * @brief Get the total number of dynamic layers
-   * @return number dynamic layers
-   */
-  size_t numDynamicLayers() const;
-
-  /**
    * @brief Get the total number of nodes in the graph
    * @return The number of nodes in the graph
    */
-  size_t numNodes(bool include_mesh = true) const;
-
-  /**
-   * @brief Get the number of static nodes in the graph
-   * @return The number of static nodes in the graph
-   */
-  size_t numStaticNodes() const;
-
-  /**
-   * @brief Get the number of dynamic nodes in the graph
-   * @return The number of dynamic nodes in the graph
-   */
-  size_t numDynamicNodes() const;
+  size_t numNodes() const;
 
   /**
    * @brief Get number of edges in the graph
    */
   size_t numEdges() const;
-
-  /**
-   * @brief Get number of static edges in the graph
-   * @return Number of static edges in the graph
-   */
-  size_t numStaticEdges() const;
-
-  /**
-   * @brief Get number of dynamic edges in the graph
-   * @return Number of dynamic edges in the graph
-   */
-  size_t numDynamicEdges() const;
 
   /**
    * @brief Get whether or not the scene graph is empty
@@ -437,13 +382,11 @@ class DynamicSceneGraph {
 
   /**
    * @brief Update graph from separate layer
-   * @note Will invalidate the layer and edges passed in
    * @param other_layer Layer to update from
    * @param edges Optional edges to add to graph
    * @return Whether the update was successful or not
    */
-  bool updateFromLayer(SceneGraphLayer& other_layer,
-                       std::unique_ptr<Edges>&& edges = nullptr);
+  bool updateFromLayer(const SceneGraphLayer& other_layer, const Edges& edges = {});
 
   /**
    * @brief Update graph from another graph
@@ -571,10 +514,9 @@ class DynamicSceneGraph {
   std::map<NodeId, LayerKey> node_lookup_;
 
   Layers layers_;
-  std::map<LayerId, DynamicLayers> dynamic_layers_;
+  std::map<LayerId, IntralayerGroup> intralayer_groups_;
 
   EdgeContainer interlayer_edges_;
-  EdgeContainer dynamic_interlayer_edges_;
 
   std::shared_ptr<Mesh> mesh_;
 
@@ -582,43 +524,33 @@ class DynamicSceneGraph {
   /**
    * @brief constant iterator around the layers
    */
-  inline const Layers& layers() const { return layers_; };
+  const Layers& layers() const { return layers_; };
 
   /**
    * @brief constant iterator over mapping between nodes and layers
    */
-  inline const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
+  const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
 
   /**
    * @brief constant iterator around the inter-layer edges
    *
    * @note inter-layer edges are edges between nodes in different layers
    */
-  inline const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
+  const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
 
-  inline const DynamicLayers& dynamicLayersOfType(LayerId layer_id) const {
-    auto iter = dynamic_layers_.find(layer_id);
-    if (iter == dynamic_layers_.end()) {
-      static DynamicLayers empty;  // avoid invalid reference
+  const IntralayerGroup& intralayer_groups(LayerId layer_id) const {
+    auto iter = intralayer_groups_.find(layer_id);
+    if (iter == intralayer_groups_.end()) {
+      static IntralayerGroup empty;  // avoid invalid reference
       return empty;
     }
 
     return iter->second;
   }
 
-  inline const std::map<LayerId, DynamicLayers>& dynamicLayers() const {
-    return dynamic_layers_;
+  const std::map<LayerId, IntralayerGroup>& intralayer_groups() const {
+    return intralayer_groups_;
   }
-
-  /**
-   * @brief constant iterator around the dynamic interlayer edges
-   *
-   * @note dynamic interlayer edges are edges between nodes in different layers where at
-   * least one of the nodes is dynamic
-   */
-  inline const Edges& dynamic_interlayer_edges() const {
-    return dynamic_interlayer_edges_.edges;
-  };
 };
 
 }  // namespace spark_dsg

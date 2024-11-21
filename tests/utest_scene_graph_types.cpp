@@ -32,55 +32,39 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include "spark_dsg/layer_prefix.h"
-
-#include <algorithm>
-#include <sstream>
+#include <gtest/gtest.h>
+#include <spark_dsg/printing.h>
+#include <spark_dsg/scene_graph_types.h>
 
 namespace spark_dsg {
 
-LayerPrefix::LayerPrefix(char key) {
-  value_.symbol.key = key;
-  value_.symbol.index = 0;
+void PrintTo(const LayerKey& edge, std::ostream* os) { *os << edge; }
+
+TEST(LayerKeyTests, TestEquality) {
+  EXPECT_EQ(LayerKey(1), LayerKey(1));
+  EXPECT_NE(LayerKey(1), LayerKey(2));
+  EXPECT_NE(LayerKey(1), LayerKey(1, 0u));
+  EXPECT_EQ(LayerKey(2, 0u), LayerKey(2, 0u));
+  EXPECT_NE(LayerKey(2, 0u), LayerKey(2, 1u));
 }
 
-LayerPrefix::LayerPrefix(char key, uint32_t index) {
-  value_.symbol.key = key;
-  value_.symbol.index = index;
-}
+TEST(LayerKeyTests, TestIsParent) {
+  LayerKey key1{1};
+  LayerKey key2{1};
+  LayerKey key3{2};
+  LayerKey key4{2, 0u};
+  LayerKey key5{3, 0u};
+  LayerKey key6{2, 1u};
 
-LayerPrefix::LayerPrefix(uint32_t index) { value_.value = index; }
+  // static
+  EXPECT_TRUE(key3.isParentOf(key1));
+  EXPECT_FALSE(key1.isParentOf(key2));
+  EXPECT_FALSE(key1.isParentOf(key3));
 
-LayerPrefix LayerPrefix::fromId(NodeId node_id) {
-  // grab the 32 msb portion of the ID
-  return LayerPrefix(static_cast<uint32_t>(node_id >> 32));
-}
-
-std::string LayerPrefix::str(bool with_key) const {
-  if (!with_key) {
-    return std::to_string(value_.value);
-  }
-
-  std::stringstream ss;
-  ss << value_.symbol.key;
-  if (value_.symbol.index) {
-    ss << "(" << value_.symbol.index << ")";
-  }
-
-  return ss.str();
-}
-
-bool LayerPrefix::matches(NodeId node) const {
-  return value_.value == static_cast<uint32_t>(node >> 32);
-}
-
-NodeId LayerPrefix::makeId(size_t index) const {
-  return (static_cast<NodeId>(value_.value) << 32) + index;
-}
-
-size_t LayerPrefix::index(NodeId node_id) const {
-  // grab the 32 lsb portion of the ID
-  return 0xFFFF'FFFF & node_id;
+  // intralayer groups
+  EXPECT_TRUE(key4.isParentOf(key1));
+  EXPECT_TRUE(key5.isParentOf(key6));
+  EXPECT_FALSE(key6.isParentOf(key4));
 }
 
 }  // namespace spark_dsg

@@ -80,12 +80,12 @@ LayerIter& LayerIter::operator++() {
 
 bool LayerIter::operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
 
-DynamicLayerIter::DynamicLayerIter(const LayerMap& container)
+IntralayerGroupIter::IntralayerGroupIter(const LayerMap& container)
     : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {
   setSubIter();
 }
 
-void DynamicLayerIter::setSubIter() {
+void IntralayerGroupIter::setSubIter() {
   if (curr_iter_ == end_iter_) {
     valid_ = false;
     return;
@@ -106,11 +106,11 @@ void DynamicLayerIter::setSubIter() {
   }
 }
 
-LayerView DynamicLayerIter::operator*() const {
+LayerView IntralayerGroupIter::operator*() const {
   return LayerView(*(curr_layer_iter_->second));
 }
 
-DynamicLayerIter& DynamicLayerIter::operator++() {
+IntralayerGroupIter& IntralayerGroupIter::operator++() {
   ++curr_layer_iter_;
   if (curr_layer_iter_ == end_layer_iter_) {
     ++curr_iter_;
@@ -120,7 +120,7 @@ DynamicLayerIter& DynamicLayerIter::operator++() {
   return *this;
 }
 
-bool DynamicLayerIter::operator==(const IterSentinel&) {
+bool IntralayerGroupIter::operator==(const IterSentinel&) {
   if (!valid_) {
     return true;
   }

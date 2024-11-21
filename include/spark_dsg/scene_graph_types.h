@@ -42,9 +42,14 @@
  */
 namespace spark_dsg {
 
-using NodeId = uint64_t;  //!< Node label
-using LayerId = int64_t;  //!< Layer label
+//! Node ID representation
+using NodeId = uint64_t;
+//! Layer ID representation
+using LayerId = int64_t;
+//! Interlayer group ID
+using IntralayerId = uint32_t;
 
+//! Key type for edges
 struct EdgeKey {
   EdgeKey(NodeId k1, NodeId k2);
   bool operator==(const EdgeKey& other) const;
@@ -52,6 +57,21 @@ struct EdgeKey {
 
   NodeId k1;
   NodeId k2;
+};
+
+//! Layer key specifying primary layer and interlayer group
+struct LayerKey {
+  LayerId layer = 0;
+  uint32_t intralayer_id = 0;
+
+  LayerKey() = default;
+  LayerKey(LayerId layer_id);
+  LayerKey(LayerId layer_id, IntralayerId intralayer_id);
+  bool isParentOf(const LayerKey& other) const;
+  bool operator==(const LayerKey& other) const;
+  inline bool operator!=(const LayerKey& other) const {
+    return !this->operator==(other);
+  }
 };
 
 //! @brief Common layer names
