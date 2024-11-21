@@ -667,8 +667,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              NodeSymbol source,
              NodeSymbol target,
              bool enforce_single_parent) {
-            return enforce_single_parent ? graph.insertParentEdge(source, target)
-                                         : graph.insertEdge(source, target);
+            return graph.insertEdge(source, target, nullptr, enforce_single_parent);
           },
           "source"_a,
           "target"_a,
@@ -680,9 +679,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              NodeSymbol target,
              const EdgeAttributes& info,
              bool enforce_single_parent) {
-            return enforce_single_parent
-                       ? graph.insertParentEdge(source, target, info.clone())
-                       : graph.insertEdge(source, target, info.clone());
+            return graph.insertEdge(
+                source, target, info.clone(), enforce_single_parent);
           },
           "source"_a,
           "target"_a,
