@@ -133,7 +133,7 @@ TEST_P(GraphSerializationFixture, DsgWithNaNs) {
   EXPECT_EQ(expected, *result);
 }
 
-TEST_P(GraphSerializationFixture, DsgDynamic) {
+TEST_P(GraphSerializationFixture, DsgWithPartitions) {
   const auto round_trip_serializer = GetParam();
 
   using namespace std::chrono_literals;
