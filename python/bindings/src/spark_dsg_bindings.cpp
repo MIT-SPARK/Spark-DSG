@@ -70,11 +70,11 @@ using namespace spark_dsg;
 using spark_dsg::python::EdgeIter;
 using spark_dsg::python::GlobalEdgeIter;
 using spark_dsg::python::GlobalNodeIter;
-using spark_dsg::python::IntralayerGroupIter;
 using spark_dsg::python::IterSentinel;
 using spark_dsg::python::LayerIter;
 using spark_dsg::python::LayerView;
 using spark_dsg::python::NodeIter;
+using spark_dsg::python::PartitionIter;
 using spark_dsg::python::Quaternion;
 
 PYBIND11_MODULE(_dsg_bindings, module) {
@@ -126,9 +126,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
 
   py::class_<LayerKey>(module, "LayerKey")
       .def(py::init<LayerId>())
-      .def(py::init<LayerId, IntralayerId>())
-      .def_readonly("layer", &LayerKey::layer)
-      .def_readonly("intralayer_id", &LayerKey::intralayer_id)
+      .def(py::init<LayerId, PartitionId>())
+      .def_readwrite("layer", &LayerKey::layer)
+      .def_readwrite("partition", &LayerKey::partition)
       .def("__repr__", [](const LayerKey& key) {
         std::stringstream ss;
         ss << key;
@@ -636,11 +636,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("clear", &DynamicSceneGraph::clear)
       .def(
           "add_layer",
-          [](DynamicSceneGraph& graph, LayerId layer, IntralayerId group) {
-            graph.addLayer(layer, group);
+          [](DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
+            graph.addLayer(layer, partition);
           },
           "layer"_a,
-          "group"_a = 0)
+          "partition"_a = 0)
       .def("add_node",
            [](DynamicSceneGraph& graph,
               LayerId layer_id,
@@ -651,14 +651,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(
           "add_node",
           [](DynamicSceneGraph& graph,
-             LayerId layer_id,
-             IntralayerId group,
+             LayerId layer,
+             PartitionId partition,
              NodeSymbol node_id,
              const NodeAttributes& attrs) {
-            return graph.emplaceNode({layer_id, group}, node_id, attrs.clone());
+            return graph.emplaceNode({layer, partition}, node_id, attrs.clone());
           },
-          "layer_id"_a,
-          "prefix"_a,
+          "layer"_a,
+          "partition"_a,
           "node_id"_a,
           "attrs"_a)
       .def(
@@ -703,11 +703,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("has_mesh", &DynamicSceneGraph::hasMesh)
       .def(
           "get_layer",
-          [](const DynamicSceneGraph& graph, LayerId layer_id, IntralayerId group) {
-            return LayerView(graph.getLayer(layer_id, group));
+          [](const DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
+            return LayerView(graph.getLayer(layer, partition));
           },
-          "layer_id"_a,
-          "group"_a = 0,
+          "layer"_a,
+          "partition"_a = 0,
           py::return_value_policy::reference_internal)
       .def(
           "get_node",
@@ -781,9 +781,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
-          "intralayer_groups",
+          "layer_partitions",
           [](const DynamicSceneGraph& graph) {
-            return py::make_iterator(IntralayerGroupIter(graph.intralayer_groups()),
+            return py::make_iterator(PartitionIter(graph.layer_partitions()),
                                      IterSentinel());
           },
           nullptr,

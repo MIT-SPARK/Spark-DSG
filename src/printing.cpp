@@ -44,8 +44,8 @@ std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
 
 std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
   out << key.layer;
-  if (key.intralayer_id) {
-    out << "[" << key.intralayer_id << "]";
+  if (key.partition) {
+    out << "[" << key.partition << "]";
   }
 
   return out;

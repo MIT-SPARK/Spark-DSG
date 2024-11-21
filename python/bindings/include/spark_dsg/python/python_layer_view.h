@@ -71,22 +71,22 @@ class LayerIter {
   DynamicSceneGraph::Layers::const_iterator end_iter_;
 };
 
-class IntralayerGroupIter {
+class PartitionIter {
  public:
-  using LayerMap = std::map<LayerId, DynamicSceneGraph::IntralayerGroup>;
+  using LayerMap = std::map<LayerId, DynamicSceneGraph::Partitions>;
 
-  IntralayerGroupIter(const LayerMap& container);
+  PartitionIter(const LayerMap& container);
   void setSubIter();
   LayerView operator*() const;
-  IntralayerGroupIter& operator++();
+  PartitionIter& operator++();
   bool operator==(const IterSentinel&);
 
  private:
   bool valid_;
   LayerMap::const_iterator curr_iter_;
   LayerMap::const_iterator end_iter_;
-  DynamicSceneGraph::IntralayerGroup::const_iterator curr_layer_iter_;
-  DynamicSceneGraph::IntralayerGroup::const_iterator end_layer_iter_;
+  DynamicSceneGraph::Partitions::const_iterator curr_layer_iter_;
+  DynamicSceneGraph::Partitions::const_iterator end_layer_iter_;
 };
 
 }  // namespace spark_dsg::python

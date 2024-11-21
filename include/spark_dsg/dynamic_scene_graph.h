@@ -70,8 +70,8 @@ class DynamicSceneGraph {
   using Layer = SceneGraphLayer;
   //! Layer container
   using Layers = std::map<LayerId, Layer::Ptr>;
-  //! Dynamic layer container
-  using IntralayerGroup = std::map<IntralayerId, Layer::Ptr>;
+  //! Container for layer partitions
+  using Partitions = std::map<PartitionId, Layer::Ptr>;
 
   friend class SceneGraphLogger;
 
@@ -106,70 +106,69 @@ class DynamicSceneGraph {
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_id Layer id to check
-   * @param intralayer_id Intralayer id to check if specified
+   * @param partition Partition to check if specified
    * @returns Returns true if the layer exists and is valid
    */
-  bool hasLayer(LayerId layer_id, IntralayerId intralayer_id = 0) const;
+  bool hasLayer(LayerId layer_id, PartitionId partition = 0) const;
 
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_name Layer name to check
-   * @param intralayer_id Intralayer id to check if specified
+   * @param partition Partition to check if specified
    * @returns Returns true if the layer exists and is valid
    */
-  bool hasLayer(const std::string& layer_name, IntralayerId intralayer_id = 0) const;
+  bool hasLayer(const std::string& layer_name, PartitionId partition = 0) const;
 
   /**
    * @brief Attempt to retrieve the specified layer
    * @param layer_id Layer ID to find
-   * @param intralayer_id Intralayer id to find if specified
+   * @param partition Partition to find if specified
    * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
    */
-  const Layer* findLayer(LayerId layer_id, IntralayerId intralayer_id = 0) const;
+  const Layer* findLayer(LayerId layer_id, PartitionId partition = 0) const;
 
   /**
    * @brief Attempt to retrieve the specified layer
    * @param layer_name Layer name to find
-   * @param intralayer_id Intralayer id to find if specified
+   * @param partition Partition to find if specified
    * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
    */
   const Layer* findLayer(const std::string& layer_name,
-                         IntralayerId intralayer_id = 0) const;
+                         PartitionId partition = 0) const;
 
   /**
    * @brief Get a layer if the layer exists
    * @param layer_id layer to get
-   * @param intralayer_id Intralayer id to get if specified
+   * @param partition Partition to get if specified
    * @returns a constant reference to the requested layer
    * @throws std::out_of_range if the layer doesn't exist
    */
-  const Layer& getLayer(LayerId layer_id, IntralayerId intralayer_id = 0) const;
+  const Layer& getLayer(LayerId layer_id, PartitionId partition = 0) const;
 
   /**
    * @brief Get a layer if the layer exists
    * @param layer_name layer to get
-   * @param intralayer_id Intralayer id to get if specified
+   * @param partition Partition to get if specified
    * @returns a constant reference to the requested layer
    * @throws std::out_of_range if the layer doesn't exist
    */
-  const Layer& getLayer(const std::string& layer_name,
-                        IntralayerId intralayer_id = 0) const;
+  const Layer& getLayer(const std::string& layer_name, PartitionId partition = 0) const;
 
   /**
    * @brief Add a new layer to the graph if it doesn't exist already
    * @param layer Layer ID
-   * @param intralayer_id Intralayer id to get if specified
+   * @param partition Partition to get if specified
    * @return Layer that was created or existed previously
    */
-  const Layer& addLayer(LayerId layer, IntralayerId intralayer_id = 0);
+  const Layer& addLayer(LayerId layer, PartitionId partition = 0);
 
   /**
    * @brief Remove a layer from the graph if it exists
    * @param layer Layer ID
-   * @param intralayer_id Intralayer id to get if specified
+   * @param partition Partition to get if specified
    * @return true if the layer was created
    */
-  void removeLayer(LayerId layer, IntralayerId intralayer_id = 0);
+  void removeLayer(LayerId layer, PartitionId partition = 0);
 
   /**
    * @brief construct and add a node to the specified layer in the graph
@@ -489,7 +488,7 @@ class DynamicSceneGraph {
   std::map<NodeId, LayerKey> node_lookup_;
 
   Layers layers_;
-  std::map<LayerId, IntralayerGroup> intralayer_groups_;
+  std::map<LayerId, Partitions> layer_partitions_;
 
   EdgeContainer interlayer_edges_;
 
@@ -513,18 +512,18 @@ class DynamicSceneGraph {
    */
   const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
 
-  const IntralayerGroup& intralayer_groups(LayerId layer_id) const {
-    auto iter = intralayer_groups_.find(layer_id);
-    if (iter == intralayer_groups_.end()) {
-      static IntralayerGroup empty;  // avoid invalid reference
+  const Partitions& layer_partition(LayerId layer_id) const {
+    auto iter = layer_partitions_.find(layer_id);
+    if (iter == layer_partitions_.end()) {
+      static Partitions empty;  // avoid invalid reference
       return empty;
     }
 
     return iter->second;
   }
 
-  const std::map<LayerId, IntralayerGroup>& intralayer_groups() const {
-    return intralayer_groups_;
+  const std::map<LayerId, Partitions>& layer_partitions() const {
+    return layer_partitions_;
   }
 };
 

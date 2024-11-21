@@ -494,7 +494,7 @@ TEST(DynamicSceneGraph, insertDynamicLayerCorrect) {
   EXPECT_TRUE(graph.hasLayer(7, 'a'));
 }
 
-TEST(DynamicSceneGraph, emplaceGroupNodeCorrect) {
+TEST(DynamicSceneGraph, emplacePartitionNodeCorrect) {
   DynamicSceneGraph G;
   EXPECT_EQ(4u, G.numLayers());
 
@@ -503,7 +503,7 @@ TEST(DynamicSceneGraph, emplaceGroupNodeCorrect) {
   EXPECT_TRUE(G.findNode("a0"_id));
   EXPECT_EQ(1u, G.numNodes());
 
-  // repeat dynamic nodes don't work
+  // repeat partition nodes don't work
   EXPECT_FALSE(G.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>()));
   EXPECT_EQ(1u, G.numNodes());
 
@@ -513,11 +513,11 @@ TEST(DynamicSceneGraph, emplaceGroupNodeCorrect) {
   EXPECT_TRUE(G.hasNode("o0"_id));
   EXPECT_TRUE(G.findNode("o0"_id));
 
-  // repeat static nodes (of dynamic nodes) don't work
+  // repeat static nodes (of partition nodes) don't work
   EXPECT_FALSE(G.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>()));
   EXPECT_EQ(2u, G.numNodes());
 
-  // repeat dynamic nodes (of static nodes) don't work
+  // repeat partition nodes (of static nodes) don't work
   EXPECT_FALSE(G.emplaceNode({2, 'o'}, "o0"_id, std::make_unique<NodeAttributes>()));
   EXPECT_EQ(2u, G.numNodes());
   EXPECT_FALSE(G.hasLayer(2, 'o'));
@@ -648,7 +648,7 @@ TEST(DynamicSceneGraph, mergeGraphCorrect) {
   EXPECT_LT(G_1.getPosition("a0"_id).norm(), 1.0e-6);
 }
 
-TEST(DynamicSceneGraph, mergeGraphWithIntralayerGroupsCorrect) {
+TEST(DynamicSceneGraph, mergeGraphWithPartitionsCorrect) {
   DynamicSceneGraph G_1;
 
   DynamicSceneGraph G_2;
@@ -682,7 +682,7 @@ TEST(DynamicSceneGraph, mergeGraphWithIntralayerGroupsCorrect) {
   EXPECT_TRUE(G_1.hasNode("a4"_id));
 }
 
-TEST(DynamicSceneGraph, clearWithIntralayerGroupsCorrect) {
+TEST(DynamicSceneGraph, clearWithPartitionsCorrect) {
   DynamicSceneGraph graph;
   EXPECT_EQ(4u, graph.numLayers());
 
@@ -694,7 +694,7 @@ TEST(DynamicSceneGraph, clearWithIntralayerGroupsCorrect) {
   EXPECT_FALSE(graph.hasNode("a0"_id));
 }
 
-TEST(DynamicSceneGraph, InsertDynamicEdgeCorrect) {
+TEST(DynamicSceneGraph, insertPartitionEdgeCorrect) {
   DynamicSceneGraph graph;
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
@@ -721,7 +721,7 @@ TEST(DynamicSceneGraph, getPositionCorrect) {
   graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>(expected1));
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>(expected2));
 
-  // valid dynamic node matches expected
+  // valid partition node matches expected
   Eigen::Vector3d result1 = graph.getPosition("a0"_id);
   EXPECT_EQ(expected1, result1);
 
@@ -737,7 +737,7 @@ TEST(DynamicSceneGraph, getPositionCorrect) {
     SUCCEED();
   }
 
-  // invalid dynamic nodes cause an exception
+  // invalid partition nodes cause an exception
   try {
     graph.getPosition("a3"_id);
     FAIL();

@@ -116,15 +116,15 @@ inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rh
     }
   }
 
-  for (const auto& [layer_id, layer_group] : lhs.intralayer_groups()) {
-    for (const auto& [group_id, layer] : layer_group) {
-      if (!rhs.hasLayer(layer_id, group_id)) {
+  for (const auto& [layer_id, partitions] : lhs.layer_partitions()) {
+    for (const auto& [partition_id, partition] : partitions) {
+      if (!rhs.hasLayer(layer_id, partition_id)) {
         return false;
       }
 
-      const auto& rhs_layer = rhs.getLayer(layer_id, group_id);
+      const auto& rhs_partition = rhs.getLayer(layer_id, partition_id);
       const auto layers_equal =
-          isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
+          isSubset(*partition, rhs_partition) && isSubset(rhs_partition, *partition);
       if (!layers_equal) {
         return false;
       }

@@ -48,7 +48,7 @@ namespace spark_dsg {
 void write_binary(serialization::BinarySerializer& s, const SceneGraphNode& node) {
   s.startFixedArray(4);
   s.write(node.layer.layer);
-  s.write(node.layer.intralayer_id);
+  s.write(node.layer.partition);
   s.write(node.id);
   s.write(node.attributes());
 }
@@ -80,17 +80,17 @@ NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
   NodeId node;
   deserializer.read(node);
 
-  IntralayerId intralayer_id = 0;
+  PartitionId partition = 0;
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 1, 0)) {
     std::optional<std::chrono::nanoseconds> stamp;
     deserializer.read(stamp);
     // guess at interlayer IDs based on node symbol prefix
     if (stamp) {
-      intralayer_id = NodeSymbol(node).category();
+      partition = NodeSymbol(node).category();
     }
   } else {
-    deserializer.read(intralayer_id);
+    deserializer.read(partition);
   }
 
   auto attrs = serialization::Visitor::from(factory, deserializer);
@@ -98,7 +98,7 @@ NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
     return node;
   }
 
-  callback({layer, intralayer_id}, node, std::move(attrs));
+  callback({layer, partition}, node, std::move(attrs));
   return node;
 }
 
@@ -118,7 +118,7 @@ void parseEdge(const AttributeFactory<EdgeAttributes>& factory,
 
 void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer) {
   BinarySerializer serializer(&buffer);
-  serializer.write(graph.id.layer);  // we don't save intralayer group IDs
+  serializer.write(graph.id.layer);  // we don't save partition IDs
 
   // saves names to type index mapping
   serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
@@ -159,9 +159,9 @@ void writeGraph(const DynamicSceneGraph& graph,
     }
   }
 
-  for (const auto& [layer_id, group] : graph.intralayer_groups()) {
-    for (const auto& [group_id, layer] : group) {
-      for (const auto& [node_id, node] : layer->nodes()) {
+  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
+    for (const auto& [partition_id, partition] : partitions) {
+      for (const auto& [node_id, node] : partition->nodes()) {
         serializer.write(*node);
       }
     }
@@ -175,9 +175,9 @@ void writeGraph(const DynamicSceneGraph& graph,
     }
   }
 
-  for (const auto& [layer_id, group] : graph.intralayer_groups()) {
-    for (const auto& [group_id, layer] : group) {
-      for (const auto& [edge_id, edge] : layer->edges()) {
+  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
+    for (const auto& [partition_id, partition] : partitions) {
+      for (const auto& [edge_id, edge] : partition->edges()) {
         serializer.write(edge);
       }
     }

@@ -53,7 +53,7 @@ using nlohmann::json;
 void to_json(json& record, const SceneGraphNode& node) {
   record = {{"id", node.id},
             {"layer", node.layer.layer},
-            {"intralayer_id", node.layer.intralayer_id},
+            {"partition", node.layer.partition},
             {"attributes", node.attributes()}};
 }
 
@@ -68,14 +68,14 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
   auto node_id = record.at("id").get<NodeId>();
   auto layer = record.at("layer").get<LayerId>();
 
-  IntralayerId intralayer_id = 0;
+  PartitionId partition = 0;
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 1, 0)) {
     if (record.contains("timestamp")) {
-      intralayer_id = NodeSymbol(node_id).category();
+      partition = NodeSymbol(node_id).category();
     }
   } else {
-    intralayer_id = record.at("intralayer_id").get<IntralayerId>();
+    partition = record.at("partition").get<PartitionId>();
   }
 
   auto attrs = serialization::Visitor::from(factory, record.at("attributes"));
@@ -85,7 +85,7 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
     throw std::runtime_error(ss.str());
   }
 
-  if (!graph.emplaceNode({layer, intralayer_id}, node_id, std::move(attrs))) {
+  if (!graph.emplaceNode({layer, partition}, node_id, std::move(attrs))) {
     std::stringstream ss;
     ss << "failed to add " << NodeSymbol(node_id).getLabel();
     throw std::runtime_error(ss.str());
@@ -134,14 +134,14 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
     record["edges"].push_back(edge);
   }
 
-  for (const auto& [layer_id, group] : graph.intralayer_groups()) {
-    for (const auto& [prefix, layer] : group) {
-      for (const auto& [node_id, node] : layer->nodes()) {
+  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
+    for (const auto& [partition_id, partition] : partitions) {
+      for (const auto& [node_id, node] : partition->nodes()) {
         record["nodes"].push_back(*node);
       }
 
-      for (const auto& id_edge_pair : layer->edges()) {
-        record["edges"].push_back(id_edge_pair.second);
+      for (const auto& [edge_id, edge] : partition->edges()) {
+        record["edges"].push_back(edge);
       }
     }
   }
