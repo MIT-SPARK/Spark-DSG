@@ -61,7 +61,7 @@ TEST(SceneGraphLayerTests, EmplaceNodeInvariants) {
   auto node_opt = layer.findNode(0);
   ASSERT_TRUE(node_opt);
   const auto& node = *node_opt;
-  EXPECT_EQ(1u, node.layer);
+  EXPECT_EQ(LayerKey(1), node.layer);
   EXPECT_EQ(0u, node.id);
 
   // we already have this node, so we should fail

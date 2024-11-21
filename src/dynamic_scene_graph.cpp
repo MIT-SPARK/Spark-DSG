@@ -50,40 +50,6 @@ using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
 using Layer = SceneGraphLayer;
 
-std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
-  if (!key) {
-    out << "UNKNOWN";
-  } else {
-    out << key.layer;
-    if (key.dynamic) {
-      out << "[prefix=" << LayerPrefix(key.prefix).str(true) << "]";
-    }
-  }
-
-  return out;
-}
-
-LayerKey::LayerKey(LayerId layer_id)
-    : layer(layer_id), prefix(0), dynamic(false), valid(true) {}
-
-LayerKey::LayerKey(LayerId layer_id, LayerPrefix prefix)
-    : layer(layer_id), prefix(prefix), dynamic(true), valid(true) {}
-
-bool LayerKey::isParent(const LayerKey& other) const { return layer > other.layer; }
-
-bool LayerKey::operator==(const LayerKey& other) const {
-  if (dynamic != other.dynamic) {
-    return false;
-  }
-
-  const bool same_layer = layer == other.layer;
-  if (!dynamic && same_layer) {
-    return true;
-  }
-
-  return same_layer && prefix == other.prefix;
-}
-
 DynamicSceneGraph::DynamicSceneGraph(bool empty)
     : DynamicSceneGraph(empty ? LayerIds{} : LayerIds{2, 3, 4, 5},
                         empty ? LayerNames{}
@@ -104,12 +70,11 @@ DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids,
 
 void DynamicSceneGraph::clear() {
   layers_.clear();
-  dynamic_layers_.clear();
+  intralayer_groups_.clear();
 
   node_lookup_.clear();
 
   interlayer_edges_.reset();
-  dynamic_interlayer_edges_.reset();
 
   mesh_.reset();
 
@@ -123,57 +88,52 @@ void DynamicSceneGraph::reset(const LayerIds& new_layer_ids) {
   clear();
 }
 
-bool DynamicSceneGraph::hasLayer(LayerId layer_id,
-                                 std::optional<LayerPrefix> prefix) const {
-  return findLayer(layer_id, prefix) != nullptr;
+bool DynamicSceneGraph::hasLayer(LayerId layer_id, IntralayerId intralayer_id) const {
+  return findLayer(layer_id, intralayer_id) != nullptr;
 }
 
 bool DynamicSceneGraph::hasLayer(const std::string& layer_name,
-                                 std::optional<LayerPrefix> prefix) const {
+                                 IntralayerId intralayer_id) const {
   auto iter = layer_names_.find(layer_name);
   if (iter == layer_names_.end()) {
     return false;
   }
 
-  return hasLayer(iter->second, prefix);
+  return hasLayer(iter->second, intralayer_id);
 }
 
 const Layer* DynamicSceneGraph::findLayer(LayerId layer,
-                                          std::optional<LayerPrefix> prefix) const {
-  if (!prefix) {
+                                          IntralayerId intralayer_id) const {
+  if (!intralayer_id) {
     auto iter = layers_.find(layer);
     return iter == layers_.end() ? nullptr : iter->second.get();
   }
 
-  auto group = dynamic_layers_.find(layer);
-  if (group == dynamic_layers_.end()) {
+  auto group = intralayer_groups_.find(layer);
+  if (group == intralayer_groups_.end()) {
     return nullptr;
   }
 
-  auto iter = group->second.find(*prefix);
+  auto iter = group->second.find(intralayer_id);
   return iter == group->second.end() ? nullptr : iter->second.get();
 }
 
 const Layer* DynamicSceneGraph::findLayer(const std::string& name,
-                                          std::optional<LayerPrefix> prefix) const {
+                                          IntralayerId intralayer_id) const {
   auto iter = layer_names_.find(name);
   if (iter == layer_names_.end()) {
     return nullptr;
   }
 
-  return findLayer(iter->second, prefix);
+  return findLayer(iter->second, intralayer_id);
 }
 
 const Layer& DynamicSceneGraph::getLayer(LayerId layer_id,
-                                         std::optional<LayerPrefix> prefix) const {
-  auto layer = findLayer(layer_id, prefix);
+                                         IntralayerId intralayer_id) const {
+  auto layer = findLayer(layer_id, intralayer_id);
   if (!layer) {
     std::stringstream ss;
-    ss << "missing layer " << layer;
-    if (prefix) {
-      ss << "(" << prefix->str() << ")";
-    }
-
+    ss << "missing layer " << LayerKey{layer_id, intralayer_id};
     throw std::out_of_range(ss.str());
   }
 
@@ -181,39 +141,38 @@ const Layer& DynamicSceneGraph::getLayer(LayerId layer_id,
 }
 
 const Layer& DynamicSceneGraph::getLayer(const std::string& name,
-                                         std::optional<LayerPrefix> prefix) const {
+                                         IntralayerId intralayer_id) const {
   auto iter = layer_names_.find(name);
   if (iter == layer_names_.end()) {
     std::stringstream ss;
     ss << "missing layer '" << name << "'";
-    if (prefix) {
-      ss << " (prefix: " << prefix->str() << ")";
+    if (intralayer_id) {
+      ss << " [intralayer_id: " << intralayer_id << "]";
     }
 
     throw std::out_of_range(ss.str());
   }
 
-  return getLayer(name, prefix);
+  return getLayer(name, intralayer_id);
 }
 
-const Layer& DynamicSceneGraph::addLayer(LayerId layer,
-                                         std::optional<LayerPrefix> prefix) {
-  return layerFromKey(prefix ? LayerKey(layer, *prefix) : LayerKey(layer));
+const Layer& DynamicSceneGraph::addLayer(LayerId layer, IntralayerId intralayer_id) {
+  return layerFromKey({layer, intralayer_id});
 }
 
-void DynamicSceneGraph::removeLayer(LayerId layer, std::optional<LayerPrefix> prefix) {
-  if (!prefix) {
+void DynamicSceneGraph::removeLayer(LayerId layer, IntralayerId intralayer_id) {
+  if (!intralayer_id) {
     layers_.erase(layer);
   }
 
-  auto iter = dynamic_layers_.find(layer);
-  if (iter == dynamic_layers_.end()) {
+  auto iter = intralayer_groups_.find(layer);
+  if (iter == intralayer_groups_.end()) {
     return;
   }
 
-  iter->second.erase(*prefix);
+  iter->second.erase(intralayer_id);
   if (iter->second.empty()) {
-    dynamic_layers_.erase(iter);
+    intralayer_groups_.erase(iter);
   }
 }
 
@@ -259,10 +218,6 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
     return false;
   }
 
-  if (!source_key || !target_key) {
-    return false;
-  }
-
   auto attrs = (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
                                       : std::move(edge_info);
 
@@ -272,13 +227,7 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
 
   // add information to the nodes about the node relationship
   addAncestry(source, target, source_key, target_key);
-
-  if (source_key.dynamic || target_key.dynamic) {
-    dynamic_interlayer_edges_.insert(source, target, std::move(attrs));
-  } else {
-    interlayer_edges_.insert(source, target, std::move(attrs));
-  }
-
+  interlayer_edges_.insert(source, target, std::move(attrs));
   return true;
 }
 
@@ -287,10 +236,6 @@ bool DynamicSceneGraph::insertParentEdge(NodeId source,
                                          std::unique_ptr<EdgeAttributes>&& edge_info) {
   LayerKey source_key, target_key;
   if (hasEdge(source, target, &source_key, &target_key)) {
-    return false;
-  }
-
-  if (!source_key || !target_key) {
     return false;
   }
 
@@ -303,13 +248,7 @@ bool DynamicSceneGraph::insertParentEdge(NodeId source,
   }
 
   addAncestry(source, target, source_key, target_key);
-
-  if (source_key.dynamic || target_key.dynamic) {
-    dynamic_interlayer_edges_.insert(source, target, std::move(attrs));
-  } else {
-    interlayer_edges_.insert(source, target, std::move(attrs));
-  }
-
+  interlayer_edges_.insert(source, target, std::move(attrs));
   return true;
 }
 
@@ -344,11 +283,7 @@ bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
   if (source_key == target_key) {
     edge = layerFromKey(source_key).edges_.find(source, target);
   } else {
-    if (source_key.dynamic || target_key.dynamic) {
-      edge = dynamic_interlayer_edges_.find(source, target);
-    } else {
-      edge = interlayer_edges_.find(source, target);
-    }
+    edge = interlayer_edges_.find(source, target);
   }
 
   if (!edge) {
@@ -360,7 +295,7 @@ bool DynamicSceneGraph::setEdgeAttributes(NodeId source,
 }
 
 bool DynamicSceneGraph::hasNode(NodeId node_id) const {
-  return node_lookup_.count(node_id) != 0;
+  return node_lookup_.count(node_id);
 }
 
 NodeStatus DynamicSceneGraph::checkNode(NodeId node_id) const {
@@ -413,11 +348,7 @@ const Edge* DynamicSceneGraph::findEdge(NodeId source, NodeId target) const {
     return layerFromKey(source_key).findEdge(source, target);
   }
 
-  if (source_key.dynamic || target_key.dynamic) {
-    return dynamic_interlayer_edges_.find(source, target);
-  } else {
-    return interlayer_edges_.find(source, target);
-  }
+  return interlayer_edges_.find(source, target);
 }
 
 bool DynamicSceneGraph::removeNode(NodeId node_id) {
@@ -449,10 +380,6 @@ bool DynamicSceneGraph::removeEdge(NodeId source, NodeId target) {
     return false;
   }
 
-  if (!source_key || !target_key) {
-    return false;
-  }
-
   if (source_key == target_key) {
     return layerFromKey(source_key).removeEdge(source, target);
   }
@@ -464,43 +391,25 @@ bool DynamicSceneGraph::removeEdge(NodeId source, NodeId target) {
 size_t DynamicSceneGraph::numLayers() const {
   const size_t static_size = layers_.size();
 
-  size_t unique_dynamic_layers = 0;
-  for (const auto& id_layer_group_pair : dynamic_layers_) {
-    if (!layers_.count(id_layer_group_pair.first)) {
-      unique_dynamic_layers++;
+  size_t unique_layer_groups = 0;
+  for (const auto& [layer_id, group] : intralayer_groups_) {
+    if (!layers_.count(layer_id)) {
+      ++unique_layer_groups;
     }
   }
 
-  return static_size + unique_dynamic_layers;
+  return static_size + unique_layer_groups;
 }
 
-size_t DynamicSceneGraph::numDynamicLayers() const {
-  size_t num_layers = 0;
-  for (const auto& id_layer_group : dynamic_layers_) {
-    num_layers += id_layer_group.second.size();
-  }
-  return num_layers;
-}
-
-size_t DynamicSceneGraph::numNodes(bool include_mesh) const {
-  return numStaticNodes() + numDynamicNodes() +
-         ((mesh_ == nullptr || !include_mesh) ? 0 : mesh_->numVertices());
-}
-
-size_t DynamicSceneGraph::numStaticNodes() const {
+size_t DynamicSceneGraph::numNodes() const {
   size_t total_nodes = 0u;
-  for (const auto& id_layer_pair : layers_) {
-    total_nodes += id_layer_pair.second->numNodes();
+  for (const auto& [layer_id, layer] : layers_) {
+    total_nodes += layer->numNodes();
   }
 
-  return total_nodes;
-}
-
-size_t DynamicSceneGraph::numDynamicNodes() const {
-  size_t total_nodes = 0u;
-  for (const auto& layer_group : dynamic_layers_) {
-    for (const auto& prefix_layer_pair : layer_group.second) {
-      total_nodes += prefix_layer_pair.second->numNodes();
+  for (const auto& [layer_id, group] : intralayer_groups_) {
+    for (const auto& [intralayer_id, layer] : group) {
+      total_nodes += layer->numNodes();
     }
   }
 
@@ -508,24 +417,14 @@ size_t DynamicSceneGraph::numDynamicNodes() const {
 }
 
 size_t DynamicSceneGraph::numEdges() const {
-  return numStaticEdges() + numDynamicEdges();
-}
-
-size_t DynamicSceneGraph::numStaticEdges() const {
   size_t total_edges = interlayer_edges_.size();
-  for (const auto& id_layer_pair : layers_) {
-    total_edges += id_layer_pair.second->numEdges();
+  for (const auto& [layer_id, layer] : layers_) {
+    total_edges += layer->numEdges();
   }
 
-  return total_edges;
-}
-
-size_t DynamicSceneGraph::numDynamicEdges() const {
-  size_t total_edges = dynamic_interlayer_edges_.size();
-
-  for (const auto& id_group_pair : dynamic_layers_) {
-    for (const auto& prefix_layer_pair : id_group_pair.second) {
-      total_edges += prefix_layer_pair.second->numEdges();
+  for (const auto& [layer_id, group] : intralayer_groups_) {
+    for (const auto& [intralayer_id, layer] : group) {
+      total_edges += layer->numEdges();
     }
   }
 
@@ -579,56 +478,25 @@ bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
   return true;
 }
 
-bool DynamicSceneGraph::updateFromLayer(SceneGraphLayer& other_layer,
-                                        std::unique_ptr<Edges>&& edges) {
+bool DynamicSceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
+                                        const Edges& edges) {
   // TODO(nathan) consider condensing with mergeGraph
-  if (!layers_.count(other_layer.id)) {
-    SG_LOG(ERROR) << "Scene graph does not have layer: " << other_layer.id << std::endl;
-    return false;
+  for (auto& [node_id, node] : other_layer.nodes_) {
+    addOrUpdateNode(node->layer, node_id, node->attributes_->clone());
   }
 
-  auto& internal_layer = *layers_.at(other_layer.id);
-  for (auto& id_node_pair : other_layer.nodes_) {
-    if (internal_layer.hasNode(id_node_pair.first)) {
-      // just copy the attributes (prior edge information should be preserved)
-      internal_layer.nodes_[id_node_pair.first]->attributes_ =
-          std::move(id_node_pair.second->attributes_);
-    } else {
-      // we need to let the scene graph know about new nodes
-      node_lookup_[id_node_pair.first] = internal_layer.id;
-      internal_layer.nodes_[id_node_pair.first] = std::move(id_node_pair.second);
-      internal_layer.nodes_status_[id_node_pair.first] = NodeStatus::NEW;
-    }
+  for (auto& [edge_key, edge] : edges) {
+    addOrUpdateEdge(edge_key.k1, edge_key.k2, edge.info->clone());
   }
 
-  // we just invalidated all the nodes in the other layer, so we better reset
-  // everything
-  other_layer.reset();
-
-  if (!edges) {
-    return true;
-  }
-
-  for (auto& id_edge_pair : *edges) {
-    auto& edge = id_edge_pair.second;
-    if (internal_layer.hasEdge(edge.source, edge.target)) {
-      internal_layer.edges_.edges.at(id_edge_pair.first).info = std::move(edge.info);
-      continue;
-    }
-
-    internal_layer.insertEdge(edge.source, edge.target, std::move(edge.info));
-  }
-
-  // we just invalidated all the info for the new edges, so reset the edges
-  edges.reset();
   return true;
 }
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const GraphMergeConfig& config) {
-  for (auto&& [l_id, other_layers] : other.dynamicLayers()) {
-    for (auto&& [prefix, other_layer] : other_layers) {
-      const LayerKey layer_key(l_id, prefix);
+  for (auto&& [l_id, other_layers] : other.intralayer_groups_) {
+    for (auto&& [intralayer_id, other_layer] : other_layers) {
+      const LayerKey layer_key(l_id, intralayer_id);
       auto& layer = layerFromKey(layer_key);
 
       std::vector<NodeId> new_nodes;
@@ -676,21 +544,6 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
     }
   }
 
-  for (const auto& id_edge_pair : other.dynamic_interlayer_edges()) {
-    const auto& edge = id_edge_pair.second;
-    NodeId new_source = config.getMergedId(edge.source);
-    NodeId new_target = config.getMergedId(edge.target);
-    if (new_source == new_target) {
-      continue;
-    }
-
-    if (config.enforce_parent_constraints) {
-      insertParentEdge(new_source, new_target, edge.info->clone());
-    } else {
-      insertEdge(new_source, new_target, edge.info->clone());
-    }
-  }
-
   // TODO(Yun) check the other mesh info (faces, vertices etc. )
   return true;
 }
@@ -714,7 +567,6 @@ std::vector<EdgeKey> DynamicSceneGraph::getRemovedEdges(bool clear_removed) {
       [&](LayerKey, Layer& layer) { layer.getRemovedEdges(to_return, clear_removed); });
 
   interlayer_edges_.getRemoved(to_return, clear_removed);
-  dynamic_interlayer_edges_.getRemoved(to_return, clear_removed);
   return to_return;
 }
 
@@ -723,36 +575,34 @@ std::vector<EdgeKey> DynamicSceneGraph::getNewEdges(bool clear_new) {
   visitLayers([&](LayerKey, Layer& layer) { layer.getNewEdges(to_return, clear_new); });
 
   interlayer_edges_.getNew(to_return, clear_new);
-  dynamic_interlayer_edges_.getNew(to_return, clear_new);
   return to_return;
 }
 
 void DynamicSceneGraph::markEdgesAsStale() {
-  for (auto& id_layer_pair : layers_) {
-    id_layer_pair.second->edges_.setStale();
+  for (auto& [layer_id, layer] : layers_) {
+    layer->edges_.setStale();
   }
-  for (auto& layer_map : dynamic_layers_) {
-    for (auto& id_layer_pair : layer_map.second) {
-      id_layer_pair.second->edges_.setStale();
+  for (auto& [layer_id, groups] : intralayer_groups_) {
+    for (auto& [intralayer_id, layer] : groups) {
+      layer->edges_.setStale();
     }
   }
 
-  dynamic_interlayer_edges_.setStale();
   interlayer_edges_.setStale();
 }
 
 void DynamicSceneGraph::removeAllStaleEdges() {
-  for (auto& id_layer_pair : layers_) {
-    removeStaleEdges(id_layer_pair.second->edges_);
+  for (auto& [layer_id, layer] : layers_) {
+    removeStaleEdges(layer->edges_);
   }
-  for (auto& layer_map : dynamic_layers_) {
-    for (auto& id_layer_pair : layer_map.second) {
-      removeStaleEdges(id_layer_pair.second->edges_);
+
+  for (auto& [layer_id, group] : intralayer_groups_) {
+    for (auto& [intralayer_id, layer] : group) {
+      removeStaleEdges(layer->edges_);
     }
   }
 
   removeStaleEdges(interlayer_edges_);
-  removeStaleEdges(dynamic_interlayer_edges_);
 }
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
@@ -768,7 +618,7 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
     }
   }
 
-  for (const auto& [layer_id, group] : dynamic_layers_) {
+  for (const auto& [layer_id, group] : intralayer_groups_) {
     for (const auto& [prefix, layer] : group) {
       for (const auto& [edge_id, edge] : layer->edges()) {
         to_return->insertEdge(edge.source, edge.target, edge.info->clone());
@@ -777,10 +627,6 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
   }
 
   for (const auto& [edge_id, edge] : interlayer_edges()) {
-    to_return->insertEdge(edge.source, edge.target, edge.info->clone());
-  }
-
-  for (const auto& [edge_id, edge] : dynamic_interlayer_edges()) {
     to_return->insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
@@ -827,22 +673,19 @@ const DynamicSceneGraph::LayerIds& DynamicSceneGraph::layer_ids() const {
 }
 
 Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) {
-  if (!key) {
-    throw std::out_of_range("invalid layer key!");
-  }
-
-  if (!key.dynamic) {
+  if (!key.intralayer_id) {
     auto iter = layers_.emplace(key.layer, std::make_unique<Layer>(key.layer)).first;
     return *iter->second;
   }
 
-  auto iter = dynamic_layers_.find(key.layer);
-  if (iter == dynamic_layers_.end()) {
-    iter = dynamic_layers_.emplace(key.layer, DynamicLayers()).first;
+  auto iter = intralayer_groups_.find(key.layer);
+  if (iter == intralayer_groups_.end()) {
+    iter = intralayer_groups_.emplace(key.layer, IntralayerGroup()).first;
   }
 
-  return *iter->second.emplace(key.prefix, std::make_unique<Layer>(key.layer))
-              .first->second;
+  auto id_layer_pair =
+      iter->second.emplace(key.intralayer_id, std::make_unique<Layer>(key.layer)).first;
+  return *id_layer_pair->second;
 }
 
 const Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) const {
@@ -879,11 +722,7 @@ bool DynamicSceneGraph::hasEdge(NodeId source,
     return layerFromKey(source_iter->second).hasEdge(source, target);
   }
 
-  if (source_iter->second.dynamic || target_iter->second.dynamic) {
-    return dynamic_interlayer_edges_.contains(source, target);
-  } else {
-    return interlayer_edges_.contains(source, target);
-  }
+  return interlayer_edges_.contains(source, target);
 }
 
 void DynamicSceneGraph::addAncestry(NodeId source,
@@ -892,10 +731,10 @@ void DynamicSceneGraph::addAncestry(NodeId source,
                                     const LayerKey& target_key) {
   auto* source_node = getNodePtr(source, source_key);
   auto* target_node = getNodePtr(target, target_key);
-  if (source_key.isParent(target_key)) {
+  if (source_key.isParentOf(target_key)) {
     source_node->children_.insert(target);
     target_node->parents_.insert(source);
-  } else if (target_key.isParent(source_key)) {
+  } else if (target_key.isParentOf(source_key)) {
     target_node->children_.insert(source);
     source_node->parents_.insert(target);
   } else {
@@ -910,10 +749,10 @@ void DynamicSceneGraph::removeAncestry(NodeId source,
                                        const LayerKey& target_key) {
   auto* source_node = getNodePtr(source, source_key);
   auto* target_node = getNodePtr(target, target_key);
-  if (source_key.isParent(target_key)) {
+  if (source_key.isParentOf(target_key)) {
     source_node->children_.erase(target);
     target_node->parents_.erase(source);
-  } else if (target_key.isParent(source_key)) {
+  } else if (target_key.isParentOf(source_key)) {
     target_node->children_.erase(source);
     source_node->parents_.erase(target);
   } else {
@@ -928,7 +767,7 @@ void DynamicSceneGraph::dropAllParents(NodeId source,
                                        const LayerKey& target_key) {
   auto* source_node = getNodePtr(source, source_key);
   auto* target_node = getNodePtr(target, target_key);
-  const auto source_is_parent = source_key.isParent(target_key);
+  const auto source_is_parent = source_key.isParentOf(target_key);
   std::set<NodeId> parents_to_clear =
       source_is_parent ? target_node->parents_ : source_node->parents_;
   NodeId child_to_clear = source_is_parent ? target : source;
@@ -942,11 +781,7 @@ void DynamicSceneGraph::removeInterlayerEdge(NodeId source,
                                              const LayerKey& source_key,
                                              const LayerKey& target_key) {
   removeAncestry(source, target, source_key, target_key);
-  if (source_key.dynamic || target_key.dynamic) {
-    dynamic_interlayer_edges_.remove(source, target);
-  } else {
-    interlayer_edges_.remove(source, target);
-  }
+  interlayer_edges_.remove(source, target);
 }
 
 void DynamicSceneGraph::removeInterlayerEdge(NodeId n1, NodeId n2) {
@@ -972,21 +807,11 @@ void DynamicSceneGraph::rewireInterlayerEdge(NodeId source,
   removeAncestry(source, target, source_key, target_key);
   addAncestry(new_source, target, new_source_key, target_key);
 
-  // TODO(nathan) edges can technically jump from dynamic to static, so problems with
-  // index not being available in other container
   EdgeAttributes::Ptr attrs;
-  if (source_key.dynamic || target_key.dynamic) {
-    const auto edge = dynamic_interlayer_edges_.find(source, target);
-    if (edge) {
-      attrs = edge->info->clone();
-      dynamic_interlayer_edges_.remove(source, target);
-    }
-  } else {
-    const auto edge = interlayer_edges_.find(source, target);
-    if (edge) {
-      attrs = edge->info->clone();
-      interlayer_edges_.remove(source, target);
-    }
+  const auto edge = interlayer_edges_.find(source, target);
+  if (edge) {
+    attrs = edge->info->clone();
+    interlayer_edges_.remove(source, target);
   }
 
   if (!attrs) {
@@ -994,11 +819,7 @@ void DynamicSceneGraph::rewireInterlayerEdge(NodeId source,
     return;
   }
 
-  if (new_source_key.dynamic || target_key.dynamic) {
-    dynamic_interlayer_edges_.insert(new_source, target, std::move(attrs));
-  } else {
-    interlayer_edges_.insert(new_source, target, std::move(attrs));
-  }
+  interlayer_edges_.insert(new_source, target, std::move(attrs));
 }
 
 void DynamicSceneGraph::removeStaleEdges(EdgeContainer& edges) {
@@ -1014,9 +835,9 @@ void DynamicSceneGraph::visitLayers(const std::function<void(LayerKey, Layer&)>&
     cb(layer_id, *layer);
   }
 
-  for (auto& [layer_id, group] : dynamic_layers_) {
-    for (auto& [prefix, layer] : group) {
-      cb(LayerKey(layer_id, prefix), *layer);
+  for (auto& [layer_id, group] : intralayer_groups_) {
+    for (auto& [intralayer_id, layer] : group) {
+      cb(LayerKey(layer_id, intralayer_id), *layer);
     }
   }
 }

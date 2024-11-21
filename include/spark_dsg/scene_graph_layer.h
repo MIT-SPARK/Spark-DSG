@@ -52,6 +52,7 @@ struct GraphMergeConfig {
   bool enforce_parent_constraints = true;
 
   NodeId getMergedId(NodeId original) const;
+  bool shouldUpdateAttributes(LayerKey layer) const;
 };
 
 /**
@@ -90,7 +91,7 @@ class SceneGraphLayer {
    * @brief Makes an empty layer with the specified layer id
    * @param layer_id layer id of the layer to be constructed
    */
-  explicit SceneGraphLayer(LayerId layer_id);
+  explicit SceneGraphLayer(LayerKey layer_id);
 
   virtual ~SceneGraphLayer() = default;
 
@@ -268,7 +269,7 @@ class SceneGraphLayer {
                                              size_t num_hops = 1) const;
 
   //! ID of the layer
-  const LayerId id;
+  const LayerKey id;
 
  protected:
   void reset();

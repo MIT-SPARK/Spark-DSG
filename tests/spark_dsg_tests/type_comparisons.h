@@ -37,6 +37,8 @@
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/node_attributes.h>
 
+#include <iostream>
+
 namespace spark_dsg {
 namespace test {
 
@@ -101,6 +103,7 @@ inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
 inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rhs) {
   for (const auto& [layer_id, layer] : lhs.layers()) {
     if (!rhs.hasLayer(layer_id)) {
+      std::cout << "Missing: " << layer_id << std::endl;
       return false;
     }
 
@@ -108,17 +111,18 @@ inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rh
     const auto layers_equal =
         isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
     if (!layers_equal) {
+      std::cout << "Inequal: " << layer_id << std::endl;
       return false;
     }
   }
 
-  for (const auto& [layer_id, layer_group] : lhs.dynamicLayers()) {
-    for (const auto& [prefix, layer] : layer_group) {
-      if (!rhs.hasLayer(layer_id, prefix)) {
+  for (const auto& [layer_id, layer_group] : lhs.intralayer_groups()) {
+    for (const auto& [group_id, layer] : layer_group) {
+      if (!rhs.hasLayer(layer_id, group_id)) {
         return false;
       }
 
-      const auto& rhs_layer = rhs.getLayer(layer_id, prefix);
+      const auto& rhs_layer = rhs.getLayer(layer_id, group_id);
       const auto layers_equal =
           isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
       if (!layers_equal) {
@@ -129,11 +133,6 @@ inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rh
 
   if (!(isSubset(lhs.interlayer_edges(), rhs.interlayer_edges()) &&
         isSubset(rhs.interlayer_edges(), lhs.interlayer_edges()))) {
-    return false;
-  }
-
-  if (!(isSubset(lhs.dynamic_interlayer_edges(), rhs.dynamic_interlayer_edges()) &&
-        isSubset(rhs.dynamic_interlayer_edges(), lhs.dynamic_interlayer_edges()))) {
     return false;
   }
 

@@ -58,7 +58,20 @@ NodeId GraphMergeConfig::getMergedId(NodeId original) const {
   return iter == previous_merges->end() ? original : iter->second;
 }
 
-SceneGraphLayer::SceneGraphLayer(LayerId layer_id) : id(layer_id) {}
+bool GraphMergeConfig::shouldUpdateAttributes(LayerKey key) const {
+  if (!update_layer_attributes) {
+    return true;
+  }
+
+  auto iter = update_layer_attributes->find(key.layer);
+  if (iter == update_layer_attributes->end()) {
+    return true;
+  }
+
+  return iter->second;
+}
+
+SceneGraphLayer::SceneGraphLayer(LayerKey layer_id) : id(layer_id) {}
 
 bool SceneGraphLayer::hasNode(NodeId node_id) const {
   return nodes_.count(node_id) != 0;
@@ -224,11 +237,7 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
 void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
                                  const GraphMergeConfig& config,
                                  std::vector<NodeId>* new_nodes) {
-  const bool update_attributes =
-      (config.update_layer_attributes && config.update_layer_attributes->count(id))
-          ? config.update_layer_attributes->at(id)
-          : true;
-
+  const bool update_attributes = config.shouldUpdateAttributes(id);
   for (const auto& id_node_pair : other_layer.nodes_) {
     const auto siter = nodes_status_.find(id_node_pair.first);
     if (siter != nodes_status_.end() && siter->second == NodeStatus::MERGED) {

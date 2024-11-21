@@ -42,6 +42,15 @@ std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
   return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
 }
 
+std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
+  out << key.layer;
+  if (key.intralayer_id) {
+    out << "[" << key.intralayer_id << "]";
+  }
+
+  return out;
+}
+
 std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
   out << "Node<id=" << NodeSymbol(node.id).getLabel() << ", layer=" << node.layer
       << ">";

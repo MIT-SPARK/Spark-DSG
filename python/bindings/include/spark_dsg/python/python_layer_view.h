@@ -53,7 +53,7 @@ class LayerView {
   const SceneGraphEdge& getEdge(NodeSymbol source, NodeSymbol target) const;
   Eigen::Vector3d getPosition(NodeSymbol node_id) const;
 
-  const LayerId id;
+  const LayerKey id;
 
  private:
   const SceneGraphLayer& layer_ref_;
@@ -71,22 +71,22 @@ class LayerIter {
   DynamicSceneGraph::Layers::const_iterator end_iter_;
 };
 
-class DynamicLayerIter {
+class IntralayerGroupIter {
  public:
-  using LayerMap = std::map<LayerId, DynamicSceneGraph::DynamicLayers>;
+  using LayerMap = std::map<LayerId, DynamicSceneGraph::IntralayerGroup>;
 
-  DynamicLayerIter(const LayerMap& container);
+  IntralayerGroupIter(const LayerMap& container);
   void setSubIter();
   LayerView operator*() const;
-  DynamicLayerIter& operator++();
+  IntralayerGroupIter& operator++();
   bool operator==(const IterSentinel&);
 
  private:
   bool valid_;
   LayerMap::const_iterator curr_iter_;
   LayerMap::const_iterator end_iter_;
-  DynamicSceneGraph::DynamicLayers::const_iterator curr_layer_iter_;
-  DynamicSceneGraph::DynamicLayers::const_iterator end_layer_iter_;
+  DynamicSceneGraph::IntralayerGroup::const_iterator curr_layer_iter_;
+  DynamicSceneGraph::IntralayerGroup::const_iterator end_layer_iter_;
 };
 
 }  // namespace spark_dsg::python

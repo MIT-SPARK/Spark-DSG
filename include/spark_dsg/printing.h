@@ -44,6 +44,8 @@ class SceneGraphNode;
 
 std::ostream& operator<<(std::ostream& out, const EdgeKey& key);
 
+std::ostream& operator<<(std::ostream& out, const LayerKey& key);
+
 std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node);
 
 Eigen::IOFormat getDefaultVectorFormat(std::optional<int> precision = std::nullopt);
