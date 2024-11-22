@@ -155,7 +155,7 @@ def test_agent_attributes(resource_dir):
     for agent in agents.nodes:
         assert hasattr(agent, "id")
         assert agent.id.category == "a"
-        assert agent.layer == dsg.DsgLayers.AGENTS
+        assert agent.layer == G.get_layer_id(dsg.DsgLayers.AGENTS, "a")
 
         _check_parent(agent)
         _check_siblings(G, agent)

@@ -63,4 +63,24 @@ bool LayerKey::operator==(const LayerKey& other) const {
   return layer == other.layer && partition == other.partition;
 }
 
+std::optional<LayerId> DsgLayers::nameToLayerId(const std::string& name) {
+  if (name == DsgLayers::SEGMENTS) {
+    return 1;
+  } else if (name == DsgLayers::OBJECTS) {
+    return 2;
+  } else if (name == DsgLayers::AGENTS) {
+    return 2;
+  } else if (name == DsgLayers::PLACES) {
+    return 3;
+  } else if (name == DsgLayers::MESH_PLACES) {
+    return 20;
+  } else if (name == DsgLayers::ROOMS) {
+    return 4;
+  } else if (name == DsgLayers::BUILDINGS) {
+    return 5;
+  } else {
+    return std::nullopt;
+  }
+}
+
 }  // namespace spark_dsg

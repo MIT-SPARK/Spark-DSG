@@ -93,6 +93,12 @@ class SceneGraphLayer {
    */
   explicit SceneGraphLayer(LayerKey layer_id);
 
+  /**
+   * @brief Make an empty layer with a layer id derived from the name
+   * @throw std::out_of_range If name doesn't correspond to one of the default layers
+   */
+  explicit SceneGraphLayer(const std::string& name);
+
   virtual ~SceneGraphLayer() = default;
 
   /**

@@ -73,6 +73,9 @@ bool GraphMergeConfig::shouldUpdateAttributes(LayerKey key) const {
 
 SceneGraphLayer::SceneGraphLayer(LayerKey layer_id) : id(layer_id) {}
 
+SceneGraphLayer::SceneGraphLayer(const std::string& name)
+    : id(DsgLayers::nameToLayerId(name).value()) {}
+
 bool SceneGraphLayer::hasNode(NodeId node_id) const {
   return nodes_.count(node_id) != 0;
 }

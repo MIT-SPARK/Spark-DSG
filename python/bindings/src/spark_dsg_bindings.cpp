@@ -226,7 +226,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              &computeAncestorBoundingBox,
              "G"_a,
              "node_id"_a,
-             "child_layer"_a = DsgLayers::PLACES,
+             "depth"_a = 1,
              "bbox_type"_a = BoundingBox::Type::AABB);
 
   /**************************************************************************************
@@ -560,6 +560,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
   py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(module,
                                                                 "SceneGraphLayer")
       .def(py::init<LayerId>())
+      .def(py::init<const std::string&>())
       .def("add_node",
            [](SceneGraphLayer& layer, NodeSymbol node, const NodeAttributes& attrs) {
              layer.emplaceNode(node, attrs.clone());
@@ -875,14 +876,19 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "mesh",
           [](const DynamicSceneGraph& graph) { return graph.mesh(); },
           [](DynamicSceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
-      .def("get_layer_id",
-           [](const DynamicSceneGraph& graph,
-              const std::string& name) -> std::optional<LayerKey> {
-             const auto& name_map = graph.layer_names();
-             auto iter = name_map.find(name);
-             return iter == name_map.end() ? std::nullopt
-                                           : std::optional<LayerId>(iter->second);
-           })
+      .def(
+          "get_layer_id",
+          [](const DynamicSceneGraph& graph,
+             const std::string& name,
+             PythonPartitionId partition) -> std::optional<LayerKey> {
+            const auto& name_map = graph.layer_names();
+            auto iter = name_map.find(name);
+            return iter == name_map.end()
+                       ? std::nullopt
+                       : std::optional<LayerKey>({iter->second, partition});
+          },
+          "name"_a,
+          "partition"_a = 0)
       .def("clone", &DynamicSceneGraph::clone)
       .def("__deepcopy__",
            [](const DynamicSceneGraph& G, py::object) { return G.clone(); })

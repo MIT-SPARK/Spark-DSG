@@ -35,6 +35,7 @@
 #pragma once
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <string>
 
 /**
@@ -90,6 +91,9 @@ struct DsgLayers {
   inline const static std::string ROOMS = "ROOMS";
   //! Building node layer
   inline const static std::string BUILDINGS = "BUILDINGS";
+
+  //! Get default layer ID for each layer name
+  static std::optional<LayerId> nameToLayerId(const std::string& name);
 };
 
 namespace graph_utilities {
