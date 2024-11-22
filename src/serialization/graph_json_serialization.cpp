@@ -70,13 +70,10 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
 
   PartitionId partition = 0;
   const auto& header = io::GlobalInfo::loadedHeader();
-  std::cout << record << std::endl;
   if (header.version < io::Version(1, 1, 0)) {
     if (record.contains("timestamp")) {
       partition = NodeSymbol(node_id).category();
     }
-    std::cout << "Found dynamic node " << NodeSymbol(node_id).getLabel() << " -> "
-              << partition << std::endl;
   } else {
     partition = record.at("partition").get<PartitionId>();
   }

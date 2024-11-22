@@ -69,16 +69,14 @@ def test_add_remove(resource_dir):
 
     # add nodes
     for node in G.nodes:
-        print(node.id)
         assert G_new.add_node(node.layer, node.id, node.attributes)
 
     # add edges
     for edge in G.edges:
-        print(edge)
         assert G_new.insert_edge(edge.source, edge.target, edge.info)
 
-    assert G.num_static_nodes() == G_new.num_static_nodes()
-    assert G.num_static_edges() == G_new.num_static_edges()
+    assert G.num_nodes() == G_new.num_nodes()
+    assert G.num_edges() == G_new.num_edges()
 
     # n.b. removing in-place (while iterating) creates undefined behavior
     # and will likely segfault
