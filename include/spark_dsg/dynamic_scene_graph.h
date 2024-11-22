@@ -363,9 +363,21 @@ class DynamicSceneGraph {
   size_t numNodes() const;
 
   /**
+   * @brief Get the total number of nodes in the graph
+   * @return The number of nodes in the graph
+   */
+  size_t numUnpartitionedNodes() const;
+
+  /**
    * @brief Get number of edges in the graph
    */
   size_t numEdges() const;
+
+  /**
+   * @brief Get the total number of nodes in the graph
+   * @return The number of nodes in the graph
+   */
+  size_t numUnpartitionedEdges() const;
 
   /**
    * @brief Get whether or not the scene graph is empty

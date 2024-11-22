@@ -395,15 +395,20 @@ size_t DynamicSceneGraph::numLayers() const {
 }
 
 size_t DynamicSceneGraph::numNodes() const {
-  size_t total_nodes = 0u;
-  for (const auto& [layer_id, layer] : layers_) {
-    total_nodes += layer->numNodes();
-  }
-
+  size_t total_nodes = numUnpartitionedNodes();
   for (const auto& [layer_id, partitions] : layer_partitions_) {
     for (const auto& [partition_id, partition] : partitions) {
       total_nodes += partition->numNodes();
     }
+  }
+
+  return total_nodes;
+}
+
+size_t DynamicSceneGraph::numUnpartitionedNodes() const {
+  size_t total_nodes = 0u;
+  for (const auto& [layer_id, layer] : layers_) {
+    total_nodes += layer->numNodes();
   }
 
   return total_nodes;
@@ -423,6 +428,23 @@ size_t DynamicSceneGraph::numEdges() const {
 
   return total_edges;
 }
+
+size_t DynamicSceneGraph::numUnpartitionedEdges() const {
+  size_t total_edges = 0;
+  for (const auto& [layer_id, layer] : layers_) {
+    total_edges += layer->numEdges();
+  }
+
+  for (const auto& [edge_key, edge] : interlayer_edges_.edges) {
+    const auto lookup = lookupEdge(edge_key.k1, edge_key.k2);
+    if (!lookup.source.partition && !lookup.target.partition) {
+      ++total_edges;
+    }
+  }
+
+  return total_edges;
+}
+
 
 bool DynamicSceneGraph::empty() const { return numNodes() == 0; }
 

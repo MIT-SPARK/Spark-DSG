@@ -147,6 +147,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("partition", &LayerKey::partition)
       .def(py::self == py::self)
       .def(py::self != py::self)
+      .def("__lt__",
+           [](const LayerKey& lhs, const LayerKey& rhs) {
+             // note that this is a partial ordering; all partitions are equal
+             return lhs.layer < rhs.layer;
+           })
+      .def("__gt__",
+           [](const LayerKey& lhs, const LayerKey& rhs) {
+             // note that this is a partial ordering; all partitions are equal
+             return lhs.layer > rhs.layer;
+           })
       .def("__repr__", [](const LayerKey& key) {
         std::stringstream ss;
         ss << key;
@@ -819,9 +829,21 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              return graph.removeEdge(source, target);
            })
       .def("num_layers", &DynamicSceneGraph::numLayers)
-      .def("num_nodes", &DynamicSceneGraph::numNodes)
+      .def(
+          "num_nodes",
+          [](const DynamicSceneGraph& graph, bool include_partitions) {
+            return include_partitions ? graph.numNodes()
+                                      : graph.numUnpartitionedNodes();
+          },
+          "include_partitions"_a = true)
+      .def(
+          "num_edges",
+          [](const DynamicSceneGraph& graph, bool include_partitions) {
+            return include_partitions ? graph.numEdges()
+                                      : graph.numUnpartitionedEdges();
+          },
+          "include_partitions"_a = true)
       .def("empty", &DynamicSceneGraph::empty)
-      .def("num_edges", &DynamicSceneGraph::numEdges)
       .def("get_position", &DynamicSceneGraph::getPosition)
       .def(
           "save",

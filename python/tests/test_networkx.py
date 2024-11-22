@@ -67,12 +67,9 @@ def test_static_graph_conversion(resource_dir):
     G = dsg.DynamicSceneGraph.load(str(dsg_path))
     G_nx = dsg_nx.graph_to_networkx(G, include_partitions=False)
 
-    agents = G.get_layer(dsg.DsgLayers.AGENTS, "a")
-    num_parents = sum([x.has_parent() for x in agents.nodes])
-
     assert G_nx is not None
-    assert len(G_nx) == G.num_nodes() - agents.num_nodes()
-    assert len(G_nx.edges) == G.num_edges() - agents.num_edges() - num_parents
+    assert len(G_nx) == G.num_nodes(include_partitions=False)
+    assert len(G_nx.edges) == G.num_edges(include_partitions=False)
 
     _check_attribute_validity(G_nx)
 
