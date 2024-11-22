@@ -58,7 +58,7 @@ NodeIter& NodeIter::operator++() {
   return *this;
 }
 
-bool NodeIter::operator==(const IterSentinel&) {
+bool NodeIter::operator==(const IterSentinel&) const {
   return !valid_ || curr_iter_ == end_iter_;
 }
 
@@ -84,7 +84,7 @@ EdgeIter& EdgeIter::operator++() {
   return *this;
 }
 
-bool EdgeIter::operator==(const IterSentinel&) {
+bool EdgeIter::operator==(const IterSentinel&) const {
   return !valid_ || curr_iter_ == end_iter_;
 }
 

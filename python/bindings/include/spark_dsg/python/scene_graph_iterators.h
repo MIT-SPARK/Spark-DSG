@@ -45,7 +45,8 @@ class NodeIter {
   NodeIter(const SceneGraphLayer::Nodes& container);
   const SceneGraphNode* operator*() const;
   NodeIter& operator++();
-  bool operator==(const IterSentinel&);
+  bool operator==(const IterSentinel&) const;
+  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
   bool valid_;
@@ -55,11 +56,12 @@ class NodeIter {
 
 class EdgeIter {
  public:
-   EdgeIter();
+  EdgeIter();
   EdgeIter(const SceneGraphLayer::Edges& container);
   const SceneGraphEdge* operator*() const;
   EdgeIter& operator++();
-  bool operator==(const IterSentinel&);
+  bool operator==(const IterSentinel&) const;
+  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
   bool valid_;
