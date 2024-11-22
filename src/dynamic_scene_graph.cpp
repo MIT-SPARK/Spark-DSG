@@ -156,7 +156,7 @@ const Layer& DynamicSceneGraph::getLayer(const std::string& name,
     throw std::out_of_range(ss.str());
   }
 
-  return getLayer(name, partition);
+  return getLayer(iter->second, partition);
 }
 
 const Layer& DynamicSceneGraph::addLayer(LayerId layer_id, const std::string& name) {
