@@ -498,13 +498,13 @@ TEST(DynamicSceneGraph, emplacePartitionNodeCorrect) {
   DynamicSceneGraph G;
   EXPECT_EQ(4u, G.numLayers());
 
-  EXPECT_TRUE(G.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(G.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a'));
   EXPECT_TRUE(G.hasNode("a0"_id));
   EXPECT_TRUE(G.findNode("a0"_id));
   EXPECT_EQ(1u, G.numNodes());
 
   // repeat partition nodes don't work
-  EXPECT_FALSE(G.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_FALSE(G.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a'));
   EXPECT_EQ(1u, G.numNodes());
 
   // static nodes still work
@@ -518,7 +518,7 @@ TEST(DynamicSceneGraph, emplacePartitionNodeCorrect) {
   EXPECT_EQ(2u, G.numNodes());
 
   // repeat partition nodes (of static nodes) don't work
-  EXPECT_FALSE(G.emplaceNode({2, 'o'}, "o0"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_FALSE(G.emplaceNode(2, "o0"_id, std::make_unique<NodeAttributes>(), 'o'));
   EXPECT_EQ(2u, G.numNodes());
   EXPECT_FALSE(G.hasLayer(2, 'o'));
 }
@@ -593,7 +593,7 @@ TEST(DynamicSceneGraph, mergeGraphCorrect) {
   EXPECT_TRUE(G_1.emplaceNode(3, 1, std::make_unique<NodeAttributes>(pos_1)));
   EXPECT_TRUE(G_1.emplaceNode(3, 2, std::make_unique<NodeAttributes>(pos_1)));
   EXPECT_TRUE(G_1.emplaceNode(2, 8, std::make_unique<NodeAttributes>(pos_1)));
-  EXPECT_TRUE(G_1.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(G_1.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a'));
   EXPECT_TRUE(G_1.insertEdge(0, 1));
   EXPECT_TRUE(G_1.insertEdge(1, 2));
   EXPECT_TRUE(G_1.insertEdge(0, 8));
@@ -608,7 +608,7 @@ TEST(DynamicSceneGraph, mergeGraphCorrect) {
   EXPECT_TRUE(G_2.emplaceNode(4, 5, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(G_2.emplaceNode(2, 6, std::make_unique<NodeAttributes>(pos_2)));
   EXPECT_TRUE(G_2.emplaceNode(2, 7, std::make_unique<NodeAttributes>(pos_2)));
-  EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(G_2.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a'));
   EXPECT_TRUE(G_2.insertEdge(0, 1));
   EXPECT_TRUE(G_2.insertEdge(1, 2));
   EXPECT_TRUE(G_2.insertEdge(1, 3));
@@ -652,11 +652,11 @@ TEST(DynamicSceneGraph, mergeGraphWithPartitionsCorrect) {
   DynamicSceneGraph G_1;
 
   DynamicSceneGraph G_2;
-  EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a3"_id, std::make_unique<NodeAttributes>()));
-  EXPECT_TRUE(G_2.emplaceNode({2, 'a'}, "a4"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(G_2.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a'));
+  EXPECT_TRUE(G_2.emplaceNode(2, "a1"_id, std::make_unique<NodeAttributes>(), 'a'));
+  EXPECT_TRUE(G_2.emplaceNode(2, "a2"_id, std::make_unique<NodeAttributes>(), 'a'));
+  EXPECT_TRUE(G_2.emplaceNode(2, "a3"_id, std::make_unique<NodeAttributes>(), 'a'));
+  EXPECT_TRUE(G_2.emplaceNode(2, "a4"_id, std::make_unique<NodeAttributes>(), 'a'));
   EXPECT_TRUE(G_2.insertEdge("a0"_id, "a1"_id));
   EXPECT_TRUE(G_2.insertEdge("a1"_id, "a2"_id));
   EXPECT_TRUE(G_2.insertEdge("a2"_id, "a3"_id));
@@ -686,7 +686,7 @@ TEST(DynamicSceneGraph, clearWithPartitionsCorrect) {
   DynamicSceneGraph graph;
   EXPECT_EQ(4u, graph.numLayers());
 
-  EXPECT_TRUE(graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>()));
+  EXPECT_TRUE(graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a'));
   EXPECT_EQ(1u, graph.numNodes());
 
   graph.clear();
@@ -696,10 +696,10 @@ TEST(DynamicSceneGraph, clearWithPartitionsCorrect) {
 
 TEST(DynamicSceneGraph, insertPartitionEdgeCorrect) {
   DynamicSceneGraph graph;
-  graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a2"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a3"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
+  graph.emplaceNode(2, "a1"_id, std::make_unique<NodeAttributes>(), 'a');
+  graph.emplaceNode(2, "a2"_id, std::make_unique<NodeAttributes>(), 'a');
+  graph.emplaceNode(2, "a3"_id, std::make_unique<NodeAttributes>(), 'a');
 
   EXPECT_EQ(0u, graph.numEdges());
 
@@ -718,7 +718,7 @@ TEST(DynamicSceneGraph, getPositionCorrect) {
   Eigen::Vector3d expected2(2.0, 3.0, 4.0);
 
   DynamicSceneGraph graph;
-  graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>(expected1));
+  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(expected1), 'a');
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>(expected2));
 
   // valid partition node matches expected
@@ -748,7 +748,7 @@ TEST(DynamicSceneGraph, getPositionCorrect) {
 
 TEST(DynamicSceneGraph, insertMixedEdgeCorrect) {
   DynamicSceneGraph graph;
-  graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
 
   EXPECT_EQ(0u, graph.numEdges());
@@ -759,20 +759,20 @@ TEST(DynamicSceneGraph, insertMixedEdgeCorrect) {
   EXPECT_TRUE(graph.hasEdge("a0"_id, "x0"_id));
   testParentRelationship(graph, "x0"_id, "a0"_id);
 
-  graph.emplaceNode({4, 'b'}, "b0"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(4, "b0"_id, std::make_unique<NodeAttributes>(), 'b');
 
   EXPECT_TRUE(graph.insertEdge("b0"_id, "x0"_id));
   EXPECT_EQ(2u, graph.numEdges());
   EXPECT_TRUE(graph.hasEdge("b0"_id, "x0"_id));
   testParentRelationship(graph, "b0"_id, "x0"_id);
 
-  graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, "a1"_id, std::make_unique<NodeAttributes>(), 'a');
   EXPECT_TRUE(graph.insertEdge("b0"_id, "a1"_id));
   EXPECT_EQ(3u, graph.numEdges());
   EXPECT_TRUE(graph.hasEdge("b0"_id, "a1"_id));
   testParentRelationship(graph, "b0"_id, "a1"_id);
 
-  graph.emplaceNode({2, 'c'}, "c0"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, "c0"_id, std::make_unique<NodeAttributes>(), 'c');
   EXPECT_TRUE(graph.insertEdge("c0"_id, "a0"_id));
   EXPECT_EQ(4u, graph.numEdges());
   EXPECT_TRUE(graph.hasEdge("c0"_id, "a0"_id));
@@ -781,7 +781,7 @@ TEST(DynamicSceneGraph, insertMixedEdgeCorrect) {
 
 TEST(DynamicSceneGraph, removedAndNewNodesCorrect) {
   DynamicSceneGraph graph;
-  graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
 
   {
@@ -814,8 +814,8 @@ TEST(DynamicSceneGraph, removedAndNewNodesCorrect) {
 
 TEST(DynamicSceneGraph, removedAndNewEdgesCorrect) {
   DynamicSceneGraph graph;
-  graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
+  graph.emplaceNode(2, "a1"_id, std::make_unique<NodeAttributes>(), 'a');
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode(4, "y1"_id, std::make_unique<NodeAttributes>());
   graph.insertEdge("x0"_id, "y1"_id);
@@ -888,8 +888,8 @@ TEST(DynamicSceneGraph, mergeGraphCorrectWithPrevMerges) {
 
 TEST(DynamicSceneGraph, cloneCorrect) {
   DynamicSceneGraph graph;
-  graph.emplaceNode({2, 'a'}, "a0"_id, std::make_unique<NodeAttributes>());
-  graph.emplaceNode({2, 'a'}, "a1"_id, std::make_unique<NodeAttributes>());
+  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
+  graph.emplaceNode(2, "a1"_id, std::make_unique<NodeAttributes>(), 'a');
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode(3, "x1"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode(4, "y1"_id, std::make_unique<NodeAttributes>());

@@ -240,23 +240,23 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
 
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
-    stale_nodes.erase(
-        parseNode(node_factory,
-                  deserializer,
-                  [&graph](const auto& layer, const auto& node, auto&& attrs) {
-                    graph.addOrUpdateNode(layer, node, std::move(attrs));
-                  }));
+    stale_nodes.erase(parseNode(
+        node_factory,
+        deserializer,
+        [&graph](const auto& key, const auto& node, auto&& attrs) {
+          graph.addOrUpdateNode(key.layer, node, std::move(attrs), key.partition);
+        }));
   }
 
   if (header.version < io::Version(1, 1, 0)) {
     deserializer.checkDynamicArray();
     while (!deserializer.isDynamicArrayEnd()) {
-      stale_nodes.erase(
-          parseNode(node_factory,
-                    deserializer,
-                    [&graph](const auto& layer, const auto& node, auto&& attrs) {
-                      graph.addOrUpdateNode(layer, node, std::move(attrs));
-                    }));
+      stale_nodes.erase(parseNode(
+          node_factory,
+          deserializer,
+          [&graph](const auto& key, const auto& node, auto&& attrs) {
+            graph.addOrUpdateNode(key.layer, node, std::move(attrs), key.partition);
+          }));
     }
   }
 

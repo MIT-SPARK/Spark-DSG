@@ -69,10 +69,12 @@ def test_add_remove(resource_dir):
 
     # add nodes
     for node in G.nodes:
-        G_new.add_node(node.layer, node.id.value, node.attributes)
+        print(node.id)
+        assert G_new.add_node(node.layer, node.id, node.attributes)
 
     # add edges
     for edge in G.edges:
+        print(edge)
         assert G_new.insert_edge(edge.source, edge.target, edge.info)
 
     assert G.num_static_nodes() == G_new.num_static_nodes()
@@ -87,7 +89,7 @@ def test_add_remove(resource_dir):
 
     # remove nodes
     for node in G.nodes:
-        assert G_new.remove_node(node.id.value)
+        assert G_new.remove_node(node.id)
 
     assert G_new.num_nodes() == 0
     assert G_new.num_edges() == 0
