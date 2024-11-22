@@ -325,6 +325,9 @@ def scene_graph_to_torch_heterogeneous(
     id_map = {}
 
     for node in G.nodes:
+        if node.layer.partition != 0:
+            continue
+
         if node.layer not in node_features:
             node_features[node.layer] = []
             node_positions[node.layer] = []
@@ -356,6 +359,9 @@ def scene_graph_to_torch_heterogeneous(
     for edge in G.edges:
         source = G.get_node(edge.source)
         target = G.get_node(edge.target)
+        if source.layer.partition != 0 or target.layer.partition != 0:
+            continue
+
         edge_type = edge_map[source.layer][target.layer][1]
         if edge_type not in edge_indices:
             edge_indices[edge_type] = []

@@ -39,7 +39,7 @@ import types
 from spark_dsg._dsg_bindings import *
 from spark_dsg._dsg_bindings import (BoundingBoxType, DsgLayers,
                                      DynamicSceneGraph, EdgeAttributes,
-                                     LayerView, NodeAttributes,
+                                     LayerKey, LayerView, NodeAttributes,
                                      SceneGraphLayer,
                                      compute_ancestor_bounding_box)
 from spark_dsg.open3d_visualization import render_to_open3d
@@ -109,6 +109,12 @@ def _add_metadata_interface(obj):
     obj.set_metadata = _set_metadata
     obj.add_metadata = _add_metadata
 
+
+def _hash_layerkey(key):
+    return hash((key.layer, key.partition))
+
+
+LayerKey.__hash__ = _hash_layerkey
 
 _add_metadata_interface(DynamicSceneGraph)
 _add_metadata_interface(NodeAttributes)
