@@ -156,7 +156,6 @@ def test_agent_attributes(resource_dir):
         assert hasattr(agent, "id")
         assert agent.id.category == "a"
         assert agent.layer == dsg.DsgLayers.AGENTS
-        assert hasattr(agent, "timestamp")
 
         _check_parent(agent)
         _check_siblings(G, agent)
@@ -174,7 +173,7 @@ def test_object_attributes(resource_dir):
     for node in objects.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "O"
-        assert node.layer == dsg.DsgLayers.OBJECTS
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.OBJECTS)
 
         _check_parent(node)
         _check_base_attributes(node.attributes)
@@ -193,7 +192,7 @@ def test_place_attributes(resource_dir):
     for node in places.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "p"
-        assert node.layer == dsg.DsgLayers.PLACES
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.PLACES)
 
         _check_parent(node)
         _check_siblings(G, node)
@@ -219,7 +218,7 @@ def test_room_attributes(resource_dir):
     for node in rooms.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "R"
-        assert node.layer == dsg.DsgLayers.ROOMS
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.ROOMS)
 
         _check_parent(node)
         _check_siblings(G, node)
@@ -243,7 +242,7 @@ def test_building_attributes(resource_dir):
     for node in buildings.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "B"
-        assert node.layer == dsg.DsgLayers.BUILDINGS
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.BUILDINGS)
 
         _check_parent(node)
         _check_siblings(G, node)

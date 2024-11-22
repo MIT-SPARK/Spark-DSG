@@ -85,6 +85,22 @@ PYBIND11_MODULE(_dsg_bindings, module) {
    * Helper types
    ************************************************************************************/
 
+  // NOTE(nathan) this is a shim to enable implicit casting of chars to partition ids to
+  // keep python api similar to before. This is not recommended in general
+  struct PythonPartitionId {
+    PythonPartitionId(PartitionId value) : value(value) {}
+    PythonPartitionId(char value) : value(value) {}
+    operator PartitionId() const { return value; }
+    PartitionId value;
+  };
+
+  py::class_<PythonPartitionId>(module, "PartitionId")
+      .def(py::init<PartitionId>())
+      .def(py::init<char>());
+
+  py::implicitly_convertible<PartitionId, PythonPartitionId>();
+  py::implicitly_convertible<char, PythonPartitionId>();
+
   py::class_<Quaternion<float>>(module, "Quaternionf")
       .def(py::init<>())
       .def(py::init<float, float, float, float>())
@@ -126,9 +142,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
 
   py::class_<LayerKey>(module, "LayerKey")
       .def(py::init<LayerId>())
-      .def(py::init<LayerId, PartitionId>())
+      .def(py::init<LayerId, PythonPartitionId>())
       .def_readwrite("layer", &LayerKey::layer)
       .def_readwrite("partition", &LayerKey::partition)
+      .def(py::self == py::self)
+      .def(py::self != py::self)
       .def("__repr__", [](const LayerKey& key) {
         std::stringstream ss;
         ss << key;
@@ -638,19 +656,25 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(py::init<const DynamicSceneGraph::LayerIds&>())
       .def("clear", &DynamicSceneGraph::clear)
       .def("reset", &DynamicSceneGraph::reset)
-      .def("has_layer",
-           py::overload_cast<LayerId, PartitionId>(&DynamicSceneGraph::hasLayer,
-                                                   py::const_),
-           "layer"_a,
-           "partition"_a = 0)
-      .def("has_layer",
-           py::overload_cast<const std::string&, PartitionId>(
-               &DynamicSceneGraph::hasLayer, py::const_),
-           "layer"_a,
-           "partition"_a = 0)
+      .def(
+          "has_layer",
+          [](const DynamicSceneGraph& graph,
+             LayerId layer,
+             PythonPartitionId partition) { return graph.hasLayer(layer, partition); },
+          "layer"_a,
+          "partition"_a = 0)
+      .def(
+          "has_layer",
+          [](const DynamicSceneGraph& graph,
+             const std::string& name,
+             PythonPartitionId partition) { return graph.hasLayer(name, partition); },
+          "layer"_a,
+          "partition"_a = 0)
       .def(
           "get_layer",
-          [](const DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
+          [](const DynamicSceneGraph& graph,
+             LayerId layer,
+             PythonPartitionId partition) {
             return LayerView(graph.getLayer(layer, partition));
           },
           "layer"_a,
@@ -660,7 +684,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "get_layer",
           [](const DynamicSceneGraph& graph,
              const std::string& layer,
-             PartitionId partition) {
+             PythonPartitionId partition) {
             return LayerView(graph.getLayer(layer, partition));
           },
           "layer"_a,
@@ -672,21 +696,26 @@ PYBIND11_MODULE(_dsg_bindings, module) {
             return LayerView(graph.addLayer(layer, name));
           },
           "layer"_a,
-          "name"_a = "")
+          "name"_a = "",
+          py::return_value_policy::reference_internal)
       .def(
           "add_layer",
-          [](DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
+          [](DynamicSceneGraph& graph, LayerId layer, PythonPartitionId partition) {
             return LayerView(graph.addLayer(layer, partition));
           },
           "layer"_a,
-          "partition"_a)
+          "partition"_a,
+          py::return_value_policy::reference_internal)
       .def(
           "add_layer",
-          [](DynamicSceneGraph& graph, const std::string& name, PartitionId partition) {
+          [](DynamicSceneGraph& graph,
+             const std::string& name,
+             PythonPartitionId partition) {
             return LayerView(graph.addLayer(name, partition));
           },
           "name"_a,
-          "partition"_a)
+          "partition"_a,
+          py::return_value_policy::reference_internal)
       .def("add_node",
            [](DynamicSceneGraph& graph,
               LayerId layer_id,
@@ -698,7 +727,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "add_node",
           [](DynamicSceneGraph& graph,
              LayerId layer,
-             PartitionId partition,
+             PythonPartitionId partition,
              NodeSymbol node_id,
              const NodeAttributes& attrs) {
             return graph.emplaceNode({layer, partition}, node_id, attrs.clone());
@@ -846,6 +875,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "mesh",
           [](const DynamicSceneGraph& graph) { return graph.mesh(); },
           [](DynamicSceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
+      .def("get_layer_id",
+           [](const DynamicSceneGraph& graph,
+              const std::string& name) -> std::optional<LayerKey> {
+             const auto& name_map = graph.layer_names();
+             auto iter = name_map.find(name);
+             return iter == name_map.end() ? std::nullopt
+                                           : std::optional<LayerId>(iter->second);
+           })
       .def("clone", &DynamicSceneGraph::clone)
       .def("__deepcopy__",
            [](const DynamicSceneGraph& G, py::object) { return G.clone(); })
