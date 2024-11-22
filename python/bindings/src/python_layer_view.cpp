@@ -133,15 +133,18 @@ bool PartitionIter::operator==(const IterSentinel&) const {
   return curr_layer_iter_ == end_layer_iter_ && curr_iter_ == end_iter_;
 }
 
-GlobalLayerIter::GlobalLayerIter(const DynamicSceneGraph& graph)
-    : layers_(graph.layers()), partitions_(graph.layer_partitions()) {}
+GlobalLayerIter::GlobalLayerIter(const DynamicSceneGraph& graph,
+                                 bool include_partitions)
+    : include_partitions_(include_partitions),
+      layers_(graph.layers()),
+      partitions_(graph.layer_partitions()) {}
 
 LayerView GlobalLayerIter::operator*() const {
   if (layers_ != IterSentinel()) {
     return *layers_;
   }
 
-  if (partitions_ != IterSentinel()) {
+  if (include_partitions_ && partitions_ != IterSentinel()) {
     return *partitions_;
   }
 
@@ -151,7 +154,7 @@ LayerView GlobalLayerIter::operator*() const {
 GlobalLayerIter& GlobalLayerIter::operator++() {
   if (layers_ != IterSentinel()) {
     ++layers_;
-  } else if (partitions_ != IterSentinel()) {
+  } else if (include_partitions_ && partitions_ != IterSentinel()) {
     ++partitions_;
   }
 
@@ -159,11 +162,12 @@ GlobalLayerIter& GlobalLayerIter::operator++() {
 }
 
 bool GlobalLayerIter::operator==(const IterSentinel&) const {
-  return layers_ == IterSentinel() && partitions_ == IterSentinel();
+  return layers_ == IterSentinel() &&
+         (!include_partitions_ || partitions_ == IterSentinel());
 }
 
-GlobalNodeIter::GlobalNodeIter(const DynamicSceneGraph& dsg)
-    : valid_(true), layers_(dsg) {
+GlobalNodeIter::GlobalNodeIter(const DynamicSceneGraph& dsg, bool include_partitions)
+    : valid_(true), layers_(dsg, include_partitions) {
   setNodeIter();
 }
 
@@ -205,9 +209,11 @@ bool GlobalNodeIter::operator==(const IterSentinel&) {
   return curr_node_iter_ == IterSentinel() && layers_ == IterSentinel();
 }
 
-GlobalEdgeIter::GlobalEdgeIter(const DynamicSceneGraph& dsg)
-    : started_interlayer_(false),
-      layers_(dsg),
+GlobalEdgeIter::GlobalEdgeIter(const DynamicSceneGraph& dsg, bool include_partitions)
+    : include_partitions_(include_partitions),
+      started_interlayer_(false),
+      dsg_(dsg),
+      layers_(dsg, include_partitions),
       interlayer_edge_iter_(dsg.interlayer_edges()) {
   setEdgeIter();
 }
@@ -216,13 +222,27 @@ const SceneGraphEdge* GlobalEdgeIter::operator*() const {
   return started_interlayer_ ? *interlayer_edge_iter_ : *curr_edge_iter_;
 }
 
+void GlobalEdgeIter::findNextValidEdge() {
+  if (include_partitions_) {
+    // every edge is valid if we include partitions
+    return;
+  }
+
+  while (dsg_.edgeToPartition(*(*interlayer_edge_iter_)) &&
+         interlayer_edge_iter_ != IterSentinel()) {
+    ++interlayer_edge_iter_;
+  }
+}
+
 void GlobalEdgeIter::setEdgeIter() {
   if (started_interlayer_ || layers_ == IterSentinel()) {
     started_interlayer_ = true;
+    findNextValidEdge();
     return;
   }
 
   curr_edge_iter_ = (*layers_).edges();
+
   while (curr_edge_iter_ == IterSentinel()) {
     ++layers_;
     if (layers_ == IterSentinel()) {
@@ -241,6 +261,7 @@ GlobalEdgeIter& GlobalEdgeIter::operator++() {
 
   if (started_interlayer_) {
     ++interlayer_edge_iter_;
+    findNextValidEdge();
     return *this;
   }
 

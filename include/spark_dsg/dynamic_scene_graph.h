@@ -447,6 +447,13 @@ class DynamicSceneGraph {
   std::vector<EdgeKey> getNewEdges(bool clear_new = false);
 
   /**
+   * @brief Get whether an edge points to a partition
+   * @param edge Edge to check
+   * @return True if at least one end point is in a partition
+   */
+  bool edgeToPartition(const SceneGraphEdge& edge) const;
+
+  /**
    * @brief Track which edges get used during a serialization update
    */
   void markEdgesAsStale();

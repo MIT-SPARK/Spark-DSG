@@ -445,7 +445,6 @@ size_t DynamicSceneGraph::numUnpartitionedEdges() const {
   return total_edges;
 }
 
-
 bool DynamicSceneGraph::empty() const { return numNodes() == 0; }
 
 Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node_id) const {
@@ -574,6 +573,11 @@ std::vector<EdgeKey> DynamicSceneGraph::getNewEdges(bool clear_new) {
 
   interlayer_edges_.getNew(to_return, clear_new);
   return to_return;
+}
+
+bool DynamicSceneGraph::edgeToPartition(const SceneGraphEdge& edge) const {
+  const auto lookup = lookupEdge(edge.source, edge.target);
+  return lookup.source.partition || lookup.target.partition;
 }
 
 void DynamicSceneGraph::markEdgesAsStale() {

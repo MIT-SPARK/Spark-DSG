@@ -904,6 +904,20 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
+          "unpartitioned_nodes",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(GlobalNodeIter(graph, false), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
+          "unpartitioned_edges",
+          [](const DynamicSceneGraph& graph) {
+            return py::make_iterator(GlobalEdgeIter(graph, false), IterSentinel());
+          },
+          nullptr,
+          py::return_value_policy::reference_internal)
+      .def_property(
           "interlayer_edges",
           [](const DynamicSceneGraph& graph) {
             return py::make_iterator(EdgeIter(graph.interlayer_edges()),

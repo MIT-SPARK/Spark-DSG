@@ -93,20 +93,21 @@ class PartitionIter {
 
 class GlobalLayerIter {
  public:
-  GlobalLayerIter(const DynamicSceneGraph& graph);
+  GlobalLayerIter(const DynamicSceneGraph& graph, bool include_partitions = true);
   LayerView operator*() const;
   GlobalLayerIter& operator++();
   bool operator==(const IterSentinel&) const;
   bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
+  bool include_partitions_;
   LayerIter layers_;
   PartitionIter partitions_;
 };
 
 class GlobalNodeIter {
  public:
-  GlobalNodeIter(const DynamicSceneGraph& dsg);
+  GlobalNodeIter(const DynamicSceneGraph& dsg, bool include_partitions = true);
   void setNodeIter();
   const SceneGraphNode* operator*() const;
   GlobalNodeIter& operator++();
@@ -120,14 +121,17 @@ class GlobalNodeIter {
 
 class GlobalEdgeIter {
  public:
-  GlobalEdgeIter(const DynamicSceneGraph& dsg);
+  GlobalEdgeIter(const DynamicSceneGraph& dsg, bool include_partitions = true);
   const SceneGraphEdge* operator*() const;
   void setEdgeIter();
+  void findNextValidEdge();
   GlobalEdgeIter& operator++();
   bool operator==(const IterSentinel&);
 
  private:
+  bool include_partitions_;
   bool started_interlayer_;
+  const DynamicSceneGraph& dsg_;
   GlobalLayerIter layers_;
   EdgeIter curr_edge_iter_;
   EdgeIter interlayer_edge_iter_;
