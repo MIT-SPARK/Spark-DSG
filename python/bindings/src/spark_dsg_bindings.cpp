@@ -717,26 +717,43 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "name"_a,
           "partition"_a,
           py::return_value_policy::reference_internal)
-      .def("add_node",
-           [](DynamicSceneGraph& graph,
-              LayerId layer_id,
-              NodeSymbol node_id,
-              const NodeAttributes& attrs) {
-             return graph.emplaceNode(layer_id, node_id, attrs.clone());
-           })
+      .def(
+          "add_node",
+          [](DynamicSceneGraph& graph,
+             LayerKey key,
+             NodeSymbol node_id,
+             const NodeAttributes& attrs) {
+            return graph.emplaceNode(key.layer, node_id, attrs.clone(), key.partition);
+          },
+          "layer"_a,
+          "node_id"_a,
+          "attrs"_a)
       .def(
           "add_node",
           [](DynamicSceneGraph& graph,
              LayerId layer,
-             PythonPartitionId partition,
              NodeSymbol node_id,
-             const NodeAttributes& attrs) {
-            return graph.emplaceNode({layer, partition}, node_id, attrs.clone());
+             const NodeAttributes& attrs,
+             PythonPartitionId partition) {
+            return graph.emplaceNode(layer, node_id, attrs.clone(), partition);
           },
           "layer"_a,
-          "partition"_a,
           "node_id"_a,
-          "attrs"_a)
+          "attrs"_a,
+          "partition"_a = 0)
+      .def(
+          "add_node",
+          [](DynamicSceneGraph& graph,
+             const std::string& layer,
+             NodeSymbol node_id,
+             const NodeAttributes& attrs,
+             PythonPartitionId partition) {
+            return graph.emplaceNode(layer, node_id, attrs.clone(), partition);
+          },
+          "layer"_a,
+          "node_id"_a,
+          "attrs"_a,
+          "partition"_a = 0)
       .def(
           "insert_edge",
           [](DynamicSceneGraph& graph,

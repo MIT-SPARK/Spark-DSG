@@ -191,11 +191,26 @@ class DynamicSceneGraph {
    * @param layer_id layer to add to
    * @param node_id node to create
    * @param attrs node attributes
+   * @param partition to add to
    * @return true if the node was added successfully
    */
-  bool emplaceNode(LayerKey layer_id,
+  bool emplaceNode(LayerId layer_id,
                    NodeId node_id,
-                   std::unique_ptr<NodeAttributes>&& attrs);
+                   std::unique_ptr<NodeAttributes>&& attrs,
+                   PartitionId partition = 0);
+
+  /**
+   * @brief construct and add a node to the specified layer in the graph
+   * @param layer layer to add to
+   * @param node_id node to create
+   * @param attrs node attributes
+   * @param partition to add to
+   * @return true if the node was added successfully
+   */
+  bool emplaceNode(const std::string& layer,
+                   NodeId node_id,
+                   std::unique_ptr<NodeAttributes>&& attrs,
+                   PartitionId partition = 0);
 
   /**
    * @brief add a node to the graph or update an existing node
@@ -203,10 +218,13 @@ class DynamicSceneGraph {
    * @param layer_id layer to add to
    * @param node_id node to add
    * @param attrs attributes to add
+   * @param partition to add to
+   * @return true if the node was added or updated successfully
    */
-  bool addOrUpdateNode(LayerKey layer_id,
+  bool addOrUpdateNode(LayerId layer_id,
                        NodeId node_id,
-                       std::unique_ptr<NodeAttributes>&& attrs);
+                       std::unique_ptr<NodeAttributes>&& attrs,
+                       PartitionId partition = 0);
 
   /**
    * @brief Add an edge to the graph

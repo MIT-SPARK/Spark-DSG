@@ -197,35 +197,51 @@ void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
   }
 }
 
-bool DynamicSceneGraph::emplaceNode(LayerKey layer_key,
+bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
                                     NodeId node_id,
-                                    std::unique_ptr<NodeAttributes>&& attrs) {
+                                    std::unique_ptr<NodeAttributes>&& attrs,
+                                    PartitionId partition) {
   if (node_lookup_.count(node_id)) {
     return false;
   }
 
-  auto& layer = layerFromKey(layer_key);
+  const LayerKey key{layer_id, partition};
+  auto& layer = layerFromKey(key);
   const auto successful = layer.emplaceNode(node_id, std::move(attrs));
   if (successful) {
-    node_lookup_.emplace(node_id, layer_key);
+    node_lookup_.emplace(node_id, key);
   }
 
   return successful;
 }
 
-bool DynamicSceneGraph::addOrUpdateNode(LayerKey layer_key,
+bool DynamicSceneGraph::emplaceNode(const std::string& layer,
+                                    NodeId node_id,
+                                    std::unique_ptr<NodeAttributes>&& attrs,
+                                    PartitionId partition) {
+  auto iter = layer_names_.find(layer);
+  if (iter == layer_names_.end()) {
+    return false;
+  }
+
+  return emplaceNode(iter->second, node_id, std::move(attrs), partition);
+}
+
+bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
                                         NodeId node_id,
-                                        std::unique_ptr<NodeAttributes>&& attrs) {
+                                        std::unique_ptr<NodeAttributes>&& attrs,
+                                        PartitionId partition) {
   auto iter = node_lookup_.find(node_id);
   if (iter != node_lookup_.end()) {
     getNodePtr(node_id, iter->second)->attributes_ = std::move(attrs);
     return true;
   }
 
-  auto& layer = layerFromKey(layer_key);
+  const LayerKey key{layer_id, partition};
+  auto& layer = layerFromKey(key);
   const auto successful = layer.emplaceNode(node_id, std::move(attrs));
   if (successful) {
-    node_lookup_.emplace(node_id, layer_key);
+    node_lookup_.emplace(node_id, key);
   }
 
   return successful;
@@ -458,8 +474,9 @@ bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
 bool DynamicSceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
                                         const Edges& edges) {
   // TODO(nathan) consider condensing with mergeGraph
+  const auto key = other_layer.id;
   for (auto& [node_id, node] : other_layer.nodes_) {
-    addOrUpdateNode(node->layer, node_id, node->attributes_->clone());
+    addOrUpdateNode(key.layer, node_id, node->attributes_->clone(), key.partition);
   }
 
   for (auto& [edge_key, edge] : edges) {
@@ -565,10 +582,11 @@ void DynamicSceneGraph::removeAllStaleEdges() {
 }
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
-  auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids_);
-  for (const auto [node_id, layer_key] : node_lookup_) {
-    auto node = getNodePtr(node_id, layer_key);
-    to_return->addOrUpdateNode(node->layer, node->id, node->attributes_->clone());
+  auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids_, layer_names_);
+  for (const auto [node_id, key] : node_lookup_) {
+    auto node = getNodePtr(node_id, key);
+    to_return->addOrUpdateNode(
+        key.layer, node_id, node->attributes_->clone(), key.partition);
   }
 
   for (const auto& [layer_id, layer] : layers_) {
