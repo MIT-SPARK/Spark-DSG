@@ -41,60 +41,30 @@ struct IterSentinel {};
 
 class NodeIter {
  public:
+  NodeIter();
   NodeIter(const SceneGraphLayer::Nodes& container);
   const SceneGraphNode* operator*() const;
   NodeIter& operator++();
   bool operator==(const IterSentinel&);
 
  private:
+  bool valid_;
   SceneGraphLayer::Nodes::const_iterator curr_iter_;
   SceneGraphLayer::Nodes::const_iterator end_iter_;
 };
 
 class EdgeIter {
  public:
+   EdgeIter();
   EdgeIter(const SceneGraphLayer::Edges& container);
   const SceneGraphEdge* operator*() const;
   EdgeIter& operator++();
   bool operator==(const IterSentinel&);
 
  private:
+  bool valid_;
   SceneGraphLayer::Edges::const_iterator curr_iter_;
   SceneGraphLayer::Edges::const_iterator end_iter_;
-};
-
-class GlobalNodeIter {
- public:
-  GlobalNodeIter(const DynamicSceneGraph& dsg);
-  void setNodeIter();
-  const SceneGraphNode& operator*() const;
-  GlobalNodeIter& operator++();
-  bool operator==(const IterSentinel&);
-
- private:
-  bool valid_;
-  SceneGraphLayer::Nodes::const_iterator curr_node_iter_;
-  SceneGraphLayer::Nodes::const_iterator end_node_iter_;
-  DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
-  DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
-};
-
-class GlobalEdgeIter {
- public:
-  GlobalEdgeIter(const DynamicSceneGraph& dsg);
-  const SceneGraphEdge* operator*() const;
-  void setEdgeIter();
-  GlobalEdgeIter& operator++();
-  bool operator==(const IterSentinel&);
-
- private:
-  bool started_interlayer_;
-  SceneGraphLayer::Edges::const_iterator curr_edge_iter_;
-  SceneGraphLayer::Edges::const_iterator end_edge_iter_;
-  DynamicSceneGraph::Layers::const_iterator curr_layer_iter_;
-  DynamicSceneGraph::Layers::const_iterator end_layer_iter_;
-  SceneGraphLayer::Edges::const_iterator curr_interlayer_iter_;
-  SceneGraphLayer::Edges::const_iterator end_interlayer_iter_;
 };
 
 }  // namespace spark_dsg::python

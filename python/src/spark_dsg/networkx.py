@@ -60,7 +60,7 @@ def _fill_from_layer(G_out, layer):
         G_out.add_edge(edge.source, edge.target, **_convert_attr(edge.info))
 
 
-def graph_to_networkx(G_in, include_dynamic=True):
+def graph_to_networkx(G_in, include_partitions=True):
     """Convert the DSG to a networkx representation."""
     nx = _get_networkx()
     if nx is None:
@@ -70,16 +70,16 @@ def graph_to_networkx(G_in, include_dynamic=True):
     for layer in G_in.layers:
         _fill_from_layer(G_out, layer)
 
+    if include_partitions:
+        for layer in G_in.layer_partitions:
+            _fill_from_layer(G_out, layer)
+
     for edge in G_in.interlayer_edges:
-        G_out.add_edge(edge.source, edge.target, **_convert_attr(edge.info))
+        if edge.source not in G_out or edge.target not in G_out:
+            # skip adding edges that involve nodes in partitions if they're not
+            # included in the conversion
+            continue
 
-    if not include_dynamic:
-        return G_out
-
-    for layer in G_in.dynamic_layers:
-        _fill_from_layer(G_out, layer)
-
-    for edge in G_in.dynamic_interlayer_edges:
         G_out.add_edge(edge.source, edge.target, **_convert_attr(edge.info))
 
     return G_out

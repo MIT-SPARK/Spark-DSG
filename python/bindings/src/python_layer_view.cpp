@@ -35,6 +35,9 @@
 #include "spark_dsg/python/python_layer_view.h"
 
 #include <spark_dsg/node_attributes.h>
+#include <spark_dsg/printing.h>
+
+#include <iostream>
 
 namespace spark_dsg::python {
 
@@ -78,7 +81,9 @@ LayerIter& LayerIter::operator++() {
   return *this;
 }
 
-bool LayerIter::operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
+bool LayerIter::operator==(const IterSentinel&) const {
+  return curr_iter_ == end_iter_;
+}
 
 PartitionIter::PartitionIter(const LayerMap& container)
     : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {
@@ -120,12 +125,140 @@ PartitionIter& PartitionIter::operator++() {
   return *this;
 }
 
-bool PartitionIter::operator==(const IterSentinel&) {
+bool PartitionIter::operator==(const IterSentinel&) const {
   if (!valid_) {
     return true;
   }
 
   return curr_layer_iter_ == end_layer_iter_ && curr_iter_ == end_iter_;
+}
+
+GlobalLayerIter::GlobalLayerIter(const DynamicSceneGraph& graph)
+    : layers_(graph.layers()), partitions_(graph.layer_partitions()) {}
+
+LayerView GlobalLayerIter::operator*() const {
+  if (layers_ != IterSentinel()) {
+    return *layers_;
+  }
+
+  if (partitions_ != IterSentinel()) {
+    return *partitions_;
+  }
+
+  throw std::runtime_error("invalid layer iterator!");
+}
+
+GlobalLayerIter& GlobalLayerIter::operator++() {
+  if (layers_ != IterSentinel()) {
+    ++layers_;
+  } else if (partitions_ != IterSentinel()) {
+    ++partitions_;
+  }
+
+  return *this;
+}
+
+bool GlobalLayerIter::operator==(const IterSentinel&) const {
+  return layers_ == IterSentinel() && partitions_ == IterSentinel();
+}
+
+GlobalNodeIter::GlobalNodeIter(const DynamicSceneGraph& dsg)
+    : valid_(true), layers_(dsg) {
+  setNodeIter();
+}
+
+void GlobalNodeIter::setNodeIter() {
+  if (layers_ == IterSentinel()) {
+    valid_ = false;
+    return;
+  }
+
+  curr_node_iter_ = (*layers_).nodes();
+  while (curr_node_iter_ == IterSentinel()) {
+    ++layers_;
+    if (layers_ == IterSentinel()) {
+      valid_ = false;
+      return;
+    }
+
+    curr_node_iter_ = (*layers_).nodes();
+  }
+}
+
+const SceneGraphNode* GlobalNodeIter::operator*() const { return *curr_node_iter_; }
+
+GlobalNodeIter& GlobalNodeIter::operator++() {
+  ++curr_node_iter_;
+  if (curr_node_iter_ == IterSentinel()) {
+    ++layers_;
+    setNodeIter();
+  }
+
+  return *this;
+}
+
+bool GlobalNodeIter::operator==(const IterSentinel&) {
+  if (!valid_) {
+    return true;
+  }
+
+  return curr_node_iter_ == IterSentinel() && layers_ == IterSentinel();
+}
+
+GlobalEdgeIter::GlobalEdgeIter(const DynamicSceneGraph& dsg)
+    : started_interlayer_(false),
+      layers_(dsg),
+      interlayer_edge_iter_(dsg.interlayer_edges()) {
+  setEdgeIter();
+}
+
+const SceneGraphEdge* GlobalEdgeIter::operator*() const {
+  return started_interlayer_ ? *interlayer_edge_iter_ : *curr_edge_iter_;
+}
+
+void GlobalEdgeIter::setEdgeIter() {
+  if (started_interlayer_ || layers_ == IterSentinel()) {
+    started_interlayer_ = true;
+    return;
+  }
+
+  curr_edge_iter_ = (*layers_).edges();
+  while (curr_edge_iter_ == IterSentinel()) {
+    ++layers_;
+    if (layers_ == IterSentinel()) {
+      started_interlayer_ = true;
+      return;
+    }
+
+    curr_edge_iter_ = (*layers_).edges();
+  }
+}
+
+GlobalEdgeIter& GlobalEdgeIter::operator++() {
+  if (*this == IterSentinel()) {
+    return *this;
+  }
+
+  if (started_interlayer_) {
+    ++interlayer_edge_iter_;
+    return *this;
+  }
+
+  ++curr_edge_iter_;
+  if (curr_edge_iter_ == IterSentinel()) {
+    ++layers_;
+    setEdgeIter();
+  }
+
+  return *this;
+}
+
+bool GlobalEdgeIter::operator==(const IterSentinel&) {
+  if (!started_interlayer_) {
+    return false;
+  }
+
+  return interlayer_edge_iter_ == IterSentinel();
 }
 
 }  // namespace spark_dsg::python
