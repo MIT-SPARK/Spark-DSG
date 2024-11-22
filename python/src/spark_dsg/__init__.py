@@ -62,9 +62,11 @@ def add_bounding_boxes_to_layer(
         layer_id (int): layer to add bindings to
     """
     layer = graph.get_layer(layer_id)
+    depth = graph.get_layer_id(layer_id).layer - graph.get_layer_id(child_layer).layer
+    assert depth > 0
     for node in layer.nodes:
         bbox = compute_ancestor_bounding_box(
-            graph, node.id.value, child_layer=child_layer, bbox_type=bbox_type
+            graph, node.id.value, depth=depth, bbox_type=bbox_type
         )
         node.attributes.bounding_box = bbox
 
