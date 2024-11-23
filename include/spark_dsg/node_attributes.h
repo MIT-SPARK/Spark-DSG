@@ -365,12 +365,14 @@ struct AgentNodeAttributes : public NodeAttributes {
   using BowIdVector = Eigen::Matrix<uint32_t, Eigen::Dynamic, 1>;
 
   AgentNodeAttributes();
-  AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
+  AgentNodeAttributes(std::chrono::nanoseconds timestamp,
+                      const Eigen::Quaterniond& world_R_body,
                       const Eigen::Vector3d& world_P_body,
                       NodeId external_key);
   virtual ~AgentNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
 
+  std::chrono::nanoseconds timestamp;
   Eigen::Quaterniond world_R_body;
   NodeId external_key;
   BowIdVector dbow_ids;

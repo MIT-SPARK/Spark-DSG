@@ -227,6 +227,14 @@ class DynamicSceneGraph {
                        PartitionId partition = 0);
 
   /**
+   * @brief Set the attributes of an existing node
+   * @param node_id Node to set attributes for
+   * @param attrs New attributes for the node
+   * @return true if the attributes for the node were set
+   */
+  bool setNodeAttributes(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
+
+  /**
    * @brief Add an edge to the graph
    *
    * Checks that the edge doesn't already exist and

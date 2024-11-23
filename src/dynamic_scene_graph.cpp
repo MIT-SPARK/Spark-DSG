@@ -247,6 +247,18 @@ bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
   return successful;
 }
 
+bool DynamicSceneGraph::setNodeAttributes(NodeId node_id,
+                                          std::unique_ptr<NodeAttributes>&& attrs) {
+  auto iter = node_lookup_.find(node_id);
+  if (iter != node_lookup_.end()) {
+    getNodePtr(node_id, iter->second)->attributes_ = std::move(attrs);
+    return true;
+  }
+
+  return false;
+}
+
+
 bool DynamicSceneGraph::insertEdge(NodeId source,
                                    NodeId target,
                                    std::unique_ptr<EdgeAttributes>&& edge_info,
