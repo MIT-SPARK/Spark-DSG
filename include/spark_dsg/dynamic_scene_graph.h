@@ -553,6 +553,15 @@ class DynamicSceneGraph {
   std::shared_ptr<Mesh> mesh_;
 
  public:
+  //! @brief Get layer key for a named layer
+  std::optional<LayerKey> getLayerKey(const std::string& name,
+                                      PartitionId partition = 0) const {
+    auto iter = layer_names_.find(name);
+    return iter == layer_names_.end()
+               ? std::nullopt
+               : std::optional<LayerKey>({iter->second, partition});
+  }
+
   //! Current static layer ids in the graph
   const LayerIds& layer_ids() const { return layer_ids_; }
 
