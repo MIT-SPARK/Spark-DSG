@@ -52,15 +52,10 @@ class SceneGraphLogger {
 
   inline void setOutputPath(const std::string& folder) { output_dir_ = folder; }
 
-  inline void setLayerName(LayerId id, const std::string& name) {
-    layer_names_.insert({id, name});
-  }
-
   void logGraph(const DynamicSceneGraph& graph);
 
  private:
   std::string output_dir_;
-  std::map<LayerId, std::string> layer_names_;
   bool write_header_ = true;
 };
 
