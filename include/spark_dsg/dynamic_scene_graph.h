@@ -576,6 +576,15 @@ class DynamicSceneGraph {
    */
   const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
 
+  const Partitions& layer_partition(const std::string& name) const {
+    auto iter = layer_names_.find(name);
+    if (iter == layer_names_.end()) {
+      throw std::out_of_range("missing layer '" + name + "'");
+    }
+
+    return layer_partition(iter->second);
+  }
+
   const Partitions& layer_partition(LayerId layer_id) const {
     auto iter = layer_partitions_.find(layer_id);
     if (iter == layer_partitions_.end()) {
