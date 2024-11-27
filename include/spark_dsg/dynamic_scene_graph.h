@@ -213,6 +213,13 @@ class DynamicSceneGraph {
                    PartitionId partition = 0);
 
   /**
+   * @brief construct and add a node to the specified layer in the graph
+   */
+  bool emplaceNode(LayerKey layer,
+                   NodeId node_id,
+                   std::unique_ptr<NodeAttributes>&& attrs);
+
+  /**
    * @brief add a node to the graph or update an existing node
    *
    * @param layer_id layer to add to

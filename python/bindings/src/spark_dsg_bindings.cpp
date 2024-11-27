@@ -733,7 +733,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              LayerKey key,
              NodeSymbol node_id,
              const NodeAttributes& attrs) {
-            return graph.emplaceNode(key.layer, node_id, attrs.clone(), key.partition);
+            return graph.emplaceNode(key, node_id, attrs.clone());
           },
           "layer"_a,
           "node_id"_a,
