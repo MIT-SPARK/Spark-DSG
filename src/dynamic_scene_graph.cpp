@@ -197,15 +197,13 @@ void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
   }
 }
 
-bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
+bool DynamicSceneGraph::emplaceNode(LayerKey key,
                                     NodeId node_id,
-                                    std::unique_ptr<NodeAttributes>&& attrs,
-                                    PartitionId partition) {
+                                    std::unique_ptr<NodeAttributes>&& attrs) {
   if (node_lookup_.count(node_id)) {
     return false;
   }
 
-  const LayerKey key{layer_id, partition};
   auto& layer = layerFromKey(key);
   const auto successful = layer.emplaceNode(node_id, std::move(attrs));
   if (successful) {
@@ -213,6 +211,13 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
   }
 
   return successful;
+}
+
+bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
+                                    NodeId node_id,
+                                    std::unique_ptr<NodeAttributes>&& attrs,
+                                    PartitionId partition) {
+  return emplaceNode(LayerKey{layer_id, partition}, node_id, std::move(attrs));
 }
 
 bool DynamicSceneGraph::emplaceNode(const std::string& layer,
@@ -257,7 +262,6 @@ bool DynamicSceneGraph::setNodeAttributes(NodeId node_id,
 
   return false;
 }
-
 
 bool DynamicSceneGraph::insertEdge(NodeId source,
                                    NodeId target,
