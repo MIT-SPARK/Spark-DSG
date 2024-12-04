@@ -52,6 +52,19 @@ using Layer = SceneGraphLayer;
 using LayerCallback = std::function<void(LayerKey, Layer&)>;
 using ConstLayerCallback = std::function<void(LayerKey, const Layer&)>;
 
+using LayerNames = DynamicSceneGraph::LayerNames;
+using LayerIds = DynamicSceneGraph::LayerIds;
+
+LayerIds layersFromNames(const LayerNames& layer_names,
+                         const LayerIds& prev_layers = {}) {
+  std::set<LayerId> layers(prev_layers.begin(), prev_layers.end());
+  for (const auto& [name, layer_id] : layer_names) {
+    layers.insert(layer_id);
+  }
+
+  return LayerIds(layers.begin(), layers.end());
+}
+
 bool EdgeLayerInfo::isSameLayer() const { return source == target; }
 
 DynamicSceneGraph::DynamicSceneGraph(bool empty)
@@ -64,12 +77,15 @@ DynamicSceneGraph::DynamicSceneGraph(bool empty)
                                            {DsgLayers::BUILDINGS, 5}}) {}
 
 DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids,
-                                     const std::map<std::string, LayerId>& layer_names)
+                                     const LayerNames& layer_names)
     : metadata(nlohmann::json::object()),
-      layer_ids_(layer_ids),
+      layer_ids_(layersFromNames(layer_names, layer_ids)),
       layer_names_(layer_names) {
-  // TODO(nathan) fill layer_ids_ from layer_names
   clear();
+}
+
+DynamicSceneGraph::Ptr DynamicSceneGraph::fromNames(const LayerNames& layers) {
+  return std::make_shared<DynamicSceneGraph>(layersFromNames(layers), layers);
 }
 
 void DynamicSceneGraph::clear() {
