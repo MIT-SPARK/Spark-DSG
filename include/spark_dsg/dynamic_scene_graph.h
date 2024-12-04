@@ -82,11 +82,17 @@ class DynamicSceneGraph {
   explicit DynamicSceneGraph(bool empty = false);
 
   /**
-   * @brief Construct the scene graph (with a provided layer factory)
-   * @param factory List of layer ids
-   * @param layer_names Names for each layer ID
+   * @brief Construct the scene graph (with the provided layers)
+   * @param layers List of layer ids
+   * @param layer_names Optional names for the layers
    */
-  DynamicSceneGraph(const LayerIds& factory, const LayerNames& layer_names = {});
+  DynamicSceneGraph(const LayerIds& layers, const LayerNames& layer_names = {});
+
+  /**
+   * @brief Construct a scene graph
+   * @param layers Mapping between layer names and layer IDs
+   */
+  static DynamicSceneGraph::Ptr fromNames(const LayerNames& layers);
 
   /**
    * @brief Default destructor
