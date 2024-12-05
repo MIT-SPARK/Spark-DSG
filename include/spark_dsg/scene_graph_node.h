@@ -139,7 +139,17 @@ class SceneGraphNode {
     return dynamic_cast<Derived&>(*attributes_);
   }
 
-  NodeAttributes* getAttributesPtr() const;
+  /**
+   * @brief Get a pointer to the underlying attributes
+   * @tparam Derived Optional type to cast the attributes to
+   * @returns Pointer to downcasted attributes
+   */
+  template <typename Derived = NodeAttributes>
+  Derived* tryAttributes() const {
+    static_assert(std::is_base_of<NodeAttributes, Derived>::value,
+                  "attributes can only be downcast to a derived NodeAttributes class");
+    return dynamic_cast<Derived*>(attributes_.get());
+  }
 
   //! ID of the node
   const NodeId id;
