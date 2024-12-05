@@ -439,8 +439,9 @@ void AgentNodeAttributes::serialization_info() {
 
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version >= io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
     serialization::field("timestamp", timestamp);
+  } else {
+    io::warnOutdatedHeader(header);
   }
 
   serialization::field("world_R_body", world_R_body);

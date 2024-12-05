@@ -248,6 +248,18 @@ bool DynamicSceneGraph::emplaceNode(const std::string& layer,
   return emplaceNode(iter->second, node_id, std::move(attrs), partition);
 }
 
+bool DynamicSceneGraph::addOrUpdateNode(const std::string& layer,
+                                        NodeId node_id,
+                                        std::unique_ptr<NodeAttributes>&& attrs,
+                                        PartitionId partition) {
+  auto iter = layer_names_.find(layer);
+  if (iter == layer_names_.end()) {
+    return false;
+  }
+
+  return addOrUpdateNode(iter->second, node_id, std::move(attrs), partition);
+}
+
 bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
                                         NodeId node_id,
                                         std::unique_ptr<NodeAttributes>&& attrs,
