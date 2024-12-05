@@ -365,11 +365,19 @@ const Edge& DynamicSceneGraph::getEdge(NodeId source, NodeId target) const {
 }
 
 const Edge* DynamicSceneGraph::findEdge(NodeId source, NodeId target) const {
+  auto source_key = node_lookup_.find(source);
+  if (source_key == node_lookup_.end()) {
+    return nullptr;
+  }
+
+  auto target_key = node_lookup_.find(target);
+  if (target_key == node_lookup_.end()) {
+    return nullptr;
+  }
+
   // defer to layers if it is a intralayer edge
-  const auto& source_key = node_lookup_.at(source);
-  const auto& target_key = node_lookup_.at(target);
-  if (source_key == target_key) {
-    return layerFromKey(source_key).findEdge(source, target);
+  if (source_key->second == target_key->second) {
+    return layerFromKey(source_key->second).findEdge(source, target);
   }
 
   return interlayer_edges_.find(source, target);
