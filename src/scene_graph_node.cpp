@@ -41,9 +41,7 @@ namespace spark_dsg {
 SceneGraphNode::SceneGraphNode(NodeId node_id,
                                LayerKey layer_id,
                                std::unique_ptr<NodeAttributes>&& attrs)
-    : id(node_id),
-      layer(layer_id),
-      attributes_(std::move(attrs)) {}
+    : id(node_id), layer(layer_id), attributes_(std::move(attrs)) {}
 
 SceneGraphNode::~SceneGraphNode() = default;
 
@@ -60,8 +58,6 @@ std::optional<NodeId> SceneGraphNode::getParent() const {
 
   return *parents_.begin();
 }
-
-NodeAttributes* SceneGraphNode::getAttributesPtr() const { return attributes_.get(); }
 
 const std::set<NodeId>& SceneGraphNode::siblings() const { return siblings_; };
 

@@ -454,8 +454,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("siblings", &SceneGraphNode::siblings)
       .def("children", &SceneGraphNode::children)
       .def_property("attributes",
-                    &SceneGraphNode::getAttributesPtr,
-                    &SceneGraphNode::getAttributesPtr,
+                    &SceneGraphNode::tryAttributes<NodeAttributes>,
+                    &SceneGraphNode::tryAttributes<NodeAttributes>,
                     py::return_value_policy::reference_internal)
       .def_property_readonly(
           "id", [](const SceneGraphNode& node) { return NodeSymbol(node.id); })
