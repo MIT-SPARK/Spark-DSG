@@ -123,14 +123,14 @@ class SceneGraphLayer {
    * be modified
    *
    * @param node_id node to get
-   * @returns a potentially valid node constant reference
+   * @returns Valid pointer to node if it exists, nullptr otherwise
    */
   const SceneGraphNode* findNode(NodeId node_id) const;
 
   /**
    * @brief Get a particular node in the layer
    * @param node_id node to get
-   * @returns a potentially valid node constant reference
+   * @returns Const reference to node (throws otherwise)
    */
   const SceneGraphNode& getNode(NodeId node_id) const;
 
@@ -174,7 +174,7 @@ class SceneGraphLayer {
    *
    * @param source source of edge to get
    * @param target target of edge to get
-   * @returns a potentially valid edge constant reference
+   * @returns Pointer to edge if it exists, nullptr otherwise
    */
   const SceneGraphEdge* findEdge(NodeId source, NodeId target) const;
 
