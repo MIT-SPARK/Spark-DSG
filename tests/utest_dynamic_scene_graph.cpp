@@ -403,6 +403,26 @@ TEST(DynamicSceneGraph, mergeNodesCorrect) {
   EXPECT_TRUE(graph.hasEdge(7, 3));
 }
 
+// Test that merging two nodes in non-primary partition meets the invariants that we
+// expect
+TEST(DynamicSceneGraph, mergeNodesPartition) {
+  DynamicSceneGraph graph;
+  EXPECT_TRUE(graph.emplaceNode(2, 2, std::make_unique<NodeAttributes>(), 1));
+  EXPECT_TRUE(graph.emplaceNode(1, 4, std::make_unique<NodeAttributes>(), 1));
+  EXPECT_TRUE(graph.emplaceNode(1, 5, std::make_unique<NodeAttributes>(), 1));
+  graph.insertEdge(2, 5);
+
+  // merge node 5 into node 4
+  EXPECT_TRUE(graph.mergeNodes(5, 4));
+  EXPECT_EQ(1u, graph.numEdges());
+  EXPECT_EQ(2u, graph.numNodes());
+  EXPECT_FALSE(graph.hasNode(5));
+  EXPECT_TRUE(graph.hasEdge(2, 4));
+  ASSERT_TRUE(graph.getNode(4).hasParent());
+  EXPECT_EQ(2u, graph.getNode(4).getParent().value());
+  EXPECT_EQ(std::set<NodeId>{4}, graph.getNode(2).children());
+}
+
 // Test that removeNode -> !hasNode
 TEST(DynamicSceneGraph, removeNodeHasNodeCorrent) {
   DynamicSceneGraph graph({1, 2});
