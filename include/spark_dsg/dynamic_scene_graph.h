@@ -340,7 +340,7 @@ class DynamicSceneGraph {
    * be modified
    *
    * @param node_id node to get
-   * @returns a pointer to a potentially valid node
+   * @returns Pointer to the node if it exists, nullptr otherwise
    */
   const SceneGraphNode* findNode(NodeId node_id) const;
 
@@ -366,7 +366,7 @@ class DynamicSceneGraph {
    *
    * @param source source of edge to get
    * @param target target of edge to get
-   * @returns a potentially valid edge constant reference
+   * @returns Pointer to the edge if it exists, nullptr otherwise
    */
   const SceneGraphEdge* findEdge(NodeId source, NodeId target) const;
 
