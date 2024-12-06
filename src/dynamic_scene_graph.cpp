@@ -513,37 +513,35 @@ Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node_id) const {
   return node->attributes().position;
 }
 
-bool DynamicSceneGraph::mergeNodes(NodeId node_from, NodeId node_to) {
-  if (!hasNode(node_from) || !hasNode(node_to)) {
+bool DynamicSceneGraph::mergeNodes(NodeId from_id, NodeId to_id) {
+  if (from_id == to_id) {
     return false;
   }
 
-  if (node_from == node_to) {
+  auto node_from = findNode(from_id);
+  auto node_to = findNode(to_id);
+  if (!node_from || !node_to) {
     return false;
   }
 
-  const auto info = node_lookup_.at(node_from);
-  if (info != node_lookup_.at(node_to)) {
+  if (node_from->layer != node_to->layer) {
     return false;  // Cannot merge nodes of different layers
   }
 
-  Node* node = layers_[info.layer]->nodes_.at(node_from).get();
-
   // Remove parent
-  const auto parents_to_rewire = node->parents_;
+  const auto parents_to_rewire = node_from->parents_;
   for (const auto& target : parents_to_rewire) {
-    rewireInterlayerEdge(node_from, node_to, target);
+    rewireInterlayerEdge(from_id, to_id, target);
   }
 
   // Reconnect children
-  const auto children_to_rewire = node->children_;
+  const auto children_to_rewire = node_from->children_;
   for (const auto& target : children_to_rewire) {
-    rewireInterlayerEdge(node_from, node_to, target);
+    rewireInterlayerEdge(from_id, to_id, target);
   }
 
-  // TODO(nathan) dynamic merge
-  layers_[info.layer]->mergeNodes(node_from, node_to);
-  node_lookup_.erase(node_from);
+  layerFromKey(node_from->layer).mergeNodes(from_id, to_id);
+  node_lookup_.erase(from_id);
   return true;
 }
 
