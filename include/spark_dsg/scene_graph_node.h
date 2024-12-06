@@ -69,7 +69,6 @@ class SceneGraphNode {
    * @param id the id of the node to create
    * @param layer the layer that the node will belong to
    * @param attrs attributes for the node
-   * @param timestamp Optional node timestamp in nanoseconds
    */
   SceneGraphNode(NodeId id, LayerKey layer, std::unique_ptr<NodeAttributes>&& attrs);
 

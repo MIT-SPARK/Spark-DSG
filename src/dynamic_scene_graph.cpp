@@ -52,6 +52,7 @@ using Layer = SceneGraphLayer;
 using LayerCallback = std::function<void(LayerKey, Layer&)>;
 using ConstLayerCallback = std::function<void(LayerKey, const Layer&)>;
 
+using Partitions = DynamicSceneGraph::Partitions;
 using LayerNames = DynamicSceneGraph::LayerNames;
 using LayerIds = DynamicSceneGraph::LayerIds;
 
@@ -103,8 +104,10 @@ void DynamicSceneGraph::clear() {
   }
 }
 
-void DynamicSceneGraph::reset(const LayerIds& new_layer_ids) {
-  layer_ids_ = new_layer_ids;
+void DynamicSceneGraph::reset(const LayerIds& layer_ids,
+                              const LayerNames& layer_names) {
+  layer_ids_ = layersFromNames(layer_names, layer_ids);
+  layer_names_ = layer_names;
   clear();
 }
 
@@ -893,6 +896,25 @@ void DynamicSceneGraph::visitLayers(const LayerCallback& cb) {
 void DynamicSceneGraph::visitLayers(const ConstLayerCallback& cb) const {
   const_cast<DynamicSceneGraph*>(this)->visitLayers(
       [&cb](LayerKey key, Layer& layer) { cb(key, layer); });
+}
+
+const Partitions& DynamicSceneGraph::layer_partition(const std::string& name) const {
+  auto iter = layer_names_.find(name);
+  if (iter == layer_names_.end()) {
+    throw std::out_of_range("missing layer '" + name + "'");
+  }
+
+  return layer_partition(iter->second);
+}
+
+const Partitions& DynamicSceneGraph::layer_partition(LayerId layer_id) const {
+  auto iter = layer_partitions_.find(layer_id);
+  if (iter == layer_partitions_.end()) {
+    static Partitions empty;  // avoid invalid reference
+    return empty;
+  }
+
+  return iter->second;
 }
 
 }  // namespace spark_dsg
