@@ -235,6 +235,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("compute_iou",
            static_cast<float (BoundingBox::*)(const BoundingBox&) const>(
                &BoundingBox::computeIoU))
+      .def_property_readonly("min",
+                             [](const BoundingBox& box) {
+                               return box.pointToWorldFrame(-box.dimensions / 2);
+                             })
+      .def_property_readonly("max",
+                             [](const BoundingBox& box) {
+                               return box.pointToWorldFrame(box.dimensions / 2);
+                             })
       .def("__repr__", [](const BoundingBox& box) {
         std::stringstream ss;
         ss << box;
