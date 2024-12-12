@@ -38,6 +38,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <cstdint>
 #include <vector>
 
 namespace spark_dsg::io {
