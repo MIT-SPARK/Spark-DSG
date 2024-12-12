@@ -95,7 +95,7 @@ const Node* SceneGraphLayer::findNode(NodeId node_id) const {
 const SceneGraphNode& SceneGraphLayer::getNode(NodeId node_id) const {
   const auto node = findNode(node_id);
   if (!node) {
-    throw std::out_of_range("missing node '" + NodeSymbol(node_id).getLabel() + "'");
+    throw std::out_of_range("missing node '" + NodeSymbol(node_id).str() + "'");
   }
 
   return *node;

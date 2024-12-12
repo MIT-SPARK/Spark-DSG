@@ -174,7 +174,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "value",
           [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); },
           nullptr)
-      .def("__repr__", &NodeSymbol::getLabel)
+      .def("__repr__", &NodeSymbol::str)
       .def("__hash__",
            [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); })
       .def(pybind11::self == pybind11::self)
@@ -479,8 +479,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           [](SceneGraphEdge& edge, const EdgeAttributes& info) { *edge.info = info; })
       .def("__repr__", [](const SceneGraphEdge& edge) {
         std::stringstream ss;
-        ss << "Edge<source=" << NodeSymbol(edge.source).getLabel()
-           << ", target=" << NodeSymbol(edge.target).getLabel() << ">";
+        ss << "Edge<source=" << NodeSymbol(edge.source).str()
+           << ", target=" << NodeSymbol(edge.target).str() << ">";
         return ss.str();
       });
 

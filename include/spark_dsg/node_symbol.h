@@ -77,7 +77,10 @@ class NodeSymbol {
   NodeSymbol operator++(int);
 
   //! get a string representation of the symbol
-  std::string getLabel() const;
+  [[deprecated("use str() instead")]] std::string getLabel() const;
+
+  //! get a string representation of the symbol
+  std::string str() const;
 
   /**
    * @brief output node symbol information

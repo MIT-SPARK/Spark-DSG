@@ -46,13 +46,11 @@ void testParentRelationship(const DynamicSceneGraph& graph,
   const auto& child_node = graph.getNode(child);
 
   EXPECT_TRUE(parent_node.children().count(child_node.id))
-      << NodeSymbol(child).getLabel() << " is not child of "
-      << NodeSymbol(parent).getLabel();
+      << NodeSymbol(child).str() << " is not child of " << NodeSymbol(parent).str();
 
   // note that this depends on the parent id not being 0
   EXPECT_EQ(parent_node.id, child_node.getParent().value_or(0))
-      << NodeSymbol(parent).getLabel() << " is not parent of "
-      << NodeSymbol(child).getLabel();
+      << NodeSymbol(parent).str() << " is not parent of " << NodeSymbol(child).str();
 }
 
 void testSiblingRelationship(const DynamicSceneGraph& graph,
@@ -62,12 +60,12 @@ void testSiblingRelationship(const DynamicSceneGraph& graph,
   const auto& target_node = graph.getNode(target);
 
   EXPECT_TRUE(source_node.siblings().count(target_node.id))
-      << NodeSymbol(target).getLabel() << " is not a sibling of "
-      << NodeSymbol(source).getLabel();
+      << NodeSymbol(target).str() << " is not a sibling of "
+      << NodeSymbol(source).str();
 
   EXPECT_TRUE(target_node.siblings().count(source_node.id))
-      << NodeSymbol(source).getLabel() << " is not a sibling of "
-      << NodeSymbol(target).getLabel();
+      << NodeSymbol(source).str() << " is not a sibling of "
+      << NodeSymbol(target).str();
 }
 
 }  // namespace
