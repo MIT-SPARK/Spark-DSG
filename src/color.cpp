@@ -1,6 +1,7 @@
 #include "spark_dsg/color.h"
 
 #include <algorithm>
+#include <array>
 #include <random>
 
 namespace spark_dsg {
