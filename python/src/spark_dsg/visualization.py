@@ -45,7 +45,11 @@ NODE_TYPE_TO_COLOR = {"B": "#636EFA", "R": "#EF553B", "p": "#AB63FA", "O": "#00C
 def z_offset(node) -> np.ndarray:
     """Take a node and returns an offset in the z direction according to node type."""
     offset = node.attributes.position.copy()
-    offset[2] += NODE_TYPE_OFFSET[node.id.category]
+    if node.id.category == "P":
+        offset[2] += NODE_TYPE_OFFSET["p"]
+    else :
+        offset[2] += NODE_TYPE_OFFSET[node.id.category]
+
     return offset
 
 
@@ -65,7 +69,10 @@ def _draw_layer_nodes(
     for node in layer.nodes:
         pos.append(np.squeeze(z_offset(node)))
         if color_func is None:
-            colors.append(NODE_TYPE_TO_COLOR[node.id.category])
+            if node.id.category == "P":
+                colors.append(NODE_TYPE_OFFSET["p"])
+            else :
+                colors.append(NODE_TYPE_OFFSET[node.id.category])
         else:
             colors.append(color_func(node))
 
