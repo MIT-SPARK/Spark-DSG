@@ -95,6 +95,7 @@ class RemoteVisualizer:
         include_dynamic=True,
         num_dynamic_to_skip=3,
         dynamic_axes_size=0.2,
+        line_width=1.0,
         layers_to_skip=[],
         collapse_layers=False,
     ):
@@ -114,10 +115,12 @@ class RemoteVisualizer:
         self._dynamic_axes_size = dynamic_axes_size
         self._layers_to_skip = layers_to_skip
         self._collapse_layers = collapse_layers
+        self._line_width = line_width
 
         self._palette = sns.color_palette("Paired")
         self._num_colors = len(self._palette)
 
+        self._is_first_draw = True
         self._geometries = {}
         self._new_geometries = []
 
@@ -309,18 +312,25 @@ class RemoteVisualizer:
         return np.zeros(3)
 
     def _update_render_geometry(self):
-        mat = o3d.visualization.rendering.MaterialRecord()
-        mat.shader = "defaultUnlit"
-        mat.point_size = self._point_size
         for name, geom in self._geometries.items():
-            if name in self._new_geometries:
-                self._viz.add_geometry(name, geom, mat)
+            if name not in self._new_geometries:
+                self._viz.remove_geometry(name)
+
+            mat = o3d.visualization.rendering.MaterialRecord()
+            if geom.get_geometry_type() != o3d.geometry.Geometry.LineSet:
+                mat.shader = "defaultUnlit"
+                mat.point_size = self._point_size
             else:
-                self._viz.update_geometry(name, geom, mat)
+                mat.shader = "unlitLine"
+                mat.line_width = self._line_width
+
+            self._viz.add_geometry(name, geom, mat)
+            self._viz.post_redraw()
 
         self._new_geometries = []
 
     def _update_names(self, G):
+        self._viz.clear_3d_labels()
         self._names = [None] * len(self._id_map)
         for node_id in self._id_map:
             node = G.get_node(node_id)
@@ -360,7 +370,9 @@ class RemoteVisualizer:
             self._update_geometries(G)
             self._update_names(G)
             self._update_render_geometry()
-            self._viz.reset_camera_to_default()
+            if self._is_first_draw:
+                self._viz.reset_camera_to_default()
+                self._is_first_draw = False
 
         self._viz.close()
 
@@ -377,12 +389,10 @@ class DsgVisualizer:
         self,
         start_remote=True,
         url="tcp://127.0.0.1:8001",
-        use_mesh=True,
         num_calls_per_update=10,
         **kwargs,
     ):
         """Make the visualizer geometries."""
-        self._use_mesh = use_mesh
         self._start_remote = start_remote
         self._num_calls_per_update = num_calls_per_update
         self._num_update_calls = 0
@@ -392,7 +402,6 @@ class DsgVisualizer:
         self._socket.bind(url)
 
         kwargs["url"] = url
-        kwargs["use_mesh"] = use_mesh
 
         if self._start_remote:
             self._proc = mp.Process(target=_run_remote_visualizer, kwargs=kwargs)
@@ -404,7 +413,7 @@ class DsgVisualizer:
         """Set graph for remote visualizer."""
         should_update = self._num_update_calls % self._num_calls_per_update == 0
         if should_update or force:
-            self._socket.send(G.to_binary(include_mesh=self._use_mesh))
+            self._socket.send(G.to_binary(include_mesh=True))
 
         self._num_update_calls += 1
 
