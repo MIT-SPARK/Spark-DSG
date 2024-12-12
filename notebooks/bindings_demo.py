@@ -63,7 +63,8 @@ G = dsg.DynamicSceneGraph.load(str(path_to_dsg))
 
 
 # %%
-fig = dsg.plot_scene_graph(G, marker_size=6)
+layer_settings = {layer.id: {"marker_size": 6} for layer in G.layers}
+fig = dsg.plot_scene_graph(G, layer_settings=layer_settings)
 if fig is not None:
     fig.show(renderer="notebook")
 
