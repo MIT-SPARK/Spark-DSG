@@ -101,14 +101,14 @@ struct EdgeContainer {
 
   EdgeStatus getStatus(NodeId source, NodeId target) const;
 
-  void getRemoved(std::vector<EdgeKey>& removed_edges, bool clear_removed);
+  void getRemoved(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
 
-  void getNew(std::vector<EdgeKey>& new_edges, bool clear_new);
+  void getNew(std::vector<EdgeKey>& new_edges, bool clear_new) const;
 
   void setStale();
 
   Edges edges;
-  EdgeStatusMap edge_status;
+  mutable EdgeStatusMap edge_status;
   mutable std::map<EdgeKey, bool> stale_edges;
 
  protected:

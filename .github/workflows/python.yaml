@@ -1,7 +1,7 @@
 ---
 # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 name: 'python: Build and Test'
-on: [push]
+on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest

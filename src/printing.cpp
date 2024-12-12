@@ -42,18 +42,27 @@ std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
   return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
 }
 
-std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
-  out << "Node<id=" << NodeSymbol(node.id).getLabel() << ", layer=" << node.layer;
-  if (node.timestamp) {
-    out << ", timestamp=" << node.timestamp->count() << "[ns]";
+std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
+  out << key.layer;
+  if (key.partition) {
+    out << "[" << key.partition << "]";
   }
-  out << ">";
+
   return out;
 }
 
-Eigen::IOFormat getDefaultVectorFormat() {
-  return Eigen::IOFormat(
-      Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "\n", "[", "]");
+std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
+  out << "Node<id=" << NodeSymbol(node.id).str() << ", layer=" << node.layer << ">";
+  return out;
+}
+
+Eigen::IOFormat getDefaultVectorFormat(std::optional<int> precision) {
+  return Eigen::IOFormat(precision.value_or(Eigen::StreamPrecision),
+                         Eigen::DontAlignCols,
+                         ", ",
+                         "\n",
+                         "[",
+                         "]");
 }
 
 }  // namespace spark_dsg

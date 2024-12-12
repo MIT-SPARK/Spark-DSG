@@ -40,6 +40,7 @@
 
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/binary_serialization.h"
+#include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg::serialization {

@@ -51,10 +51,10 @@ namespace spark_dsg {
 using nlohmann::json;
 
 void to_json(json& record, const SceneGraphNode& node) {
-  record = {{"id", node.id}, {"layer", node.layer}, {"attributes", node.attributes()}};
-  if (node.timestamp) {
-    record["timestamp"] = node.timestamp->count();
-  }
+  record = {{"id", node.id},
+            {"layer", node.layer.layer},
+            {"partition", node.layer.partition},
+            {"attributes", node.attributes()}};
 }
 
 void to_json(json& record, const SceneGraphEdge& edge) {
@@ -67,25 +67,27 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
                          DynamicSceneGraph& graph) {
   auto node_id = record.at("id").get<NodeId>();
   auto layer = record.at("layer").get<LayerId>();
+
+  PartitionId partition = 0;
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 0)) {
+    if (record.contains("timestamp")) {
+      partition = NodeSymbol(node_id).category();
+    }
+  } else {
+    partition = record.at("partition").get<PartitionId>();
+  }
+
   auto attrs = serialization::Visitor::from(factory, record.at("attributes"));
   if (!attrs) {
     std::stringstream ss;
-    ss << "invalid attributes for " << NodeSymbol(node_id).getLabel();
+    ss << "invalid attributes for " << NodeSymbol(node_id).str();
     throw std::runtime_error(ss.str());
   }
 
-  bool added = false;
-  if (record.contains("timestamp")) {
-    auto time = record.at("timestamp").get<uint64_t>();
-    added = graph.emplacePrevDynamicNode(
-        layer, node_id, std::chrono::nanoseconds(time), std::move(attrs));
-  } else {
-    added = graph.emplaceNode(layer, node_id, std::move(attrs));
-  }
-
-  if (!added) {
+  if (!graph.emplaceNode(layer, node_id, std::move(attrs), partition)) {
     std::stringstream ss;
-    ss << "failed to add " << NodeSymbol(node_id).getLabel();
+    ss << "failed to add " << NodeSymbol(node_id).str();
     throw std::runtime_error(ss.str());
   }
 }
@@ -99,8 +101,8 @@ void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& 
 
   if (!graph.insertEdge(source, target, std::move(attrs))) {
     std::stringstream ss;
-    ss << "failed to add " << NodeSymbol(source).getLabel() << " →  "
-       << NodeSymbol(target).getLabel();
+    ss << "failed to add " << NodeSymbol(source).str() << " →  "
+       << NodeSymbol(target).str();
     throw std::runtime_error(ss.str());
   }
 }
@@ -115,41 +117,32 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
   record["multigraph"] = false;
   record["nodes"] = nlohmann::json::array();
   record["edges"] = nlohmann::json::array();
-  record["layer_ids"] = graph.layer_ids;
+  record["layer_ids"] = graph.layer_ids();
+  record["layer_names"] = graph.layer_names();
   record["metadata"] = graph.metadata;
 
-  for (const auto& id_layer_pair : graph.layers()) {
-    for (const auto& id_node_pair : id_layer_pair.second->nodes()) {
-      record["nodes"].push_back(*id_node_pair.second);
+  for (const auto& [layer_id, layer] : graph.layers()) {
+    for (const auto& [node_id, node] : layer->nodes()) {
+      record["nodes"].push_back(*node);
     }
 
-    for (const auto& id_edge_pair : id_layer_pair.second->edges()) {
-      record["edges"].push_back(id_edge_pair.second);
+    for (const auto& [edge_id, edge] : layer->edges()) {
+      record["edges"].push_back(edge);
     }
   }
 
-  for (const auto& id_edge_pair : graph.interlayer_edges()) {
-    record["edges"].push_back(id_edge_pair.second);
+  for (const auto& [edge_id, edge] : graph.interlayer_edges()) {
+    record["edges"].push_back(edge);
   }
 
-  for (const auto& id_edge_pair : graph.dynamic_interlayer_edges()) {
-    record["edges"].push_back(id_edge_pair.second);
-  }
-
-  for (const auto& id_layer_group_pair : graph.dynamicLayers()) {
-    for (const auto& prefix_layer_pair : id_layer_group_pair.second) {
-      const auto& layer = *prefix_layer_pair.second;
-
-      for (size_t i = 0; i < layer.nodes().size(); ++i) {
-        if (!layer.hasNodeByIndex(i)) {
-          continue;
-        }
-
-        record["nodes"].push_back(layer.getNodeByIndex(i));
+  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
+    for (const auto& [partition_id, partition] : partitions) {
+      for (const auto& [node_id, node] : partition->nodes()) {
+        record["nodes"].push_back(*node);
       }
 
-      for (const auto& id_edge_pair : layer.edges()) {
-        record["edges"].push_back(id_edge_pair.second);
+      for (const auto& [edge_id, edge] : partition->edges()) {
+        record["edges"].push_back(edge);
       }
     }
   }
@@ -177,7 +170,18 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
   const auto edge_factory = serialization::AttributeRegistry<EdgeAttributes>::current();
 
   const auto layer_ids = record.at("layer_ids").get<DynamicSceneGraph::LayerIds>();
-  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
+  DynamicSceneGraph::LayerNames layer_names;
+  if (record.contains("layer_names")) {
+    layer_names = record.at("layer_names").get<DynamicSceneGraph::LayerNames>();
+  } else {
+    layer_names = {{DsgLayers::OBJECTS, 2},
+                   {DsgLayers::AGENTS, 2},
+                   {DsgLayers::PLACES, 3},
+                   {DsgLayers::ROOMS, 4},
+                   {DsgLayers::BUILDINGS, 5}};
+  }
+
+  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids, layer_names);
 
   if (record.contains("metadata")) {
     graph->metadata = record["metadata"];

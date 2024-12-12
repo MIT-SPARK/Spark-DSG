@@ -37,213 +37,158 @@
 #include <nlohmann/json.hpp>
 #include <type_traits>
 
-#include "spark_dsg/dynamic_scene_graph_layer.h"
 #include "spark_dsg/scene_graph_layer.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
+struct EdgeLayerInfo {
+  LayerKey source;
+  LayerKey target;
+  bool valid = false;
+  bool exists = false;
+
+  bool isSameLayer() const;
+};
+
 /**
- * @brief Dynamic Scene Graph class
+ * @brief 3D Scene Graph class
  *
- * Contains an explicit mesh layer
+ * The scene graph is comprised of multiple (optionally named) layers,
+ * where the layers are ordered by numerical ID. Between two layers with different IDs,
+ * the greater ID is the ancestor and the lesser ID is the descendant.
+ *
+ * Layers are also optionally partitioned. Partitions own disjoint sets of nodes,
+ * and partition 0 refers to the "primary" partition. All functions default to using the
+ * "primary" partition unless otherwise specified.
+ *
+ * Edges are either intralayer (between nodes in the same partition and layer) or
+ * interlayer (between nodes in different partitions or layers). Interlayer edges
+ * are managed directly by the scene graph while intralayer edges are managed by
+ * the associated partition.
+ *
+ * SceneGraphNode and SceneGraphEdge consist of topological information about the node
+ * or edge and are not mutable. They each also have a pointer to associated attributes.
+ * These underlying attributes of the node or edge always are mutable. Note that this
+ * has the implication that a const scene graph is one that is topologically constant
+ * (instead of the attributes also being constant).
  */
 class DynamicSceneGraph {
  public:
+  friend class SceneGraphLogger;
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<DynamicSceneGraph>;
-  //! container type for the layer ids
+  //! Container type for the layer ids
   using LayerIds = std::vector<LayerId>;
+  //! Container type for the layer name to ID mapping
+  using LayerNames = std::map<std::string, LayerId>;
   //! Edge container
   using Edges = EdgeContainer::Edges;
+  //! Scene graph layer
+  using Layer = SceneGraphLayer;
   //! Layer container
-  using Layers = std::map<LayerId, SceneGraphLayer::Ptr>;
-  //! Dynamic layer container
-  using DynamicLayers = std::map<uint32_t, DynamicSceneGraphLayer::Ptr>;
-  //! Callback type
-  using LayerVisitor = std::function<void(LayerKey, BaseLayer*)>;
-
-  friend class SceneGraphLogger;
+  using Layers = std::map<LayerId, Layer::Ptr>;
+  //! Container for layer partitions
+  using Partitions = std::map<PartitionId, Layer::Ptr>;
 
   /**
-   * @brief Construct the scene graph (with a default layer factory)
+   * @brief Construct the scene graph
+   * @param empty Whether or not to skip the default layer 2-5 initialization
    */
-  DynamicSceneGraph();
-
+  explicit DynamicSceneGraph(bool empty = false);
   /**
-   * @brief Construct the scene graph (with a provided layer factory)
-   * @param factor List of layer ids
+   * @brief Construct the scene graph (with the provided layers)
+   * @param layers List of layer ids
+   * @param layer_names Optional names for the layers
+   * @note Adds IDs for layers in layer_names that aren't in layers
    */
-  explicit DynamicSceneGraph(const LayerIds& factory);
-
-  /**
-   * @brief Default destructor
-   */
+  DynamicSceneGraph(const LayerIds& layers, const LayerNames& layer_names = {});
   virtual ~DynamicSceneGraph() = default;
 
   /**
-   * @brief Delete all layers and edges
+   * @brief Construct a scene graph
+   * @param layers Mapping between layer names and layer IDs
    */
+  static DynamicSceneGraph::Ptr fromNames(const LayerNames& layers);
+
+  //! @brief Delete all layers and edges
   void clear();
-
-  /**
-   * @brief Reset scene graph to use new layer ids
-   */
-  void reset(const LayerIds& layer_ids);
-
-  /**
-   * @brief Add a new dynamic layer to the graph if it doesn't exist already
-   *
-   * @param layer dynamic layer id
-   * @param layer_prefix prefix for the dynamic layer (i.e. id within layer)
-   * @return true if the layer was created
-   */
-  bool createDynamicLayer(LayerId layer, LayerPrefix layer_prefix);
-
-  /**
-   * @brief construct and add a node to the specified layer in the graph
-   * @param layer_id layer to add to
-   * @param node_id node to create
-   * @param attrs node attributes
-   * @return true if the node was added successfully
-   */
-  bool emplaceNode(LayerId layer_id,
-                   NodeId node_id,
-                   std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief construct and add a dynamic node to the specified layer in the graph
-   * @param layer_id layer to add to
-   * @param prefix dynamic layer prefix to add to
-   * @param timestamp dynamic node timestamp in nanoseconds
-   * @param attrs node attributes
-   * @param add_edge_to_previous add edge to previous dynamic node (if it exists)
-   * @return true if the node was added successfully
-   */
-  bool emplaceNode(LayerId layer_id,
-                   LayerPrefix prefix,
-                   std::chrono::nanoseconds timestamp,
-                   std::unique_ptr<NodeAttributes>&& attrs,
-                   bool add_edge_to_previous = true);
-
-  /**
-   * @brief Add a dynamic node with a specific node id
-   * @param layer_id layer to add to
-   * @param prev_node_id Node id to insert with
-   * @param timestamp dynamic node timestamp
-   * @param attrs node attributes to use
-   * @returns true if the node was added successfully
-   */
-  bool emplacePrevDynamicNode(LayerId layer_id,
-                              NodeId prev_node_id,
-                              std::chrono::nanoseconds timestamp,
-                              std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief add a node to the graph
-   *
-   * Checks that the layer id matches a current layer, that the node
-   * is not null and the node doesn't already exist
-   *
-   * @param node to add
-   * @return true if the node was added successfully
-   */
-  bool insertNode(std::unique_ptr<SceneGraphNode>&& node);
-
-  /**
-   * @brief add a node to the graph or update an existing node
-   *
-   * @param layer_id layer to add to
-   * @param node_id node to add
-   * @param attrs attributes to add
-   * @param timestamp timestamp to use (if dynamic)
-   */
-  bool addOrUpdateNode(
-      LayerId layer_id,
-      NodeId node_id,
-      std::unique_ptr<NodeAttributes>&& attrs,
-      std::optional<std::chrono::nanoseconds> timestamp = std::nullopt);
-
-  /**
-   * @brief Add an edge to the graph
-   *
-   * Checks that the edge doesn't already exist and
-   * that the source and target already exist. Handles passing
-   * the edge to the layer if the edge is a intra-layer edge,
-   * and updates parents and children of the respective nodes
-   *
-   * @param source start node
-   * @param target end node
-   * @param edge_info optional edge attributes (will use
-   *        default edge attributes if not supplied)
-   * @return true if the edge was successfully added
-   */
-  bool insertEdge(NodeId source,
-                  NodeId target,
-                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
-
-  /**
-   * @brief Insert a parent edge between two nodes
-   *
-   * Adds an edge between the two nodes, potentially removing previous edges that
-   * pointed to old parents. Checks that the edge doesn't already exist and that the
-   * source and target already exist. Will return false if the nodes exist on the same
-   * layer.
-   *
-   * @param source start node
-   * @param target end node
-   * @param edge_info optional edge attributes (will use
-   *        default edge attributes if not supplied)
-   * @return true if the edge was successfully added
-   */
-  bool insertParentEdge(NodeId source,
-                        NodeId target,
-                        std::unique_ptr<EdgeAttributes>&& edge_info = nullptr);
-
-  /**
-   * @brief Add an edge to the graph or update an existing edge
-   *
-   * @param source edge source id
-   * @param target edge target id
-   * @param edge_info edge attributes
-   */
-  bool addOrUpdateEdge(NodeId source,
-                       NodeId target,
-                       std::unique_ptr<EdgeAttributes>&& edge_info);
-
-  /**
-   * @brief Set the attributes of an existing node
-   * @param node Node ID to set the attributes for
-   * @param attrs New attributes for the node
-   * @return Returns true if update was successful
-   */
-  bool setNodeAttributes(NodeId node, std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief Set the attributes of an existing edge
-   * @param source Source ID to set the attributes for
-   * @param target Target ID to set the attributes for
-   * @param attrs New attributes for the edge
-   * @return Returns true if update was successful
-   */
-  bool setEdgeAttributes(NodeId source,
-                         NodeId target,
-                         std::unique_ptr<EdgeAttributes>&& attrs);
+  //! @brief Reset scene graph to use new layer ids
+  void reset(const LayerIds& layer_ids, const LayerNames& layer_names = {});
 
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_id Layer id to check
+   * @param partition Partition to check if specified
    * @returns Returns true if the layer exists and is valid
    */
-  bool hasLayer(LayerId layer_id) const;
-
+  bool hasLayer(LayerId layer_id, PartitionId partition = 0) const;
   /**
-   * @brief Check whether the dynamic layer exists and is valid
-   * @param layer layer id to check
-   * @param prefix dynamic layer prefix
-   * @returns returns true if the layer exists
+   * @brief Check whether the layer exists and is valid
+   * @param layer_name Layer name to check
+   * @param partition Partition to check if specified
+   * @returns Returns true if the layer exists and is valid
    */
-  bool hasLayer(LayerId layer, LayerPrefix prefix) const;
+  bool hasLayer(const std::string& layer_name, PartitionId partition = 0) const;
+  /**
+   * @brief Attempt to retrieve the specified layer
+   * @param layer_id Layer ID to find
+   * @param partition Partition to find if specified
+   * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
+   */
+  const Layer* findLayer(LayerId layer_id, PartitionId partition = 0) const;
+  /**
+   * @brief Attempt to retrieve the specified layer
+   * @param layer_name Layer name to find
+   * @param partition Partition to find if specified
+   * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
+   */
+  const Layer* findLayer(const std::string& layer_name,
+                         PartitionId partition = 0) const;
+  /**
+   * @brief Get a layer if the layer exists
+   * @param layer_id layer to get
+   * @param partition Partition to get if specified
+   * @returns a constant reference to the requested layer
+   * @throws std::out_of_range if the layer doesn't exist
+   */
+  const Layer& getLayer(LayerId layer_id, PartitionId partition = 0) const;
+  /**
+   * @brief Get a layer if the layer exists
+   * @param layer_name layer to get
+   * @param partition Partition to get if specified
+   * @returns a constant reference to the requested layer
+   * @throws std::out_of_range if the layer name doesn't exist
+   */
+  const Layer& getLayer(const std::string& layer_name, PartitionId partition = 0) const;
+  /**
+   * @brief Add a new layer with an optional name
+   * @param layer_id Layer ID
+   * @param name Optional layer name
+   */
+  const Layer& addLayer(LayerId layer_id, const std::string& name = "");
+  /**
+   * @brief Add a new partition to a layer
+   * @param layer_id Layer to add partition to
+   * @param partition Partition to add
+   * @return Layer that was created or existed previously
+   */
+  const Layer& addLayer(LayerId layer_id, PartitionId partition);
+  /**
+   * @brief Add a new partition to a layer
+   * @param name Layer name to add
+   * @param partition Partition to add
+   * @return Layer that was created or existed previously
+   * @throws std::out_of_range if the layer name doesn't exist
+   */
+  const Layer& addLayer(const std::string& name, PartitionId partition);
+  /**
+   * @brief Remove a layer from the graph if it exists
+   * @param layer Layer ID
+   * @param partition Partition to get if specified
+   * @return true if the layer was created
+   */
+  void removeLayer(LayerId layer, PartitionId partition = 0);
 
   /**
    * @brief check if a given node exists
@@ -251,13 +196,99 @@ class DynamicSceneGraph {
    * @returns true if the given node exists
    */
   bool hasNode(NodeId node_id) const;
-
   /**
    * @brief Check the status of a node
    * @param node_id node to check for
    * @returns status of type NodeStatus
    */
   NodeStatus checkNode(NodeId node_id) const;
+  /**
+   * @brief Get a particular node in the graph
+   *
+   * This can be used to update the node attributes, though
+   * information about the node (i.e. siblings, etc) cannot
+   * be modified
+   *
+   * @param node_id node to get
+   * @returns The scene graph node
+   */
+  const SceneGraphNode& getNode(NodeId node_id) const;
+  /**
+   * @brief Get a particular node in the graph
+   * @param node_id node to get
+   * @returns Pointer to the node if it exists, nullptr otherwise
+   */
+  const SceneGraphNode* findNode(NodeId node_id) const;
+  /**
+   * @brief construct and add a node to the specified layer in the graph
+   * @param layer_id layer to add to
+   * @param node_id node to create
+   * @param attrs node attributes
+   * @param partition to add to
+   * @return true if the node was added successfully
+   */
+  bool emplaceNode(LayerId layer_id,
+                   NodeId node_id,
+                   std::unique_ptr<NodeAttributes>&& attrs,
+                   PartitionId partition = 0);
+  /**
+   * @brief construct and add a node to the specified layer in the graph
+   * @param layer layer to add to
+   * @param node_id node to create
+   * @param attrs node attributes
+   * @param partition to add to
+   * @return true if the node was added successfully
+   */
+  bool emplaceNode(const std::string& layer,
+                   NodeId node_id,
+                   std::unique_ptr<NodeAttributes>&& attrs,
+                   PartitionId partition = 0);
+  /**
+   * @brief construct and add a node to the specified layer in the graph
+   * @param node_id node to create
+   * @param attrs node attributes
+   * @return true if the node was added successfully
+   */
+  bool emplaceNode(LayerKey layer,
+                   NodeId node_id,
+                   std::unique_ptr<NodeAttributes>&& attrs);
+  /**
+   * @brief add a node to the graph or update an existing node
+   * @param layer layer to add to
+   * @param node_id node to add
+   * @param attrs attributes to add
+   * @param partition to add to
+   * @return true if the node was added or updated successfully
+   */
+  bool addOrUpdateNode(const std::string& layer,
+                       NodeId node_id,
+                       std::unique_ptr<NodeAttributes>&& attrs,
+                       PartitionId partition = 0);
+  /**
+   * @brief add a node to the graph or update an existing node
+   * @param layer_id layer to add to
+   * @param node_id node to add
+   * @param attrs attributes to add
+   * @param partition to add to
+   * @return true if the node was added or updated successfully
+   */
+  bool addOrUpdateNode(LayerId layer_id,
+                       NodeId node_id,
+                       std::unique_ptr<NodeAttributes>&& attrs,
+                       PartitionId partition = 0);
+  /**
+   * @brief Set the attributes of an existing node
+   * @param node_id Node to set attributes for
+   * @param attrs New attributes for the node
+   * @return true if the attributes for the node were set
+   */
+  bool setNodeAttributes(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
+  /**
+   * @brief Remove a node from the graph
+   * @param Node node to remove
+   * @returns Returns true if the removal was successful
+   */
+  bool removeNode(NodeId node);
 
   /**
    * @brief check if a given edge exists
@@ -270,55 +301,6 @@ class DynamicSceneGraph {
    * @returns true if the given edge exists
    */
   bool hasEdge(NodeId source, NodeId target) const;
-
-  /**
-   * @brief Get a layer if the layer exists
-   * @param layer_id layer to get
-   * @returns a constant reference to the requested layer
-   * @throws std::out_of_range if the layer doesn't exist
-   */
-  const SceneGraphLayer& getLayer(LayerId layer_id) const;
-
-  /**
-   * @brief Get a dynamic layer if the layer exists
-   * @param layer_id layer to get
-   * @param prefix layer prefix to get
-   * @returns a constant reference to the requested layer
-   * @throws std::out_of_range if the layer doesn't exist
-   */
-  const DynamicSceneGraphLayer& getLayer(LayerId layer_id, LayerPrefix prefix) const;
-
-  /**
-   * @brief Get a particular node in the graph
-   *
-   * This can be used to update the node attributes, though
-   * information about the node (i.e. siblings, etc) cannot
-   * be modified
-   *
-   * @param node_id node to get
-   * @returns The scene graph node
-   */
-  const SceneGraphNode& getNode(NodeId node_id) const;
-
-  /**
-   * @brief Get a particular node in the graph
-   *
-   * This can be used to update the node attributes, though
-   * information about the node (i.e. siblings, etc) cannot
-   * be modified
-   *
-   * @param node_id node to get
-   * @returns a pointer to a potentially valid node
-   */
-  const SceneGraphNode* findNode(NodeId node_id) const;
-
-  /**
-   * @brief Get node layer information (if the node exists)
-   * @param node_id Node ID to get
-   * @returns A potentially valid Layer ID and prefix
-   */
-  std::optional<LayerKey> getLayerForNode(NodeId node_id) const;
-
   /**
    * @brief Get a particular edge in the graph
    *
@@ -331,7 +313,6 @@ class DynamicSceneGraph {
    * @returns a valid edge constant reference
    */
   const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
-
   /**
    * @brief Get a particular edge in the graph
    *
@@ -341,17 +322,40 @@ class DynamicSceneGraph {
    *
    * @param source source of edge to get
    * @param target target of edge to get
-   * @returns a potentially valid edge constant reference
+   * @returns Pointer to the edge if it exists, nullptr otherwise
    */
   const SceneGraphEdge* findEdge(NodeId source, NodeId target) const;
-
   /**
-   * @brief Remove a node from the graph
-   * @param Node node to remove
-   * @returns Returns true if the removal was successful
+   * @brief Add an edge to the graph
+   *
+   * Checks that the edge doesn't already exist and
+   * that the source and target already exist. Handles passing
+   * the edge to the layer if the edge is a intralayer edge,
+   * and updates parents and children of the respective nodes
+   *
+   * @param source start node
+   * @param target end node
+   * @param edge_info optional edge attributes (will use
+   *        default edge attributes if not supplied)
+   * @param enforce_parent_constraints Ensure that edge is only parent of node
+   * @return true if the edge was successfully added
    */
-  bool removeNode(NodeId node);
-
+  bool insertEdge(NodeId source,
+                  NodeId target,
+                  std::unique_ptr<EdgeAttributes>&& edge_info = nullptr,
+                  bool enforce_parent_constraints = false);
+  /**
+   * @brief Add an edge to the graph or update an existing edge
+   *
+   * @param source edge source id
+   * @param target edge target id
+   * @param edge_info edge attributes
+   * @param enforce_parent_constraints Ensure that edge is only parent of node
+   */
+  bool addOrUpdateEdge(NodeId source,
+                       NodeId target,
+                       std::unique_ptr<EdgeAttributes>&& edge_info,
+                       bool enforce_parent_constraints = false);
   /**
    * @brief Remove an edge from the graph
    * @param source Source of edge to remove
@@ -360,72 +364,22 @@ class DynamicSceneGraph {
    */
   bool removeEdge(NodeId source, NodeId target);
 
-  /**
-   * @brief check if a particular node id is a dynamic node
-   * @param source Node to check
-   * @returns Return true if the node is a dynamic node
-   */
-  bool isDynamic(NodeId source) const;
-
-  /**
-   * @brief Get the number of layers in the graph
-   * @return number of layers in the graph
-   */
+  //! @brief Get the number of layers in the graph
   size_t numLayers() const;
 
-  /**
-   * @brief Get the number of dynamic layers of a specific type
-   * @param layer LayerId to count
-   * @return number dynamic layers
-   */
-  size_t numDynamicLayersOfType(LayerId layer) const;
+  //! @brief Get the total number of nodes in the graph
+  size_t numNodes() const;
 
-  /**
-   * @brief Get the total number of dynamic layers
-   * @return number dynamic layers
-   */
-  size_t numDynamicLayers() const;
+  //! @brief Get the total number of nodes in partition 0 in each layer
+  size_t numUnpartitionedNodes() const;
 
-  /**
-   * @brief Get the total number of nodes in the graph
-   * @return The number of nodes in the graph
-   */
-  size_t numNodes(bool include_mesh = true) const;
-
-  /**
-   * @brief Get the number of static nodes in the graph
-   * @return The number of static nodes in the graph
-   */
-  size_t numStaticNodes() const;
-
-  /**
-   * @brief Get the number of dynamic nodes in the graph
-   * @return The number of dynamic nodes in the graph
-   */
-  size_t numDynamicNodes() const;
-
-  /**
-   * @brief Get number of edges in the graph
-   */
+  //! @brief Get number of edges in the graph
   size_t numEdges() const;
 
-  /**
-   * @brief Get number of static edges in the graph
-   * @return Number of static edges in the graph
-   */
-  size_t numStaticEdges() const;
+  //! @brief Get the total number of edges between nodes in partition 0
+  size_t numUnpartitionedEdges() const;
 
-  /**
-   * @brief Get number of dynamic edges in the graph
-   * @return Number of dynamic edges in the graph
-   */
-  size_t numDynamicEdges() const;
-
-  /**
-   * @brief Get whether or not the scene graph is empty
-   * @note The scene graph invariants make it so only nodes have to be checked
-   * @return True if the scene graph is empty
-   */
+  //! @brief Get whether or not the scene graph is empty
   bool empty() const;
 
   /**
@@ -445,13 +399,11 @@ class DynamicSceneGraph {
 
   /**
    * @brief Update graph from separate layer
-   * @note Will invalidate the layer and edges passed in
    * @param other_layer Layer to update from
    * @param edges Optional edges to add to graph
    * @return Whether the update was successful or not
    */
-  bool updateFromLayer(SceneGraphLayer& other_layer,
-                       std::unique_ptr<Edges>&& edges = nullptr);
+  bool updateFromLayer(const SceneGraphLayer& other_layer, const Edges& edges = {});
 
   /**
    * @brief Update graph from another graph
@@ -491,19 +443,19 @@ class DynamicSceneGraph {
   std::vector<EdgeKey> getNewEdges(bool clear_new = false);
 
   /**
-   * @brief Track which edges get used during a serialization update
+   * @brief Get whether an edge points to a partition
+   * @param edge Edge to check
+   * @return True if at least one end point is in a partition
    */
+  bool edgeToPartition(const SceneGraphEdge& edge) const;
+
+  //! @brief Set all current edges as stale for serialization update tracking
   void markEdgesAsStale();
 
-  /**
-   * @brief Remove edges that do not appear in serialization update
-   */
+  //! @brief Remove edges that do not appear in serialization update
   void removeAllStaleEdges();
 
-  /**
-   * @brief Clone the scene graph
-   * @returns Copy of the scene graph
-   */
+  //! @brief Make a copy of the scene graph
   DynamicSceneGraph::Ptr clone() const;
 
   /**
@@ -521,29 +473,26 @@ class DynamicSceneGraph {
    */
   static Ptr load(std::string filepath);
 
+  //! @brief Set the scene graph mesh
   void setMesh(const std::shared_ptr<Mesh>& mesh);
 
+  //! @brief Check if the scene graph has a mesh
   bool hasMesh() const;
 
+  //! @brief Get the mesh associated with the scene graph
   std::shared_ptr<Mesh> mesh() const;
-
-  //! Current static layer ids in the graph
-  const LayerIds layer_ids;
 
   //! Any extra information about the graph
   nlohmann::json metadata;
 
  protected:
-  BaseLayer& layerFromKey(const LayerKey& key);
+  Layer& layerFromKey(const LayerKey& key);
 
-  const BaseLayer& layerFromKey(const LayerKey& key) const;
+  const Layer& layerFromKey(const LayerKey& key) const;
 
   SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
 
-  bool hasEdge(NodeId source,
-               NodeId target,
-               LayerKey* source_key,
-               LayerKey* target_key) const;
+  EdgeLayerInfo lookupEdge(NodeId source, NodeId target) const;
 
   void addAncestry(NodeId source,
                    NodeId target,
@@ -571,65 +520,50 @@ class DynamicSceneGraph {
 
   void removeStaleEdges(EdgeContainer& edges);
 
-  void visitLayers(const LayerVisitor& cb);
+  void visitLayers(const std::function<void(LayerKey, Layer&)>& cb);
+
+  void visitLayers(const std::function<void(LayerKey, const Layer&)>& cb) const;
 
  protected:
-  Layers layers_;
-  std::map<LayerId, DynamicLayers> dynamic_layers_;
-
+  LayerIds layer_ids_;
+  LayerNames layer_names_;
   std::map<NodeId, LayerKey> node_lookup_;
 
+  Layers layers_;
+  std::map<LayerId, Partitions> layer_partitions_;
+
   EdgeContainer interlayer_edges_;
-  EdgeContainer dynamic_interlayer_edges_;
 
   std::shared_ptr<Mesh> mesh_;
 
  public:
-  /**
-   * @brief constant iterator around the layers
-   */
-  inline const Layers& layers() const { return layers_; };
-
-  /**
-   * @brief constant iterator over mapping between nodes and layers
-   */
-  inline const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
-
-  /**
-   * @brief constant iterator around the inter-layer edges
-   *
-   * @note inter-layer edges are edges between nodes in different layers
-   */
-  inline const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
-
-  inline const DynamicLayers& dynamicLayersOfType(LayerId layer_id) const {
-    auto iter = dynamic_layers_.find(layer_id);
-    if (iter == dynamic_layers_.end()) {
-      static DynamicLayers empty;  // avoid invalid reference
-      return empty;
-    }
-
-    return iter->second;
+  //! @brief Get layer key for a named layer
+  std::optional<LayerKey> getLayerKey(const std::string& name,
+                                      PartitionId partition = 0) const {
+    auto iter = layer_names_.find(name);
+    return iter == layer_names_.end()
+               ? std::nullopt
+               : std::optional<LayerKey>({iter->second, partition});
   }
 
-  inline const std::map<LayerId, DynamicLayers>& dynamicLayers() const {
-    return dynamic_layers_;
+  //! @brief Current static layer ids in the graph
+  const LayerIds& layer_ids() const { return layer_ids_; }
+  //! @brief Current name to layer mapping
+  const LayerNames layer_names() const { return layer_names_; }
+  //! @brief Constant reference to the layers
+  const Layers& layers() const { return layers_; };
+  //! @brief Constant reference to the mapping between nodes and layers
+  const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
+  //! @brief Const reference to the interlayer edges
+  const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
+  //! @brief Constant reference to partitions for a particular layer
+  const Partitions& layer_partition(const std::string& name) const;
+  //! @brief Constant reference to partitions for a particular layer
+  const Partitions& layer_partition(LayerId layer_id) const;
+  //! @brief Constant reference to all layer partitions
+  const std::map<LayerId, Partitions>& layer_partitions() const {
+    return layer_partitions_;
   }
-
-  /**
-   * @brief constant iterator around the dynamic interlayer edges
-   *
-   * @note dynamic interlayer edges are edges between nodes in different layers where at
-   * least one of the nodes is dynamic
-   */
-  inline const Edges& dynamic_interlayer_edges() const {
-    return dynamic_interlayer_edges_.edges;
-  };
 };
-
-/**
- * @brief Return a container of the layer hierarchy from #spark_dsg::DsgLayers
- */
-DynamicSceneGraph::LayerIds getDefaultLayerIds();
 
 }  // namespace spark_dsg

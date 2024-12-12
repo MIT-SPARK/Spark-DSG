@@ -33,9 +33,9 @@
 #
 #
 """Test that pytorch conversion works as expected."""
-import spark_dsg as dsg
 import numpy as np
 import pytest
+import spark_dsg as dsg
 
 
 def _fake_node_embedding(G, x):
@@ -128,9 +128,10 @@ def test_torch_homogeneous(resource_dir, has_torch):
 
     data = G.to_torch(_fake_node_embedding, use_heterogeneous=False)
 
-    assert data.x.size() == (G.num_static_nodes(), 20)
-    assert data.pos.size() == (G.num_static_nodes(), 3)
-    assert data.edge_index.size() == (2, 2 * G.num_static_edges())
+    N = G.num_nodes(include_partitions=False)
+    assert data.x.size() == (N, 20)
+    assert data.pos.size() == (N, 3)
+    assert data.edge_index.size() == (2, 2 * G.num_edges(include_partitions=False))
     assert data.edge_attr is None
 
 
@@ -149,10 +150,11 @@ def test_torch_homogeneous_edge_features(resource_dir, has_torch):
         edge_converter=_fake_edge_embedding,
     )
 
-    assert data.x.size() == (G.num_static_nodes(), 20)
-    assert data.pos.size() == (G.num_static_nodes(), 3)
-    assert data.edge_index.size() == (2, 2 * G.num_static_edges())
-    assert data.edge_attr.size() == (2 * G.num_static_edges(), 20)
+    N = G.num_nodes(include_partitions=False)
+    assert data.x.size() == (N, 20)
+    assert data.pos.size() == (N, 3)
+    assert data.edge_index.size() == (2, 2 * G.num_edges(include_partitions=False))
+    assert data.edge_attr.size() == (2 * G.num_edges(include_partitions=False), 20)
 
 
 def test_torch_hetereogeneous(resource_dir, has_torch):

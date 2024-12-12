@@ -47,7 +47,7 @@ def test_empty_graph():
 def test_implicit_prefix():
     """Test that we got rid of the need for explicit layer prefix construction."""
     G = dsg.DynamicSceneGraph()
-    G.create_dynamic_layer(dsg.DsgLayers.AGENTS, "a")
+    G.add_layer(dsg.DsgLayers.AGENTS, "a")
     assert G.has_layer(dsg.DsgLayers.AGENTS, "a")
 
 
@@ -57,15 +57,7 @@ def test_layer_ids(resource_dir):
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
     layer_ids = [layer.id for layer in G.layers]
-    assert layer_ids == [
-        dsg.DsgLayers.OBJECTS,
-        dsg.DsgLayers.PLACES,
-        dsg.DsgLayers.ROOMS,
-        dsg.DsgLayers.BUILDINGS,
-    ]
-
-    # TODO(nathan) add to bindings
-    # assert G.mesh_layer_id == 1
+    assert layer_ids == [2, 3, 4, 5]
 
 
 def test_add_remove(resource_dir):
@@ -77,14 +69,14 @@ def test_add_remove(resource_dir):
 
     # add nodes
     for node in G.nodes:
-        G_new.add_node(node.layer, node.id.value, node.attributes)
+        assert G_new.add_node(node.layer, node.id, node.attributes)
 
     # add edges
     for edge in G.edges:
         assert G_new.insert_edge(edge.source, edge.target, edge.info)
 
-    assert G.num_static_nodes() == G_new.num_static_nodes()
-    assert G.num_static_edges() == G_new.num_static_edges()
+    assert G.num_nodes() == G_new.num_nodes()
+    assert G.num_edges() == G_new.num_edges()
 
     # n.b. removing in-place (while iterating) creates undefined behavior
     # and will likely segfault
@@ -95,7 +87,7 @@ def test_add_remove(resource_dir):
 
     # remove nodes
     for node in G.nodes:
-        assert G_new.remove_node(node.id.value)
+        assert G_new.remove_node(node.id)
 
     assert G_new.num_nodes() == 0
     assert G_new.num_edges() == 0
@@ -159,12 +151,11 @@ def test_agent_attributes(resource_dir):
     mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
-    agents = G.get_dynamic_layer(dsg.DsgLayers.AGENTS, "a")
+    agents = G.get_layer(dsg.DsgLayers.AGENTS, "a")
     for agent in agents.nodes:
         assert hasattr(agent, "id")
         assert agent.id.category == "a"
-        assert agent.layer == dsg.DsgLayers.AGENTS
-        assert hasattr(agent, "timestamp")
+        assert agent.layer == G.get_layer_id(dsg.DsgLayers.AGENTS, "a")
 
         _check_parent(agent)
         _check_siblings(G, agent)
@@ -182,7 +173,7 @@ def test_object_attributes(resource_dir):
     for node in objects.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "O"
-        assert node.layer == dsg.DsgLayers.OBJECTS
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.OBJECTS)
 
         _check_parent(node)
         _check_base_attributes(node.attributes)
@@ -201,7 +192,7 @@ def test_place_attributes(resource_dir):
     for node in places.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "p"
-        assert node.layer == dsg.DsgLayers.PLACES
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.PLACES)
 
         _check_parent(node)
         _check_siblings(G, node)
@@ -227,7 +218,7 @@ def test_room_attributes(resource_dir):
     for node in rooms.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "R"
-        assert node.layer == dsg.DsgLayers.ROOMS
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.ROOMS)
 
         _check_parent(node)
         _check_siblings(G, node)
@@ -251,7 +242,7 @@ def test_building_attributes(resource_dir):
     for node in buildings.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "B"
-        assert node.layer == dsg.DsgLayers.BUILDINGS
+        assert node.layer == G.get_layer_id(dsg.DsgLayers.BUILDINGS)
 
         _check_parent(node)
         _check_siblings(G, node)

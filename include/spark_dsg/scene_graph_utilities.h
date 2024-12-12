@@ -34,22 +34,21 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include "spark_dsg/bounding_box.h"
-#include "spark_dsg/layer_prefix.h"
+#include "spark_dsg/scene_graph_types.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 
-using SgNodeCallback = std::function<void(const DynamicSceneGraph&, const NodeId)>;
-
-void getAncestorsOfLayer(const DynamicSceneGraph& graph,
-                         NodeId parent,
-                         LayerKey child_layer,
-                         const SgNodeCallback& callback);
+void getNodeAncestorsAtDepth(
+    const DynamicSceneGraph& graph,
+    NodeId parent,
+    size_t depth,
+    const std::function<void(const DynamicSceneGraph&, const NodeId)>& callback);
 
 BoundingBox computeAncestorBoundingBox(
     const DynamicSceneGraph& graph,
     NodeId parent,
-    LayerId child_layer = DsgLayers::PLACES,
+    size_t depth = 1,
     BoundingBox::Type bbox_type = BoundingBox::Type::AABB);
 
 }  // namespace spark_dsg

@@ -53,7 +53,7 @@ class LayerView {
   const SceneGraphEdge& getEdge(NodeSymbol source, NodeSymbol target) const;
   Eigen::Vector3d getPosition(NodeSymbol node_id) const;
 
-  const LayerId id;
+  const LayerKey id;
 
  private:
   const SceneGraphLayer& layer_ref_;
@@ -64,44 +64,77 @@ class LayerIter {
   LayerIter(const DynamicSceneGraph::Layers& container);
   LayerView operator*() const;
   LayerIter& operator++();
-  bool operator==(const IterSentinel&);
+  bool operator==(const IterSentinel&) const;
+  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
   DynamicSceneGraph::Layers::const_iterator curr_iter_;
   DynamicSceneGraph::Layers::const_iterator end_iter_;
 };
 
-class DynamicLayerView {
+class PartitionIter {
  public:
-  DynamicLayerView(const DynamicSceneGraphLayer& layer);
-  DynamicNodeIter nodes() const;
-  EdgeIter edges() const;
-  size_t numNodes() const;
-  size_t numEdges() const;
+  using LayerMap = std::map<LayerId, DynamicSceneGraph::Partitions>;
 
-  const LayerId id;
-  const LayerPrefix prefix;
-
- private:
-  const DynamicSceneGraphLayer& layer_ref_;
-};
-
-class DynamicLayerIter {
- public:
-  using LayerMap = std::map<LayerId, DynamicSceneGraph::DynamicLayers>;
-
-  DynamicLayerIter(const LayerMap& container);
+  PartitionIter(const LayerMap& container);
   void setSubIter();
-  DynamicLayerView operator*() const;
-  DynamicLayerIter& operator++();
-  bool operator==(const IterSentinel&);
+  LayerView operator*() const;
+  PartitionIter& operator++();
+  bool operator==(const IterSentinel&) const;
+  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
   bool valid_;
   LayerMap::const_iterator curr_iter_;
   LayerMap::const_iterator end_iter_;
-  DynamicSceneGraph::DynamicLayers::const_iterator curr_layer_iter_;
-  DynamicSceneGraph::DynamicLayers::const_iterator end_layer_iter_;
+  DynamicSceneGraph::Partitions::const_iterator curr_layer_iter_;
+  DynamicSceneGraph::Partitions::const_iterator end_layer_iter_;
+};
+
+class GlobalLayerIter {
+ public:
+  GlobalLayerIter(const DynamicSceneGraph& graph, bool include_partitions = true);
+  LayerView operator*() const;
+  GlobalLayerIter& operator++();
+  bool operator==(const IterSentinel&) const;
+  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
+
+ private:
+  bool include_partitions_;
+  LayerIter layers_;
+  PartitionIter partitions_;
+};
+
+class GlobalNodeIter {
+ public:
+  GlobalNodeIter(const DynamicSceneGraph& dsg, bool include_partitions = true);
+  void setNodeIter();
+  const SceneGraphNode* operator*() const;
+  GlobalNodeIter& operator++();
+  bool operator==(const IterSentinel&);
+
+ private:
+  bool valid_;
+  GlobalLayerIter layers_;
+  NodeIter curr_node_iter_;
+};
+
+class GlobalEdgeIter {
+ public:
+  GlobalEdgeIter(const DynamicSceneGraph& dsg, bool include_partitions = true);
+  const SceneGraphEdge* operator*() const;
+  void setEdgeIter();
+  void findNextValidEdge();
+  GlobalEdgeIter& operator++();
+  bool operator==(const IterSentinel&);
+
+ private:
+  bool include_partitions_;
+  bool started_interlayer_;
+  const DynamicSceneGraph& dsg_;
+  GlobalLayerIter layers_;
+  EdgeIter curr_edge_iter_;
+  EdgeIter interlayer_edge_iter_;
 };
 
 }  // namespace spark_dsg::python

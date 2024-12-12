@@ -65,11 +65,11 @@ def test_static_graph_conversion(resource_dir):
     """Test that graph conversion is exact."""
     dsg_path = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(dsg_path))
-    G_nx = dsg_nx.graph_to_networkx(G, include_dynamic=False)
+    G_nx = dsg_nx.graph_to_networkx(G, include_partitions=False)
 
     assert G_nx is not None
-    assert len(G_nx) == G.num_static_nodes()
-    assert len(G_nx.edges) == G.num_static_edges()
+    assert len(G_nx) == G.num_nodes(include_partitions=False)
+    assert len(G_nx.edges) == G.num_edges(include_partitions=False)
 
     _check_attribute_validity(G_nx)
 
@@ -81,14 +81,14 @@ def test_full_graph_conversion(resource_dir):
     G = dsg.DynamicSceneGraph.load(str(dsg_path))
 
     # check that we have edges between static and dynamic layers
-    agents = G.get_dynamic_layer(dsg.DsgLayers.AGENTS, "a")
+    agents = G.get_layer(dsg.DsgLayers.AGENTS, "a")
     has_parents = np.array([x.has_parent() for x in agents.nodes])
     assert has_parents.any()
 
-    G_nx = dsg_nx.graph_to_networkx(G, include_dynamic=True)
+    G_nx = dsg_nx.graph_to_networkx(G, include_partitions=True)
 
     assert G_nx is not None
-    assert len(G_nx) == G.num_nodes(include_mesh=False)
+    assert len(G_nx) == G.num_nodes()
     assert len(G_nx.edges) == G.num_edges()
 
     _check_attribute_validity(G_nx)
