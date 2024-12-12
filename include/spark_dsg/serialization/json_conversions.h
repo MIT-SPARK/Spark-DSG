@@ -111,7 +111,7 @@ struct adl_serializer<Eigen::Matrix<Scalar, Rows, Cols>> {
       throw std::runtime_error(ss.str());
     }
 
-    mat = Eigen::Matrix<Scalar, Rows, Cols>(rows, cols);
+    mat = Eigen::Matrix<Scalar, Rows, Cols>::Zero(rows, cols);
     for (size_t i = 0; i < vec->size(); ++i) {
       int r = i / cols;
       int c = i % cols;
