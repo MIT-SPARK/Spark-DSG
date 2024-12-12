@@ -43,6 +43,7 @@
 #include <spark_dsg/scene_graph_utilities.h>
 #include <spark_dsg/serialization/file_io.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
+#include <spark_dsg/serialization/versioning.h>
 
 #include <iomanip>
 #include <iostream>
@@ -827,6 +828,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              "node_id"_a,
              "child_layer"_a = DsgLayers::PLACES,
              "bbox_type"_a = BoundingBox::Type::AABB);
+
+  module.def("version",
+             []() { return spark_dsg::io::FileHeader::current().version.toString(); });
 
   py::implicitly_convertible<char, LayerPrefix>();
 }
