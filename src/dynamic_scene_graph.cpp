@@ -353,7 +353,7 @@ bool DynamicSceneGraph::hasEdge(NodeId source, NodeId target) const {
 const Node& DynamicSceneGraph::getNode(NodeId node_id) const {
   const auto node = findNode(node_id);
   if (!node) {
-    throw std::out_of_range("missing node '" + NodeSymbol(node_id).getLabel() + "'");
+    throw std::out_of_range("missing node '" + NodeSymbol(node_id).str() + "'");
   }
 
   return *node;
@@ -505,7 +505,7 @@ bool DynamicSceneGraph::empty() const { return numNodes() == 0; }
 Eigen::Vector3d DynamicSceneGraph::getPosition(NodeId node_id) const {
   auto iter = node_lookup_.find(node_id);
   if (iter == node_lookup_.end()) {
-    throw std::out_of_range("node " + NodeSymbol(node_id).getLabel() +
+    throw std::out_of_range("node " + NodeSymbol(node_id).str() +
                             " is not in the graph");
   }
 

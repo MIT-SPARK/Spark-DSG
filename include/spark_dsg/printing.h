@@ -56,7 +56,7 @@ std::string displayNodeSymbolContainer(const Container& set) {
   ss << "[";
   auto iter = set.begin();
   while (iter != set.end()) {
-    ss << NodeSymbol(*iter).getLabel();
+    ss << NodeSymbol(*iter).str();
     ++iter;
     if (iter != set.end()) {
       ss << ", ";

@@ -52,8 +52,7 @@ std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
 }
 
 std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node) {
-  out << "Node<id=" << NodeSymbol(node.id).getLabel() << ", layer=" << node.layer
-      << ">";
+  out << "Node<id=" << NodeSymbol(node.id).str() << ", layer=" << node.layer << ">";
   return out;
 }
 

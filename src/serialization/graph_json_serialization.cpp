@@ -81,13 +81,13 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
   auto attrs = serialization::Visitor::from(factory, record.at("attributes"));
   if (!attrs) {
     std::stringstream ss;
-    ss << "invalid attributes for " << NodeSymbol(node_id).getLabel();
+    ss << "invalid attributes for " << NodeSymbol(node_id).str();
     throw std::runtime_error(ss.str());
   }
 
   if (!graph.emplaceNode(layer, node_id, std::move(attrs), partition)) {
     std::stringstream ss;
-    ss << "failed to add " << NodeSymbol(node_id).getLabel();
+    ss << "failed to add " << NodeSymbol(node_id).str();
     throw std::runtime_error(ss.str());
   }
 }
@@ -101,8 +101,8 @@ void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& 
 
   if (!graph.insertEdge(source, target, std::move(attrs))) {
     std::stringstream ss;
-    ss << "failed to add " << NodeSymbol(source).getLabel() << " →  "
-       << NodeSymbol(target).getLabel();
+    ss << "failed to add " << NodeSymbol(source).str() << " →  "
+       << NodeSymbol(target).str();
     throw std::runtime_error(ss.str());
   }
 }
