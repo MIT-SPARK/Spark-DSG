@@ -149,6 +149,8 @@ void writeGraph(const DynamicSceneGraph& graph,
   serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
   serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
 
+  serializer.write(graph.layer_names());
+
   // dump metadata to serialized json and write
   std::stringstream ss;
   ss << graph.metadata;
@@ -222,6 +224,14 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   // load name to type index mapping if present
   const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);
   const auto edge_factory = loadFactory<EdgeAttributes>(header, deserializer);
+
+  if (header.version >= io::Version(1, 1, 0)) {
+    std::map<std::string, LayerId> layer_names;
+    deserializer.read(layer_names);
+    for (const auto& [name, layer_id] : layer_names) {
+      graph.addLayer(layer_id, name);
+    }
+  }
 
   if (header.version >= io::Version(1, 0, 6)) {
     std::string metadata_json;
