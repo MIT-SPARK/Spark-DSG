@@ -34,9 +34,9 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <ostream>
 
+#include "spark_dsg/metadata.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 
 namespace spark_dsg {
@@ -78,7 +78,7 @@ struct EdgeAttributes {
   //! the weight of the edge
   double weight;
   //! Arbitrary metadata about the edge
-  nlohmann::json metadata;
+  Metadata metadata;
 
   /**
    * @brief output attribute information

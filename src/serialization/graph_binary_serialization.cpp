@@ -152,9 +152,7 @@ void writeGraph(const DynamicSceneGraph& graph,
   serializer.write(graph.layer_names());
 
   // dump metadata to serialized json and write
-  std::stringstream ss;
-  ss << graph.metadata;
-  serializer.write(ss.str());
+  serializer.write(graph.metadata().dump());
 
   serializer.startDynamicArray();
   for (const auto& [layer_id, layer] : graph.layers()) {

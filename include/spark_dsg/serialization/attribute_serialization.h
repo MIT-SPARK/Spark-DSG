@@ -173,7 +173,7 @@ void Visitor::to(nlohmann::json& record, const Attrs& attrs) {
   visitor.type_ = Type::JSON_WRITE;
   visitor.impl_ = std::make_unique<JsonWriter>(&record);
   record["type"] = attrs.registration().name;
-  record["metadata"] = attrs.metadata;
+  record["metadata"] = attrs.metadata();
   attrs.serialization_info();
   visitor.impl_.reset();
 }
@@ -184,11 +184,7 @@ void Visitor::to(BinarySerializer& serializer, const Attrs& attrs) {
   visitor.type_ = Type::BINARY_WRITE;
   visitor.impl_ = std::make_unique<BinaryWriter>(&serializer);
   serializer.write(attrs.registration().type_id);
-
-  // serialize metadata
-  std::stringstream ss;
-  ss << attrs.metadata;
-  serializer.write(ss.str());
+  serializer.write(attrs.metadata().dump());
 
   attrs.serialization_info();
   visitor.impl_.reset();

@@ -80,8 +80,9 @@ LabelSpace::LabelSpace(const std::vector<std::string>& names)
 LabelSpace LabelSpace::fromMetadata(const DynamicSceneGraph& graph,
                                     LayerId layer,
                                     PartitionId partition) {
-  const auto labelspace_node = graph.metadata.find("labelspaces");
-  if (labelspace_node == graph.metadata.end()) {
+  const auto& metadata = graph.metadata();
+  const auto labelspace_node = metadata.find("labelspaces");
+  if (labelspace_node == metadata.end()) {
     return {};
   }
 
@@ -103,6 +104,11 @@ bool LabelSpace::empty() const { return label_to_name_.empty(); }
 
 void LabelSpace::save(DynamicSceneGraph& graph,
                       LayerId layer,
-                      PartitionId partition) const {}
+                      PartitionId partition) const {
+  graph.metadata.add(nlohmann::json{
+      "labelspaces",
+      {std::to_string(layer), {std::to_string(partition), label_to_name_}},
+  });
+}
 
 }  // namespace spark_dsg

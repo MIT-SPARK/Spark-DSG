@@ -239,6 +239,17 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              "depth"_a = 1,
              "bbox_type"_a = BoundingBox::Type::AABB);
 
+  py::class_<Metadata>(module, "_Metadata")
+      .def(py::init<>())
+      .def("_get", [](const Metadata& data) { return data().dump(); })
+      .def("_set",
+           [](Metadata& data, const std::string& contents) {
+             data.set(nlohmann::json::parse(contents));
+           })
+      .def("_add", [](Metadata& data, const std::string& contents) {
+        data.add(nlohmann::json::parse(contents));
+      });
+
   /**************************************************************************************
    * Bounding Box
    *************************************************************************************/
@@ -295,16 +306,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("last_update_time_ns", &NodeAttributes::last_update_time_ns)
       .def_readwrite("is_active", &NodeAttributes::is_active)
       .def_readwrite("is_predicted", &NodeAttributes::is_predicted)
-      .def("_get_metadata",
-           [](const NodeAttributes& node) {
-             std::stringstream ss;
-             ss << node.metadata;
-             return ss.str();
-           })
-      .def("_set_metadata",
-           [](NodeAttributes& node, const std::string& data) {
-             node.metadata = nlohmann::json::parse(data);
-           })
+      .def_readwrite("_metadata", &NodeAttributes::metadata)
       .def("__repr__", [](const NodeAttributes& attrs) {
         std::stringstream ss;
         ss << attrs;
@@ -432,15 +434,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(py::init<>())
       .def_readwrite("weighted", &EdgeAttributes::weighted)
       .def_readwrite("weight", &EdgeAttributes::weight)
-      .def("_get_metadata",
-           [](const EdgeAttributes& edge) {
-             std::stringstream ss;
-             ss << edge.metadata;
-             return ss.str();
-           })
-      .def("_set_metadata", [](EdgeAttributes& edge, const std::string& data) {
-        edge.metadata = nlohmann::json::parse(data);
-      });
+      .def_readwrite("_metadata", &EdgeAttributes::metadata);
 
   /**************************************************************************************
    * Scene graph node
@@ -864,16 +858,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                   [](const std::filesystem::path& filepath) {
                     return DynamicSceneGraph::load(filepath);
                   })
-      .def("_get_metadata",
-           [](const DynamicSceneGraph& graph) {
-             std::stringstream ss;
-             ss << graph.metadata;
-             return ss.str();
-           })
-      .def("_set_metadata",
-           [](DynamicSceneGraph& graph, const std::string& data) {
-             graph.metadata = nlohmann::json::parse(data);
-           })
+      .def_readwrite("_metadata", &DynamicSceneGraph::metadata)
       .def_property(
           "layers",
           [](const DynamicSceneGraph& graph) {

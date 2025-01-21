@@ -38,7 +38,10 @@
 namespace spark_dsg {
 
 struct Metadata {
+  Metadata();
+  Metadata(const nlohmann::json& contents);
   const nlohmann::json& get() const;
+  inline const nlohmann::json& operator()() const { return get(); }
   void set(const nlohmann::json& new_metadata);
   void add(const nlohmann::json& to_add);
 

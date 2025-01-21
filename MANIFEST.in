@@ -5,3 +5,4 @@ graft src
 graft include
 graft cmake
 graft python/bindings
+graft third_party

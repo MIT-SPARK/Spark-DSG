@@ -54,12 +54,14 @@ void updateNested(nlohmann::json& to_update, const nlohmann::json& contents) {
   }
 }
 
+Metadata::Metadata() : contents_(nlohmann::json::object()) {}
+
+Metadata::Metadata(const nlohmann::json& contents) : contents_(contents) {}
+
 const nlohmann::json& Metadata::get() const { return contents_; }
 
 void Metadata::set(const nlohmann::json& new_metadata) { contents_ = new_metadata; }
 
-void Metadata::add(const nlohmann::json& to_add) {
-  updateNested(contents_, to_add);
-}
+void Metadata::add(const nlohmann::json& to_add) { updateNested(contents_, to_add); }
 
 }  // namespace spark_dsg

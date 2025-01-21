@@ -71,43 +71,25 @@ def add_bounding_boxes_to_layer(
         node.attributes.bounding_box = bbox
 
 
-def _get_metadata(obj):
-    """Get graph metadata."""
-    data_str = obj._get_metadata()
-    metadata = json.loads(data_str)
-    metadata = dict() if metadata is None else metadata
-    return types.MappingProxyType(metadata)
-
-
-def _set_metadata(obj, data):
-    """Serialize and set graph metadata."""
-    obj._set_metadata(json.dumps(data))
-
-
-def _update_nested(contents, other):
-    for key, value in other.items():
-        if key not in contents:
-            contents[key] = {}
-
-        if isinstance(value, dict):
-            _update_nested(contents[key], value)
-        else:
-            contents[key] = value
-
-
-def _add_metadata(obj, data):
-    """Serialize and update metadata from passed object."""
-    data_str = obj._get_metadata()
-    metadata = json.loads(data_str)
-    metadata = dict() if metadata is None else metadata
-    _update_nested(metadata, data)
-    obj._set_metadata(json.dumps(metadata))
-
-
 def _add_metadata_interface(obj):
-    obj.metadata = property(_get_metadata)
-    obj.set_metadata = _set_metadata
-    obj.add_metadata = _add_metadata
+    class Metadata:
+
+        def __init__(self, metadata):
+            self._metadata = metadata
+
+        def get(self):
+            data_str = self._metadata._get()
+            metadata = json.loads(data_str)
+            metadata = dict() if metadata is None else metadata
+            return types.MappingProxyType(metadata)
+
+        def set(self, obj):
+            self._metadata._set(json.dumps(obj))
+
+        def add(self, obj):
+            self._metadata._add(json.dumps(obj))
+
+    obj.metadata = property(lambda x: Metadata(x._metadata))
 
 
 def _hash_layerkey(key):

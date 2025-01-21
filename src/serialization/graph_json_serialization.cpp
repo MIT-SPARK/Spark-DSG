@@ -119,7 +119,7 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
   record["edges"] = nlohmann::json::array();
   record["layer_ids"] = graph.layer_ids();
   record["layer_names"] = graph.layer_names();
-  record["metadata"] = graph.metadata;
+  record["metadata"] = graph.metadata();
 
   for (const auto& [layer_id, layer] : graph.layers()) {
     for (const auto& [node_id, node] : layer->nodes()) {

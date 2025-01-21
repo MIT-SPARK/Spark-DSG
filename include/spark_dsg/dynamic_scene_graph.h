@@ -37,6 +37,7 @@
 #include <nlohmann/json.hpp>
 #include <type_traits>
 
+#include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
@@ -483,7 +484,7 @@ class DynamicSceneGraph {
   std::shared_ptr<Mesh> mesh() const;
 
   //! Any extra information about the graph
-  nlohmann::json metadata;
+  Metadata metadata;
 
  protected:
   Layer& layerFromKey(const LayerKey& key);
