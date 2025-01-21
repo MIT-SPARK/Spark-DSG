@@ -32,86 +32,20 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include <nlohmann/json.hpp>
-#include <optional>
+#include <gtest/gtest.h>
 
-#include "spark_dsg/node_attributes.h"
-#include "spark_dsg/spark_dsg_fwd.h"
+#include "spark_dsg/label_space.h"
 
 namespace spark_dsg {
 
-/**
- * @brief Inverse mapping between numerical labels and category names
- *
- * Generally intended to be instantiated and stored in the scene graph metadata (on a
- * per-layer basis)
- */
-class LabelSpace {
- public:
-  LabelSpace() = default;
+TEST(LabelSpace, EmptyCorrect) {
+  LabelSpace empty;
+  EXPECT_TRUE(empty.empty());
+  EXPECT_FALSE(empty);
 
-  /**
-   * @brief Construct the label space from a mapping between numerical labels and
-   * category names
-   */
-  explicit LabelSpace(const std::map<SemanticLabel, std::string>& label_to_names);
-
-  /**
-   * @brief Construct the labelspace from names (assumes the numerical labels correspond
-   * to vector indices)
-   */
-  explicit LabelSpace(const std::vector<std::string>& names);
-
-  /**
-   * @brief Pull the labelspace from scene graph metadata
-   */
-  static LabelSpace fromMetadata(const DynamicSceneGraph& graph,
-                                 LayerId layer,
-                                 PartitionId partition = 0);
-
-  /**
-   * @brief Get whether or not the label space is populated
-   */
-  bool empty() const;
-
-  /**
-   * @brief Labelspaces are valid if they aren't empty
-   */
-  inline operator bool() const { return !empty(); }
-
-  /**
-   * @brief Get the corresponding category name to the label if it exists
-   */
-  std::optional<std::string> getCategory(SemanticLabel label) const;
-
-  /**
-   * @brief Get the corresponding label to the name if it exists.
-   */
-  std::optional<SemanticLabel> getLabel(const std::string& category) const;
-
-  /**
-   * @brief Utility function to lookup corresponding category name to node
-   */
-  std::string getCategory(const SemanticNodeAttributes& attrs,
-                          const std::string& unknown_name = "UNKNOWN") const;
-
-  /**
-   * @brief Save the label space to metadata
-   */
-  void save(DynamicSceneGraph& graph, LayerId layer, PartitionId partition = 0) const;
-
- private:
-  std::map<SemanticLabel, std::string> label_to_name_;
-  std::map<std::string, SemanticLabel> name_to_label_;
-
- public:
-  /**
-   * @brief Get constant reference to label-name mapping
-   */
-  const std::map<SemanticLabel, std::string>& labels_to_names() const {
-    return label_to_name_;
-  }
-};
+  LabelSpace full(std::map<SemanticLabel, std::string>{{0, "wall"}, {1, "floor"}});
+  EXPECT_FALSE(full.empty());
+  EXPECT_TRUE(full);
+}
 
 }  // namespace spark_dsg

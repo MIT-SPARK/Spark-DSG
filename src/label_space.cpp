@@ -102,6 +102,23 @@ LabelSpace LabelSpace::fromMetadata(const DynamicSceneGraph& graph,
 
 bool LabelSpace::empty() const { return label_to_name_.empty(); }
 
+std::optional<std::string> LabelSpace::getCategory(SemanticLabel label) const {
+  const auto iter = label_to_name_.find(label);
+  return iter == label_to_name_.end() ? std::nullopt
+                                      : std::optional<std::string>(iter->second);
+}
+
+std::optional<SemanticLabel> LabelSpace::getLabel(const std::string& name) const {
+  const auto iter = name_to_label_.find(name);
+  return iter == name_to_label_.end() ? std::nullopt
+                                      : std::optional<SemanticLabel>(iter->second);
+}
+
+std::string LabelSpace::getCategory(const SemanticNodeAttributes& attrs,
+                                    const std::string& unknown_name) const {
+  return getCategory(attrs.semantic_label).value_or(unknown_name);
+}
+
 void LabelSpace::save(DynamicSceneGraph& graph,
                       LayerId layer,
                       PartitionId partition) const {
