@@ -35,6 +35,8 @@
 
 #include "spark_dsg/label_space.h"
 
+#include <iostream>
+
 #include "spark_dsg/dynamic_scene_graph.h"
 
 namespace spark_dsg {
@@ -122,10 +124,12 @@ std::string LabelSpace::getCategory(const SemanticNodeAttributes& attrs,
 void LabelSpace::save(DynamicSceneGraph& graph,
                       LayerId layer,
                       PartitionId partition) const {
-  graph.metadata.add(nlohmann::json{
-      "labelspaces",
-      {std::to_string(layer), {std::to_string(partition), label_to_name_}},
-  });
+  auto entry = nlohmann::json::object();
+  entry["labelspaces"] = nlohmann::json::object();
+  entry["labelspaces"][std::to_string(layer)] = nlohmann::json::object();
+  entry["labelspaces"][std::to_string(layer)][std::to_string(partition)] =
+      label_to_name_;
+  graph.metadata.add(entry);
 }
 
 }  // namespace spark_dsg

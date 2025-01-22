@@ -112,6 +112,13 @@ class LabelSpace {
   const std::map<SemanticLabel, std::string>& labels_to_names() const {
     return label_to_name_;
   }
+
+  /**
+   * @brief Get constant reference to label-name mapping
+   */
+  const std::map<std::string, SemanticLabel>& names_to_labels() const {
+    return name_to_label_;
+  }
 };
 
 }  // namespace spark_dsg

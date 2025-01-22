@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
+#include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/label_space.h"
 
 namespace spark_dsg {
@@ -46,6 +47,62 @@ TEST(LabelSpace, EmptyCorrect) {
   LabelSpace full(std::map<SemanticLabel, std::string>{{0, "wall"}, {1, "floor"}});
   EXPECT_FALSE(full.empty());
   EXPECT_TRUE(full);
+}
+
+TEST(LabelSpace, InverseCorrect) {
+  const std::map<SemanticLabel, std::string> label_to_names{
+      {0, "wall"}, {1, "floor"}, {4, "ceiling"}, {20, "lamp"}};
+  LabelSpace labelspace(label_to_names);
+
+  const std::map<std::string, SemanticLabel> expected{
+      {"ceiling", 4}, {"floor", 1}, {"lamp", 20}, {"wall", 0}};
+  EXPECT_EQ(labelspace.names_to_labels(), expected);
+}
+
+TEST(LabelSpace, FromVectorCorrect) {
+  const std::vector<std::string> labels{"floor", "ceiling", "wall", "lamp"};
+  LabelSpace label_space(labels);
+
+  const std::map<SemanticLabel, std::string> expected{
+      {0, "floor"}, {1, "ceiling"}, {2, "wall"}, {3, "lamp"}};
+  EXPECT_EQ(label_space.labels_to_names(), expected);
+}
+
+TEST(LabelSpace, LookupCorrect) {
+  const std::map<SemanticLabel, std::string> label_to_names{
+      {0, "wall"}, {1, "floor"}, {4, "ceiling"}, {20, "lamp"}};
+  LabelSpace labelspace(label_to_names);
+
+  // label-based lookup should work
+  EXPECT_EQ(labelspace.getCategory(-1), std::nullopt);
+  EXPECT_EQ(labelspace.getCategory(5), std::nullopt);
+  EXPECT_EQ(labelspace.getCategory(4), "ceiling");
+
+  // names-based lookup should work
+  EXPECT_EQ(labelspace.getLabel("door"), std::nullopt);
+  EXPECT_EQ(labelspace.getLabel("wall"), 0u);
+  EXPECT_EQ(labelspace.getLabel("lamp"), 20u);
+
+  SemanticNodeAttributes attrs;
+  attrs.semantic_label = 1u;
+  EXPECT_EQ(labelspace.getCategory(attrs), "floor");
+  attrs.semantic_label = 2u;
+  EXPECT_EQ(labelspace.getCategory(attrs), "UNKNOWN");
+  attrs.semantic_label = 2u;
+  EXPECT_EQ(labelspace.getCategory(attrs, "custom"), "custom");
+}
+
+TEST(LabelSpace, Serialization) {
+  const std::map<SemanticLabel, std::string> label_to_names{
+      {0, "wall"}, {1, "floor"}, {4, "ceiling"}, {20, "lamp"}};
+  LabelSpace labelspace(label_to_names);
+
+  DynamicSceneGraph graph;
+  labelspace.save(graph, 1, 0);
+  EXPECT_FALSE(LabelSpace::fromMetadata(graph, 1, 1));
+  EXPECT_FALSE(LabelSpace::fromMetadata(graph, 2, 0));
+  EXPECT_TRUE(LabelSpace::fromMetadata(graph, 1, 0));
+  EXPECT_EQ(LabelSpace::fromMetadata(graph, 1, 0).labels_to_names(), label_to_names);
 }
 
 }  // namespace spark_dsg
