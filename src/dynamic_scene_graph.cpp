@@ -560,6 +560,8 @@ bool DynamicSceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const GraphMergeConfig& config) {
+  metadata.add(other.metadata());
+
   other.visitLayers([&](LayerKey layer_key, const SceneGraphLayer& other_layer) {
     auto& layer = layerFromKey(layer_key);
 
