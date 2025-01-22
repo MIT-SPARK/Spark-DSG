@@ -71,6 +71,12 @@ class Labelspace {
                                  PartitionId partition = 0);
 
   /**
+   * @brief Pull the labelspace from scene graph metadata
+   */
+  static Labelspace fromMetadata(const DynamicSceneGraph& graph,
+                                 const std::string& name);
+
+  /**
    * @brief Get whether or not the label space is populated
    */
   bool empty() const;
@@ -100,6 +106,11 @@ class Labelspace {
    * @brief Save the label space to metadata
    */
   void save(DynamicSceneGraph& graph, LayerId layer, PartitionId partition = 0) const;
+
+  /**
+   * @brief Save the label space to metadata
+   */
+  void save(DynamicSceneGraph& graph, const std::string& name) const;
 
  private:
   std::map<SemanticLabel, std::string> label_to_name_;

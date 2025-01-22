@@ -71,6 +71,10 @@ inline LabelNameMap index(const std::vector<std::string>& names) {
   return result;
 }
 
+inline std::string layerInfoToKey(LayerId layer, PartitionId partition) {
+  return "_l" + std::to_string(layer) + "p" + std::to_string(partition);
+}
+
 }  // namespace
 
 Labelspace::Labelspace(const std::map<SemanticLabel, std::string>& label_to_names)
@@ -82,23 +86,23 @@ Labelspace::Labelspace(const std::vector<std::string>& names)
 Labelspace Labelspace::fromMetadata(const DynamicSceneGraph& graph,
                                     LayerId layer,
                                     PartitionId partition) {
+  return fromMetadata(graph, layerInfoToKey(layer, partition));
+}
+
+Labelspace Labelspace::fromMetadata(const DynamicSceneGraph& graph,
+                                    const std::string& name) {
   const auto& metadata = graph.metadata();
   const auto labelspace_node = metadata.find("labelspaces");
   if (labelspace_node == metadata.end()) {
     return {};
   }
 
-  const auto layer_node = labelspace_node->find(std::to_string(layer));
-  if (layer_node == labelspace_node->end()) {
+  const auto mapping_node = labelspace_node->find(name);
+  if (mapping_node == labelspace_node->end()) {
     return {};
   }
 
-  const auto partition_node = layer_node->find(std::to_string(partition));
-  if (partition_node == layer_node->end()) {
-    return {};
-  }
-
-  const auto mapping = partition_node->get<LabelNameMap>();
+  const auto mapping = mapping_node->get<LabelNameMap>();
   return Labelspace(mapping);
 }
 
@@ -124,11 +128,13 @@ std::string Labelspace::getCategory(const SemanticNodeAttributes& attrs,
 void Labelspace::save(DynamicSceneGraph& graph,
                       LayerId layer,
                       PartitionId partition) const {
+  save(graph, layerInfoToKey(layer, partition));
+}
+
+void Labelspace::save(DynamicSceneGraph& graph, const std::string& name) const {
   auto entry = nlohmann::json::object();
   entry["labelspaces"] = nlohmann::json::object();
-  entry["labelspaces"][std::to_string(layer)] = nlohmann::json::object();
-  entry["labelspaces"][std::to_string(layer)][std::to_string(partition)] =
-      label_to_name_;
+  entry["labelspaces"][name] = label_to_name_;
   graph.metadata.add(entry);
 }
 
