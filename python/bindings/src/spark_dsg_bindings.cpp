@@ -269,6 +269,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           },
           "node"_a,
           "unknown_name"_a = "UNKNOWN")
+      .def("__bool__", [](const Labelspace& labelspace) { return static_cast<bool>(labelspace); })
       .def_property_readonly("labels_to_names", &Labelspace::labels_to_names)
       .def_property_readonly("names_to_labels", &Labelspace::names_to_labels);
 

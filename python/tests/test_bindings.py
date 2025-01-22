@@ -333,3 +333,16 @@ def test_attribute_metadata(tmp_path):
     G_new = dsg.DynamicSceneGraph.load(graph_path)
     new_attrs = G_new.get_node(dsg.NodeSymbol("O", 1)).attributes
     assert new_attrs.metadata.get() == {"test": {"a": 6, "b": 42.0, "c": "hello"}}
+
+
+def test_labelspace():
+    labelspace = dsg.Labelspace({0: "wall", 1: "floor", 2: "ceiling", 4: "desk"})
+    assert labelspace.get_category(1) == "floor"
+    assert labelspace.get_category(3) is None
+    assert labelspace.get_label("wall") == 0
+    assert labelspace.get_label("lamp") is None
+
+    G = dsg.DynamicSceneGraph()
+    G.set_labelspace(labelspace, 0, 1)
+    assert not G.get_labelspace(0, 0)
+    assert G.get_labelspace(0, 1).labels_to_names == labelspace.labels_to_names
