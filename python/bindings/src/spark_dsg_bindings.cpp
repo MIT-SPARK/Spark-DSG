@@ -42,7 +42,7 @@
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/edge_container.h>
-#include <spark_dsg/label_space.h>
+#include <spark_dsg/labelspace.h>
 #include <spark_dsg/mesh.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
@@ -251,17 +251,17 @@ PYBIND11_MODULE(_dsg_bindings, module) {
         data.add(nlohmann::json::parse(contents));
       });
 
-  py::class_<LabelSpace>(module, "LabelSpace")
+  py::class_<Labelspace>(module, "Labelspace")
       .def(py::init<>())
       .def(py::init<const std::map<SemanticLabel, std::string>&>())
-      .def("get_label", &LabelSpace::getLabel)
+      .def("get_label", &Labelspace::getLabel)
       .def("get_category",
-           [](const LabelSpace& label_space, SemanticLabel label) {
-             return label_space.getCategory(label);
+           [](const Labelspace& labelspace, SemanticLabel label) {
+             return labelspace.getCategory(label);
            })
       .def(
           "get_node_category",
-          [](const LabelSpace& labelspace,
+          [](const Labelspace& labelspace,
              const SceneGraphNode& node,
              const std::string& unknown_name) {
             const auto attrs = node.tryAttributes<SemanticNodeAttributes>();
@@ -269,8 +269,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           },
           "node"_a,
           "unknown_name"_a = "UNKNOWN")
-      .def_property_readonly("labels_to_names", &LabelSpace::labels_to_names)
-      .def_property_readonly("names_to_labels", &LabelSpace::names_to_labels);
+      .def_property_readonly("labels_to_names", &Labelspace::labels_to_names)
+      .def_property_readonly("names_to_labels", &Labelspace::names_to_labels);
 
   /**************************************************************************************
    * Bounding Box
@@ -975,16 +975,16 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                         reinterpret_cast<const uint8_t*>(view.data()), view.size());
                   })
       .def(
-          "get_label_space",
+          "get_labelspace",
           [](const DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
-            return LabelSpace::fromMetadata(graph, layer, partition);
+            return Labelspace::fromMetadata(graph, layer, partition);
           },
           "layer"_a,
           "partition"_a = 0)
       .def(
-          "set_label_space",
+          "set_labelspace",
           [](DynamicSceneGraph& graph,
-             const LabelSpace& labelspace,
+             const Labelspace& labelspace,
              LayerId layer,
              PartitionId partition) { labelspace.save(graph, layer, partition); },
           "labelspace"_a,

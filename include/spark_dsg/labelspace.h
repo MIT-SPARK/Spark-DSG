@@ -47,26 +47,26 @@ namespace spark_dsg {
  * Generally intended to be instantiated and stored in the scene graph metadata (on a
  * per-layer basis)
  */
-class LabelSpace {
+class Labelspace {
  public:
-  LabelSpace() = default;
+  Labelspace() = default;
 
   /**
    * @brief Construct the label space from a mapping between numerical labels and
    * category names
    */
-  explicit LabelSpace(const std::map<SemanticLabel, std::string>& label_to_names);
+  explicit Labelspace(const std::map<SemanticLabel, std::string>& label_to_names);
 
   /**
    * @brief Construct the labelspace from names (assumes the numerical labels correspond
    * to vector indices)
    */
-  explicit LabelSpace(const std::vector<std::string>& names);
+  explicit Labelspace(const std::vector<std::string>& names);
 
   /**
    * @brief Pull the labelspace from scene graph metadata
    */
-  static LabelSpace fromMetadata(const DynamicSceneGraph& graph,
+  static Labelspace fromMetadata(const DynamicSceneGraph& graph,
                                  LayerId layer,
                                  PartitionId partition = 0);
 

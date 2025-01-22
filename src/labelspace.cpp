@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 
-#include "spark_dsg/label_space.h"
+#include "spark_dsg/labelspace.h"
 
 #include <iostream>
 
@@ -73,13 +73,13 @@ inline LabelNameMap index(const std::vector<std::string>& names) {
 
 }  // namespace
 
-LabelSpace::LabelSpace(const std::map<SemanticLabel, std::string>& label_to_names)
+Labelspace::Labelspace(const std::map<SemanticLabel, std::string>& label_to_names)
     : label_to_name_(label_to_names), name_to_label_(invert(label_to_names)) {}
 
-LabelSpace::LabelSpace(const std::vector<std::string>& names)
-    : LabelSpace(index(names)) {}
+Labelspace::Labelspace(const std::vector<std::string>& names)
+    : Labelspace(index(names)) {}
 
-LabelSpace LabelSpace::fromMetadata(const DynamicSceneGraph& graph,
+Labelspace Labelspace::fromMetadata(const DynamicSceneGraph& graph,
                                     LayerId layer,
                                     PartitionId partition) {
   const auto& metadata = graph.metadata();
@@ -99,29 +99,29 @@ LabelSpace LabelSpace::fromMetadata(const DynamicSceneGraph& graph,
   }
 
   const auto mapping = partition_node->get<LabelNameMap>();
-  return LabelSpace(mapping);
+  return Labelspace(mapping);
 }
 
-bool LabelSpace::empty() const { return label_to_name_.empty(); }
+bool Labelspace::empty() const { return label_to_name_.empty(); }
 
-std::optional<std::string> LabelSpace::getCategory(SemanticLabel label) const {
+std::optional<std::string> Labelspace::getCategory(SemanticLabel label) const {
   const auto iter = label_to_name_.find(label);
   return iter == label_to_name_.end() ? std::nullopt
                                       : std::optional<std::string>(iter->second);
 }
 
-std::optional<SemanticLabel> LabelSpace::getLabel(const std::string& name) const {
+std::optional<SemanticLabel> Labelspace::getLabel(const std::string& name) const {
   const auto iter = name_to_label_.find(name);
   return iter == name_to_label_.end() ? std::nullopt
                                       : std::optional<SemanticLabel>(iter->second);
 }
 
-std::string LabelSpace::getCategory(const SemanticNodeAttributes& attrs,
+std::string Labelspace::getCategory(const SemanticNodeAttributes& attrs,
                                     const std::string& unknown_name) const {
   return getCategory(attrs.semantic_label).value_or(unknown_name);
 }
 
-void LabelSpace::save(DynamicSceneGraph& graph,
+void Labelspace::save(DynamicSceneGraph& graph,
                       LayerId layer,
                       PartitionId partition) const {
   auto entry = nlohmann::json::object();
