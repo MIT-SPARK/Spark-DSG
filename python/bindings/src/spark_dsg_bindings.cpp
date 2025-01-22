@@ -42,6 +42,7 @@
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/edge_container.h>
+#include <spark_dsg/label_space.h>
 #include <spark_dsg/mesh.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
@@ -249,6 +250,27 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("_add", [](Metadata& data, const std::string& contents) {
         data.add(nlohmann::json::parse(contents));
       });
+
+  py::class_<LabelSpace>(module, "LabelSpace")
+      .def(py::init<>())
+      .def(py::init<const std::map<SemanticLabel, std::string>&>())
+      .def("get_label", &LabelSpace::getLabel)
+      .def("get_category",
+           [](const LabelSpace& label_space, SemanticLabel label) {
+             return label_space.getCategory(label);
+           })
+      .def(
+          "get_node_category",
+          [](const LabelSpace& labelspace,
+             const SceneGraphNode& node,
+             const std::string& unknown_name) {
+            const auto attrs = node.tryAttributes<SemanticNodeAttributes>();
+            return attrs ? labelspace.getCategory(*attrs, unknown_name) : unknown_name;
+          },
+          "node"_a,
+          "unknown_name"_a = "UNKNOWN")
+      .def_property_readonly("labels_to_names", &LabelSpace::labels_to_names)
+      .def_property_readonly("names_to_labels", &LabelSpace::names_to_labels);
 
   /**************************************************************************************
    * Bounding Box
@@ -946,11 +968,28 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                 graph, reinterpret_cast<const uint8_t*>(view.data()), view.size());
           },
           "contents"_a)
-      .def_static("from_binary", [](const py::bytes& contents) {
-        const auto view = static_cast<std::string_view>(contents);
-        return io::binary::readGraph(reinterpret_cast<const uint8_t*>(view.data()),
-                                     view.size());
-      });
+      .def_static("from_binary",
+                  [](const py::bytes& contents) {
+                    const auto view = static_cast<std::string_view>(contents);
+                    return io::binary::readGraph(
+                        reinterpret_cast<const uint8_t*>(view.data()), view.size());
+                  })
+      .def(
+          "get_label_space",
+          [](const DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
+            return LabelSpace::fromMetadata(graph, layer, partition);
+          },
+          "layer"_a,
+          "partition"_a = 0)
+      .def(
+          "set_label_space",
+          [](DynamicSceneGraph& graph,
+             const LabelSpace& labelspace,
+             LayerId layer,
+             PartitionId partition) { labelspace.save(graph, layer, partition); },
+          "labelspace"_a,
+          "layer"_a,
+          "partition"_a = 0);
 
   /**************************************************************************************
    * Zmq Interface
