@@ -269,7 +269,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           },
           "node"_a,
           "unknown_name"_a = "UNKNOWN")
-      .def("__bool__", [](const Labelspace& labelspace) { return static_cast<bool>(labelspace); })
+      .def("__bool__",
+           [](const Labelspace& labelspace) { return static_cast<bool>(labelspace); })
       .def_property_readonly("labels_to_names", &Labelspace::labels_to_names)
       .def_property_readonly("names_to_labels", &Labelspace::names_to_labels);
 
@@ -983,6 +984,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "layer"_a,
           "partition"_a = 0)
       .def(
+          "get_labelspace",
+          [](const DynamicSceneGraph& graph, const std::string& name) {
+            return Labelspace::fromMetadata(graph, name);
+          },
+          "name"_a)
+      .def(
           "set_labelspace",
           [](DynamicSceneGraph& graph,
              const Labelspace& labelspace,
@@ -990,7 +997,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              PartitionId partition) { labelspace.save(graph, layer, partition); },
           "labelspace"_a,
           "layer"_a,
-          "partition"_a = 0);
+          "partition"_a = 0)
+      .def(
+          "set_labelspace",
+          [](DynamicSceneGraph& graph,
+             const Labelspace& labelspace,
+             const std::string& name) { labelspace.save(graph, name); },
+          "labelspace"_a,
+          "name"_a);
 
   /**************************************************************************************
    * Zmq Interface
