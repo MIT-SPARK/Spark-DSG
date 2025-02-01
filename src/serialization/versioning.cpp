@@ -34,9 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/versioning.h"
 
-#include <filesystem>
-#include <fstream>
-#include <sstream>
+#include <spdlog/spdlog.h>
 
 #include "spark_dsg/logging.h"
 #include "spark_dsg/serialization/binary_conversions.h"
@@ -77,23 +75,21 @@ void checkProjectCompatibility(const FileHeader& loaded, const FileHeader& curre
   // distinction could also be more fine graind for known projects.
   const auto it = PROJECT_COMPATIBILITY.find(current.project_name);
   if (it == PROJECT_COMPATIBILITY.end()) {
-    std::stringstream msg;
-    msg << "Attempted to load invalid binary file: the loaded file was created with an "
-           "incompatible project ("
-        << loaded.project_name << ") to the current project (" << current.project_name
-        << ").";
-    throw(std::runtime_error(msg.str()));
+    throw std::runtime_error(
+        "Attempted to load invalid binary file: the loaded file was created with an "
+        "incompatible project (" +
+        loaded.project_name + ") to the current project (" + current.project_name +
+        ").");
   }
   const auto& compatible_projects = it->second;
 
   const auto it2 = compatible_projects.find(loaded.project_name);
   if (it2 == compatible_projects.end()) {
-    std::stringstream msg;
-    msg << "Attempted to load invalid binary file: the loaded file was created with an "
-           "incompatible project ("
-        << loaded.project_name << ") to the current project (" << current.project_name
-        << ").";
-    throw(std::runtime_error(msg.str()));
+    throw std::runtime_error(
+        "Attempted to load invalid binary file: the loaded file was created with an "
+        "incompatible project (" +
+        loaded.project_name + ") to the current project (" + current.project_name +
+        ").");
   }
 }
 
@@ -115,10 +111,9 @@ bool Version::operator<(const Version& other) const {
 }
 
 std::string Version::toString() const {
-  std::stringstream ss;
-  ss << static_cast<int>(major) << "." << static_cast<int>(minor) << "."
-     << static_cast<int>(patch);
-  return ss.str();
+  return std::to_string(static_cast<int>(major)) + "." +
+         std::to_string(static_cast<int>(minor)) + "." +
+         std::to_string(static_cast<int>(patch));
 }
 
 std::vector<uint8_t> FileHeader::serializeToBinary() const {
@@ -147,7 +142,6 @@ FileHeader FileHeader::legacy() {
 
 std::string FileHeader::toString() const {
   return project_name + " v" + version.toString();
-  std::stringstream ss;
 }
 
 void warnOutdatedHeader(const FileHeader& header) {
@@ -155,11 +149,12 @@ void warnOutdatedHeader(const FileHeader& header) {
     return;
   }
 
-  SG_LOG(WARN) << "Loading file with outdated encoding (" << header.toString()
-               << "). This format may be discontinued in the future. For optimal "
-                  "preservation and performance load the file "
-                  "and save it again to update to the current encoding ("
-               << FileHeader::current().toString() << ").";
+  spdlog::warn(
+      "Loading file with outdated encoding ({}). This format may be discontinued in "
+      "the future. For optimal preservation and performance load the file and save it "
+      "again to update to the current encoding ({}).",
+      header.toString(),
+      FileHeader::current().toString());
 }
 
 // TODO(nathan) this and the header write might belong in file_io instead

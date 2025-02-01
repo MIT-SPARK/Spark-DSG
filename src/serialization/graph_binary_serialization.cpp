@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 
+#include <spdlog/spdlog.h>
+
 #include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
@@ -239,7 +241,7 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
     try {
       graph.metadata = nlohmann::json::parse(metadata_json);
     } catch (const std::exception& e) {
-      SG_LOG(WARN) << "Invalid json metadata: " << e.what();
+      spdlog::warn("Invalid json metadata: {}", e.what());
     }
   }
 

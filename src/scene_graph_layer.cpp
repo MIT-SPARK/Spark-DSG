@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/scene_graph_layer.h"
 
+#include <spdlog/spdlog.h>
+
 #include <queue>
 #include <sstream>
 
@@ -169,7 +171,7 @@ bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
                                  std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (source == target) {
-    SG_LOG(WARN) << "Attempted to add a self-edge";
+    spdlog::warn("Attempted to add a self-edge for node {}!", source);
     return false;
   }
 

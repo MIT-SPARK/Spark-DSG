@@ -74,8 +74,8 @@ target_include_directories(
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
 target_link_libraries(
-  ${PROJECT_NAME} PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json spdlog::spdlog
-  PRIVATE Threads::Threads
+  ${PROJECT_NAME} PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json PRIVATE spdlog::spdlog
+                                                                            Threads::Threads
 )
 if(NOT BUILD_SHARED_LIBS)
   set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)

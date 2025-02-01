@@ -34,32 +34,4 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include <spdlog/spdlog.h>
-
-#include <sstream>
-
-// To log use the macro SG_LOG(SEVERITY) << "message";
-
-namespace spark_dsg {
-
-struct LogEntry {
-  const spdlog::level::level_enum level;
-  std::stringstream ss;
-
-  LogEntry(spdlog::level::level_enum level) : level(level) {}
-  ~LogEntry() { spdlog::log(level, ss.str()); }
-
-  template <typename T>
-  LogEntry& operator<<(const T& rhs) {
-    ss << rhs;
-    return *this;
-  }
-};
-
-}  // namespace spark_dsg
-
-// constructs temporary log entry that prepends filename and line before handing message
-// to spdlog
-#define SG_LOG(SEVERITY)                                                    \
-  LogEntry(static_cast<spdlog::level::level_enum>(SPDLOG_LEVEL_##SEVERITY)) \
-      << __FILE__ << ":" << __LINE__ << "]: "
+namespace spark_dsg {}  // namespace spark_dsg
