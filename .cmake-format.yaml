@@ -13,7 +13,7 @@ parse:
     pybind11_add_module:
       pargs: 1
 format:
-  line_width: 88
+  line_width: 100
   tab_size: 2
   use_tabchars: false
   max_subgroups_hwrap: 3
@@ -26,6 +26,6 @@ format:
   max_lines_hwrap: 1
   command_case: canonical
   keyword_case: unchanged
-  always_wrap: [add_library, pybind11_add_module]
+  #always_wrap: [add_library, pybind11_add_module]
   enable_sort: true
   autosort: false
