@@ -104,7 +104,7 @@ struct ZmqReceiver::Detail {
 #if CPPZMQ_VERSION < ZMQ_MAKE_VERSION(4, 7, 0)
     socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
 #else
-    socket->set(zmq::sockopt::subscribe, "", 0);
+    socket->set(zmq::sockopt::subscribe, "");
 #endif
 
     if (conflate) {
@@ -112,7 +112,7 @@ struct ZmqReceiver::Detail {
 #if CPPZMQ_VERSION < ZMQ_MAKE_VERSION(4, 7, 0)
       socket->setsockopt(ZMQ_CONFLATE, &conflate_flag, sizeof(conflate_flag));
 #else
-      socket->set(zmq::sockopt::conflate, &conflate_flag, sizeof(conflate_flag));
+      socket->set(zmq::sockopt::conflate, conflate_flag);
 #endif
     }
   }

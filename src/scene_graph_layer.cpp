@@ -169,7 +169,7 @@ bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
                                  std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (source == target) {
-    SG_LOG(WARN) << "Attempted to add a self-edge" << std::endl;
+    SG_LOG(WARN) << "Attempted to add a self-edge";
     return false;
   }
 
