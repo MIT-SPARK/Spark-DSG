@@ -411,9 +411,12 @@ class DynamicSceneGraph {
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
    * @param config Configuration controlling merge behavior
+   * @param transform the other graph when merging
    * @returns True if merge was successful
    */
-  bool mergeGraph(const DynamicSceneGraph& other, const GraphMergeConfig& config = {});
+  bool mergeGraph(const DynamicSceneGraph& other,
+                  const GraphMergeConfig& config = {},
+                  const Eigen::Affine3d* transform = nullptr);
 
   /**
    * @brief Get all removed nodes from the graph

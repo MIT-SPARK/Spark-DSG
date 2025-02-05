@@ -559,7 +559,8 @@ bool DynamicSceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
 }
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
-                                   const GraphMergeConfig& config) {
+                                   const GraphMergeConfig& config,
+                                   const Eigen::Affine3d* transform) {
   metadata.add(other.metadata());
 
   other.visitLayers([&](LayerKey layer_key, const SceneGraphLayer& other_layer) {
@@ -578,7 +579,7 @@ bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
     }
 
     std::vector<NodeId> new_nodes;
-    layer.mergeLayer(other_layer, config, &new_nodes);
+    layer.mergeLayer(other_layer, config, &new_nodes, transform);
     for (const auto node_id : new_nodes) {
       node_lookup_[node_id] = layer_key;
     }

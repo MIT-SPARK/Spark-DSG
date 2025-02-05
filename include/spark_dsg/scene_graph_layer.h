@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <Eigen/Geometry>
 #include <functional>
 #include <map>
 #include <unordered_set>
@@ -232,7 +233,8 @@ class SceneGraphLayer {
    */
   void mergeLayer(const SceneGraphLayer& other,
                   const GraphMergeConfig& config,
-                  std::vector<NodeId>* new_nodes);
+                  std::vector<NodeId>* new_nodes = nullptr,
+                  const Eigen::Affine3d* transform = nullptr);
 
   /**
    * @brief Get node ids of newly inserted nodes
