@@ -53,25 +53,31 @@ except ImportError as e:
 
 
 LAYER_OFFSETS = {
-    DsgLayers.OBJECTS: 0.0,
-    DsgLayers.PLACES: 6.0,
-    DsgLayers.ROOMS: 12.0,
-    DsgLayers.BUILDINGS: 16.0,
+    DsgLayers.name_to_layer_id(DsgLayers.OBJECTS): 0.0,
+    DsgLayers.name_to_layer_id(DsgLayers.PLACES): 6.0,
+    DsgLayers.name_to_layer_id(DsgLayers.ROOMS): 12.0,
+    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS): 16.0,
 }
 
-LAYER_IDS = (DsgLayers.OBJECTS, DsgLayers.PLACES, DsgLayers.ROOMS, DsgLayers.BUILDINGS)
+LAYER_IDS = (
+    DsgLayers.name_to_layer_id(DsgLayers.OBJECTS),
+    DsgLayers.name_to_layer_id(DsgLayers.PLACES),
+    DsgLayers.name_to_layer_id(DsgLayers.ROOMS),
+    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS)
+)
+
 CATEGORY_MAP = {
-    "O": DsgLayers.OBJECTS,
-    "p": DsgLayers.PLACES,
-    "R": DsgLayers.ROOMS,
-    "B": DsgLayers.BUILDINGS,
+    "O": DsgLayers.name_to_layer_id(DsgLayers.OBJECTS),
+    "p": DsgLayers.name_to_layer_id(DsgLayers.PLACES),
+    "R": DsgLayers.name_to_layer_id(DsgLayers.ROOMS),
+    "B": DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS),
 }
 
 LAYER_NAMES = {
-    DsgLayers.OBJECTS: "objects",
-    DsgLayers.PLACES: "places",
-    DsgLayers.ROOMS: "rooms",
-    DsgLayers.BUILDINGS: "buildings",
+    DsgLayers.name_to_layer_id(DsgLayers.OBJECTS): "objects",
+    DsgLayers.name_to_layer_id(DsgLayers.PLACES): "places",
+    DsgLayers.name_to_layer_id(DsgLayers.ROOMS): "rooms",
+    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS): "buildings",
 }
 
 
@@ -162,7 +168,7 @@ class RemoteVisualizer:
 
         if self._include_dynamic:
             if G.has_layer(DsgLayers.AGENTS, "a"):
-                self._update_dynamic_layer(G.get_dynamic_layer(DsgLayers.AGENTS, "a"))
+                self._update_dynamic_layer(G.get_layer(DsgLayers.AGENTS, "a"))
 
     def _update_mesh_geometry(self, G):
         if not G.has_mesh():
