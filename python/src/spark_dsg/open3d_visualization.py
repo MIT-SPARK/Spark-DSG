@@ -63,7 +63,7 @@ LAYER_IDS = (
     DsgLayers.name_to_layer_id(DsgLayers.OBJECTS),
     DsgLayers.name_to_layer_id(DsgLayers.PLACES),
     DsgLayers.name_to_layer_id(DsgLayers.ROOMS),
-    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS)
+    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS),
 )
 
 CATEGORY_MAP = {
@@ -340,7 +340,9 @@ class RemoteVisualizer:
         self._names = [None] * len(self._id_map)
         for node_id in self._id_map:
             node = G.get_node(node_id)
-            if node.layer == DsgLayers.OBJECTS or node.layer == DsgLayers.ROOMS:
+            if node.layer == DsgLayers.name_to_layer_id(
+                DsgLayers.OBJECTS
+            ) or node.layer == DsgLayers.name_to_layer_id(DsgLayers.ROOMS):
                 self._names[self._id_map[node_id]] = node.attributes.name
 
         for name, point in zip(self._names, self._points):
