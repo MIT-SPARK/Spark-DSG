@@ -36,161 +36,56 @@
 
 namespace spark_dsg::python {
 
-NodeIter::NodeIter(const SceneGraphLayer::Nodes& container)
-    : curr_iter_(container.begin()), end_iter_(container.end()) {}
+NodeIter::NodeIter() : valid_(false) {}
 
-const SceneGraphNode* NodeIter::operator*() const { return curr_iter_->second.get(); }
+NodeIter::NodeIter(const SceneGraphLayer::Nodes& container)
+    : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {}
+
+const SceneGraphNode* NodeIter::operator*() const {
+  if (!valid_) {
+    throw std::runtime_error("invalid node iterator!");
+  }
+
+  return curr_iter_->second.get();
+}
 
 NodeIter& NodeIter::operator++() {
+  if (!valid_) {
+    throw std::runtime_error("invalid node iterator!");
+  }
+
   ++curr_iter_;
   return *this;
 }
 
-bool NodeIter::operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
-
-DynamicNodeIter::DynamicNodeIter(const DynamicSceneGraphLayer::Nodes& container)
-    : curr_iter_(container.begin()), end_iter_(container.end()) {
-  while (*curr_iter_ == nullptr && curr_iter_ != end_iter_) {
-    ++curr_iter_;
-  }
+bool NodeIter::operator==(const IterSentinel&) const {
+  return !valid_ || curr_iter_ == end_iter_;
 }
 
-const SceneGraphNode* DynamicNodeIter::operator*() const { return curr_iter_->get(); }
-
-DynamicNodeIter& DynamicNodeIter::operator++() {
-  ++curr_iter_;
-  while (*curr_iter_ == nullptr && curr_iter_ != end_iter_) {
-    ++curr_iter_;
-  }
-  return *this;
-}
-
-bool DynamicNodeIter::operator==(const IterSentinel&) {
-  return curr_iter_ == end_iter_;
-}
+EdgeIter::EdgeIter() : valid_(false) {}
 
 EdgeIter::EdgeIter(const SceneGraphLayer::Edges& container)
-    : curr_iter_(container.begin()), end_iter_(container.end()) {}
+    : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {}
 
-const SceneGraphEdge* EdgeIter::operator*() const { return &(curr_iter_->second); }
+const SceneGraphEdge* EdgeIter::operator*() const {
+  if (!valid_) {
+    throw std::runtime_error("invalid edge iterator!");
+  }
+
+  return &(curr_iter_->second);
+}
 
 EdgeIter& EdgeIter::operator++() {
+  if (!valid_) {
+    throw std::runtime_error("invalid edge iterator!");
+  }
+
   ++curr_iter_;
   return *this;
 }
 
-bool EdgeIter::operator==(const IterSentinel&) { return curr_iter_ == end_iter_; }
-
-GlobalNodeIter::GlobalNodeIter(const DynamicSceneGraph& dsg) : valid_(true) {
-  curr_layer_iter_ = dsg.layers().begin();
-  end_layer_iter_ = dsg.layers().end();
-
-  setNodeIter();
-}
-
-void GlobalNodeIter::setNodeIter() {
-  if (curr_layer_iter_ == end_layer_iter_) {
-    valid_ = false;
-    return;
-  }
-
-  curr_node_iter_ = curr_layer_iter_->second->nodes().begin();
-  end_node_iter_ = curr_layer_iter_->second->nodes().end();
-  while (curr_node_iter_ == end_node_iter_) {
-    ++curr_layer_iter_;
-    if (curr_layer_iter_ == end_layer_iter_) {
-      valid_ = false;
-      return;
-    }
-
-    curr_node_iter_ = curr_layer_iter_->second->nodes().begin();
-    end_node_iter_ = curr_layer_iter_->second->nodes().end();
-  }
-}
-
-const SceneGraphNode& GlobalNodeIter::operator*() const {
-  return *curr_node_iter_->second;
-}
-
-GlobalNodeIter& GlobalNodeIter::operator++() {
-  ++curr_node_iter_;
-  if (curr_node_iter_ == end_node_iter_) {
-    ++curr_layer_iter_;
-    setNodeIter();
-  }
-
-  return *this;
-}
-
-bool GlobalNodeIter::operator==(const IterSentinel&) {
-  if (!valid_) {
-    return true;
-  }
-
-  return curr_node_iter_ == end_node_iter_ && curr_layer_iter_ == end_layer_iter_;
-}
-
-GlobalEdgeIter::GlobalEdgeIter(const DynamicSceneGraph& dsg)
-    : started_interlayer_(false) {
-  curr_layer_iter_ = dsg.layers().begin();
-  end_layer_iter_ = dsg.layers().end();
-
-  curr_interlayer_iter_ = dsg.interlayer_edges().begin();
-  end_interlayer_iter_ = dsg.interlayer_edges().end();
-
-  setEdgeIter();
-}
-
-const SceneGraphEdge* GlobalEdgeIter::operator*() const {
-  if (started_interlayer_) {
-    return &curr_interlayer_iter_->second;
-  } else {
-    return &curr_edge_iter_->second;
-  }
-}
-
-void GlobalEdgeIter::setEdgeIter() {
-  if (started_interlayer_ || curr_layer_iter_ == end_layer_iter_) {
-    started_interlayer_ = true;
-    return;
-  }
-
-  curr_edge_iter_ = curr_layer_iter_->second->edges().begin();
-  end_edge_iter_ = curr_layer_iter_->second->edges().end();
-
-  while (curr_edge_iter_ == end_edge_iter_) {
-    ++curr_layer_iter_;
-    if (curr_layer_iter_ == end_layer_iter_) {
-      started_interlayer_ = true;
-      return;
-    }
-
-    curr_edge_iter_ = curr_layer_iter_->second->edges().begin();
-    end_edge_iter_ = curr_layer_iter_->second->edges().end();
-  }
-}
-
-GlobalEdgeIter& GlobalEdgeIter::operator++() {
-  if (started_interlayer_) {
-    ++curr_interlayer_iter_;
-    return *this;
-  }
-
-  ++curr_edge_iter_;
-  if (curr_edge_iter_ == end_edge_iter_) {
-    ++curr_layer_iter_;
-    setEdgeIter();
-  }
-
-  return *this;
-}
-
-bool GlobalEdgeIter::operator==(const IterSentinel&) {
-  if (!started_interlayer_) {
-    return false;
-  }
-
-  return curr_interlayer_iter_ == end_interlayer_iter_;
+bool EdgeIter::operator==(const IterSentinel&) const {
+  return !valid_ || curr_iter_ == end_iter_;
 }
 
 }  // namespace spark_dsg::python

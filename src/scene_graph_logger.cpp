@@ -69,56 +69,65 @@ SceneGraphLogger::SceneGraphLogger() {}
 SceneGraphLogger::~SceneGraphLogger() {}
 
 void SceneGraphLogger::logGraph(const DynamicSceneGraph& graph) {
+  const auto& name_to_layer = graph.layer_names();
+  std::map<LayerId, std::string> layer_names;
+  for (const auto& [name, layer] : name_to_layer) {
+    layer_names.emplace(layer, name);
+  }
+
   // What I want to log: for each layer, the number of active nodes, number of
   // merged node, number of deleted nodes
-  for (const auto& id_layer : graph.layers_) {
-    if (layer_names_.count(id_layer.first) > 0) {
-      if (id_layer.second->numNodes() == 0 && !write_header_) {
-        continue;
-      }
-      size_t num_active_nodes = 0;
-      size_t num_removed_nodes = 0;
-      size_t num_merged_nodes = 0;
-      size_t num_nodes_with_parents = 0;
-      size_t num_nodes_with_children = 0;
-      for (const auto& id_node_status : id_layer.second->nodes_status_) {
-        switch (id_node_status.second) {
-          case NodeStatus::NEW:
-          case NodeStatus::VISIBLE:
-            num_active_nodes++;
-            if (graph.getNode(id_node_status.first).hasParent()) {
-              num_nodes_with_parents++;
-            }
-            if (graph.getNode(id_node_status.first).hasChildren()) {
-              num_nodes_with_children++;
-            }
-            break;
-          case NodeStatus::DELETED:
-            num_removed_nodes++;
-            break;
-          case NodeStatus::MERGED:
-            num_merged_nodes++;
-            break;
-          case NodeStatus::NONEXISTENT:
-          default:
-            break;
-        }
-      }
-      size_t num_edges = id_layer.second->numEdges();
-
-      // Write to file
-      std::string csv_filename =
-          output_dir_ + "/" + layer_names_.at(id_layer.first) + "_layer.csv";
-      writeStatsToCsv(num_active_nodes,
-                      num_removed_nodes,
-                      num_merged_nodes,
-                      num_nodes_with_parents,
-                      num_nodes_with_children,
-                      num_edges,
-                      csv_filename,
-                      write_header_);
+  for (const auto& [layer_id, layer] : graph.layers_) {
+    if (layer->numNodes() == 0 && !write_header_) {
+      continue;
     }
+
+    size_t num_active_nodes = 0;
+    size_t num_removed_nodes = 0;
+    size_t num_merged_nodes = 0;
+    size_t num_nodes_with_parents = 0;
+    size_t num_nodes_with_children = 0;
+    for (const auto& [node_id, node_status] : layer->nodes_status_) {
+      switch (node_status) {
+        case NodeStatus::NEW:
+        case NodeStatus::VISIBLE:
+          num_active_nodes++;
+          if (graph.getNode(node_id).hasParent()) {
+            num_nodes_with_parents++;
+          }
+          if (graph.getNode(node_id).hasChildren()) {
+            num_nodes_with_children++;
+          }
+          break;
+        case NodeStatus::DELETED:
+          num_removed_nodes++;
+          break;
+        case NodeStatus::MERGED:
+          num_merged_nodes++;
+          break;
+        case NodeStatus::NONEXISTENT:
+        default:
+          break;
+      }
+    }
+
+    size_t num_edges = layer->numEdges();
+
+    auto iter = layer_names.find(layer_id);
+    std::string name = iter == layer_names.end() ? ("layer_" + std::to_string(layer_id))
+                                                 : iter->second;
+    // Write to file
+    std::string csv_filename = output_dir_ + "/" + name + "_layer.csv";
+    writeStatsToCsv(num_active_nodes,
+                    num_removed_nodes,
+                    num_merged_nodes,
+                    num_nodes_with_parents,
+                    num_nodes_with_children,
+                    num_edges,
+                    csv_filename,
+                    write_header_);
   }
+
   write_header_ = false;
   return;
 }

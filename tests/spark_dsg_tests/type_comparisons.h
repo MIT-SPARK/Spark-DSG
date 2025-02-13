@@ -34,8 +34,10 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <spark_dsg/dynamic_scene_graph.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/node_attributes.h>
+
+#include <iostream>
 
 namespace spark_dsg {
 namespace test {
@@ -51,7 +53,7 @@ bool quaternionsEqual(const Eigen::Quaternion<Scalar>& lhs,
 
 inline bool operator==(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
   return lhs.id == rhs.id && lhs.layer == rhs.layer &&
-         lhs.attributes() == rhs.attributes() && lhs.timestamp == rhs.timestamp;
+         lhs.attributes() == rhs.attributes();
 }
 
 inline bool operator!=(const SceneGraphNode& lhs, const SceneGraphNode& rhs) {
@@ -98,29 +100,10 @@ inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
   return isSubset(lhs.edges(), rhs.edges());
 }
 
-inline bool isSubset(const DynamicSceneGraphLayer& lhs,
-                     const DynamicSceneGraphLayer& rhs) {
-  for (const auto& node : lhs.nodes()) {
-    if (!node) {
-      continue;
-    }
-
-    const auto rhs_node = rhs.findNode(node->id);
-    if (!rhs_node) {
-      return false;
-    }
-
-    if (*rhs_node != *node) {
-      return false;
-    }
-  }
-
-  return isSubset(lhs.edges(), rhs.edges());
-}
-
 inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rhs) {
   for (const auto& [layer_id, layer] : lhs.layers()) {
     if (!rhs.hasLayer(layer_id)) {
+      std::cout << "Missing: " << layer_id << std::endl;
       return false;
     }
 
@@ -128,19 +111,20 @@ inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rh
     const auto layers_equal =
         isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
     if (!layers_equal) {
+      std::cout << "Inequal: " << layer_id << std::endl;
       return false;
     }
   }
 
-  for (const auto& [layer_id, layer_group] : lhs.dynamicLayers()) {
-    for (const auto& [prefix, layer] : layer_group) {
-      if (!rhs.hasLayer(layer_id, prefix)) {
+  for (const auto& [layer_id, partitions] : lhs.layer_partitions()) {
+    for (const auto& [partition_id, partition] : partitions) {
+      if (!rhs.hasLayer(layer_id, partition_id)) {
         return false;
       }
 
-      const auto& rhs_layer = rhs.getLayer(layer_id, prefix);
+      const auto& rhs_partition = rhs.getLayer(layer_id, partition_id);
       const auto layers_equal =
-          isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
+          isSubset(*partition, rhs_partition) && isSubset(rhs_partition, *partition);
       if (!layers_equal) {
         return false;
       }
@@ -149,11 +133,6 @@ inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rh
 
   if (!(isSubset(lhs.interlayer_edges(), rhs.interlayer_edges()) &&
         isSubset(rhs.interlayer_edges(), lhs.interlayer_edges()))) {
-    return false;
-  }
-
-  if (!(isSubset(lhs.dynamic_interlayer_edges(), rhs.dynamic_interlayer_edges()) &&
-        isSubset(rhs.dynamic_interlayer_edges(), lhs.dynamic_interlayer_edges()))) {
     return false;
   }
 

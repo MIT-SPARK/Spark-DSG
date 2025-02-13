@@ -44,7 +44,7 @@ from typing import Callable, Dict, Optional, Union
 
 import numpy as np
 
-from spark_dsg._dsg_bindings import (DsgLayers, DynamicSceneGraph, LayerView,
+from spark_dsg._dsg_bindings import (DynamicSceneGraph, LayerView,
                                      SceneGraphEdge, SceneGraphLayer,
                                      SceneGraphNode)
 
@@ -52,12 +52,7 @@ NodeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphNode], np.ndarray]
 EdgeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphEdge], np.ndarray]
 
 
-DEFAULT_LAYER_MAP = {
-    DsgLayers.OBJECTS: "objects",
-    DsgLayers.PLACES: "places",
-    DsgLayers.ROOMS: "rooms",
-    DsgLayers.BUILDINGS: "buildings",
-}
+DEFAULT_LAYER_MAP = {2: "objects", 3: "places", 4: "rooms", 5: "buildings"}
 
 
 def _centroid_bbx_embedding(G, x) -> NodeConversionFunc:
@@ -214,7 +209,8 @@ def scene_graph_to_torch_homogeneous(
         dtype_int = torch.int32
         dtype_float = torch.float32
 
-    N = G.num_static_nodes()
+    N = G.num_nodes(include_partitions=False)
+    M = G.num_edges(include_partitions=False)
 
     node_features = []
     node_positions = torch.zeros((N, 3), dtype=torch.float64)
@@ -223,9 +219,9 @@ def scene_graph_to_torch_homogeneous(
     node_ids = []
     id_map = {}
 
-    for node in G.nodes:
+    for node in G.unpartitioned_nodes:
         idx = len(node_features)
-        node_masks[node.layer][idx] = True
+        node_masks[node.layer.layer][idx] = True
         node_positions[idx, :] = torch.tensor(
             np.squeeze(node.attributes.position), dtype=dtype_float
         )
@@ -238,9 +234,9 @@ def scene_graph_to_torch_homogeneous(
     node_labels = torch.tensor(np.array(node_labels), dtype=dtype_int)
     node_ids = torch.tensor(np.array(node_ids), dtype=torch.int64)
 
-    edge_index = torch.zeros((2, G.num_static_edges()), dtype=torch.int64)
+    edge_index = torch.zeros((2, M), dtype=torch.int64)
     edge_features = []
-    for idx, edge in enumerate(G.edges):
+    for idx, edge in enumerate(G.unpartitioned_edges):
         edge_index[:, idx] = torch.tensor(_get_directed_edge(G, edge, id_map))
 
         if edge_converter is not None:
@@ -323,18 +319,19 @@ def scene_graph_to_torch_heterogeneous(
     node_ids = {}
     id_map = {}
 
-    for node in G.nodes:
-        if node.layer not in node_features:
-            node_features[node.layer] = []
-            node_positions[node.layer] = []
-            node_labels[node.layer] = []
-            node_ids[node.layer] = []
+    for node in G.unpartitioned_nodes:
+        layer_id = node.layer.layer
+        if layer_id not in node_features:
+            node_features[layer_id] = []
+            node_positions[layer_id] = []
+            node_labels[layer_id] = []
+            node_ids[layer_id] = []
 
-        idx = len(node_features[node.layer])
-        node_positions[node.layer].append(np.squeeze(node.attributes.position))
-        node_features[node.layer].append(node_converter(G, node))
-        node_labels[node.layer].append(node.attributes.semantic_label)
-        node_ids[node.layer].append(node.id.value)
+        idx = len(node_features[layer_id])
+        node_positions[layer_id].append(np.squeeze(node.attributes.position))
+        node_features[layer_id].append(node_converter(G, node))
+        node_labels[layer_id].append(node.attributes.semantic_label)
+        node_ids[layer_id].append(node.id.value)
         id_map[node.id.value] = idx
 
     for layer in node_features:
@@ -352,10 +349,10 @@ def scene_graph_to_torch_heterogeneous(
 
     edge_indices = {}
     edge_features = {}
-    for edge in G.edges:
+    for edge in G.unpartitioned_edges:
         source = G.get_node(edge.source)
         target = G.get_node(edge.target)
-        edge_type = edge_map[source.layer][target.layer][1]
+        edge_type = edge_map[source.layer.layer][target.layer.layer][1]
         if edge_type not in edge_indices:
             edge_indices[edge_type] = []
             edge_features[edge_type] = []

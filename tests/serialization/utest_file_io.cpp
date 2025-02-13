@@ -78,9 +78,8 @@ TEST(FileIoTests, VersionSerialization) {
 
 void testSaveLoad(const std::string& file_name) {
   DynamicSceneGraph graph;
-  graph.emplaceNode(DsgLayers::PLACES,
-                    NodeSymbol('p', 0),
-                    std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
+  graph.emplaceNode(
+      2, NodeSymbol('p', 0), std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
   graph.setMesh(std::make_shared<Mesh>());
   graph.save(file_name);
   auto other = DynamicSceneGraph::load(file_name);

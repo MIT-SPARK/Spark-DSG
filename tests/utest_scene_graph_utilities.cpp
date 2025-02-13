@@ -43,26 +43,26 @@ namespace spark_dsg {
 
 struct AncestorTestConfig {
   NodeId query;
-  LayerId query_layer;
+  size_t depth;
   std::vector<NodeId> expected;
 };
 
 std::ostream& operator<<(std::ostream& out, const AncestorTestConfig& config) {
-  out << "{query: " << NodeSymbol(config.query).getLabel()
-      << ", layer: " << config.query_layer
+  out << "{query: " << NodeSymbol(config.query).str()
+      << ", depth: " << config.depth
       << ", expected: " << displayNodeSymbolContainer(config.expected) << "}";
   return out;
 }
 
 struct BoundingBoxTestConfig {
   NodeId query;
-  LayerId query_layer;
+  size_t depth;
   BoundingBox expected;
 };
 
 std::ostream& operator<<(std::ostream& out, const BoundingBoxTestConfig& config) {
-  out << "{query: " << NodeSymbol(config.query).getLabel()
-      << ", layer: " << config.query_layer << ", expected: " << config.expected << "}";
+  out << "{query: " << NodeSymbol(config.query).str()
+      << ", depth: " << config.depth << ", expected: " << config.expected << "}";
   return out;
 }
 
@@ -99,26 +99,26 @@ TEST_P(AncestorTestFixture, ResultCorrect) {
   AncestorTestConfig config = GetParam();
 
   std::vector<NodeId> ancestors;
-  getAncestorsOfLayer(
+  getNodeAncestorsAtDepth(
       graph,
       config.query,
-      config.query_layer,
+      config.depth,
       [&](const DynamicSceneGraph&, const NodeId node) { ancestors.push_back(node); });
 
   EXPECT_EQ(ancestors, config.expected);
 }
 
 const AncestorTestConfig ancestor_test_cases[] = {
-    {0, 4, {}},
-    {0, 3, {2}},
+    {0, 0, {}},
+    {0, 1, {2}},
     {0, 2, {4, 5}},
-    {1, 4, {}},
-    {1, 3, {3}},
+    {1, 0, {}},
+    {1, 1, {3}},
     {1, 2, {6, 7}},
-    {2, 3, {}},
-    {2, 2, {4, 5}},
-    {3, 3, {}},
-    {3, 2, {6, 7}},
+    {2, 0, {}},
+    {2, 1, {4, 5}},
+    {3, 0, {}},
+    {3, 1, {6, 7}},
 };
 
 INSTANTIATE_TEST_SUITE_P(GetAncestors,
@@ -127,15 +127,15 @@ INSTANTIATE_TEST_SUITE_P(GetAncestors,
 
 TEST_P(BoundingBoxTestFixture, BoundingBoxCorrect) {
   const BoundingBoxTestConfig config = GetParam();
-  const auto bbox = computeAncestorBoundingBox(graph, config.query, config.query_layer);
+  const auto bbox = computeAncestorBoundingBox(graph, config.query, config.depth);
   EXPECT_EQ(bbox, config.expected);
 }
 
 const BoundingBoxTestConfig bbox_test_cases[] = {
-    {0, 4, {}},
-    {1, 4, {}},
-    {2, 3, {}},
-    {3, 3, {}},
+    {0, 0, {}},
+    {1, 0, {}},
+    {2, 0, {}},
+    {3, 0, {}},
     {0, 2, {{1, 1, 1}, {1.5, 1.5, 1.5}}},
     {1, 2, {{1, 1, 1}, {3.5, 3.5, 3.5}}},
 };

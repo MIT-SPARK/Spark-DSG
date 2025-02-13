@@ -33,19 +33,38 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <spark_dsg/printing.h>
 #include <spark_dsg/scene_graph_types.h>
 
 namespace spark_dsg {
 
-TEST(LayerHelperTests, TestToString) {
-  EXPECT_EQ("OBJECTS", DsgLayers::LayerIdToString(DsgLayers::OBJECTS));
-  // layer 2 always maps to OBJECTS
-  EXPECT_EQ("OBJECTS", DsgLayers::LayerIdToString(DsgLayers::AGENTS));
+void PrintTo(const LayerKey& edge, std::ostream* os) { *os << edge; }
+
+TEST(LayerKeyTests, TestEquality) {
+  EXPECT_EQ(LayerKey(1), LayerKey(1));
+  EXPECT_NE(LayerKey(1), LayerKey(2));
+  EXPECT_NE(LayerKey(1), LayerKey(1, 0u));
+  EXPECT_EQ(LayerKey(2, 0u), LayerKey(2, 0u));
+  EXPECT_NE(LayerKey(2, 0u), LayerKey(2, 1u));
 }
 
-TEST(LayerHelperTests, TestToId) {
-  EXPECT_EQ(DsgLayers::OBJECTS, DsgLayers::StringToLayerId("OBJECTS"));
-  EXPECT_EQ(DsgLayers::AGENTS, DsgLayers::StringToLayerId("AGENTS"));
+TEST(LayerKeyTests, TestIsParent) {
+  LayerKey key1{1};
+  LayerKey key2{1};
+  LayerKey key3{2};
+  LayerKey key4{2, 0u};
+  LayerKey key5{3, 0u};
+  LayerKey key6{2, 1u};
+
+  // static
+  EXPECT_TRUE(key3.isParentOf(key1));
+  EXPECT_FALSE(key1.isParentOf(key2));
+  EXPECT_FALSE(key1.isParentOf(key3));
+
+  // intralayer groups
+  EXPECT_TRUE(key4.isParentOf(key1));
+  EXPECT_TRUE(key5.isParentOf(key6));
+  EXPECT_FALSE(key6.isParentOf(key4));
 }
 
 }  // namespace spark_dsg

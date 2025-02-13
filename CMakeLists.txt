@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(spark_dsg VERSION 1.0.6)
+project(spark_dsg VERSION 1.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -35,16 +35,13 @@ configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
 add_library(
   ${PROJECT_NAME}
   src/adjacency_matrix.cpp
-  src/base_layer.cpp
   src/bounding_box_extraction.cpp
   src/bounding_box.cpp
   src/color.cpp
   src/colormaps.cpp
-  src/dynamic_scene_graph_layer.cpp
   src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
-  src/layer_prefix.cpp
   src/layer_view.cpp
   src/mesh.cpp
   src/node_attributes.cpp

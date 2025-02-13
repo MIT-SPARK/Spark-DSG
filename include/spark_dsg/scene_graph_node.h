@@ -33,7 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <chrono>
 #include <memory>
 #include <optional>
 #include <set>
@@ -71,28 +70,11 @@ class SceneGraphNode {
    * @param layer the layer that the node will belong to
    * @param attrs attributes for the node
    */
-  SceneGraphNode(NodeId id, LayerId layer, std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief Make a scene graph node (with a timestamp)
-   *
-   *
-   * @param id the id of the node to create
-   * @param layer the layer that the node will belong to
-   * @param attrs attributes for the node
-   * @param timestamp node timestamp in nanoseconds
-   */
-  SceneGraphNode(NodeId id,
-                 LayerId layer,
-                 std::chrono::nanoseconds timestamp,
-                 std::unique_ptr<NodeAttributes>&& attrs);
+  SceneGraphNode(NodeId id, LayerKey layer, std::unique_ptr<NodeAttributes>&& attrs);
 
   SceneGraphNode(const SceneGraphNode& other) = delete;
-
   SceneGraphNode& operator=(const SceneGraphNode& other) = delete;
-
   SceneGraphNode(SceneGraphNode&& other) = default;
-
   SceneGraphNode& operator=(SceneGraphNode&& other) = delete;
 
   virtual ~SceneGraphNode();
@@ -156,14 +138,22 @@ class SceneGraphNode {
     return dynamic_cast<Derived&>(*attributes_);
   }
 
-  NodeAttributes* getAttributesPtr() const;
+  /**
+   * @brief Get a pointer to the underlying attributes
+   * @tparam Derived Optional type to cast the attributes to
+   * @returns Pointer to downcasted attributes
+   */
+  template <typename Derived = NodeAttributes>
+  Derived* tryAttributes() const {
+    static_assert(std::is_base_of<NodeAttributes, Derived>::value,
+                  "attributes can only be downcast to a derived NodeAttributes class");
+    return dynamic_cast<Derived*>(attributes_.get());
+  }
 
   //! ID of the node
   const NodeId id;
   //! ID of the layer the node belongs to
-  const LayerId layer;
-  //! Timestamp of node (if dynamic)
-  const std::optional<std::chrono::nanoseconds> timestamp;
+  const LayerKey layer;
 
  protected:
   //! pointer to attributes

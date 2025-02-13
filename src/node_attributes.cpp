@@ -413,12 +413,14 @@ bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
          has_active_mesh_indices == derived->has_active_mesh_indices;
 }
 
-AgentNodeAttributes::AgentNodeAttributes() : NodeAttributes() {}
+AgentNodeAttributes::AgentNodeAttributes() : NodeAttributes(), timestamp(0) {}
 
-AgentNodeAttributes::AgentNodeAttributes(const Eigen::Quaterniond& world_R_body,
+AgentNodeAttributes::AgentNodeAttributes(std::chrono::nanoseconds timestamp,
+                                         const Eigen::Quaterniond& world_R_body,
                                          const Eigen::Vector3d& world_P_body,
                                          NodeId external_key)
     : NodeAttributes(world_P_body),
+      timestamp(timestamp),
       world_R_body(world_R_body),
       external_key(external_key) {}
 
@@ -434,6 +436,14 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void AgentNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
+
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version >= io::Version(1, 1, 0)) {
+    serialization::field("timestamp", timestamp);
+  } else {
+    io::warnOutdatedHeader(header);
+  }
+
   serialization::field("world_R_body", world_R_body);
   serialization::field("external_key", external_key);
   serialization::field("dbow_ids", dbow_ids);
@@ -450,7 +460,8 @@ bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
     return false;
   }
 
-  return quaternionsEqual(world_R_body, derived->world_R_body) &&
+  return timestamp == derived->timestamp &&
+         quaternionsEqual(world_R_body, derived->world_R_body) &&
          external_key == derived->external_key && dbow_ids == derived->dbow_ids &&
          dbow_values == derived->dbow_values;
 }
