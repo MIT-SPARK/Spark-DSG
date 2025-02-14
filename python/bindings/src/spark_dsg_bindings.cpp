@@ -42,6 +42,7 @@
 #include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/edge_container.h>
+#include <spark_dsg/labelspace.h>
 #include <spark_dsg/mesh.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
@@ -239,6 +240,40 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              "depth"_a = 1,
              "bbox_type"_a = BoundingBox::Type::AABB);
 
+  py::class_<Metadata>(module, "_Metadata")
+      .def(py::init<>())
+      .def("_get", [](const Metadata& data) { return data().dump(); })
+      .def("_set",
+           [](Metadata& data, const std::string& contents) {
+             data.set(nlohmann::json::parse(contents));
+           })
+      .def("_add", [](Metadata& data, const std::string& contents) {
+        data.add(nlohmann::json::parse(contents));
+      });
+
+  py::class_<Labelspace>(module, "Labelspace")
+      .def(py::init<>())
+      .def(py::init<const std::map<SemanticLabel, std::string>&>())
+      .def("get_label", &Labelspace::getLabel)
+      .def("get_category",
+           [](const Labelspace& labelspace, SemanticLabel label) {
+             return labelspace.getCategory(label);
+           })
+      .def(
+          "get_node_category",
+          [](const Labelspace& labelspace,
+             const SceneGraphNode& node,
+             const std::string& unknown_name) {
+            const auto attrs = node.tryAttributes<SemanticNodeAttributes>();
+            return attrs ? labelspace.getCategory(*attrs, unknown_name) : unknown_name;
+          },
+          "node"_a,
+          "unknown_name"_a = "UNKNOWN")
+      .def("__bool__",
+           [](const Labelspace& labelspace) { return static_cast<bool>(labelspace); })
+      .def_property_readonly("labels_to_names", &Labelspace::labels_to_names)
+      .def_property_readonly("names_to_labels", &Labelspace::names_to_labels);
+
   /**************************************************************************************
    * Bounding Box
    *************************************************************************************/
@@ -295,16 +330,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("last_update_time_ns", &NodeAttributes::last_update_time_ns)
       .def_readwrite("is_active", &NodeAttributes::is_active)
       .def_readwrite("is_predicted", &NodeAttributes::is_predicted)
-      .def("_get_metadata",
-           [](const NodeAttributes& node) {
-             std::stringstream ss;
-             ss << node.metadata;
-             return ss.str();
-           })
-      .def("_set_metadata",
-           [](NodeAttributes& node, const std::string& data) {
-             node.metadata = nlohmann::json::parse(data);
-           })
+      .def_readwrite("_metadata", &NodeAttributes::metadata)
       .def("__repr__", [](const NodeAttributes& attrs) {
         std::stringstream ss;
         ss << attrs;
@@ -432,15 +458,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(py::init<>())
       .def_readwrite("weighted", &EdgeAttributes::weighted)
       .def_readwrite("weight", &EdgeAttributes::weight)
-      .def("_get_metadata",
-           [](const EdgeAttributes& edge) {
-             std::stringstream ss;
-             ss << edge.metadata;
-             return ss.str();
-           })
-      .def("_set_metadata", [](EdgeAttributes& edge, const std::string& data) {
-        edge.metadata = nlohmann::json::parse(data);
-      });
+      .def_readwrite("_metadata", &EdgeAttributes::metadata);
 
   /**************************************************************************************
    * Scene graph node
@@ -864,16 +882,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                   [](const std::filesystem::path& filepath) {
                     return DynamicSceneGraph::load(filepath);
                   })
-      .def("_get_metadata",
-           [](const DynamicSceneGraph& graph) {
-             std::stringstream ss;
-             ss << graph.metadata;
-             return ss.str();
-           })
-      .def("_set_metadata",
-           [](DynamicSceneGraph& graph, const std::string& data) {
-             graph.metadata = nlohmann::json::parse(data);
-           })
+      .def_readwrite("_metadata", &DynamicSceneGraph::metadata)
       .def_property(
           "layers",
           [](const DynamicSceneGraph& graph) {
@@ -961,11 +970,41 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                 graph, reinterpret_cast<const uint8_t*>(view.data()), view.size());
           },
           "contents"_a)
-      .def_static("from_binary", [](const py::bytes& contents) {
-        const auto view = static_cast<std::string_view>(contents);
-        return io::binary::readGraph(reinterpret_cast<const uint8_t*>(view.data()),
-                                     view.size());
-      });
+      .def_static("from_binary",
+                  [](const py::bytes& contents) {
+                    const auto view = static_cast<std::string_view>(contents);
+                    return io::binary::readGraph(
+                        reinterpret_cast<const uint8_t*>(view.data()), view.size());
+                  })
+      .def(
+          "get_labelspace",
+          [](const DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
+            return Labelspace::fromMetadata(graph, layer, partition);
+          },
+          "layer"_a,
+          "partition"_a = 0)
+      .def(
+          "get_labelspace",
+          [](const DynamicSceneGraph& graph, const std::string& name) {
+            return Labelspace::fromMetadata(graph, name);
+          },
+          "name"_a)
+      .def(
+          "set_labelspace",
+          [](DynamicSceneGraph& graph,
+             const Labelspace& labelspace,
+             LayerId layer,
+             PartitionId partition) { labelspace.save(graph, layer, partition); },
+          "labelspace"_a,
+          "layer"_a,
+          "partition"_a = 0)
+      .def(
+          "set_labelspace",
+          [](DynamicSceneGraph& graph,
+             const Labelspace& labelspace,
+             const std::string& name) { labelspace.save(graph, name); },
+          "labelspace"_a,
+          "name"_a);
 
   /**************************************************************************************
    * Zmq Interface

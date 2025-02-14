@@ -79,9 +79,7 @@ DynamicSceneGraph::DynamicSceneGraph(bool empty)
 
 DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids,
                                      const LayerNames& layer_names)
-    : metadata(nlohmann::json::object()),
-      layer_ids_(layersFromNames(layer_names, layer_ids)),
-      layer_names_(layer_names) {
+    : layer_ids_(layersFromNames(layer_names, layer_ids)), layer_names_(layer_names) {
   clear();
 }
 
@@ -562,6 +560,8 @@ bool DynamicSceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
 
 bool DynamicSceneGraph::mergeGraph(const DynamicSceneGraph& other,
                                    const GraphMergeConfig& config) {
+  metadata.add(other.metadata());
+
   other.visitLayers([&](LayerKey layer_key, const SceneGraphLayer& other_layer) {
     auto& layer = layerFromKey(layer_key);
 

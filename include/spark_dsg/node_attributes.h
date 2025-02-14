@@ -38,7 +38,6 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -46,6 +45,7 @@
 #include "spark_dsg/bounding_box.h"
 #include "spark_dsg/color.h"
 #include "spark_dsg/mesh.h"
+#include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_types.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 
@@ -115,7 +115,7 @@ struct NodeAttributes {
   //! whether the node was observed by Hydra, or added as a prediction
   bool is_predicted;
   //! Arbitrary node metadata
-  nlohmann::json metadata;
+  Metadata metadata;
 
   /**
    * @brief output attribute information

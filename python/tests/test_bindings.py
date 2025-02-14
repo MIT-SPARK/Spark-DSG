@@ -298,21 +298,21 @@ def test_node_counts(resource_dir):
 def test_graph_metadata(tmp_path):
     """Test that graph metadata works as expected."""
     G = dsg.DynamicSceneGraph()
-    G.add_metadata({"foo": 5})
-    G.add_metadata({"bar": [1, 2, 3, 4, 5]})
-    G.add_metadata({"something": {"a": 13, "b": 42.0, "c": "world"}})
+    G.metadata.add({"foo": 5})
+    G.metadata.add({"bar": [1, 2, 3, 4, 5]})
+    G.metadata.add({"something": {"a": 13, "b": 42.0, "c": "world"}})
 
     graph_path = tmp_path / "graph.json"
     G.save(graph_path)
     G_new = dsg.DynamicSceneGraph.load(graph_path)
-    assert G_new.metadata == {
+    assert G_new.metadata.get() == {
         "foo": 5,
         "bar": [1, 2, 3, 4, 5],
         "something": {"a": 13, "b": 42.0, "c": "world"},
     }
 
-    G.add_metadata({"something": {"b": 643.0, "other": "foo"}})
-    assert G.metadata == {
+    G.metadata.add({"something": {"b": 643.0, "other": "foo"}})
+    assert G.metadata.get() == {
         "foo": 5,
         "bar": [1, 2, 3, 4, 5],
         "something": {"a": 13, "b": 643.0, "c": "world", "other": "foo"},
@@ -324,12 +324,25 @@ def test_attribute_metadata(tmp_path):
     G = dsg.DynamicSceneGraph()
 
     attrs = dsg.ObjectNodeAttributes()
-    attrs.add_metadata({"test": {"a": 5, "c": "hello"}})
-    attrs.add_metadata({"test": {"a": 6, "b": 42.0}})
+    attrs.metadata.add({"test": {"a": 5, "c": "hello"}})
+    attrs.metadata.add({"test": {"a": 6, "b": 42.0}})
     G.add_node(dsg.DsgLayers.OBJECTS, dsg.NodeSymbol("O", 1), attrs)
 
     graph_path = tmp_path / "graph.json"
     G.save(graph_path)
     G_new = dsg.DynamicSceneGraph.load(graph_path)
     new_attrs = G_new.get_node(dsg.NodeSymbol("O", 1)).attributes
-    assert new_attrs.metadata == {"test": {"a": 6, "b": 42.0, "c": "hello"}}
+    assert new_attrs.metadata.get() == {"test": {"a": 6, "b": 42.0, "c": "hello"}}
+
+
+def test_labelspace():
+    labelspace = dsg.Labelspace({0: "wall", 1: "floor", 2: "ceiling", 4: "desk"})
+    assert labelspace.get_category(1) == "floor"
+    assert labelspace.get_category(3) is None
+    assert labelspace.get_label("wall") == 0
+    assert labelspace.get_label("lamp") is None
+
+    G = dsg.DynamicSceneGraph()
+    G.set_labelspace(labelspace, 0, 1)
+    assert not G.get_labelspace(0, 0)
+    assert G.get_labelspace(0, 1).labels_to_names == labelspace.labels_to_names
