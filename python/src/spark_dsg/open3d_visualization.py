@@ -53,25 +53,31 @@ except ImportError as e:
 
 
 LAYER_OFFSETS = {
-    DsgLayers.OBJECTS: 0.0,
-    DsgLayers.PLACES: 6.0,
-    DsgLayers.ROOMS: 12.0,
-    DsgLayers.BUILDINGS: 16.0,
+    DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer: 0.0,
+    DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer: 6.0,
+    DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer: 12.0,
+    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS).layer: 16.0,
 }
 
-LAYER_IDS = (DsgLayers.OBJECTS, DsgLayers.PLACES, DsgLayers.ROOMS, DsgLayers.BUILDINGS)
+LAYER_IDS = (
+    DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer,
+    DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer,
+    DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer,
+    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS).layer,
+)
+
 CATEGORY_MAP = {
-    "O": DsgLayers.OBJECTS,
-    "p": DsgLayers.PLACES,
-    "R": DsgLayers.ROOMS,
-    "B": DsgLayers.BUILDINGS,
+    "O": DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer,
+    "p": DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer,
+    "R": DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer,
+    "B": DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS).layer,
 }
 
 LAYER_NAMES = {
-    DsgLayers.OBJECTS: "objects",
-    DsgLayers.PLACES: "places",
-    DsgLayers.ROOMS: "rooms",
-    DsgLayers.BUILDINGS: "buildings",
+    DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer: "objects",
+    DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer: "places",
+    DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer: "rooms",
+    DsgLayers.name_to_layer_id(DsgLayers.BUILDINGS).layer: "buildings",
 }
 
 
@@ -162,7 +168,7 @@ class RemoteVisualizer:
 
         if self._include_dynamic:
             if G.has_layer(DsgLayers.AGENTS, "a"):
-                self._update_dynamic_layer(G.get_dynamic_layer(DsgLayers.AGENTS, "a"))
+                self._update_dynamic_layer(G.get_layer(DsgLayers.AGENTS, "a"))
 
     def _update_mesh_geometry(self, G):
         if not G.has_mesh():
@@ -334,7 +340,9 @@ class RemoteVisualizer:
         self._names = [None] * len(self._id_map)
         for node_id in self._id_map:
             node = G.get_node(node_id)
-            if node.layer == DsgLayers.OBJECTS or node.layer == DsgLayers.ROOMS:
+            if node.layer == DsgLayers.name_to_layer_id(
+                DsgLayers.OBJECTS
+            ).layer or node.layer == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer:
                 self._names[self._id_map[node_id]] = node.attributes.name
 
         for name, point in zip(self._names, self._points):

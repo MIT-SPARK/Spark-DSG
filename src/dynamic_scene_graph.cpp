@@ -180,6 +180,12 @@ const Layer& DynamicSceneGraph::addLayer(LayerId layer_id,
 
 void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
   if (!partition) {
+    auto it = layers_.find(layer);
+    if (it != layers_.end()) {
+      while (!it->second->nodes_.empty()) {
+        removeNode(it->second->nodes_.begin()->first);
+      }
+    }
     layers_.erase(layer);
   }
 
@@ -188,7 +194,14 @@ void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
     return;
   }
 
-  iter->second.erase(partition);
+  auto part_iter = iter->second.find(partition);
+  if (part_iter != iter->second.end()) {
+    while (!part_iter->second->nodes_.empty()) {
+      removeNode(part_iter->second->nodes_.begin()->first);
+    }
+    iter->second.erase(part_iter);
+  }
+
   if (iter->second.empty()) {
     layer_partitions_.erase(iter);
   }

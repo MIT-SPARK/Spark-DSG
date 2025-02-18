@@ -140,7 +140,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readonly_static("MESH_PLACES", &DsgLayers::MESH_PLACES)
       .def_readonly_static("ROOMS", &DsgLayers::ROOMS)
       .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS)
-      .def("name_to_layer_id", &DsgLayers::nameToLayerId);
+      .def_static(
+          "name_to_layer_id",
+          [](const std::string& name) -> std::optional<LayerKey> {
+              return DsgLayers::nameToLayerId(name);
+          },
+          "name"_a);
 
   py::class_<LayerKey>(module, "LayerKey")
       .def(py::init<LayerId>())
@@ -728,6 +733,13 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "partition"_a = 0,
           "name"_a = "",
           py::return_value_policy::reference_internal)
+      .def(
+          "remove_layer",
+          [](DynamicSceneGraph& graph, LayerId layer, PythonPartitionId partition) {
+              graph.removeLayer(layer, partition);
+          },
+          "layer"_a,
+          "partition"_a = 0)
       .def(
           "add_node",
           [](DynamicSceneGraph& graph,
