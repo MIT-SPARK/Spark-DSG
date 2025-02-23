@@ -340,6 +340,44 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
   }
 }
 
+TEST(SceneGraphLayerTests, MergeLayerTransformCorrect) {
+  SceneGraphLayer layer_1(1);
+  SceneGraphLayer layer_2(1);
+
+  for (size_t i = 0; i < 3; ++i) {
+    Eigen::Vector3d node_pos;
+    node_pos << static_cast<double>(i), 0.0, 0.0;
+    EXPECT_TRUE(layer_1.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
+    layer_1.getNode(i).attributes().is_active = true;
+  }
+
+  for (size_t i = 0; i < 5; ++i) {
+    Eigen::Vector3d node_pos;
+    node_pos << static_cast<double>(i + 10), 0.0, 0.0;
+    EXPECT_TRUE(layer_2.emplaceNode(i, std::make_unique<NodeAttributes>(node_pos)));
+  }
+  Eigen::Matrix4d transform_matrix;
+  transform_matrix << -1, 0, 0, 0, 0, -1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1;
+
+  Eigen::Affine3d transform(transform_matrix);
+  std::vector<NodeId> new_nodes;
+  layer_1.mergeLayer(layer_2, {}, &new_nodes, &transform);
+
+  for (size_t i = 0; i < 3; i++) {
+    Eigen::Vector3d result = layer_1.getNode(i).attributes().position;
+    EXPECT_NEAR(static_cast<double>(i) + 10, result(0), 1.0e-9);
+    EXPECT_NEAR(0.0, result(1), 1.0e-9);
+    EXPECT_NEAR(0.0, result(2), 1.0e-9);
+  }
+
+  for (size_t i = 3; i < 5; i++) {
+    Eigen::Vector3d result = layer_1.getNode(i).attributes().position;
+    EXPECT_NEAR(-static_cast<double>(i) - 10, result(0), 1.0e-9);
+    EXPECT_NEAR(2.0, result(1), 1.0e-9);
+    EXPECT_NEAR(3.0, result(2), 1.0e-9);
+  }
+}
+
 TEST(SceneGraphLayerTests, GetNeighborhoodCorrect) {
   SceneGraphLayer layer(1);
 
