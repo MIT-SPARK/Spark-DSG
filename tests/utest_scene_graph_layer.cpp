@@ -341,8 +341,8 @@ TEST(SceneGraphLayerTests, MergeLayerCorrect) {
 }
 
 TEST(SceneGraphLayerTests, MergeLayerTransformCorrect) {
-  IsolatedSceneGraphLayer layer_1(1);
-  IsolatedSceneGraphLayer layer_2(1);
+  SceneGraphLayer layer_1(1);
+  SceneGraphLayer layer_2(1);
 
   for (size_t i = 0; i < 3; ++i) {
     Eigen::Vector3d node_pos;
