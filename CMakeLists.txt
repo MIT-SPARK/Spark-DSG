@@ -1,18 +1,24 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(spark_dsg VERSION 1.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_options(-Wall -Wextra)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra)
+endif()
 
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  # from: https://www.kitware.com//cmake-and-the-default-build-type/
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+option(BUILD_SHARED_LIBS "Build shared libs" ON)
 option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
-option(SPARK_DSG_BUILD_TESTS "Build tests" ON)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
-option(SPARK_DSG_PROFILE_BUILD "Profile build time" OFF)
-option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 find_package(nlohmann_json REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -20,14 +26,10 @@ find_package(Threads REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(zmq libzmq)
-
-if(SPARK_DSG_PROFILE_BUILD)
-  add_compile_options(-ftime-trace)
-endif()
-
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
   set(SPARK_DSG_USE_ZMQ 1)
 else()
+  message(WARNING "ZMQ not found! Disabling ZMQ interface")
   set(SPARK_DSG_USE_ZMQ 0)
 endif()
 configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
@@ -66,31 +68,30 @@ add_library(
   src/serialization/versioning.cpp
 )
 
-if(NOT BUILD_SHARED_LIBS)
-  set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
-endif()
-
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC $<INSTALL_INTERFACE:include>
-         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC Eigen3::Eigen nlohmann_json::nlohmann_json
   PRIVATE Threads::Threads
 )
-
+if(NOT BUILD_SHARED_LIBS)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
+endif()
 if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${zmq_LIBRARIES})
   target_include_directories(${PROJECT_NAME} PRIVATE ${zmq_INCLUDE_DIRS})
 endif()
 
+add_library(spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+
 if(SPARK_DSG_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
+if(SPARK_DSG_BUILD_PYTHON)
   if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/.git)
     find_package(Git REQUIRED)
     execute_process(
@@ -103,17 +104,14 @@ if(SPARK_DSG_BUILD_PYTHON OR SPARK_DSG_BUILD_TESTS)
   add_subdirectory(python)
 endif()
 
-if(SPARK_DSG_BUILD_TESTS)
+include(CTest)
+if(BUILD_TESTING)
   enable_testing()
   add_subdirectory(tests)
 endif()
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-
-add_library(
-  spark_dsg::${PROJECT_NAME} ALIAS ${PROJECT_NAME}
-)
 
 write_basic_package_version_file(
   ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION}

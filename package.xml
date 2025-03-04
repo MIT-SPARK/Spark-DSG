@@ -13,6 +13,8 @@
 
   <buildtool_depend>cmake</buildtool_depend>
   <depend>eigen</depend>
+  <!-- NOTE(nathan) the rosdep key for this changes between 20.04 and 22.04 so we use both -->
+  <depend>libzmq3-dev</depend>
   <depend>libzmqpp-dev</depend>
   <depend>nlohmann-json-dev</depend>
   <depend>python3-dev</depend>
