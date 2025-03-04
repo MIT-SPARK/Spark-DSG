@@ -109,10 +109,9 @@ setup(
             "spark_dsg._dsg_bindings",
             sourcedir=".",
             extra_cmake_flags=[
-                "-DSPARK_DSG_BUILD_TESTS=OFF",
+                "-DBUILD_TESTING=OFF",
                 "-DSPARK_DSG_BUILD_EXAMPLES=OFF",
                 "-DSPARK_DSG_BUILD_PYTHON=ON",
-                "-DBUILD_SHARED_LIBS=OFF",
             ],
         )
     ],
