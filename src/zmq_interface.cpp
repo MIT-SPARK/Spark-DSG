@@ -101,7 +101,7 @@ struct ZmqReceiver::Detail {
   Detail(const std::string& url, size_t, bool conflate) {
     socket.reset(new zmq::socket_t(ZmqContextHolder::instance().context(), ZMQ_SUB));
     socket->connect(url);
-#if CPPZMQ_VERSION < ZMQ_MAKE_VERSION(4, 7, 0)
+#if CPPZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 7, 0)
     socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
 #else
     socket->set(zmq::sockopt::subscribe, "");
@@ -109,7 +109,7 @@ struct ZmqReceiver::Detail {
 
     if (conflate) {
       int conflate_flag = 1;
-#if CPPZMQ_VERSION < ZMQ_MAKE_VERSION(4, 7, 0)
+#if CPPZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 7, 0)
       socket->setsockopt(ZMQ_CONFLATE, &conflate_flag, sizeof(conflate_flag));
 #else
       socket->set(zmq::sockopt::conflate, conflate_flag);
