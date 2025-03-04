@@ -44,6 +44,10 @@ struct BoundingBox;
 void to_json(nlohmann::json& j, const BoundingBox& b);
 void from_json(const nlohmann::json& j, BoundingBox& b);
 
+struct LayerKey;
+void to_json(nlohmann::json& j, const LayerKey& key);
+void from_json(const nlohmann::json& j, LayerKey& key);
+
 struct NearestVertexInfo;
 void to_json(nlohmann::json& j, const NearestVertexInfo& b);
 void from_json(const nlohmann::json& j, NearestVertexInfo& b);

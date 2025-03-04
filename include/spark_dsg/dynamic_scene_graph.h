@@ -82,7 +82,7 @@ class DynamicSceneGraph {
   //! Container type for the layer ids
   using LayerIds = std::vector<LayerId>;
   //! Container type for the layer name to ID mapping
-  using LayerNames = std::map<std::string, LayerId>;
+  using LayerNames = std::map<std::string, LayerKey>;
   //! Edge container
   using Edges = EdgeContainer::Edges;
   //! Scene graph layer
@@ -127,10 +127,9 @@ class DynamicSceneGraph {
   /**
    * @brief Check whether the layer exists and is valid
    * @param layer_name Layer name to check
-   * @param partition Partition to check if specified
    * @returns Returns true if the layer exists and is valid
    */
-  bool hasLayer(const std::string& layer_name, PartitionId partition = 0) const;
+  bool hasLayer(const std::string& layer_name) const;
   /**
    * @brief Attempt to retrieve the specified layer
    * @param layer_id Layer ID to find
@@ -141,11 +140,9 @@ class DynamicSceneGraph {
   /**
    * @brief Attempt to retrieve the specified layer
    * @param layer_name Layer name to find
-   * @param partition Partition to find if specified
    * @returns Returns a valid pointer to the layer if it exists (nullptr otherwise)
    */
-  const Layer* findLayer(const std::string& layer_name,
-                         PartitionId partition = 0) const;
+  const Layer* findLayer(const std::string& layer_name) const;
   /**
    * @brief Get a layer if the layer exists
    * @param layer_id layer to get
@@ -157,32 +154,21 @@ class DynamicSceneGraph {
   /**
    * @brief Get a layer if the layer exists
    * @param layer_name layer to get
-   * @param partition Partition to get if specified
    * @returns a constant reference to the requested layer
    * @throws std::out_of_range if the layer name doesn't exist
    */
-  const Layer& getLayer(const std::string& layer_name, PartitionId partition = 0) const;
+  const Layer& getLayer(const std::string& layer_name) const;
   /**
    * @brief Add a new layer with an optional name
    * @param layer_id Layer ID
+   * @param partition Partition to add
    * @param name Optional layer name
-   */
-  const Layer& addLayer(LayerId layer_id, const std::string& name = "");
-  /**
-   * @brief Add a new partition to a layer
-   * @param layer_id Layer to add partition to
-   * @param partition Partition to add
    * @return Layer that was created or existed previously
    */
-  const Layer& addLayer(LayerId layer_id, PartitionId partition);
-  /**
-   * @brief Add a new partition to a layer
-   * @param name Layer name to add
-   * @param partition Partition to add
-   * @return Layer that was created or existed previously
-   * @throws std::out_of_range if the layer name doesn't exist
-   */
-  const Layer& addLayer(const std::string& name, PartitionId partition);
+  const Layer& addLayer(LayerId layer_id,
+                        PartitionId partition = 0,
+                        const std::string& name = "");
+
   /**
    * @brief Remove a layer from the graph if it exists
    * @param layer Layer ID
@@ -237,13 +223,11 @@ class DynamicSceneGraph {
    * @param layer layer to add to
    * @param node_id node to create
    * @param attrs node attributes
-   * @param partition to add to
    * @return true if the node was added successfully
    */
   bool emplaceNode(const std::string& layer,
                    NodeId node_id,
-                   std::unique_ptr<NodeAttributes>&& attrs,
-                   PartitionId partition = 0);
+                   std::unique_ptr<NodeAttributes>&& attrs);
   /**
    * @brief construct and add a node to the specified layer in the graph
    * @param node_id node to create
@@ -263,8 +247,7 @@ class DynamicSceneGraph {
    */
   bool addOrUpdateNode(const std::string& layer,
                        NodeId node_id,
-                       std::unique_ptr<NodeAttributes>&& attrs,
-                       PartitionId partition = 0);
+                       std::unique_ptr<NodeAttributes>&& attrs);
   /**
    * @brief add a node to the graph or update an existing node
    * @param layer_id layer to add to
@@ -542,12 +525,10 @@ class DynamicSceneGraph {
 
  public:
   //! @brief Get layer key for a named layer
-  std::optional<LayerKey> getLayerKey(const std::string& name,
-                                      PartitionId partition = 0) const {
+  std::optional<LayerKey> getLayerKey(const std::string& name) const {
     auto iter = layer_names_.find(name);
-    return iter == layer_names_.end()
-               ? std::nullopt
-               : std::optional<LayerKey>({iter->second, partition});
+    return iter == layer_names_.end() ? std::nullopt
+                                      : std::optional<LayerKey>(iter->second);
   }
 
   //! @brief Current static layer ids in the graph
@@ -560,8 +541,6 @@ class DynamicSceneGraph {
   const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
   //! @brief Const reference to the interlayer edges
   const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
-  //! @brief Constant reference to partitions for a particular layer
-  const Partitions& layer_partition(const std::string& name) const;
   //! @brief Constant reference to partitions for a particular layer
   const Partitions& layer_partition(LayerId layer_id) const;
   //! @brief Constant reference to all layer partitions

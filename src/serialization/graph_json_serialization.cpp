@@ -171,14 +171,17 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
 
   const auto layer_ids = record.at("layer_ids").get<DynamicSceneGraph::LayerIds>();
   DynamicSceneGraph::LayerNames layer_names;
-  if (record.contains("layer_names")) {
-    layer_names = record.at("layer_names").get<DynamicSceneGraph::LayerNames>();
-  } else {
+  if (header.version < io::Version(1, 1, 0)) {
     layer_names = {{DsgLayers::OBJECTS, 2},
                    {DsgLayers::AGENTS, 2},
                    {DsgLayers::PLACES, 3},
                    {DsgLayers::ROOMS, 4},
                    {DsgLayers::BUILDINGS, 5}};
+  } else if (header.version < io::Version(1, 1, 1)) {
+    const auto names = record.at("layer_names").get<std::map<std::string, LayerId>>();
+    layer_names = DynamicSceneGraph::LayerNames(names.begin(), names.end());
+  } else {
+    layer_names = record.at("layer_names").get<DynamicSceneGraph::LayerNames>();
   }
 
   auto graph = std::make_shared<DynamicSceneGraph>(layer_ids, layer_names);

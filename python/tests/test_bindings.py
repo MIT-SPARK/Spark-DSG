@@ -47,8 +47,8 @@ def test_empty_graph():
 def test_implicit_prefix():
     """Test that we got rid of the need for explicit layer prefix construction."""
     G = dsg.DynamicSceneGraph()
-    G.add_layer(dsg.DsgLayers.AGENTS, "a")
-    assert G.has_layer(dsg.DsgLayers.AGENTS, "a")
+    G.add_layer(2, "a", dsg.DsgLayers.AGENTS)
+    assert G.has_layer(2, "a")
 
 
 def test_layer_ids(resource_dir):
@@ -151,11 +151,12 @@ def test_agent_attributes(resource_dir):
     mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
-    agents = G.get_layer(dsg.DsgLayers.AGENTS, "a")
+    layer_id = G.get_layer_id(dsg.DsgLayers.AGENTS).layer
+    agents = G.get_layer(layer_id, "a")
     for agent in agents.nodes:
         assert hasattr(agent, "id")
         assert agent.id.category == "a"
-        assert agent.layer == G.get_layer_id(dsg.DsgLayers.AGENTS, "a")
+        assert agent.layer == dsg.LayerKey(layer_id, "a")
 
         _check_parent(agent)
         _check_siblings(G, agent)

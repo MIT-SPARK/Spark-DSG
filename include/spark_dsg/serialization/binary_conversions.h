@@ -43,6 +43,10 @@ struct BoundingBox;
 void read_binary(const serialization::BinaryDeserializer& s, BoundingBox& box);
 void write_binary(serialization::BinarySerializer& s, const BoundingBox& box);
 
+struct LayerKey;
+void read_binary(const serialization::BinaryDeserializer& s, LayerKey& key);
+void write_binary(serialization::BinarySerializer& s, const LayerKey& key);
+
 struct NearestVertexInfo;
 void read_binary(const serialization::BinaryDeserializer& s, NearestVertexInfo& info);
 void write_binary(serialization::BinarySerializer& s, const NearestVertexInfo& info);

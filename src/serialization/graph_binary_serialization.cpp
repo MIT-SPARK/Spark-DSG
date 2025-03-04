@@ -223,12 +223,23 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);
   const auto edge_factory = loadFactory<EdgeAttributes>(header, deserializer);
 
-  if (header.version >= io::Version(1, 1, 0)) {
-    std::map<std::string, LayerId> layer_names;
+  std::map<std::string, LayerKey> layer_names;
+  if (header.version < io::Version(1, 1, 0)) {
+    layer_names = {{DsgLayers::OBJECTS, 2},
+                   {DsgLayers::AGENTS, 2},
+                   {DsgLayers::PLACES, 3},
+                   {DsgLayers::ROOMS, 4},
+                   {DsgLayers::BUILDINGS, 5}};
+  } else if (header.version < io::Version(1, 1, 1)) {
+    std::map<std::string, LayerId> names;
+    deserializer.read(names);
+    layer_names = DynamicSceneGraph::LayerNames(names.begin(), names.end());
+  } else {
     deserializer.read(layer_names);
-    for (const auto& [name, layer_id] : layer_names) {
-      graph.addLayer(layer_id, name);
-    }
+  }
+
+  for (const auto& [name, key] : layer_names) {
+    graph.addLayer(key.layer, key.partition, name);
   }
 
   if (header.version >= io::Version(1, 0, 6)) {
