@@ -71,8 +71,8 @@ SceneGraphLogger::~SceneGraphLogger() {}
 void SceneGraphLogger::logGraph(const DynamicSceneGraph& graph) {
   const auto& name_to_layer = graph.layer_names();
   std::map<LayerId, std::string> layer_names;
-  for (const auto& [name, layer] : name_to_layer) {
-    layer_names.emplace(layer, name);
+  for (const auto& [name, key] : name_to_layer) {
+    layer_names.emplace(key.layer, name);
   }
 
   // What I want to log: for each layer, the number of active nodes, number of

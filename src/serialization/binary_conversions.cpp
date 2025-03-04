@@ -77,6 +77,18 @@ void write_binary(serialization::BinarySerializer& s, const BoundingBox& box) {
   s.write(box.world_R_center);
 }
 
+void write_binary(serialization::BinarySerializer& s, const LayerKey& key) {
+  s.startFixedArray(2);
+  s.write(key.layer);
+  s.write(key.partition);
+}
+
+void read_binary(const serialization::BinaryDeserializer& s, LayerKey& key) {
+  s.checkFixedArrayLength(2);
+  s.read(key.layer);
+  s.read(key.partition);
+}
+
 void read_binary(const serialization::BinaryDeserializer& s, NearestVertexInfo& info) {
   // array: [block_index, pos, vertex_index, label]
   s.checkFixedArrayLength(4);

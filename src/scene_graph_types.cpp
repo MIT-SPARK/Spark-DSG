@@ -63,7 +63,7 @@ bool LayerKey::operator==(const LayerKey& other) const {
   return layer == other.layer && partition == other.partition;
 }
 
-std::optional<LayerId> DsgLayers::nameToLayerId(const std::string& name) {
+std::optional<LayerKey> DsgLayers::nameToLayerId(const std::string& name) {
   if (name == DsgLayers::SEGMENTS) {
     return 1;
   } else if (name == DsgLayers::OBJECTS) {
@@ -73,7 +73,7 @@ std::optional<LayerId> DsgLayers::nameToLayerId(const std::string& name) {
   } else if (name == DsgLayers::PLACES) {
     return 3;
   } else if (name == DsgLayers::MESH_PLACES) {
-    return 20;
+    return LayerKey{3, 1};
   } else if (name == DsgLayers::ROOMS) {
     return 4;
   } else if (name == DsgLayers::BUILDINGS) {

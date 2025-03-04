@@ -93,7 +93,7 @@ struct DsgLayers {
   inline const static std::string BUILDINGS = "BUILDINGS";
 
   //! Get default layer ID for each layer name
-  static std::optional<LayerId> nameToLayerId(const std::string& name);
+  static std::optional<LayerKey> nameToLayerId(const std::string& name);
 };
 
 namespace graph_utilities {

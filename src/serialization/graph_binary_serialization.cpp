@@ -224,10 +224,10 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   const auto edge_factory = loadFactory<EdgeAttributes>(header, deserializer);
 
   if (header.version >= io::Version(1, 1, 0)) {
-    std::map<std::string, LayerId> layer_names;
+    std::map<std::string, LayerKey> layer_names;
     deserializer.read(layer_names);
-    for (const auto& [name, layer_id] : layer_names) {
-      graph.addLayer(layer_id, name);
+    for (const auto& [name, key] : layer_names) {
+      graph.addLayer(key.layer, key.partition, name);
     }
   }
 

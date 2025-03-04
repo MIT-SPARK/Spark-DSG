@@ -89,6 +89,15 @@ void from_json(const json& j, BoundingBox& b) {
   b.world_R_center = world_q_center.toRotationMatrix();
 }
 
+void to_json(json& j, const LayerKey& key) {
+  j = json{{"layer", key.layer}, {"partition", key.partition}};
+}
+
+void from_json(const json& j, LayerKey& key) {
+  key.layer = j.at("layer").get<LayerId>();
+  key.partition = j.at("partition").get<PartitionId>();
+}
+
 void to_json(json& j, const NearestVertexInfo& info) {
   j = json{
       {"block", info.block}, {"voxel_pos", info.voxel_pos}, {"vertex", info.vertex}};

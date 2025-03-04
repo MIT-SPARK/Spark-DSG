@@ -59,8 +59,8 @@ using LayerIds = DynamicSceneGraph::LayerIds;
 LayerIds layersFromNames(const LayerNames& layer_names,
                          const LayerIds& prev_layers = {}) {
   std::set<LayerId> layers(prev_layers.begin(), prev_layers.end());
-  for (const auto& [name, layer_id] : layer_names) {
-    layers.insert(layer_id);
+  for (const auto& [name, key] : layer_names) {
+    layers.insert(key.layer);
   }
 
   return LayerIds(layers.begin(), layers.end());
@@ -113,14 +113,13 @@ bool DynamicSceneGraph::hasLayer(LayerId layer_id, PartitionId partition) const 
   return findLayer(layer_id, partition) != nullptr;
 }
 
-bool DynamicSceneGraph::hasLayer(const std::string& layer_name,
-                                 PartitionId partition) const {
+bool DynamicSceneGraph::hasLayer(const std::string& layer_name) const {
   auto iter = layer_names_.find(layer_name);
   if (iter == layer_names_.end()) {
     return false;
   }
 
-  return hasLayer(iter->second, partition);
+  return hasLayer(iter->second.layer, iter->second.partition);
 }
 
 const Layer* DynamicSceneGraph::findLayer(LayerId layer, PartitionId partition) const {
@@ -138,14 +137,13 @@ const Layer* DynamicSceneGraph::findLayer(LayerId layer, PartitionId partition) 
   return iter == partitions->second.end() ? nullptr : iter->second.get();
 }
 
-const Layer* DynamicSceneGraph::findLayer(const std::string& name,
-                                          PartitionId partition) const {
+const Layer* DynamicSceneGraph::findLayer(const std::string& name) const {
   auto iter = layer_names_.find(name);
   if (iter == layer_names_.end()) {
     return nullptr;
   }
 
-  return findLayer(iter->second, partition);
+  return findLayer(iter->second.layer, iter->second.partition);
 }
 
 const Layer& DynamicSceneGraph::getLayer(LayerId layer_id,
@@ -160,42 +158,24 @@ const Layer& DynamicSceneGraph::getLayer(LayerId layer_id,
   return *layer;
 }
 
-const Layer& DynamicSceneGraph::getLayer(const std::string& name,
-                                         PartitionId partition) const {
+const Layer& DynamicSceneGraph::getLayer(const std::string& name) const {
   auto iter = layer_names_.find(name);
   if (iter == layer_names_.end()) {
-    std::stringstream ss;
-    ss << "missing layer '" << name << "'";
-    if (partition) {
-      ss << " [" << partition << "]";
-    }
-
-    throw std::out_of_range(ss.str());
+    throw std::out_of_range("missing layer '" + name + "'");
   }
 
-  return getLayer(iter->second, partition);
+  return getLayer(iter->second.layer, iter->second.partition);
 }
 
-const Layer& DynamicSceneGraph::addLayer(LayerId layer_id, const std::string& name) {
+const Layer& DynamicSceneGraph::addLayer(LayerId layer_id,
+                                         PartitionId partition,
+                                         const std::string& name) {
+  const LayerKey key{layer_id, partition};
   if (!name.empty()) {
-    layer_names_.emplace(name, layer_id);
+    layer_names_.emplace(name, key);
   }
 
-  return layerFromKey(layer_id);
-}
-
-const Layer& DynamicSceneGraph::addLayer(LayerId layer_id, PartitionId partition) {
-  return layerFromKey({layer_id, partition});
-}
-
-const Layer& DynamicSceneGraph::addLayer(const std::string& name,
-                                         PartitionId partition) {
-  auto iter = layer_names_.find(name);
-  if (iter == layer_names_.end()) {
-    throw std::out_of_range("no layer is named '" + name + "'");
-  }
-
-  return layerFromKey({iter->second, partition});
+  return layerFromKey(key);
 }
 
 void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
@@ -239,26 +219,25 @@ bool DynamicSceneGraph::emplaceNode(LayerId layer_id,
 
 bool DynamicSceneGraph::emplaceNode(const std::string& layer,
                                     NodeId node_id,
-                                    std::unique_ptr<NodeAttributes>&& attrs,
-                                    PartitionId partition) {
+                                    std::unique_ptr<NodeAttributes>&& attrs) {
   auto iter = layer_names_.find(layer);
   if (iter == layer_names_.end()) {
     return false;
   }
 
-  return emplaceNode(iter->second, node_id, std::move(attrs), partition);
+  return emplaceNode(iter->second, node_id, std::move(attrs));
 }
 
 bool DynamicSceneGraph::addOrUpdateNode(const std::string& layer,
                                         NodeId node_id,
-                                        std::unique_ptr<NodeAttributes>&& attrs,
-                                        PartitionId partition) {
+                                        std::unique_ptr<NodeAttributes>&& attrs) {
   auto iter = layer_names_.find(layer);
   if (iter == layer_names_.end()) {
     return false;
   }
 
-  return addOrUpdateNode(iter->second, node_id, std::move(attrs), partition);
+  return addOrUpdateNode(
+      iter->second.layer, node_id, std::move(attrs), iter->second.partition);
 }
 
 bool DynamicSceneGraph::addOrUpdateNode(LayerId layer_id,
@@ -895,15 +874,6 @@ void DynamicSceneGraph::visitLayers(const LayerCallback& cb) {
 void DynamicSceneGraph::visitLayers(const ConstLayerCallback& cb) const {
   const_cast<DynamicSceneGraph*>(this)->visitLayers(
       [&cb](LayerKey key, Layer& layer) { cb(key, layer); });
-}
-
-const Partitions& DynamicSceneGraph::layer_partition(const std::string& name) const {
-  auto iter = layer_names_.find(name);
-  if (iter == layer_names_.end()) {
-    throw std::out_of_range("missing layer '" + name + "'");
-  }
-
-  return layer_partition(iter->second);
 }
 
 const Partitions& DynamicSceneGraph::layer_partition(LayerId layer_id) const {
