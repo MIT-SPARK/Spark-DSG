@@ -473,6 +473,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("get_parent", &SceneGraphNode::getParent)
       .def("siblings", &SceneGraphNode::siblings)
       .def("children", &SceneGraphNode::children)
+      .def("parents", &SceneGraphNode::parents)
+      .def("connections", &SceneGraphNode::connections)
       .def_property("attributes",
                     &SceneGraphNode::tryAttributes<NodeAttributes>,
                     &SceneGraphNode::tryAttributes<NodeAttributes>,
@@ -983,7 +985,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              const Labelspace& labelspace,
              const std::string& name) { labelspace.save(graph, name); },
           "labelspace"_a,
-          "name"_a);
+          "name"_a)
+      .def_property_readonly("layer_ids", &DynamicSceneGraph::layer_ids)
+      .def_property_readonly("layer_names", &DynamicSceneGraph::layer_names);
 
   /**************************************************************************************
    * Zmq Interface
