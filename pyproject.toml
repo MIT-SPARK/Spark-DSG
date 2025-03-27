@@ -37,15 +37,14 @@ viz = [
 [project.urls]
 Repository = "https://github.com/MIT-SPARK/Spark-DSG"
 
-[tool.scikit-build]
-cmake.define = {
-  SPARK_DSG_BUILD_PYTHON = "ON",
-}
+[tool.scikit-build.cmake.define]
+SPARK_DSG_BUILD_PYTHON = "ON"
+SPARK_DSG_BUILD_EXAMPLES = "OFF"
+BUILD_TESTING = "OFF"
+BUILD_SHARED_LIBS = "OFF"
 
-[tool.ruff.lint]
-per-file-ignores = [
-    "__init__.py" = ["F401", "F403"],
-]
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true

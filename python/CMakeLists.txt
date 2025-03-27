@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 3.16)
-project(spark_dsg_python)
-
 find_package(pybind11 REQUIRED)
 pybind11_add_module(
   _dsg_bindings
@@ -13,3 +10,4 @@ target_link_libraries(_dsg_bindings PRIVATE spark_dsg)
 target_include_directories(
   _dsg_bindings PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/bindings/include
 )
+install(TARGETS _dsg_bindings DESTINATION ${PROJECT_NAME})
