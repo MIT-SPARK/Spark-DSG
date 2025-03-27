@@ -40,6 +40,7 @@ Repository = "https://github.com/MIT-SPARK/Spark-DSG"
 [tool.scikit-build.cmake.define]
 SPARK_DSG_BUILD_PYTHON = "ON"
 SPARK_DSG_BUILD_EXAMPLES = "OFF"
+SPARK_DSG_BUILDING_PYTHON_PACKAGE = "ON"
 BUILD_TESTING = "OFF"
 BUILD_SHARED_LIBS = "OFF"
 
