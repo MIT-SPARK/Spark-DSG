@@ -33,8 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/edge_container.h>
 #include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/edge_container.h>
 
 namespace spark_dsg {
 

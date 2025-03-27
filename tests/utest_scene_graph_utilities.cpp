@@ -48,8 +48,7 @@ struct AncestorTestConfig {
 };
 
 std::ostream& operator<<(std::ostream& out, const AncestorTestConfig& config) {
-  out << "{query: " << NodeSymbol(config.query).str()
-      << ", depth: " << config.depth
+  out << "{query: " << NodeSymbol(config.query).str() << ", depth: " << config.depth
       << ", expected: " << displayNodeSymbolContainer(config.expected) << "}";
   return out;
 }
@@ -61,8 +60,8 @@ struct BoundingBoxTestConfig {
 };
 
 std::ostream& operator<<(std::ostream& out, const BoundingBoxTestConfig& config) {
-  out << "{query: " << NodeSymbol(config.query).str()
-      << ", depth: " << config.depth << ", expected: " << config.expected << "}";
+  out << "{query: " << NodeSymbol(config.query).str() << ", depth: " << config.depth
+      << ", expected: " << config.expected << "}";
   return out;
 }
 
