@@ -33,9 +33,11 @@
 #
 #
 """Test fixtures for spark-dsg package."""
-import pytest
-import pathlib
+
 import importlib
+import pathlib
+
+import pytest
 
 
 @pytest.fixture

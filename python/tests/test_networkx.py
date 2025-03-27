@@ -33,6 +33,7 @@
 #
 #
 """Test that networkx conversion works as expected."""
+
 import importlib
 
 import numpy as np

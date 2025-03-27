@@ -33,16 +33,19 @@
 #
 #
 """Scene Graph visualizer using open3d."""
-from spark_dsg._dsg_bindings import DsgLayers, NodeSymbol, DynamicSceneGraph
+
 import multiprocessing as mp
-import numpy as np
 import time
+
+import numpy as np
+
+from spark_dsg._dsg_bindings import DsgLayers, DynamicSceneGraph, NodeSymbol
 
 try:
     import open3d as o3d
     import seaborn as sns
-    from scipy.spatial.transform import Rotation as Rot
     import zmq
+    from scipy.spatial.transform import Rotation as Rot
 
     OPEN3D_VISUALIZER_ENABLED = True
 except ImportError as e:

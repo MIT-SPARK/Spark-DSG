@@ -33,18 +33,24 @@
 #
 #
 """The Spark-DSG package."""
+
 import json
 import types
 
 from spark_dsg._dsg_bindings import *
-from spark_dsg._dsg_bindings import (BoundingBoxType, DsgLayers,
-                                     DynamicSceneGraph, EdgeAttributes,
-                                     LayerKey, LayerView, NodeAttributes,
-                                     SceneGraphLayer,
-                                     compute_ancestor_bounding_box)
+from spark_dsg._dsg_bindings import (
+    BoundingBoxType,
+    DsgLayers,
+    DynamicSceneGraph,
+    EdgeAttributes,
+    LayerKey,
+    LayerView,
+    NodeAttributes,
+    SceneGraphLayer,
+    compute_ancestor_bounding_box,
+)
 from spark_dsg.open3d_visualization import render_to_open3d
-from spark_dsg.torch_conversion import (scene_graph_layer_to_torch,
-                                        scene_graph_to_torch)
+from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_to_torch
 from spark_dsg.visualization import plot_scene_graph
 
 
@@ -73,7 +79,6 @@ def add_bounding_boxes_to_layer(
 
 def _add_metadata_interface(obj):
     class Metadata:
-
         def __init__(self, metadata):
             self._metadata = metadata
 

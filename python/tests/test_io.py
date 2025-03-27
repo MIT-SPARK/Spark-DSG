@@ -33,9 +33,10 @@
 #
 #
 """Test that collections of graphs work correctly."""
+
+import numpy as np
 import spark_dsg as dsg
 import spark_dsg.io as dsg_io
-import numpy as np
 
 
 def _make_layer(layer, end, start=0):
