@@ -105,4 +105,24 @@ TEST(Labelspace, Serialization) {
   EXPECT_EQ(Labelspace::fromMetadata(graph, 1, 0).labels_to_names(), label_to_names);
 }
 
+TEST(Labelspace, Clone) {
+  const std::map<SemanticLabel, std::string> label_to_names{
+      {0, "wall"}, {1, "floor"}, {4, "ceiling"}, {20, "lamp"}};
+  Labelspace labelspace(label_to_names);
+
+  DynamicSceneGraph graph;
+  labelspace.save(graph, 1, 0);
+  EXPECT_FALSE(Labelspace::fromMetadata(graph, 1, 1));
+  EXPECT_FALSE(Labelspace::fromMetadata(graph, 2, 0));
+  EXPECT_TRUE(Labelspace::fromMetadata(graph, 1, 0));
+  EXPECT_EQ(Labelspace::fromMetadata(graph, 1, 0).labels_to_names(), label_to_names);
+
+  const auto copy = graph.clone();
+  ASSERT_TRUE(copy != nullptr);
+  EXPECT_FALSE(Labelspace::fromMetadata(*copy, 1, 1));
+  EXPECT_FALSE(Labelspace::fromMetadata(*copy, 2, 0));
+  EXPECT_TRUE(Labelspace::fromMetadata(*copy, 1, 0));
+  EXPECT_EQ(Labelspace::fromMetadata(*copy, 1, 0).labels_to_names(), label_to_names);
+}
+
 }  // namespace spark_dsg
