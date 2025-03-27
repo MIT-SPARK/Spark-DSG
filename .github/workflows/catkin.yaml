@@ -10,8 +10,6 @@ jobs:
         run: apt update && apt install -y git
       - uses: actions/checkout@v4
         with: {path: src/spark_dsg}
-      - name: Lint
-        run: pip install pre-commit && cd src/spark_dsg && pre-commit run --all-files
       - name: Dependencies
         run: |
           apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool
