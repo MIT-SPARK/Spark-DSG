@@ -139,7 +139,8 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readonly_static("PLACES", &DsgLayers::PLACES)
       .def_readonly_static("MESH_PLACES", &DsgLayers::MESH_PLACES)
       .def_readonly_static("ROOMS", &DsgLayers::ROOMS)
-      .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS);
+      .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS)
+      .def("name_to_layer_id", &DsgLayers::nameToLayerId);
 
   py::class_<LayerKey>(module, "LayerKey")
       .def(py::init<LayerId>())
