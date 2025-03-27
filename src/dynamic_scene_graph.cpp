@@ -642,6 +642,8 @@ void DynamicSceneGraph::removeAllStaleEdges() {
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
   auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids_, layer_names_);
+  to_return->metadata = metadata;
+
   for (const auto [node_id, key] : node_lookup_) {
     auto node = getNodePtr(node_id, key);
     to_return->addOrUpdateNode(
