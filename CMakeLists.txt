@@ -21,7 +21,7 @@ endif()
 
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
-option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
+option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 
 find_package(nlohmann_json REQUIRED)
@@ -96,15 +96,6 @@ if(SPARK_DSG_BUILD_EXAMPLES)
 endif()
 
 if(SPARK_DSG_BUILD_PYTHON)
-  if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/.git)
-    find_package(Git REQUIRED)
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-  endif()
-
-  add_subdirectory(third_party/pybind11 EXCLUDE_FROM_ALL)
   add_subdirectory(python)
 endif()
 

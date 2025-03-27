@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(spark_dsg_python)
 
+find_package(pybind11 REQUIRED)
 pybind11_add_module(
   _dsg_bindings
   bindings/src/mesh_helpers.cpp
