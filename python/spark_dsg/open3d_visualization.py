@@ -343,9 +343,10 @@ class RemoteVisualizer:
         self._names = [None] * len(self._id_map)
         for node_id in self._id_map:
             node = G.get_node(node_id)
-            if node.layer == DsgLayers.name_to_layer_id(
-                DsgLayers.OBJECTS
-            ).layer or node.layer == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer:
+            if (
+                node.layer == DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer
+                or node.layer == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer
+            ):
                 self._names[self._id_map[node_id]] = node.attributes.name
 
         for name, point in zip(self._names, self._points):
