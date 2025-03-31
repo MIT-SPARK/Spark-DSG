@@ -33,16 +33,19 @@
 #
 #
 """Functions for parsing a house file."""
+
+import heapq
+
+import numpy as np
+import seaborn as sns
+import shapely.geometry
+import shapely.ops
+
 from spark_dsg._dsg_bindings import (
     DsgLayers,
     NodeSymbol,
     RoomNodeAttributes,
 )
-import seaborn as sns
-import numpy as np
-import shapely.geometry
-import shapely.ops
-import heapq
 
 
 def _filter_line(line):

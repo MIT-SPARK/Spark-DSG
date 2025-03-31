@@ -33,8 +33,10 @@
 #
 #
 """Visualization for a DSG."""
-import numpy as np
+
 import logging
+
+import numpy as np
 
 # DSG plot style
 NODE_TYPE_OFFSET = {"B": 30, "R": 25, "p": 10, "O": 0}

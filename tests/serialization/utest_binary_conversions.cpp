@@ -62,7 +62,7 @@ TEST(BinaryConversions, SerializeEigenVector) {
   }
 
   {  // uint8_t vector
-    Color expected(1,2,3);
+    Color expected(1, 2, 3);
 
     auto result = writeRT(expected);
     EXPECT_EQ(expected, result);

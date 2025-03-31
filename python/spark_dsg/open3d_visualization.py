@@ -33,16 +33,19 @@
 #
 #
 """Scene Graph visualizer using open3d."""
-from spark_dsg._dsg_bindings import DsgLayers, NodeSymbol, DynamicSceneGraph
+
 import multiprocessing as mp
-import numpy as np
 import time
+
+import numpy as np
+
+from spark_dsg._dsg_bindings import DsgLayers, DynamicSceneGraph, NodeSymbol
 
 try:
     import open3d as o3d
     import seaborn as sns
-    from scipy.spatial.transform import Rotation as Rot
     import zmq
+    from scipy.spatial.transform import Rotation as Rot
 
     OPEN3D_VISUALIZER_ENABLED = True
 except ImportError as e:
@@ -340,9 +343,10 @@ class RemoteVisualizer:
         self._names = [None] * len(self._id_map)
         for node_id in self._id_map:
             node = G.get_node(node_id)
-            if node.layer == DsgLayers.name_to_layer_id(
-                DsgLayers.OBJECTS
-            ).layer or node.layer == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer:
+            if (
+                node.layer == DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer
+                or node.layer == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer
+            ):
                 self._names[self._id_map[node_id]] = node.attributes.name
 
         for name, point in zip(self._names, self._points):

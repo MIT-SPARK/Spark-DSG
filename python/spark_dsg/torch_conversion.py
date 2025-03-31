@@ -39,14 +39,19 @@ Includes specific conversion functions for both homogeneous and heterogeneous
 graphs. Note that `DynamicSceneGraph.to_torch()` calls into the relevant
 homogeneous or heterogeneous conversion function.
 """
+
 import importlib
 from typing import Callable, Dict, Optional, Union
 
 import numpy as np
 
-from spark_dsg._dsg_bindings import (DynamicSceneGraph, LayerView,
-                                     SceneGraphEdge, SceneGraphLayer,
-                                     SceneGraphNode)
+from spark_dsg._dsg_bindings import (
+    DynamicSceneGraph,
+    LayerView,
+    SceneGraphEdge,
+    SceneGraphLayer,
+    SceneGraphNode,
+)
 
 NodeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphNode], np.ndarray]
 EdgeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphEdge], np.ndarray]

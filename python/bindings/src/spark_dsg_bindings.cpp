@@ -143,7 +143,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_static(
           "name_to_layer_id",
           [](const std::string& name) -> std::optional<LayerKey> {
-              return DsgLayers::nameToLayerId(name);
+            return DsgLayers::nameToLayerId(name);
           },
           "name"_a);
 
@@ -736,7 +736,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def(
           "remove_layer",
           [](DynamicSceneGraph& graph, LayerId layer, PythonPartitionId partition) {
-              graph.removeLayer(layer, partition);
+            graph.removeLayer(layer, partition);
           },
           "layer"_a,
           "partition"_a = 0)

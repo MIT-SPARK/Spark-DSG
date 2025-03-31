@@ -33,6 +33,7 @@
 #
 #
 """Test that the bindings are working appropriately."""
+
 import numpy as np
 import spark_dsg as dsg
 

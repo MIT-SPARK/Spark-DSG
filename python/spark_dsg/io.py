@@ -33,6 +33,7 @@
 #
 #
 """Module for reading and writing collections of DSGS."""
+
 import functools
 import json
 import mmap

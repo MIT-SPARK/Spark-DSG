@@ -8,29 +8,20 @@ jobs:
     steps:
       - name: Install Git
         run: apt update && apt install -y git
-      # checkout the code
       - uses: actions/checkout@v4
-        with:
-          path: src/spark_dsg
-          submodules: true
-      # install necessary dependences
+        with: {path: src/spark_dsg}
       - name: Dependencies
         run: |
           apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool
           rosdep update --rosdistro noetic && rosdep install --rosdistro noetic --from-paths src --ignore-src -r -y
-      # configure repo
       - name: Configure
         run: |
           catkin init
           catkin config --extend /opt/ros/noetic
           catkin config                       \
             -DCMAKE_BUILD_TYPE=Release        \
-            -DSPARK_DSG_BUILD_TESTS=ON        \
-            -DSPARK_DSG_BUILD_PYTHON=ON       \
             -DSPARK_DSG_BUILD_EXAMPLES=ON
-      # build repo
       - name: Build
         run: catkin build spark_dsg
-      # run unit tests
       - name: Test
         run: catkin test spark_dsg

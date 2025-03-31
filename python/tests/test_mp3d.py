@@ -33,8 +33,9 @@
 #
 #
 """Test mp3d utilities."""
-import spark_dsg.mp3d as dsg_mp3d
+
 import spark_dsg as dsg
+import spark_dsg.mp3d as dsg_mp3d
 
 
 def test_load_mp3d_info(resource_dir):

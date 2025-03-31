@@ -27,7 +27,7 @@ mkdir /path/to/environment
 cd /path/to/environment
 python3 -m venv dsg  # or some other environment name
 
-# you may also want to upgrade pip on 18.04, though it shouldn't be necessary
+# you may also want to upgrade pip, though it shouldn't be necessary
 # source dsg/bin/activate
 # pip install --upgrade pip
 ```
@@ -35,18 +35,14 @@ python3 -m venv dsg  # or some other environment name
   2. Install the python package
 ```bash
 source /path/to/dsg/environment/bin/activate
-
-# you might want to set cmake to use multiple threads
-# export CMAKE_BUILD_PARALLEL_LEVEL=8
-
 git clone git@github.com:MIT-SPARK/Spark-DSG.git
-cd Spark-DSG
-pip install -e .
+pip install ./Spark-DSG
 ```
 
 ### Python Bindings Usage
 
-See [this notebook](notebooks/bindings_demo.py) for some examples for the bindings (you'll want to clone the repo, even if you installed from github).  You'll want to install `jupyter` and `jupytext` if you want to run it as a notebook, though you can also just run it directly as a python script.
+See [this notebook](examples/python_api.py) for some examples for the bindings (you'll want to clone the repo, even if you installed from github).
+You'll want to install `jupyter` and `jupytext` if you want to run it as a notebook, though you can also just run it directly as a python script.
 
 ### Python API documentation
 

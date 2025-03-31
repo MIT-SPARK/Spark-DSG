@@ -137,8 +137,9 @@ TEST(MeshTests, append) {
   for (size_t i = 0; i < original_faces; ++i) {
     const auto& orig = mesh.face(i);
     const auto& appended = mesh.face(i + original_faces);
-    Mesh::Face expected{
-        orig[0] + original_vertices, orig[1] + original_vertices, orig[2] + original_vertices};
+    Mesh::Face expected{orig[0] + original_vertices,
+                        orig[1] + original_vertices,
+                        orig[2] + original_vertices};
     EXPECT_EQ(expected, appended);
     EXPECT_LT(appended[0], mesh.numVertices());
     EXPECT_LT(appended[1], mesh.numVertices());

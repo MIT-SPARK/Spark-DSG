@@ -49,9 +49,9 @@
 # ---
 
 # %%
-import spark_dsg as dsg
 import pathlib
 
+import spark_dsg as dsg
 
 # %%
 path_to_dsg = "~/uh2_office_dsg.json"
