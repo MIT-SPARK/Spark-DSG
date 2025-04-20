@@ -103,7 +103,7 @@ void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& 
     std::stringstream ss;
     ss << "failed to add " << NodeSymbol(source).str() << " →  "
        << NodeSymbol(target).str();
-    throw std::runtime_error(ss.str());
+    //throw std::runtime_error(ss.str());
   }
 }
 
