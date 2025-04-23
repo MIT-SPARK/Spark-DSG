@@ -36,9 +36,30 @@
 
 #include <iomanip>
 
+#include "spark_dsg/printing.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 
 namespace spark_dsg {
+
+template <typename Derived>
+bool matricesEqual(const Eigen::DenseBase<Derived>& lhs,
+                   const Eigen::DenseBase<Derived>& rhs) {
+  if (lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols()) {
+    return false;
+  }
+
+  bool same = true;
+  for (int r = 0; r < lhs.rows(); ++r) {
+    for (int c = 0; c < lhs.cols(); ++c) {
+      const auto lhs_nan = std::isnan(lhs(r, c));
+      const auto rhs_nan = std::isnan(rhs(r, c));
+      // if one value is nan, this still works
+      same &= (lhs_nan && rhs_nan) || lhs(r, c) == rhs(r, c);
+    }
+  }
+
+  return same;
+}
 
 EdgeAttributes::EdgeAttributes() : weighted(false), weight(1.0) {}
 
@@ -78,4 +99,69 @@ bool EdgeAttributes::is_equal(const EdgeAttributes& other) const {
   return weighted == other.weighted && weight == other.weight;
 }
 
+SpatialEdgeAttributes::SpatialEdgeAttributes()
+    : EdgeAttributes(), type(SpatialEdgeAttributes::Type::UNKNOWN) {}
+
+EdgeAttributes::Ptr SpatialEdgeAttributes::clone() const {
+  return std::make_unique<SpatialEdgeAttributes>(*this);
+}
+
+void SpatialEdgeAttributes::fill_ostream(std::ostream& out) const {
+  EdgeAttributes::fill_ostream(out);
+  out << "\n  - type: " << static_cast<int>(type) << "\n"
+      << "]";
+}
+
+void SpatialEdgeAttributes::serialization_info() {
+  EdgeAttributes::serialization_info();
+  int type_val = static_cast<int>(type);
+  serialization::field("type", type_val);
+}
+
+bool SpatialEdgeAttributes::is_equal(const EdgeAttributes& other) const {
+  const auto derived = dynamic_cast<const SpatialEdgeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!EdgeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return type == derived->type;
+}
+
+ArticulateEdgeAttributes::ArticulateEdgeAttributes()
+    : EdgeAttributes(), type(ArticulateEdgeAttributes::Type::UNKNOWN) {}
+
+EdgeAttributes::Ptr ArticulateEdgeAttributes::clone() const {
+  return std::make_unique<ArticulateEdgeAttributes>(*this);
+}
+
+void ArticulateEdgeAttributes::fill_ostream(std::ostream& out) const {
+  auto format = getDefaultVectorFormat();
+  EdgeAttributes::fill_ostream(out);
+  out << "\n  - type: " << static_cast<int>(type) << "\n"
+      << "\n  - axis: " << axis.transpose().format(format) << "\n"
+      << "]";
+}
+
+void ArticulateEdgeAttributes::serialization_info() {
+  EdgeAttributes::serialization_info();
+  int type_val = static_cast<int>(type);
+  serialization::field("type", type_val);
+}
+
+bool ArticulateEdgeAttributes::is_equal(const EdgeAttributes& other) const {
+  const auto derived = dynamic_cast<const ArticulateEdgeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!EdgeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return type == derived->type && matricesEqual(axis, derived->axis);
+}
 }  // namespace spark_dsg

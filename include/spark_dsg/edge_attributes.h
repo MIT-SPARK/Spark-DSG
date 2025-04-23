@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <Eigen/Geometry>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <ostream>
@@ -99,7 +100,7 @@ struct EdgeAttributes {
   virtual void fill_ostream(std::ostream& out) const;
   //! register serialization information about the attributes
   virtual void serialization_info();
-  virtual void serialization_info() const;
+  void serialization_info() const;
   //! compute equality
   virtual bool is_equal(const EdgeAttributes& other) const;
 
@@ -112,4 +113,45 @@ struct EdgeAttributes {
   }
 };
 
+struct SpatialEdgeAttributes : public EdgeAttributes {
+ public:
+  //! pointer type for node
+  using Ptr = std::unique_ptr<SpatialEdgeAttributes>;
+
+  //! alias for semantic label
+  enum class Type { INSIDE, UNKNOWN } type;
+
+  SpatialEdgeAttributes();
+  virtual ~SpatialEdgeAttributes() = default;
+  EdgeAttributes::Ptr clone() const override;
+
+ protected:
+  void fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const EdgeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_EDGE_ATTRIBUTES(SpatialEdgeAttributes);
+};
+
+struct ArticulateEdgeAttributes : public EdgeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  //! pointer type for node
+  using Ptr = std::unique_ptr<ArticulateEdgeAttributes>;
+
+  //! alias for semantic label
+  enum class Type { REVOLUTE, PRISMATIC, UNKNOWN } type;
+  Eigen::Vector3f axis;
+
+  ArticulateEdgeAttributes();
+  virtual ~ArticulateEdgeAttributes() = default;
+  EdgeAttributes::Ptr clone() const override;
+
+ protected:
+  void fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const EdgeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_EDGE_ATTRIBUTES(ArticulateEdgeAttributes);
+};
 }  // namespace spark_dsg
