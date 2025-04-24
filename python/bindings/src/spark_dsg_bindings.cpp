@@ -416,6 +416,27 @@ PYBIND11_MODULE(_dsg_bindings, module) {
         edge.metadata = nlohmann::json::parse(data);
       });
 
+  py::enum_<SpatialEdgeAttributes::Type>(module, "SpatialEdgeAttributesType")
+      .value("INSIDE", SpatialEdgeAttributes::Type::INSIDE)
+      .value("UNKNOWN", SpatialEdgeAttributes::Type::UNKNOWN)
+      .export_values();
+
+  py::class_<SpatialEdgeAttributes, EdgeAttributes>(module, "SpatialEdgeAttributes")
+      .def(py::init<>())
+      .def_readwrite("type", &SpatialEdgeAttributes::type);
+
+  py::enum_<ArticulateEdgeAttributes::Type>(module, "ArticulateEdgeAttributesType")
+      .value("REVOLUTE", ArticulateEdgeAttributes::Type::REVOLUTE)
+      .value("PRISMATIC", ArticulateEdgeAttributes::Type::PRISMATIC)
+      .value("UNKNOWN", ArticulateEdgeAttributes::Type::UNKNOWN)
+      .export_values();
+
+  py::class_<ArticulateEdgeAttributes, EdgeAttributes>(module,
+                                                       "ArticulateEdgeAttributes")
+      .def(py::init<>())
+      .def_readwrite("type", &ArticulateEdgeAttributes::type)
+      .def_readwrite("axis", &ArticulateEdgeAttributes::axis);
+
   /**************************************************************************************
    * Scene graph node
    *************************************************************************************/
