@@ -60,13 +60,14 @@ def _fill_from_layer(G_out, layer):
         G_out.add_edge(edge.source, edge.target, **_convert_attr(edge.info))
 
 
-def graph_to_networkx(G_in, include_dynamic=True):
+def graph_to_networkx(G_in, include_dynamic=True, directed=False):
     """Convert the DSG to a networkx representation."""
     nx = _get_networkx()
     if nx is None:
         return None
 
-    G_out = nx.Graph()
+    G_out = nx.DiGraph() if directed else nx.Graph()
+
     for layer in G_in.layers:
         _fill_from_layer(G_out, layer)
 
@@ -85,12 +86,13 @@ def graph_to_networkx(G_in, include_dynamic=True):
     return G_out
 
 
-def layer_to_networkx(G_in):
+def layer_to_networkx(G_in, directed=False):
     """Convert the DSG to a networkx representation."""
     nx = _get_networkx()
     if nx is None:
         return None
 
-    G_out = nx.Graph()
+    G_out = nx.DiGraph() if directed else nx.Graph()
+
     _fill_from_layer(G_out, G_in)
     return G_out
