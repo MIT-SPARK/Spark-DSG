@@ -80,7 +80,7 @@ class NodeSymbol {
   [[deprecated("use str() instead")]] std::string getLabel() const;
 
   //! get a string representation of the symbol
-  std::string str(bool literal=false) const;
+  std::string str(bool literal = false) const;
 
   /**
    * @brief output node symbol information
