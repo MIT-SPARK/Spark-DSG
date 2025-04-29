@@ -63,7 +63,12 @@ NodeSymbol NodeSymbol::operator++(int) {
   return old;
 }
 
-std::string NodeSymbol::str() const {
+std::string NodeSymbol::str(bool literal) const {
+  if (literal) {
+    const auto idx = std::to_string(value_.symbol.index);
+    return std::isalpha(value_.symbol.key) ? value_.symbol.key + idx : idx;
+  }
+
   std::stringstream ss;
   ss << *this;
   return ss.str();
