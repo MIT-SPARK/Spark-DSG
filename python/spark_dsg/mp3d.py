@@ -192,7 +192,7 @@ class Mp3dRoom:
             rotated_vertices = rotated_vertices[:-1]
             self._polygon_xy = shapely.geometry.Polygon(rotated_vertices)
 
-    def pos_on_same_floor(self, pos):
+    def pos_on_same_floor(self, pos, eps=0):
         """
         Check if a 3d position is within z-axis bounds.
 
@@ -202,9 +202,9 @@ class Mp3dRoom:
         Returns:
             bool: True if position falls inside [min_z, max_z]
         """
-        return self._min_z <= pos[2] <= self._max_z
+        return (self._min_z - eps) <= pos[2] <= (self._max_z + eps)
 
-    def pos_inside_room(self, pos):
+    def pos_inside_room(self, pos, eps=0):
         """
         Check if a 3d position falls within the bounds of the room.
 
@@ -214,11 +214,20 @@ class Mp3dRoom:
         Returns:
             bool: True if position falls inside [min_z, max_z] and polygon bounds
         """
-        if not self.pos_on_same_floor(pos):
-            return False
+        if not self.pos_on_same_floor(pos, eps=eps):
+            return False, float('inf')
 
         xy_pos = shapely.geometry.Point(pos[0], pos[1])
-        return self._polygon_xy.contains(xy_pos)
+
+        if eps == 0:
+            inside = self._polygon_xy.contains(xy_pos)
+            error = 0 if inside else self._polygon_xy.exterior.distance(xy_pos)
+        else:
+            padded_polygon = self._polygon_xy.buffer(eps)
+            inside = padded_polygon.contains(xy_pos)
+            error = 0 if inside else padded_polygon.exterior.distance(xy_pos)
+
+        return inside, error
 
     def get_polygon_xy(self):
         """Get the xy bounding polygon of the room."""
@@ -393,6 +402,7 @@ def repartition_rooms(
     min_iou_threshold=0.0,
     colors=None,
     verbose=False,
+    eps=0,
 ):
     """
     Create a copy of the DSG with ground-truth room nodes.
@@ -439,16 +449,36 @@ def repartition_rooms(
     missing_nodes = []
     for place in G.get_layer(DsgLayers.PLACES).nodes:
         pos = G.get_position(place.id.value)
+        if eps > 0:
+            best_room = None
+            best_error = float("inf")
 
-        for room in new_rooms:
-            if not room.pos_inside_room(pos):
-                continue
+            for room in new_rooms:
+                inside, error = room.pos_inside_room(pos, eps=eps)
+                if inside:
+                    best_room = room
+                    best_error = 0.0
+                    break  # stop at first valid assignment
+                if error < best_error:
+                    best_error = error
+                    best_room = room
 
-            room_id = room.get_id()
-            G.insert_edge(place.id.value, room_id.value)
-            break  # avoid labeling node as missing
+            if best_room is not None:
+                room_id = best_room.get_id()
+                G.insert_edge(place.id.value, room_id.value)
+            else:
+                missing_nodes.append(place)
         else:
-            missing_nodes.append(place)
+            for room in new_rooms:
+                inside, _ = room.pos_inside_room(pos, eps=eps)
+                if not inside:
+                    continue
+
+                room_id = room.get_id()
+                G.insert_edge(place.id.value, room_id.value)
+                break  # avoid labeling node as missing
+            else:
+                missing_nodes.append(place)
     if verbose:
         print(f"Found {len(missing_nodes)} places node outside of room segmentations.")
 
