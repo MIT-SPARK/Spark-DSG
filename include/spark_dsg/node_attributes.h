@@ -106,6 +106,8 @@ struct NodeAttributes {
   virtual ~NodeAttributes() = default;
   virtual NodeAttributes::Ptr clone() const;
 
+  virtual void transform(const Eigen::Affine3d& transform);
+
   //! Position of the node
   Eigen::Vector3d position;
   //! last time the place was updated (while active)
@@ -167,6 +169,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   SemanticNodeAttributes();
   virtual ~SemanticNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
+  virtual void transform(const Eigen::Affine3d& transform) override;
 
   bool hasLabel() const;
   bool hasFeature() const;
@@ -207,6 +210,7 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   ObjectNodeAttributes();
   virtual ~ObjectNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
+  virtual void transform(const Eigen::Affine3d& transform);
 
   //! Mesh vertice connections
   std::list<size_t> mesh_connections;
@@ -371,6 +375,7 @@ struct AgentNodeAttributes : public NodeAttributes {
                       NodeId external_key);
   virtual ~AgentNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
+  virtual void transform(const Eigen::Affine3d& transform) override;
 
   std::chrono::nanoseconds timestamp;
   Eigen::Quaterniond world_R_body;

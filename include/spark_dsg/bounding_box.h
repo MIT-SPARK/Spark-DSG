@@ -214,6 +214,12 @@ struct BoundingBox {
   float computeIoU(const BoundingBox& other) const;
 
   /**
+   * @brief Transform the bounding box.
+   * @param transform The transform to apply.
+   */
+  void transform(const Eigen::Affine3d& transform);
+
+  /**
    * @brief output bounding box information
    * @param out output stream
    * @param bounding_box bounding box to print

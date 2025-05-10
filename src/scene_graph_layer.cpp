@@ -265,7 +265,7 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
 
     auto attrs = other.attributes_->clone();
     if (transform_new_nodes) {
-      attrs->position = *transform_new_nodes * attrs->position;
+      attrs->transform(*transform_new_nodes);
     }
     nodes_[other.id] = Node::Ptr(new Node(other.id, id, std::move(attrs)));
     nodes_status_[other.id] = NodeStatus::NEW;
