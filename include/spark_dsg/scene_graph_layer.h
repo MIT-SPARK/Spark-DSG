@@ -234,7 +234,7 @@ class SceneGraphLayer {
   void mergeLayer(const SceneGraphLayer& other,
                   const GraphMergeConfig& config,
                   std::vector<NodeId>* new_nodes = nullptr,
-                  const Eigen::Affine3d* transform_new_nodes = nullptr);
+                  const Eigen::Isometry3d* transform_new_nodes = nullptr);
 
   /**
    * @brief Get node ids of newly inserted nodes

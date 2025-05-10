@@ -217,7 +217,7 @@ struct BoundingBox {
    * @brief Transform the bounding box.
    * @param transform The transform to apply.
    */
-  void transform(const Eigen::Affine3d& transform);
+  void transform(const Eigen::Isometry3d& transform);
 
   /**
    * @brief output bounding box information

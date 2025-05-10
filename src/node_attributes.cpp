@@ -113,7 +113,7 @@ NodeAttributes::Ptr NodeAttributes::clone() const {
   return std::make_unique<NodeAttributes>(*this);
 }
 
-void NodeAttributes::transform(const Eigen::Affine3d& transform) {
+void NodeAttributes::transform(const Eigen::Isometry3d& transform) {
   position = transform * position;
 }
 
@@ -164,7 +164,7 @@ NodeAttributes::Ptr SemanticNodeAttributes::clone() const {
   return std::make_unique<SemanticNodeAttributes>(*this);
 }
 
-void SemanticNodeAttributes::transform(const Eigen::Affine3d& transform) {
+void SemanticNodeAttributes::transform(const Eigen::Isometry3d& transform) {
   NodeAttributes::transform(transform);
   bounding_box.transform(transform);
 }
@@ -236,7 +236,7 @@ NodeAttributes::Ptr ObjectNodeAttributes::clone() const {
   return std::make_unique<ObjectNodeAttributes>(*this);
 }
 
-void ObjectNodeAttributes::transform(const Eigen::Affine3d& transform) {
+void ObjectNodeAttributes::transform(const Eigen::Isometry3d& transform) {
   SemanticNodeAttributes::transform(transform);
   world_R_object =
       Eigen::Quaterniond(transform.linear() * world_R_object.toRotationMatrix());
@@ -443,7 +443,7 @@ NodeAttributes::Ptr AgentNodeAttributes::clone() const {
   return std::make_unique<AgentNodeAttributes>(*this);
 }
 
-void AgentNodeAttributes::transform(const Eigen::Affine3d& transform) {
+void AgentNodeAttributes::transform(const Eigen::Isometry3d& transform) {
   NodeAttributes::transform(transform);
   world_R_body = transform.linear() * world_R_body;
 }

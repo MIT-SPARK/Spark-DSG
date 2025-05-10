@@ -399,7 +399,7 @@ class DynamicSceneGraph {
    */
   bool mergeGraph(const DynamicSceneGraph& other,
                   const GraphMergeConfig& config = {},
-                  const Eigen::Affine3d* transform = nullptr);
+                  const Eigen::Isometry3d* transform = nullptr);
 
   /**
    * @brief Get all removed nodes from the graph

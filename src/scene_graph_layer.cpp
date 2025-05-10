@@ -240,7 +240,7 @@ bool SceneGraphLayer::rewireEdge(NodeId source,
 void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
                                  const GraphMergeConfig& config,
                                  std::vector<NodeId>* new_nodes,
-                                 const Eigen::Affine3d* transform_new_nodes) {
+                                 const Eigen::Isometry3d* transform_new_nodes) {
   const bool update_attributes = config.shouldUpdateAttributes(id);
   for (const auto& id_node_pair : other_layer.nodes_) {
     const auto siter = nodes_status_.find(id_node_pair.first);
