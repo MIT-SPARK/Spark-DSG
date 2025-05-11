@@ -113,6 +113,10 @@ NodeAttributes::Ptr NodeAttributes::clone() const {
   return std::make_unique<NodeAttributes>(*this);
 }
 
+void NodeAttributes::transform(const Eigen::Isometry3d& transform) {
+  position = transform * position;
+}
+
 bool NodeAttributes::operator==(const NodeAttributes& other) const {
   return is_equal(other);
 }
@@ -158,6 +162,11 @@ SemanticNodeAttributes::SemanticNodeAttributes()
 
 NodeAttributes::Ptr SemanticNodeAttributes::clone() const {
   return std::make_unique<SemanticNodeAttributes>(*this);
+}
+
+void SemanticNodeAttributes::transform(const Eigen::Isometry3d& transform) {
+  NodeAttributes::transform(transform);
+  bounding_box.transform(transform);
 }
 
 bool SemanticNodeAttributes::hasLabel() const {
@@ -225,6 +234,12 @@ ObjectNodeAttributes::ObjectNodeAttributes()
 
 NodeAttributes::Ptr ObjectNodeAttributes::clone() const {
   return std::make_unique<ObjectNodeAttributes>(*this);
+}
+
+void ObjectNodeAttributes::transform(const Eigen::Isometry3d& transform) {
+  SemanticNodeAttributes::transform(transform);
+  world_R_object =
+      Eigen::Quaterniond(transform.linear() * world_R_object.toRotationMatrix());
 }
 
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
@@ -426,6 +441,11 @@ AgentNodeAttributes::AgentNodeAttributes(std::chrono::nanoseconds timestamp,
 
 NodeAttributes::Ptr AgentNodeAttributes::clone() const {
   return std::make_unique<AgentNodeAttributes>(*this);
+}
+
+void AgentNodeAttributes::transform(const Eigen::Isometry3d& transform) {
+  NodeAttributes::transform(transform);
+  world_R_body = transform.linear() * world_R_body;
 }
 
 std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {

@@ -359,7 +359,7 @@ TEST(SceneGraphLayerTests, MergeLayerTransformCorrect) {
   Eigen::Matrix4d transform_matrix;
   transform_matrix << -1, 0, 0, 0, 0, -1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1;
 
-  Eigen::Affine3d transform(transform_matrix);
+  Eigen::Isometry3d transform(transform_matrix);
   std::vector<NodeId> new_nodes;
   layer_1.mergeLayer(layer_2, {}, &new_nodes, &transform);
 

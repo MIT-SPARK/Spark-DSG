@@ -241,6 +241,11 @@ float BoundingBox::computeIoU(const BoundingBox& other) const {
   return intersection_volume / union_volume;
 }
 
+void BoundingBox::transform(const Eigen::Isometry3d& transform) {
+  world_P_center = transform.cast<float>() * world_P_center;
+  world_R_center = transform.rotation().cast<float>() * world_R_center;
+}
+
 bool BoundingBox::operator==(const BoundingBox& other) const {
   if (type != other.type) {
     return false;
