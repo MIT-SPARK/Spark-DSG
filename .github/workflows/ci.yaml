@@ -18,7 +18,7 @@ jobs:
       - name: Dependencies
         run: sudo apt-get update && sudo apt install libgtest-dev libeigen3-dev nlohmann-json3-dev libzmq3-dev
       - name: Configure
-        run: cmake -B ${{github.workspace}}/build -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_TESTS=ON -DSPARK_DSG_BUILD_EXAMPLES=ON
+        run: cmake -B ${{github.workspace}}/build -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_EXAMPLES=ON
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Release
       - name: Test
@@ -44,3 +44,22 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install pytest networkx torch_geometric
           pytest ${{github.workspace}}/python/tests
+  ros1:
+    runs-on: ubuntu-latest
+    container: ros:noetic-ros-base-focal
+    steps:
+      - uses: actions/checkout@v4
+        with: {path: src/spark_dsg}
+      - name: Dependencies
+        run: |
+          apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool git
+          rosdep update --rosdistro noetic && rosdep install --rosdistro noetic --from-paths src --ignore-src -r -y
+      - name: Configure
+        run: |
+          catkin init
+          catkin config --extend /opt/ros/noetic
+          catkin config -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_EXAMPLES=ON
+      - name: Build
+        run: catkin build spark_dsg
+      - name: Test
+        run: catkin test spark_dsg
