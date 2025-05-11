@@ -215,7 +215,7 @@ class Mp3dRoom:
             bool: True if position falls inside [min_z, max_z] and polygon bounds
         """
         if not self.pos_on_same_floor(pos, eps=eps if z_eps is None else z_eps):
-            return False, float('inf')
+            return False, float("inf")
 
         xy_pos = shapely.geometry.Point(pos[0], pos[1])
 
