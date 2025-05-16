@@ -1,5 +1,7 @@
 """Entry points for spark_dsg."""
+
 import click
+
 import spark_dsg.commands.visualize as visualize
 
 
@@ -10,3 +12,6 @@ def cli():
 
 
 cli.add_command(visualize.cli)
+
+if __name__ == "__main__":
+    cli()
