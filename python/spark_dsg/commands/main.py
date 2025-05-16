@@ -1,4 +1,4 @@
-"""Entry points for hydra."""
+"""Entry points for spark_dsg."""
 import click
 import spark_dsg.commands.visualize as visualize
 
