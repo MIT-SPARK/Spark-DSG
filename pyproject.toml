@@ -37,6 +37,9 @@ viz = [
 [project.urls]
 Repository = "https://github.com/MIT-SPARK/Spark-DSG"
 
+[project.scripts]
+spark-dsg = "spark_dsg.__main__:cli"
+
 [tool.scikit-build.cmake.define]
 SPARK_DSG_BUILD_PYTHON = "ON"
 SPARK_DSG_BUILD_EXAMPLES = "OFF"
