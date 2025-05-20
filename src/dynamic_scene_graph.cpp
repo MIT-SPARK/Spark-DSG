@@ -688,6 +688,13 @@ DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
   return to_return;
 }
 
+void DynamicSceneGraph::transform(const Eigen::Isometry3d& transform) {
+  visitLayers([&](LayerKey, Layer& layer) { layer.transform(transform); });
+  if (mesh_) {
+    mesh_->transform(transform.cast<float>());
+  }
+}
+
 void DynamicSceneGraph::save(std::string filepath, bool include_mesh) const {
   const auto type = io::verifyFileExtension(filepath);
   if (type == io::FileType::JSON) {

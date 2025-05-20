@@ -384,6 +384,12 @@ SceneGraphLayer::Ptr SceneGraphLayer::clone(const NodeChecker& is_valid) const {
   return new_layer;
 }
 
+void SceneGraphLayer::transform(const Eigen::Isometry3d& transform) {
+  for (auto&& [id, node] : nodes_) {
+    node->attributes().transform(transform);
+  }
+}
+
 namespace graph_utilities {
 
 using LayerGraphTraits = graph_traits<SceneGraphLayer>;

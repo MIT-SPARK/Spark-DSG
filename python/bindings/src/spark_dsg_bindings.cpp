@@ -452,6 +452,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           [](AgentNodeAttributes& attrs, const Quaternion<double>& rot) {
             attrs.world_R_body = rot;
           })
+      .def_readwrite("timestamp", &AgentNodeAttributes::timestamp)
       .def_readwrite("external_key", &AgentNodeAttributes::external_key)
       .def_readwrite("dbow_ids", &AgentNodeAttributes::dbow_ids)
       .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values);
@@ -942,6 +943,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           },
           "name"_a)
       .def("clone", &DynamicSceneGraph::clone)
+      .def("transform",
+           [](DynamicSceneGraph& G, const Eigen::Matrix4d& mat) {
+             Eigen::Isometry3d iso(mat);
+             G.transform(iso);
+           })
       .def("__deepcopy__",
            [](const DynamicSceneGraph& G, py::object) { return G.clone(); })
       .def(
