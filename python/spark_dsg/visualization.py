@@ -43,15 +43,16 @@ LAYER_TYPE_OFFSET = {
     5: 30,  # buildings
     4: 25,  # rooms
     3: 10,  # places
-    2: 0,   # objects
+    2: 0,  # objects
 }
 
 LAYER_TYPE_TO_COLOR = {
-    5: "#636EFA",   # buildings
-    4: "#EF553B",   # rooms
-    3: "#AB63FA",   # places
-    2: "#00CC96",   # objects    
+    5: "#636EFA",  # buildings
+    4: "#EF553B",  # rooms
+    3: "#AB63FA",  # places
+    2: "#00CC96",  # objects
 }
+
 
 def z_offset(layer_idx: int) -> np.ndarray:
     return np.array([0, 0, LAYER_TYPE_OFFSET[layer_idx]])
@@ -80,8 +81,8 @@ def _draw_layer_nodes(
             text.append(str(node.id))
         else:
             text.append(text_func(node))
-    
-    if len(pos) == 0: 
+
+    if len(pos) == 0:
         return
 
     pos = np.array(pos)
@@ -129,13 +130,13 @@ def plot_scene_graph(G, title=None, figure_path=None, layer_settings=None):
         source = G.get_node(edge.source)
         target = G.get_node(edge.target)
 
-        if source.layer.layer not in LAYER_TYPE_OFFSET.keys() or \
-            target.layer.layer not in LAYER_TYPE_OFFSET.keys():
+        if (
+            source.layer.layer not in LAYER_TYPE_OFFSET.keys()
+            or target.layer.layer not in LAYER_TYPE_OFFSET.keys()
+        ):
             continue
-        source_pos = np.array(source.attributes.position) \
-            + z_offset(source.layer.layer)
-        target_pos = np.array(target.attributes.position) \
-            + z_offset(target.layer.layer)
+        source_pos = np.array(source.attributes.position) + z_offset(source.layer.layer)
+        target_pos = np.array(target.attributes.position) + z_offset(target.layer.layer)
 
         # intralayer edges
         if source.layer == target.layer:

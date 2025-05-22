@@ -35,7 +35,7 @@
 """Functions for parsing a house file."""
 
 import heapq
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import numpy as np
 import seaborn as sns
@@ -207,7 +207,7 @@ class Mp3dRoom:
 
     def pos_inside_room(self, pos, eps=0.0, z_eps=0.0):
         """
-        Check if a 3d position falls within the bound of the room 
+        Check if a 3d position falls within the bound of the room
         (i.e. within eps bound in x-y plane and z_eps bound along z-axis).
 
         Args:
