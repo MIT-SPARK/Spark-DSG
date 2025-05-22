@@ -445,6 +445,9 @@ class DynamicSceneGraph {
   //! @brief Make a copy of the scene graph
   DynamicSceneGraph::Ptr clone() const;
 
+  //! @brief Rigidly transform graph
+  void transform(const Eigen::Isometry3d& transform);
+
   /**
    * @brief Save the DSG to file. By default, this will save a binary version of the
    * graph. To save as JSON, specify the filepath with a .json extension.

@@ -262,6 +262,11 @@ class SceneGraphLayer {
   virtual SceneGraphLayer::Ptr clone(const NodeChecker& is_valid = {}) const;
 
   /**
+   * @brief Rigidly transform layer
+   */
+  void transform(const Eigen::Isometry3d& transform);
+
+  /**
    * @brief Get the immediate neighborhood of a node via BFS
    * @param node Node to get the neighborhood of
    * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
