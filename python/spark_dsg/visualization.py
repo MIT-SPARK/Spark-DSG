@@ -35,7 +35,6 @@
 """Visualization for a DSG."""
 
 import logging
-import spark_dsg as dsg
 
 import numpy as np
 
@@ -77,12 +76,13 @@ def _draw_layer_nodes(
             colors.append(LAYER_TYPE_TO_COLOR[layer.id])
         else:
             colors.append(color_func(node))
-
         if text_func is None:
             text.append(str(node.id))
         else:
             text.append(text_func(node))
-    if len(pos) == 0: return
+    
+    if len(pos) == 0: 
+        return
 
     pos = np.array(pos)
     fig.add_trace(
