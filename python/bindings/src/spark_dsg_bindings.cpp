@@ -368,7 +368,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                                                            "ObjectNodeAttributes")
       .def(py::init<>())
       .def_readwrite("registered", &ObjectNodeAttributes::registered)
-      .def_readonly("mesh_connections", &ObjectNodeAttributes::mesh_connections)
+      .def_readwrite("mesh_connections", &ObjectNodeAttributes::mesh_connections)
       .def_property(
           "world_R_object",
           [](const ObjectNodeAttributes& attrs) {
