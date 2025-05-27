@@ -35,6 +35,7 @@
 """Functions for parsing a house file."""
 
 import heapq
+from typing import Any, Dict, List
 
 import numpy as np
 import seaborn as sns
@@ -192,7 +193,7 @@ class Mp3dRoom:
             rotated_vertices = rotated_vertices[:-1]
             self._polygon_xy = shapely.geometry.Polygon(rotated_vertices)
 
-    def pos_on_same_floor(self, pos):
+    def pos_on_same_floor(self, pos, z_eps=0.0):
         """
         Check if a 3d position is within z-axis bounds.
 
@@ -202,23 +203,30 @@ class Mp3dRoom:
         Returns:
             bool: True if position falls inside [min_z, max_z]
         """
-        return self._min_z <= pos[2] <= self._max_z
+        return (self._min_z - z_eps) <= pos[2] <= (self._max_z + z_eps)
 
-    def pos_inside_room(self, pos):
+    def pos_inside_room(self, pos, eps=0.0, z_eps=0.0):
         """
-        Check if a 3d position falls within the bounds of the room.
+        Check if a 3d position falls within the bound of the room
+        (i.e. within eps bound in x-y plane and z_eps bound along z-axis).
 
         Args:
             pos (List[float]): 3d position to check
 
-        Returns:
-            bool: True if position falls inside [min_z, max_z] and polygon bounds
+        Returns:eps
+            bool: True if position falls inside room 2D polygon and vertical height
+            float: x-y distance to the room polygon or "inf" if not on the same floor
         """
-        if not self.pos_on_same_floor(pos):
-            return False
+        if not self.pos_on_same_floor(pos, z_eps=z_eps):
+            return False, float("inf")
 
         xy_pos = shapely.geometry.Point(pos[0], pos[1])
-        return self._polygon_xy.contains(xy_pos)
+
+        if self._polygon_xy.contains(xy_pos):
+            return True, 0.0
+
+        dist = self._polygon_xy.distance(xy_pos)
+        return dist < eps, dist
 
     def get_polygon_xy(self):
         """Get the xy bounding polygon of the room."""
@@ -254,7 +262,7 @@ class Mp3dRoom:
         return ord(self._label)
 
 
-def load_mp3d_info(house_path):
+def load_mp3d_info(house_path) -> Dict[str, List[Dict[str, Any]]]:
     """
     Load room info from a GT house file.
 
@@ -262,7 +270,7 @@ def load_mp3d_info(house_path):
         house_path (str): Path to house file
 
     Returns:
-        Dict[str, List[Dict[Str, Any]]]): Parsed house file information
+        Dict[str, List[Dict[Str, Any]]]: Parsed house file information
     """
     info = {x: [] for x in PARSERS}
     with open(house_path, "r") as fin:
@@ -277,7 +285,7 @@ def load_mp3d_info(house_path):
     return info
 
 
-def get_rooms_from_mp3d_info(mp3d_info, angle_deg=-90.0):
+def get_rooms_from_mp3d_info(mp3d_info, angle_deg=-90.0) -> List[Mp3dRoom]:
     """
     Generate a list of Mp3dRoom objects from ground-truth segmentation.
 
@@ -393,6 +401,8 @@ def repartition_rooms(
     min_iou_threshold=0.0,
     colors=None,
     verbose=False,
+    eps=0.0,
+    z_eps=0.0,
 ):
     """
     Create a copy of the DSG with ground-truth room nodes.
@@ -439,16 +449,25 @@ def repartition_rooms(
     missing_nodes = []
     for place in G.get_layer(DsgLayers.PLACES).nodes:
         pos = G.get_position(place.id.value)
+        best_room = None
+        best_error = float("inf")
 
         for room in new_rooms:
-            if not room.pos_inside_room(pos):
-                continue
+            inside, error = room.pos_inside_room(pos, eps=eps, z_eps=z_eps)
+            if error < best_error:
+                best_error = error
+                if inside:  # update best_room if inside
+                    best_room = room
 
-            room_id = room.get_id()
+        if best_room is not None:
+            room_id = best_room.get_id()
             G.insert_edge(place.id.value, room_id.value)
-            break  # avoid labeling node as missing
-        else:
+        elif verbose:
             missing_nodes.append(place)
+            print(
+                f"Place node {place.id.value} not assigned to any room "
+                f"(min dist to rooms on the same floor: {best_error:.2f})."
+            )
     if verbose:
         print(f"Found {len(missing_nodes)} places node outside of room segmentations.")
 

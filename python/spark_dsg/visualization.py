@@ -39,16 +39,23 @@ import logging
 import numpy as np
 
 # DSG plot style
-NODE_TYPE_OFFSET = {"B": 30, "R": 25, "p": 10, "O": 0}
+LAYER_TYPE_OFFSET = {
+    5: 30,  # buildings
+    4: 25,  # rooms
+    3: 10,  # places
+    2: 0,  # objects
+}
 
-NODE_TYPE_TO_COLOR = {"B": "#636EFA", "R": "#EF553B", "p": "#AB63FA", "O": "#00CC96"}
+LAYER_TYPE_TO_COLOR = {
+    5: "#636EFA",  # buildings
+    4: "#EF553B",  # rooms
+    3: "#AB63FA",  # places
+    2: "#00CC96",  # objects
+}
 
 
-def z_offset(node) -> np.ndarray:
-    """Take a node and returns an offset in the z direction according to node type."""
-    offset = node.attributes.position.copy()
-    offset[2] += NODE_TYPE_OFFSET[node.id.category]
-    return offset
+def z_offset(layer_idx: int) -> np.ndarray:
+    return np.array([0, 0, LAYER_TYPE_OFFSET[layer_idx]])
 
 
 def _draw_layer_nodes(
@@ -65,16 +72,18 @@ def _draw_layer_nodes(
     pos, colors, text = [], [], []
 
     for node in layer.nodes:
-        pos.append(np.squeeze(z_offset(node)))
+        pos.append(np.array(node.attributes.position) + z_offset(layer.id))
         if color_func is None:
-            colors.append(NODE_TYPE_TO_COLOR[node.id.category])
+            colors.append(LAYER_TYPE_TO_COLOR[layer.id])
         else:
             colors.append(color_func(node))
-
         if text_func is None:
             text.append(str(node.id))
         else:
             text.append(text_func(node))
+
+    if len(pos) == 0:
+        return
 
     pos = np.array(pos)
     fig.add_trace(
@@ -105,8 +114,13 @@ def plot_scene_graph(G, title=None, figure_path=None, layer_settings=None):
     for layer in G.layers:
         has_settings = layer_settings is not None and layer.id in layer_settings
         settings = {} if not has_settings else layer_settings[layer.id]
-        print(settings)
-        _draw_layer_nodes(fig, layer, **settings)
+        if layer.id in LAYER_TYPE_OFFSET.keys():
+            _draw_layer_nodes(fig, layer, **settings)
+        else:
+            print(
+                f"Skipping layer (id={layer.id}), "
+                f"containing {len([n for n in layer.nodes])} nodes."
+            )
 
     # edges
     x_lines, y_lines, z_lines = [], [], []
@@ -116,20 +130,25 @@ def plot_scene_graph(G, title=None, figure_path=None, layer_settings=None):
         source = G.get_node(edge.source)
         target = G.get_node(edge.target)
 
-        start_offset = z_offset(source)
-        end_offset = z_offset(target)
+        if (
+            source.layer.layer not in LAYER_TYPE_OFFSET.keys()
+            or target.layer.layer not in LAYER_TYPE_OFFSET.keys()
+        ):
+            continue
+        source_pos = np.array(source.attributes.position) + z_offset(source.layer.layer)
+        target_pos = np.array(target.attributes.position) + z_offset(target.layer.layer)
 
         # intralayer edges
         if source.layer == target.layer:
-            x_lines_dark += [start_offset[0], end_offset[0], None]
-            y_lines_dark += [start_offset[1], end_offset[1], None]
-            z_lines_dark += [start_offset[2], end_offset[2], None]
+            x_lines_dark += [source_pos[0], target_pos[0], None]
+            y_lines_dark += [source_pos[1], target_pos[1], None]
+            z_lines_dark += [source_pos[2], target_pos[2], None]
 
         # interlayer edges
         else:
-            x_lines += [start_offset[0], end_offset[0], None]
-            y_lines += [start_offset[1], end_offset[1], None]
-            z_lines += [start_offset[2], end_offset[2], None]
+            x_lines += [source_pos[0], target_pos[0], None]
+            y_lines += [source_pos[1], target_pos[1], None]
+            z_lines += [source_pos[2], target_pos[2], None]
 
     # add interlayer edges to plot
     fig.add_trace(
