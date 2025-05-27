@@ -184,8 +184,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def("__repr__", [](const NodeSymbol& ns) { return ns.str(false); })
       .def("__hash__",
            [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); })
-      .def("str",
-           [](const NodeSymbol& ns, const bool literal) { return ns.str(literal); })
+      .def("str", &NodeSymbol::str, "literal"_a = true);
       .def(pybind11::self == pybind11::self)
       .def(pybind11::self != pybind11::self);
 
