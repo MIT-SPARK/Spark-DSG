@@ -44,22 +44,17 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install pytest networkx torch_geometric
           pytest ${{github.workspace}}/python/tests
-  ros1:
+  ros2:
     runs-on: ubuntu-latest
-    container: ros:noetic-ros-base-focal
+    container: ros:jazzy-ros-base
     steps:
       - uses: actions/checkout@v4
         with: {path: src/spark_dsg}
       - name: Dependencies
         run: |
-          apt update && apt install -y python3-wstool python3-catkin-tools python3-vcstool git
-          rosdep update --rosdistro noetic && rosdep install --rosdistro noetic --from-paths src --ignore-src -r -y
-      - name: Configure
-        run: |
-          catkin init
-          catkin config --extend /opt/ros/noetic
-          catkin config -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_EXAMPLES=ON
+          apt update && apt install -y python3-vcstool git
+          rosdep update --rosdistro jazzy && rosdep install --rosdistro jazzy --from-paths src --ignore-src -r -y
       - name: Build
-        run: catkin build spark_dsg
+        run: colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_EXAMPLES=ON
       - name: Test
-        run: catkin test spark_dsg
+        run: colcon test
