@@ -934,16 +934,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "mesh",
           [](const DynamicSceneGraph& graph) { return graph.mesh(); },
           [](DynamicSceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
-      .def(
-          "get_layer_id",
-          [](const DynamicSceneGraph& graph,
-             const std::string& name) -> std::optional<LayerKey> {
-            const auto& name_map = graph.layer_names();
-            auto iter = name_map.find(name);
-            return iter == name_map.end() ? std::nullopt
-                                          : std::optional<LayerKey>({iter->second});
-          },
-          "name"_a)
+      .def("get_layer_key", &DynamicSceneGraph::getLayerKey, "name"_a)
       .def("clone", &DynamicSceneGraph::clone)
       .def("transform",
            [](DynamicSceneGraph& G, const Eigen::Matrix4d& mat) {

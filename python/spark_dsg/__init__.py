@@ -36,21 +36,17 @@
 
 import json
 import types
+import warnings
 
 from spark_dsg._dsg_bindings import *
-from spark_dsg._dsg_bindings import (
-    BoundingBoxType,
-    DsgLayers,
-    DynamicSceneGraph,
-    EdgeAttributes,
-    LayerKey,
-    LayerView,
-    NodeAttributes,
-    SceneGraphLayer,
-    compute_ancestor_bounding_box,
-)
+from spark_dsg._dsg_bindings import (BoundingBoxType, DsgLayers,
+                                     DynamicSceneGraph, EdgeAttributes,
+                                     LayerKey, LayerView, NodeAttributes,
+                                     SceneGraphLayer,
+                                     compute_ancestor_bounding_box)
 from spark_dsg.open3d_visualization import render_to_open3d
-from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_to_torch
+from spark_dsg.torch_conversion import (scene_graph_layer_to_torch,
+                                        scene_graph_to_torch)
 from spark_dsg.visualization import plot_scene_graph
 
 
@@ -101,12 +97,22 @@ def _hash_layerkey(key):
     return hash((key.layer, key.partition))
 
 
+def _get_layer_id(graph, name):
+    warnings.warn(
+        "'get_layer_id' is deprecated. Please use 'get_layer_key'",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return graph.get_layer_key(name)
+
+
 LayerKey.__hash__ = _hash_layerkey
 
 _add_metadata_interface(DynamicSceneGraph)
 _add_metadata_interface(NodeAttributes)
 _add_metadata_interface(EdgeAttributes)
 
+DynamicSceneGraph.get_layer_id = _get_layer_id
 DynamicSceneGraph.to_torch = scene_graph_to_torch
 SceneGraphLayer.to_torch = scene_graph_layer_to_torch
 LayerView.to_torch = scene_graph_layer_to_torch
