@@ -39,14 +39,19 @@ import types
 import warnings
 
 from spark_dsg._dsg_bindings import *
-from spark_dsg._dsg_bindings import (BoundingBoxType, DsgLayers,
-                                     DynamicSceneGraph, EdgeAttributes,
-                                     LayerKey, LayerView, NodeAttributes,
-                                     SceneGraphLayer,
-                                     compute_ancestor_bounding_box)
+from spark_dsg._dsg_bindings import (
+    BoundingBoxType,
+    DsgLayers,
+    DynamicSceneGraph,
+    EdgeAttributes,
+    LayerKey,
+    LayerView,
+    NodeAttributes,
+    SceneGraphLayer,
+    compute_ancestor_bounding_box,
+)
 from spark_dsg.open3d_visualization import render_to_open3d
-from spark_dsg.torch_conversion import (scene_graph_layer_to_torch,
-                                        scene_graph_to_torch)
+from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_to_torch
 from spark_dsg.visualization import plot_scene_graph
 
 
