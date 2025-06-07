@@ -178,32 +178,43 @@ const Layer& DynamicSceneGraph::addLayer(LayerId layer_id,
   return layerFromKey(key);
 }
 
-void DynamicSceneGraph::removeLayer(LayerId layer, PartitionId partition) {
-  if (!partition) {
-    auto it = layers_.find(layer);
-    if (it != layers_.end()) {
-      while (!it->second->nodes_.empty()) {
-        removeNode(it->second->nodes_.begin()->first);
-      }
+void DynamicSceneGraph::removeLayer(LayerId layer_id, PartitionId partition) {
+  LayerKey key{layer_id, partition};
+  auto niter = layer_names_.begin();
+  while (niter != layer_names_.end()) {
+    if (niter->second == key) {
+      niter = layer_names_.erase(niter);
+    } else {
+      ++niter;
     }
-    layers_.erase(layer);
   }
 
-  auto iter = layer_partitions_.find(layer);
-  if (iter == layer_partitions_.end()) {
+  auto layer = findLayer(layer_id, partition);
+  if (!layer) {
     return;
   }
 
-  auto part_iter = iter->second.find(partition);
-  if (part_iter != iter->second.end()) {
-    while (!part_iter->second->nodes_.empty()) {
-      removeNode(part_iter->second->nodes_.begin()->first);
-    }
-    iter->second.erase(part_iter);
+  std::vector<NodeId> to_remove;
+  for (const auto& [node_id, node] : layer->nodes()) {
+    to_remove.push_back(node_id);
   }
 
-  if (iter->second.empty()) {
-    layer_partitions_.erase(iter);
+  for (const auto& node_id : to_remove) {
+    removeNode(node_id);
+  }
+
+  if (!partition) {
+    layers_.erase(layer_id);
+  } else {
+    auto iter = layer_partitions_.find(layer_id);
+    if (iter == layer_partitions_.end()) {
+      return;
+    }
+
+    iter->second.erase(partition);
+    if (iter->second.empty()) {
+      layer_partitions_.erase(iter);
+    }
   }
 }
 
