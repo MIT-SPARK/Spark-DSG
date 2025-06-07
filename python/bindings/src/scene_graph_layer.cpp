@@ -110,6 +110,8 @@ void init_scene_graph_layer(py::module_& m) {
       .def("num_edges", &LayerView::numEdges)
       .def("get_position", &LayerView::getPosition)
       .def_property(
+          "key", [](const LayerView& view) { return view.id; }, nullptr)
+      .def_property(
           "id", [](const LayerView& view) { return view.id.layer; }, nullptr)
       .def_property(
           "partition", [](const LayerView& view) { return view.id.partition; }, nullptr)
