@@ -61,8 +61,12 @@ struct Version {
 
   // Constructors.
   Version() = default;
-  Version(uint8_t _major, uint8_t _minor, uint8_t _patch)
-      : major(_major), minor(_minor), patch(_patch) {}
+  Version(uint8_t _major, uint8_t _minor, uint8_t _patch) {
+    // manually assign fields to avoid gnu macros
+    major = _major;
+    minor = _minor;
+    patch = _patch;
+  }
 
   // Comparison operators.
   bool operator==(const Version& other) const;
