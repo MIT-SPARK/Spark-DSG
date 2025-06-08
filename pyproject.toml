@@ -13,6 +13,7 @@ dependencies = [
     "numpy",
     "seaborn",
     "shapely",
+    "zmq",
 ]
 authors = [
   {name ="Nathan Hughes", email = "na26933@mit.edu"},
@@ -31,7 +32,6 @@ viz = [
     "plotly",
     "open3d >= 0.17",
     "scipy",
-    "zmq",
 ]
 
 [project.urls]

@@ -3,6 +3,7 @@
 import click
 
 import spark_dsg.commands.visualize as visualize
+import spark_dsg.commands.zmq as zmq
 
 
 @click.group()
@@ -12,6 +13,7 @@ def cli():
 
 
 cli.add_command(visualize.cli)
+cli.add_command(zmq.cli)
 
 if __name__ == "__main__":
     cli()

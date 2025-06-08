@@ -33,6 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <pybind11/pybind11.h>
+#include <spark_dsg/serialization/versioning.h>
 
 #include "spark_dsg/python/attributes.h"
 #include "spark_dsg/python/bounding_box.h"
@@ -59,4 +60,6 @@ PYBIND11_MODULE(_dsg_bindings, m) {
   spark_dsg::python::init_scene_graph(m);
   spark_dsg::python::init_scene_graph_layer(m);
   spark_dsg::python::init_spark_types(m);
+
+  m.def("version", []() { return spark_dsg::io::FileHeader::current().version.toString(); });
 }
