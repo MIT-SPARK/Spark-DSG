@@ -152,7 +152,7 @@ def test_agent_attributes(resource_dir):
     mp3d_dsg = resource_dir / "apartment_dsg.json"
     G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
 
-    layer_id = G.get_layer_id(dsg.DsgLayers.AGENTS).layer
+    layer_id = G.get_layer_key(dsg.DsgLayers.AGENTS).layer
     agents = G.get_layer(layer_id, "a")
     for agent in agents.nodes:
         assert hasattr(agent, "id")
@@ -175,7 +175,7 @@ def test_object_attributes(resource_dir):
     for node in objects.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "O"
-        assert node.layer == G.get_layer_id(dsg.DsgLayers.OBJECTS)
+        assert node.layer == G.get_layer_key(dsg.DsgLayers.OBJECTS)
 
         _check_parent(node)
         _check_base_attributes(node.attributes)
@@ -194,7 +194,7 @@ def test_place_attributes(resource_dir):
     for node in places.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "p"
-        assert node.layer == G.get_layer_id(dsg.DsgLayers.PLACES)
+        assert node.layer == G.get_layer_key(dsg.DsgLayers.PLACES)
 
         _check_parent(node)
         _check_siblings(G, node)
@@ -220,7 +220,7 @@ def test_room_attributes(resource_dir):
     for node in rooms.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "R"
-        assert node.layer == G.get_layer_id(dsg.DsgLayers.ROOMS)
+        assert node.layer == G.get_layer_key(dsg.DsgLayers.ROOMS)
 
         _check_parent(node)
         _check_siblings(G, node)
@@ -244,7 +244,7 @@ def test_building_attributes(resource_dir):
     for node in buildings.nodes:
         assert hasattr(node, "id")
         assert node.id.category == "B"
-        assert node.layer == G.get_layer_id(dsg.DsgLayers.BUILDINGS)
+        assert node.layer == G.get_layer_key(dsg.DsgLayers.BUILDINGS)
 
         _check_parent(node)
         _check_siblings(G, node)
