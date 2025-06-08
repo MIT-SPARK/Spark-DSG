@@ -32,30 +32,48 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+#include "spark_dsg/python/python_types.h"
+
 #include <pybind11/pybind11.h>
 
-#include "spark_dsg/python/attributes.h"
-#include "spark_dsg/python/bounding_box.h"
-#include "spark_dsg/python/color.h"
-#include "spark_dsg/python/graph_types.h"
-#include "spark_dsg/python/mesh.h"
-#include "spark_dsg/python/metadata.h"
-#include "spark_dsg/python/python_types.h"
-#include "spark_dsg/python/scene_graph_iterators.h"
-#include "spark_dsg/python/scene_graph_layer.h"
-#include "spark_dsg/python/spark_types.h"
+namespace spark_dsg::python {
 
-PYBIND11_MODULE(_dsg_bindings, m) {
-  pybind11::options options;
+namespace py = pybind11;
 
-  spark_dsg::python::init_attributes(m);
-  spark_dsg::python::init_bounding_box(m);
-  spark_dsg::python::init_color(m);
-  spark_dsg::python::init_graph_types(m);
-  spark_dsg::python::init_mesh(m);
-  spark_dsg::python::init_metadata(m);
-  spark_dsg::python::init_python_types(m);
-  spark_dsg::python::init_scene_graph(m);
-  spark_dsg::python::init_scene_graph_layer(m);
-  spark_dsg::python::init_spark_types(m);
+PythonPartitionId::PythonPartitionId(PartitionId value) : value(value) {}
+
+PythonPartitionId::PythonPartitionId(char value) : value(value) {}
+
+PythonPartitionId::operator PartitionId() const { return value; }
+
+Quaternion::Quaternion() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) {}
+
+Quaternion::Quaternion(double w, double x, double y, double z)
+    : w(w), x(x), y(y), z(z) {}
+
+void init_types(py::module_& m) {
+  // NOTE(nathan) this is a shim to enable implicit casting of chars to partition ids to
+  // keep python api similar to before. This is not recommended in general
+  py::class_<PythonPartitionId>(m, "PartitionId")
+      .def(py::init<PartitionId>())
+      .def(py::init<char>());
+
+  py::implicitly_convertible<PartitionId, PythonPartitionId>();
+  py::implicitly_convertible<char, PythonPartitionId>();
+
+  py::class_<Quaternion>(m, "Quaternion")
+      .def(py::init<>())
+      .def(py::init<double, double, double, double>())
+      .def_readwrite("w", &Quaternion::w)
+      .def_readwrite("x", &Quaternion::x)
+      .def_readwrite("y", &Quaternion::y)
+      .def_readwrite("z", &Quaternion::z)
+      .def("__repr__", [](const Quaternion& q) {
+        std::stringstream ss;
+        ss << "Quaternion<w=" << q.w << ", x=" << q.x << ", y=" << q.y << ", z=" << q.z
+           << ">";
+        return ss.str();
+      });
 }
+
+}  // namespace spark_dsg::python

@@ -32,30 +32,11 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+#pragma once
 #include <pybind11/pybind11.h>
 
-#include "spark_dsg/python/attributes.h"
-#include "spark_dsg/python/bounding_box.h"
-#include "spark_dsg/python/color.h"
-#include "spark_dsg/python/graph_types.h"
-#include "spark_dsg/python/mesh.h"
-#include "spark_dsg/python/metadata.h"
-#include "spark_dsg/python/python_types.h"
-#include "spark_dsg/python/scene_graph_iterators.h"
-#include "spark_dsg/python/scene_graph_layer.h"
-#include "spark_dsg/python/spark_types.h"
+namespace spark_dsg::python {
 
-PYBIND11_MODULE(_dsg_bindings, m) {
-  pybind11::options options;
+void init_bounding_box(pybind11::module_& m);
 
-  spark_dsg::python::init_attributes(m);
-  spark_dsg::python::init_bounding_box(m);
-  spark_dsg::python::init_color(m);
-  spark_dsg::python::init_graph_types(m);
-  spark_dsg::python::init_mesh(m);
-  spark_dsg::python::init_metadata(m);
-  spark_dsg::python::init_python_types(m);
-  spark_dsg::python::init_scene_graph(m);
-  spark_dsg::python::init_scene_graph_layer(m);
-  spark_dsg::python::init_spark_types(m);
-}
+}  // namespace spark_dsg::python

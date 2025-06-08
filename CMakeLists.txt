@@ -25,7 +25,7 @@ option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 
 set(SPARK_DSG_INSTALL_PREFIX "")
-if(DEFINED SKBUILD AND ${SKBUILD} GREATER 0)
+if(DEFINED SKBUILD AND "${SKBUILD}" GREATER 0)
   # nest headers, cmake and built lib under spark_dsg to make installation into sitepackages / wheel work correctly
   set(SPARK_DSG_INSTALL_PREFIX "${PROJECT_NAME}/")
   set(SPARK_DSG_BUILD_ZMQ OFF)

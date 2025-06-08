@@ -33,39 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Geometry>
-#include <iostream>
+#include <pybind11/pybind11.h>
 
 namespace spark_dsg::python {
 
-template <typename Scalar>
-struct Quaternion {
-  Quaternion() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) {}
-
-  Quaternion(Scalar w, Scalar x, Scalar y, Scalar z) : w(w), x(x), y(y), z(z) {}
-
-  explicit Quaternion(const Eigen::Quaternion<Scalar> other) {
-    w = other.w();
-    x = other.x();
-    y = other.y();
-    z = other.z();
-  }
-
-  operator Eigen::Quaternion<Scalar>() const {
-    return Eigen::Quaternion<Scalar>(w, x, y, z);
-  }
-
-  Scalar w;
-  Scalar x;
-  Scalar y;
-  Scalar z;
-};
-
-template <typename Scalar>
-std::ostream& operator<<(std::ostream& out, const Quaternion<Scalar>& q) {
-  out << "Quaternion<w=" << q.w << ", x=" << q.x << ", y=" << q.y << ", z=" << q.z
-      << ">";
-  return out;
-}
+void init_metadata(pybind11::module_& m);
 
 }  // namespace spark_dsg::python
