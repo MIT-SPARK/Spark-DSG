@@ -47,9 +47,9 @@ SceneGraphNode::~SceneGraphNode() = default;
 
 bool SceneGraphNode::hasParent() const { return parents_.size() == 1; }
 
-bool SceneGraphNode::hasSiblings() const { return not siblings_.empty(); }
+bool SceneGraphNode::hasSiblings() const { return !siblings_.empty(); }
 
-bool SceneGraphNode::hasChildren() const { return not children_.empty(); }
+bool SceneGraphNode::hasChildren() const { return !children_.empty(); }
 
 std::optional<NodeId> SceneGraphNode::getParent() const {
   if (parents_.size() != 1) {
