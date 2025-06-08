@@ -58,9 +58,7 @@ NodeIter& NodeIter::operator++() {
   return *this;
 }
 
-bool NodeIter::operator==(const IterSentinel&) const {
-  return !valid_ || curr_iter_ == end_iter_;
-}
+bool NodeIter::operator==(const IterSentinel&) const { return !valid_ || curr_iter_ == end_iter_; }
 
 EdgeIter::EdgeIter() : valid_(false) {}
 
@@ -84,8 +82,6 @@ EdgeIter& EdgeIter::operator++() {
   return *this;
 }
 
-bool EdgeIter::operator==(const IterSentinel&) const {
-  return !valid_ || curr_iter_ == end_iter_;
-}
+bool EdgeIter::operator==(const IterSentinel&) const { return !valid_ || curr_iter_ == end_iter_; }
 
 }  // namespace spark_dsg::python

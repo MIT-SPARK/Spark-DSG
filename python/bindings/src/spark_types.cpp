@@ -65,9 +65,7 @@ void init_spark_types(py::module_& m) {
       .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS)
       .def_static(
           "name_to_layer_id",
-          [](const std::string& name) -> std::optional<LayerKey> {
-            return DsgLayers::nameToLayerId(name);
-          },
+          [](const std::string& name) -> std::optional<LayerKey> { return DsgLayers::nameToLayerId(name); },
           "name"_a);
 
   py::class_<LayerKey>(m, "LayerKey")
@@ -101,12 +99,9 @@ void init_spark_types(py::module_& m) {
       .def_property("category_id", &NodeSymbol::categoryId, nullptr)
       .def_property("category", &NodeSymbol::category, nullptr)
       .def_property(
-          "value",
-          [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); },
-          nullptr)
+          "value", [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); }, nullptr)
       .def("__repr__", [](const NodeSymbol& ns) { return ns.str(false); })
-      .def("__hash__",
-           [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); })
+      .def("__hash__", [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); })
       .def("str", &NodeSymbol::str, "literal"_a = true)
       .def(pybind11::self == pybind11::self)
       .def(pybind11::self != pybind11::self);

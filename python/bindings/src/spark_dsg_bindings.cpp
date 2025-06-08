@@ -41,6 +41,7 @@
 #include "spark_dsg/python/mesh.h"
 #include "spark_dsg/python/metadata.h"
 #include "spark_dsg/python/python_types.h"
+#include "spark_dsg/python/scene_graph.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
 #include "spark_dsg/python/scene_graph_layer.h"
 #include "spark_dsg/python/spark_types.h"

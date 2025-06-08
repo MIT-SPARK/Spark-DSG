@@ -43,6 +43,8 @@ namespace py = pybind11;
 using namespace spark_dsg;
 
 void init_color(py::module_& m) {
+  // TODO(nathan) colormaps
+
   py::class_<Color>(m, "Color")
       .def_readwrite("r", &Color::r)
       .def_readwrite("g", &Color::g)

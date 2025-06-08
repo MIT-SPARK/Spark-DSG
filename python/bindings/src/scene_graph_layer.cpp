@@ -32,118 +32,62 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+#include "spark_dsg/python/scene_graph_layer.h"
+
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-#include <spark_dsg/bounding_box.h>
-#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
-#include <spark_dsg/edge_container.h>
-#include <spark_dsg/labelspace.h>
-#include <spark_dsg/mesh.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
-#include <spark_dsg/printing.h>
 #include <spark_dsg/scene_graph_layer.h>
-#include <spark_dsg/scene_graph_node.h>
-#include <spark_dsg/scene_graph_types.h>
-#include <spark_dsg/scene_graph_utilities.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
-#include <spark_dsg/serialization/versioning.h>
 
-#include <filesystem>
-#include <iomanip>
-#include <sstream>
-
-#include "spark_dsg/python/attributes.h"
-#include "spark_dsg/python/mesh.h"
 #include "spark_dsg/python/python_layer_view.h"
-#include "spark_dsg/python/python_types.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
-#include "spark_dsg/python/spark_types.h"
+
+namespace spark_dsg::python {
 
 namespace py = pybind11;
 using namespace py::literals;
 
-using namespace spark_dsg;
-using spark_dsg::python::EdgeIter;
-using spark_dsg::python::GlobalEdgeIter;
-using spark_dsg::python::GlobalNodeIter;
-using spark_dsg::python::IterSentinel;
-using spark_dsg::python::LayerIter;
-using spark_dsg::python::LayerView;
-using spark_dsg::python::NodeIter;
-using spark_dsg::python::PartitionIter;
-using spark_dsg::python::PythonPartitionId;
-using spark_dsg::python::Quaternion;
-
-PYBIND11_MODULE(_dsg_bindings, module) {
-  py::options options;
-
-  spark_dsg::python::init_types(module);
-  spark_dsg::python::init_spark_types(module);
-  spark_dsg::python::init_mesh(module);
-  spark_dsg::python::init_attributes(module);
-
-  /**************************************************************************************
-   * Scene graph layer
-   *************************************************************************************/
-
-  py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(module,
-                                                                "SceneGraphLayer")
+void init_scene_graph_layer(py::module_& m) {
+  py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(m, "SceneGraphLayer")
       .def(py::init<LayerId>())
       .def(py::init<const std::string&>())
       .def("add_node",
            [](SceneGraphLayer& layer, NodeSymbol node, const NodeAttributes& attrs) {
              layer.emplaceNode(node, attrs.clone());
            })
+      .def(
+          "insert_edge",
+          [](SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) { return layer.insertEdge(source, target); })
       .def("insert_edge",
-           [](SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) {
-             return layer.insertEdge(source, target);
-           })
-      .def("insert_edge",
-           [](SceneGraphLayer& layer,
-              NodeSymbol source,
-              NodeSymbol target,
-              const EdgeAttributes& info) {
+           [](SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target, const EdgeAttributes& info) {
              return layer.insertEdge(source, target, info.clone());
            })
       .def("has_node", &SceneGraphLayer::hasNode)
       .def("has_edge", &SceneGraphLayer::hasEdge)
-      .def("get_node",
-           &SceneGraphLayer::getNode,
-           py::return_value_policy::reference_internal)
-      .def("find_node",
-           &SceneGraphLayer::findNode,
-           py::return_value_policy::reference_internal)
-      .def("get_edge",
-           &SceneGraphLayer::getEdge,
-           py::return_value_policy::reference_internal)
-      .def("find_edge",
-           &SceneGraphLayer::findEdge,
-           py::return_value_policy::reference_internal)
+      .def("get_node", &SceneGraphLayer::getNode, py::return_value_policy::reference_internal)
+      .def("find_node", &SceneGraphLayer::findNode, py::return_value_policy::reference_internal)
+      .def("get_edge", &SceneGraphLayer::getEdge, py::return_value_policy::reference_internal)
+      .def("find_edge", &SceneGraphLayer::findEdge, py::return_value_policy::reference_internal)
       .def("remove_edge", &SceneGraphLayer::removeEdge)
       .def("num_nodes", &SceneGraphLayer::numNodes)
       .def("num_edges", &SceneGraphLayer::numEdges)
       .def("get_position",
-           [](const SceneGraphLayer& layer, NodeSymbol node) {
-             return layer.getNode(node).attributes().position;
-           })
+           [](const SceneGraphLayer& layer, NodeSymbol node) { return layer.getNode(node).attributes().position; })
       .def_readonly("id", &SceneGraphLayer::id)
       .def_property(
           "nodes",
-          [](const SceneGraphLayer& view) {
-            return py::make_iterator(NodeIter(view.nodes()), IterSentinel());
-          },
+          [](const SceneGraphLayer& view) { return py::make_iterator(NodeIter(view.nodes()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const SceneGraphLayer& view) {
-            return py::make_iterator(EdgeIter(view.edges()), IterSentinel());
-          },
+          [](const SceneGraphLayer& view) { return py::make_iterator(EdgeIter(view.edges()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def("to_binary",
@@ -154,11 +98,10 @@ PYBIND11_MODULE(_dsg_bindings, module) {
            })
       .def_static("from_binary", [](const py::bytes& contents) {
         const auto view = static_cast<std::string_view>(contents);
-        return io::binary::readLayer(reinterpret_cast<const uint8_t*>(view.data()),
-                                     view.size());
+        return io::binary::readLayer(reinterpret_cast<const uint8_t*>(view.data()), view.size());
       });
 
-  py::class_<LayerView>(module, "LayerView")
+  py::class_<LayerView>(m, "LayerView")
       .def("has_node", &LayerView::hasNode)
       .def("has_edge", &LayerView::hasEdge)
       .def("get_node", &LayerView::getNode, py::return_value_policy::reference_internal)
@@ -172,16 +115,14 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           "partition", [](const LayerView& view) { return view.id.partition; }, nullptr)
       .def_property(
           "nodes",
-          [](const LayerView& view) {
-            return py::make_iterator(view.nodes(), IterSentinel());
-          },
+          [](const LayerView& view) { return py::make_iterator(view.nodes(), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const LayerView& view) {
-            return py::make_iterator(view.edges(), IterSentinel());
-          },
+          [](const LayerView& view) { return py::make_iterator(view.edges(), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal);
 }
+
+}  // namespace spark_dsg::python

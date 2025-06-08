@@ -70,6 +70,6 @@ struct Quaternion {
   double z;
 };
 
-void init_types(pybind11::module_& m);
+void init_python_types(pybind11::module_& m);
 
 }  // namespace spark_dsg::python

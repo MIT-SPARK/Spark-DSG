@@ -32,66 +32,26 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <pybind11/eigen.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
+#include "spark_dsg/python/graph_types.h"
+
 #include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
-#include <spark_dsg/bounding_box.h>
-#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/edge_container.h>
-#include <spark_dsg/labelspace.h>
-#include <spark_dsg/mesh.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
 #include <spark_dsg/printing.h>
-#include <spark_dsg/scene_graph_layer.h>
 #include <spark_dsg/scene_graph_node.h>
-#include <spark_dsg/scene_graph_types.h>
-#include <spark_dsg/scene_graph_utilities.h>
-#include <spark_dsg/serialization/graph_binary_serialization.h>
-#include <spark_dsg/serialization/versioning.h>
 
-#include <filesystem>
-#include <iomanip>
 #include <sstream>
 
-#include "spark_dsg/python/attributes.h"
-#include "spark_dsg/python/mesh.h"
-#include "spark_dsg/python/python_layer_view.h"
-#include "spark_dsg/python/python_types.h"
-#include "spark_dsg/python/scene_graph_iterators.h"
-#include "spark_dsg/python/spark_types.h"
+namespace spark_dsg::python {
 
 namespace py = pybind11;
+
 using namespace py::literals;
 
-using namespace spark_dsg;
-using spark_dsg::python::EdgeIter;
-using spark_dsg::python::GlobalEdgeIter;
-using spark_dsg::python::GlobalNodeIter;
-using spark_dsg::python::IterSentinel;
-using spark_dsg::python::LayerIter;
-using spark_dsg::python::LayerView;
-using spark_dsg::python::NodeIter;
-using spark_dsg::python::PartitionIter;
-using spark_dsg::python::PythonPartitionId;
-using spark_dsg::python::Quaternion;
-
-PYBIND11_MODULE(_dsg_bindings, module) {
-  py::options options;
-
-  spark_dsg::python::init_types(module);
-  spark_dsg::python::init_spark_types(module);
-  spark_dsg::python::init_mesh(module);
-  spark_dsg::python::init_attributes(module);
-
-  /**************************************************************************************
-   * Scene graph node
-   *************************************************************************************/
-
-  py::class_<SceneGraphNode>(module, "SceneGraphNode")
+void init_graph_types(py::module_& m) {
+  py::class_<SceneGraphNode>(m, "SceneGraphNode")
       .def("has_parent", &SceneGraphNode::hasParent)
       .def("has_siblings", &SceneGraphNode::hasSiblings)
       .def("has_children", &SceneGraphNode::hasChildren)
@@ -102,8 +62,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
                     &SceneGraphNode::tryAttributes<NodeAttributes>,
                     &SceneGraphNode::tryAttributes<NodeAttributes>,
                     py::return_value_policy::reference_internal)
-      .def_property_readonly(
-          "id", [](const SceneGraphNode& node) { return NodeSymbol(node.id); })
+      .def_property_readonly("id", [](const SceneGraphNode& node) { return NodeSymbol(node.id); })
       .def_readonly("layer", &SceneGraphNode::layer)
       .def("__repr__", [](const SceneGraphNode& node) {
         std::stringstream ss;
@@ -111,11 +70,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
         return ss.str();
       });
 
-  /**************************************************************************************
-   * Scene graph edge
-   *************************************************************************************/
-
-  py::class_<SceneGraphEdge>(module, "SceneGraphEdge")
+  py::class_<SceneGraphEdge>(m, "SceneGraphEdge")
       .def_readonly("source", &SceneGraphEdge::source)
       .def_readonly("target", &SceneGraphEdge::target)
       .def_property(
@@ -124,8 +79,9 @@ PYBIND11_MODULE(_dsg_bindings, module) {
           [](SceneGraphEdge& edge, const EdgeAttributes& info) { *edge.info = info; })
       .def("__repr__", [](const SceneGraphEdge& edge) {
         std::stringstream ss;
-        ss << "Edge<source=" << NodeSymbol(edge.source).str()
-           << ", target=" << NodeSymbol(edge.target).str() << ">";
+        ss << "Edge<source=" << NodeSymbol(edge.source).str() << ", target=" << NodeSymbol(edge.target).str() << ">";
         return ss.str();
       });
 }
+
+}  // namespace spark_dsg::python

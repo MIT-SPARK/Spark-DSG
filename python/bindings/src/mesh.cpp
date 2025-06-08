@@ -113,9 +113,8 @@ void setEigenFaces(Mesh& mesh, const Eigen::MatrixXi& indices) {
 
   mesh.resizeFaces(indices.cols());
   for (int i = 0; i < indices.cols(); ++i) {
-    Mesh::Face face{{static_cast<size_t>(indices(0, i)),
-                     static_cast<size_t>(indices(1, i)),
-                     static_cast<size_t>(indices(2, i))}};
+    Mesh::Face face{
+        {static_cast<size_t>(indices(0, i)), static_cast<size_t>(indices(1, i)), static_cast<size_t>(indices(2, i))}};
     mesh.face(i) = face;
   }
 }
@@ -145,10 +144,7 @@ void init_mesh(py::module_& m) {
       .def("label", &Mesh::label)
       .def("set_label", &Mesh::setLabel)
       .def("face", py::overload_cast<size_t>(&Mesh::face, py::const_))
-      .def("set_face",
-           [](Mesh& mesh, size_t index, const Mesh::Face& face) {
-             mesh.face(index) = face;
-           })
+      .def("set_face", [](Mesh& mesh, size_t index, const Mesh::Face& face) { mesh.face(index) = face; })
       .def("to_json", &Mesh::serializeToJson)
       .def_static("from_json", &Mesh::deserializeFromJson)
       .def("to_binary",
@@ -160,35 +156,22 @@ void init_mesh(py::module_& m) {
       .def_static("from_binary",
                   [](const py::bytes& contents) {
                     const auto view = static_cast<std::string_view>(contents);
-                    return Mesh::deserializeFromBinary(
-                        reinterpret_cast<const uint8_t*>(view.data()), view.size());
+                    return Mesh::deserializeFromBinary(reinterpret_cast<const uint8_t*>(view.data()), view.size());
                   })
       .def("save", &Mesh::save)
-      .def("save",
-           [](const Mesh& mesh, const std::filesystem::path& path) { mesh.save(path); })
+      .def("save", [](const Mesh& mesh, const std::filesystem::path& path) { mesh.save(path); })
       .def_static("load", &Mesh::load)
-      .def_static("load",
-                  [](const std::filesystem::path& path) { return Mesh::load(path); })
-      .def("get_vertices",
-           [](const Mesh& mesh) { return spark_dsg::python::getEigenVertices(mesh); })
-      .def("get_faces",
-           [](const Mesh& mesh) { return spark_dsg::python::getEigenFaces(mesh); })
+      .def_static("load", [](const std::filesystem::path& path) { return Mesh::load(path); })
+      .def("get_vertices", [](const Mesh& mesh) { return spark_dsg::python::getEigenVertices(mesh); })
+      .def("get_faces", [](const Mesh& mesh) { return spark_dsg::python::getEigenFaces(mesh); })
       .def("get_labels", [](const Mesh& mesh) { return mesh.labels; })
       .def("set_vertices",
-           [](Mesh& mesh, const Eigen::MatrixXd& points) {
-             spark_dsg::python::setEigenVertices(mesh, points);
-           })
-      .def("set_faces",
-           [](Mesh& mesh, const Eigen::MatrixXi& faces) {
-             spark_dsg::python::setEigenFaces(mesh, faces);
-           })
+           [](Mesh& mesh, const Eigen::MatrixXd& points) { spark_dsg::python::setEigenVertices(mesh, points); })
+      .def("set_faces", [](Mesh& mesh, const Eigen::MatrixXi& faces) { spark_dsg::python::setEigenFaces(mesh, faces); })
       .def(
           "transform",
-          [](Mesh& mesh,
-             const Eigen::Matrix3d& rotation,
-             const Eigen::Vector3d& translation) {
-            const Eigen::Isometry3d transform =
-                Eigen::Translation3d(translation) * Eigen::Quaterniond(rotation);
+          [](Mesh& mesh, const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation) {
+            const Eigen::Isometry3d transform = Eigen::Translation3d(translation) * Eigen::Quaterniond(rotation);
             mesh.transform(transform.cast<float>());
           },
           "rotation"_a = Eigen::Matrix3d::Identity(),

@@ -69,34 +69,24 @@ void init_metadata(py::module_& m) {
   py::class_<Metadata>(m, "_Metadata")
       .def(py::init<>())
       .def("_get", [](const Metadata& data) { return data().dump(); })
-      .def("_set",
-           [](Metadata& data, const std::string& contents) {
-             data.set(nlohmann::json::parse(contents));
-           })
-      .def("_add", [](Metadata& data, const std::string& contents) {
-        data.add(nlohmann::json::parse(contents));
-      });
+      .def("_set", [](Metadata& data, const std::string& contents) { data.set(nlohmann::json::parse(contents)); })
+      .def("_add", [](Metadata& data, const std::string& contents) { data.add(nlohmann::json::parse(contents)); });
 
   py::class_<Labelspace>(m, "Labelspace")
       .def(py::init<>())
       .def(py::init<const std::map<SemanticLabel, std::string>&>())
       .def("get_label", &Labelspace::getLabel)
       .def("get_category",
-           [](const Labelspace& labelspace, SemanticLabel label) {
-             return labelspace.getCategory(label);
-           })
+           [](const Labelspace& labelspace, SemanticLabel label) { return labelspace.getCategory(label); })
       .def(
           "get_node_category",
-          [](const Labelspace& labelspace,
-             const SceneGraphNode& node,
-             const std::string& unknown_name) {
+          [](const Labelspace& labelspace, const SceneGraphNode& node, const std::string& unknown_name) {
             const auto attrs = node.tryAttributes<SemanticNodeAttributes>();
             return attrs ? labelspace.getCategory(*attrs, unknown_name) : unknown_name;
           },
           "node"_a,
           "unknown_name"_a = "UNKNOWN")
-      .def("__bool__",
-           [](const Labelspace& labelspace) { return static_cast<bool>(labelspace); })
+      .def("__bool__", [](const Labelspace& labelspace) { return static_cast<bool>(labelspace); })
       .def_property_readonly("labels_to_names", &Labelspace::labels_to_names)
       .def_property_readonly("names_to_labels", &Labelspace::names_to_labels);
 }

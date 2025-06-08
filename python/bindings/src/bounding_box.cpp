@@ -58,9 +58,7 @@ void init_bounding_box(py::module_& m) {
       .def(py::init([](BoundingBox::Type type,
                        const Eigen::Vector3f& dim,
                        const Eigen::Vector3f& pos,
-                       const Eigen::Matrix3f& trans) {
-        return BoundingBox(type, dim, pos, trans);
-      }))
+                       const Eigen::Matrix3f& trans) { return BoundingBox(type, dim, pos, trans); }))
       .def_readwrite("type", &BoundingBox::type)
       .def_readwrite("dimensions", &BoundingBox::dimensions)
       .def_readwrite("world_P_center", &BoundingBox::world_P_center)
@@ -69,23 +67,11 @@ void init_bounding_box(py::module_& m) {
       .def("volume", &BoundingBox::volume)
       .def("has_rotation", &BoundingBox::hasRotation)
       .def("corners", &BoundingBox::corners)
-      .def("contains",
-           static_cast<bool (BoundingBox::*)(const Eigen::Vector3f&) const>(
-               &BoundingBox::contains))
-      .def("intersects",
-           static_cast<bool (BoundingBox::*)(const BoundingBox&) const>(
-               &BoundingBox::intersects))
-      .def("compute_iou",
-           static_cast<float (BoundingBox::*)(const BoundingBox&) const>(
-               &BoundingBox::computeIoU))
-      .def_property_readonly("min",
-                             [](const BoundingBox& box) {
-                               return box.pointToWorldFrame(-box.dimensions / 2);
-                             })
-      .def_property_readonly("max",
-                             [](const BoundingBox& box) {
-                               return box.pointToWorldFrame(box.dimensions / 2);
-                             })
+      .def("contains", static_cast<bool (BoundingBox::*)(const Eigen::Vector3f&) const>(&BoundingBox::contains))
+      .def("intersects", static_cast<bool (BoundingBox::*)(const BoundingBox&) const>(&BoundingBox::intersects))
+      .def("compute_iou", static_cast<float (BoundingBox::*)(const BoundingBox&) const>(&BoundingBox::computeIoU))
+      .def_property_readonly("min", [](const BoundingBox& box) { return box.pointToWorldFrame(-box.dimensions / 2); })
+      .def_property_readonly("max", [](const BoundingBox& box) { return box.pointToWorldFrame(box.dimensions / 2); })
       .def("__repr__", [](const BoundingBox& box) {
         std::stringstream ss;
         ss << box;

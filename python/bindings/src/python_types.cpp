@@ -48,15 +48,12 @@ PythonPartitionId::operator PartitionId() const { return value; }
 
 Quaternion::Quaternion() : w(1.0f), x(0.0f), y(0.0f), z(0.0f) {}
 
-Quaternion::Quaternion(double w, double x, double y, double z)
-    : w(w), x(x), y(y), z(z) {}
+Quaternion::Quaternion(double w, double x, double y, double z) : w(w), x(x), y(y), z(z) {}
 
-void init_types(py::module_& m) {
+void init_python_types(py::module_& m) {
   // NOTE(nathan) this is a shim to enable implicit casting of chars to partition ids to
   // keep python api similar to before. This is not recommended in general
-  py::class_<PythonPartitionId>(m, "PartitionId")
-      .def(py::init<PartitionId>())
-      .def(py::init<char>());
+  py::class_<PythonPartitionId>(m, "PartitionId").def(py::init<PartitionId>()).def(py::init<char>());
 
   py::implicitly_convertible<PartitionId, PythonPartitionId>();
   py::implicitly_convertible<char, PythonPartitionId>();
@@ -70,8 +67,7 @@ void init_types(py::module_& m) {
       .def_readwrite("z", &Quaternion::z)
       .def("__repr__", [](const Quaternion& q) {
         std::stringstream ss;
-        ss << "Quaternion<w=" << q.w << ", x=" << q.x << ", y=" << q.y << ", z=" << q.z
-           << ">";
+        ss << "Quaternion<w=" << q.w << ", x=" << q.x << ", y=" << q.y << ", z=" << q.z << ">";
         return ss.str();
       });
 }
