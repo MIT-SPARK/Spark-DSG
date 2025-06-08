@@ -93,10 +93,12 @@ class NodeSymbol {
  private:
   union {
     NodeId value;
-    struct __attribute__((packed)) {
+#pragma pack(push, 1)
+    struct {
       NodeId index : 56;
       char key : 8;
     } symbol;
+#pragma pack(pop)
   } value_;
 };
 
