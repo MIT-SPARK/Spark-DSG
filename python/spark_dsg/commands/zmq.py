@@ -4,7 +4,7 @@ import time
 
 import click
 import spark_dsg as dsg
-from spark_dsg.zmq import DsgReceiver, DsgSender
+from spark_dsg.zmq import DsgReceiver, DsgSender, ZmqGraph
 
 
 @click.group(name="zmq")
@@ -42,3 +42,22 @@ def echo(url, wait_duration_ms):
 
         print(f"Got graph with {receiver.graph.num_nodes()} nodes!")
         time.sleep(wait_duration_ms / 1000.0)
+
+
+@cli.command()
+@click.argument("url", type=str)
+@click.option("--poll-time-ms", "-w", type=int, default=100)
+def monitor(url, poll_time_ms):
+    """Use ZmqGraph to monitor an url for changes."""
+    with ZmqGraph(url) as zmq_graph:
+        num_nodes = None
+        while True:
+            have_change = False
+            if zmq_graph.has_change and zmq_graph.graph is not None:
+                have_change = True
+                num_nodes = zmq_graph.graph.num_nodes()
+
+            nodes_str = f"{num_nodes}" if num_nodes else "N/A"
+            change_str = "yes" if have_change else "no"
+            print(f"Graph has {nodes_str} nodes (changed: {change_str})")
+            time.sleep(poll_time_ms / 1000.0)
