@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <Eigen/Core>
+#include <filesystem>
 #include <nlohmann/json.hpp>
 #include <type_traits>
 
@@ -454,14 +455,14 @@ class DynamicSceneGraph {
    * @param filepath Filepath to save graph to.
    * @param include_mesh Optionally encode mesh (defaults to true)
    */
-  void save(std::string filepath, bool include_mesh = true) const;
+  void save(std::filesystem::path filepath, bool include_mesh = true) const;
 
   /**
    * @brief Parse graph from binary or JSON file
    * @param filepath Complete path to file to read, including extension.
    * @returns Resulting parsed scene graph
    */
-  static Ptr load(std::string filepath);
+  static Ptr load(std::filesystem::path filepath);
 
   //! @brief Set the scene graph mesh
   void setMesh(const std::shared_ptr<Mesh>& mesh);

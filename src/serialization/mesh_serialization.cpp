@@ -213,7 +213,7 @@ Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length
   return mesh;
 }
 
-void Mesh::save(std::string filepath) const {
+void Mesh::save(std::filesystem::path filepath) const {
   const auto type = io::verifyFileExtension(filepath);
   if (type == io::FileType::JSON) {
     std::ofstream outfile(filepath);
@@ -231,9 +231,9 @@ void Mesh::save(std::string filepath) const {
   out.write(reinterpret_cast<const char*>(mesh_buffer.data()), mesh_buffer.size());
 }
 
-Mesh::Ptr Mesh::load(std::string filepath) {
+Mesh::Ptr Mesh::load(std::filesystem::path filepath) {
   if (!std::filesystem::exists(filepath)) {
-    throw std::runtime_error("mesh file does not exist: " + filepath);
+    throw std::runtime_error("mesh file does not exist: " + filepath.string());
   }
 
   const auto type = io::verifyFileExtension(filepath);

@@ -220,7 +220,7 @@ void init_scene_graph(py::module_& m) {
           "filepath"_a,
           "include_mesh"_a = true)
       .def_static("load", &DynamicSceneGraph::load)
-      .def_static("load", [](const std::filesystem::path& filepath) { return DynamicSceneGraph::load(filepath); })
+      .def_static("load", [](const std::string& filepath) { return DynamicSceneGraph::load(filepath); })
       .def_readwrite("_metadata", &DynamicSceneGraph::metadata)
       .def_property(
           "layers",
