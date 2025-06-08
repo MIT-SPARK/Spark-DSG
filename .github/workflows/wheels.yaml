@@ -2,15 +2,14 @@
 # Adapted from:
 # https://github.com/pypa/cibuildwheel?tab=readme-ov-file#example-setup
 name: 'Spark-DSG Wheels'
-on: {push: {branches: [develop]}}
+on: {push: {branches: [develop, feature/cibuildwheels]}}
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        #os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-latest]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
