@@ -33,24 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <string>
+#include <pybind11/pybind11.h>
 
-#include "spark_dsg/spark_dsg_fwd.h"
+namespace spark_dsg::python {
 
-namespace spark_dsg::io::json {
+void init_graph_types(pybind11::module_& m);
 
-/**
- * @brief Get JSON string representing graph
- * @param include_mesh Optionally encode mesh (defaults to false)
- * @returns JSON string representing graph
- */
-std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh = false);
-
-/**
- * @brief parse graph from JSON string
- * @param contents JSON string to parse
- * @returns Resulting parsed scene graph
- */
-std::shared_ptr<DynamicSceneGraph> readGraph(const std::string& contents);
-
-}  // namespace spark_dsg::io::json
+}  // namespace spark_dsg::python

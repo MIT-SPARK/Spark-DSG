@@ -32,25 +32,24 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include <string>
+#include "spark_dsg/python/color.h"
 
-#include "spark_dsg/spark_dsg_fwd.h"
+#include <spark_dsg/color.h>
 
-namespace spark_dsg::io::json {
+namespace spark_dsg::python {
 
-/**
- * @brief Get JSON string representing graph
- * @param include_mesh Optionally encode mesh (defaults to false)
- * @returns JSON string representing graph
- */
-std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh = false);
+namespace py = pybind11;
 
-/**
- * @brief parse graph from JSON string
- * @param contents JSON string to parse
- * @returns Resulting parsed scene graph
- */
-std::shared_ptr<DynamicSceneGraph> readGraph(const std::string& contents);
+using namespace spark_dsg;
 
-}  // namespace spark_dsg::io::json
+void init_color(py::module_& m) {
+  // TODO(nathan) colormaps
+
+  py::class_<Color>(m, "Color")
+      .def_readwrite("r", &Color::r)
+      .def_readwrite("g", &Color::g)
+      .def_readwrite("b", &Color::b)
+      .def_readwrite("a", &Color::a);
+}
+
+}  // namespace spark_dsg::python

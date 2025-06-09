@@ -706,7 +706,7 @@ void DynamicSceneGraph::transform(const Eigen::Isometry3d& transform) {
   }
 }
 
-void DynamicSceneGraph::save(std::string filepath, bool include_mesh) const {
+void DynamicSceneGraph::save(std::filesystem::path filepath, bool include_mesh) const {
   const auto type = io::verifyFileExtension(filepath);
   if (type == io::FileType::JSON) {
     io::saveDsgJson(*this, filepath, include_mesh);
@@ -717,9 +717,9 @@ void DynamicSceneGraph::save(std::string filepath, bool include_mesh) const {
   io::saveDsgBinary(*this, filepath, include_mesh);
 }
 
-DynamicSceneGraph::Ptr DynamicSceneGraph::load(std::string filepath) {
+DynamicSceneGraph::Ptr DynamicSceneGraph::load(std::filesystem::path filepath) {
   if (!std::filesystem::exists(filepath)) {
-    throw std::runtime_error("graph file does not exist: " + filepath);
+    throw std::runtime_error("graph file does not exist: " + filepath.string());
   }
 
   const auto type = io::verifyFileExtension(filepath);

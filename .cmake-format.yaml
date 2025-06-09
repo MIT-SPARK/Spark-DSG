@@ -13,7 +13,7 @@ parse:
     pybind11_add_module:
       pargs: 1
 format:
-  line_width: 100
+  line_width: 120
   tab_size: 2
   use_tabchars: false
   max_subgroups_hwrap: 3

@@ -8,7 +8,7 @@ namespace spark_dsg {
 
 std::random_device rd;
 std::mt19937 gen(rd());
-std::uniform_int_distribution<uint8_t> dis(0, 255);
+std::uniform_int_distribution<> dis(0, 255);
 
 namespace {
 
@@ -114,7 +114,12 @@ Color Color::blend(const Color& other, float weight) const {
                static_cast<uint8_t>(a * (1.0f - weight) + other.a * weight));
 }
 
-Color Color::random() { return Color(dis(gen), dis(gen), dis(gen), dis(gen)); }
+Color Color::random() {
+  return Color(static_cast<uint8_t>(dis(gen)),
+               static_cast<uint8_t>(dis(gen)),
+               static_cast<uint8_t>(dis(gen)),
+               static_cast<uint8_t>(dis(gen)));
+}
 
 std::array<float, 4> Color::toUnitRange() const {
   return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};

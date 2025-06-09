@@ -32,34 +32,51 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <pybind11/pybind11.h>
-#include <spark_dsg/serialization/versioning.h>
-
-#include "spark_dsg/python/attributes.h"
 #include "spark_dsg/python/bounding_box.h"
-#include "spark_dsg/python/color.h"
-#include "spark_dsg/python/graph_types.h"
-#include "spark_dsg/python/mesh.h"
-#include "spark_dsg/python/metadata.h"
-#include "spark_dsg/python/python_types.h"
-#include "spark_dsg/python/scene_graph.h"
-#include "spark_dsg/python/scene_graph_iterators.h"
-#include "spark_dsg/python/scene_graph_layer.h"
-#include "spark_dsg/python/spark_types.h"
 
-PYBIND11_MODULE(_dsg_bindings, m) {
-  pybind11::options options;
+#include <pybind11/eigen.h>
+#include <pybind11/stl.h>
+#include <spark_dsg/bounding_box.h>
 
-  spark_dsg::python::init_attributes(m);
-  spark_dsg::python::init_bounding_box(m);
-  spark_dsg::python::init_color(m);
-  spark_dsg::python::init_graph_types(m);
-  spark_dsg::python::init_mesh(m);
-  spark_dsg::python::init_metadata(m);
-  spark_dsg::python::init_python_types(m);
-  spark_dsg::python::init_scene_graph(m);
-  spark_dsg::python::init_scene_graph_layer(m);
-  spark_dsg::python::init_spark_types(m);
+namespace spark_dsg::python {
 
-  m.def("version", []() { return spark_dsg::io::FileHeader::current().version.toString(); });
+namespace py = pybind11;
+using namespace py::literals;
+
+void init_bounding_box(py::module_& m) {
+  py::enum_<BoundingBox::Type>(m, "BoundingBoxType")
+      .value("INVALID", BoundingBox::Type::INVALID)
+      .value("AABB", BoundingBox::Type::AABB)
+      .value("OBB", BoundingBox::Type::OBB)
+      .value("RAABB", BoundingBox::Type::RAABB);
+
+  py::class_<BoundingBox>(m, "BoundingBox")
+      .def(py::init<>())
+      .def(py::init<const Eigen::Vector3f&>())
+      .def(py::init<const Eigen::Vector3f&, const Eigen::Vector3f&>())
+      .def(py::init<const Eigen::Vector3f&, const Eigen::Vector3f&, float>())
+      .def(py::init([](BoundingBox::Type type,
+                       const Eigen::Vector3f& dim,
+                       const Eigen::Vector3f& pos,
+                       const Eigen::Matrix3f& trans) { return BoundingBox(type, dim, pos, trans); }))
+      .def_readwrite("type", &BoundingBox::type)
+      .def_readwrite("dimensions", &BoundingBox::dimensions)
+      .def_readwrite("world_P_center", &BoundingBox::world_P_center)
+      .def_readwrite("world_R_center", &BoundingBox::world_R_center)
+      .def("is_valid", &BoundingBox::isValid)
+      .def("volume", &BoundingBox::volume)
+      .def("has_rotation", &BoundingBox::hasRotation)
+      .def("corners", &BoundingBox::corners)
+      .def("contains", static_cast<bool (BoundingBox::*)(const Eigen::Vector3f&) const>(&BoundingBox::contains))
+      .def("intersects", static_cast<bool (BoundingBox::*)(const BoundingBox&) const>(&BoundingBox::intersects))
+      .def("compute_iou", static_cast<float (BoundingBox::*)(const BoundingBox&) const>(&BoundingBox::computeIoU))
+      .def_property_readonly("min", [](const BoundingBox& box) { return box.pointToWorldFrame(-box.dimensions / 2); })
+      .def_property_readonly("max", [](const BoundingBox& box) { return box.pointToWorldFrame(box.dimensions / 2); })
+      .def("__repr__", [](const BoundingBox& box) {
+        std::stringstream ss;
+        ss << box;
+        return ss.str();
+      });
 }
+
+}  // namespace spark_dsg::python

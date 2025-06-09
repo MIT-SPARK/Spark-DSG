@@ -13,6 +13,7 @@ dependencies = [
     "numpy",
     "seaborn",
     "shapely",
+    "zmq",
 ]
 authors = [
   {name ="Nathan Hughes", email = "na26933@mit.edu"},
@@ -31,7 +32,6 @@ viz = [
     "plotly",
     "open3d >= 0.17",
     "scipy",
-    "zmq",
 ]
 
 [project.urls]
@@ -43,7 +43,6 @@ spark-dsg = "spark_dsg.__main__:cli"
 [tool.scikit-build.cmake.define]
 SPARK_DSG_BUILD_PYTHON = "ON"
 SPARK_DSG_BUILD_EXAMPLES = "OFF"
-SPARK_DSG_BUILDING_PYTHON_PACKAGE = "ON"
 BUILD_TESTING = "OFF"
 BUILD_SHARED_LIBS = "OFF"
 
@@ -52,3 +51,7 @@ BUILD_SHARED_LIBS = "OFF"
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
+
+[tool.cibuildwheel]
+skip = ["pp*", "*musl*"]
+archs = ["native"]

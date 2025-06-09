@@ -69,7 +69,7 @@ def add_bounding_boxes_to_layer(
         layer_id (int): layer to add bindings to
     """
     layer = graph.get_layer(layer_id)
-    depth = graph.get_layer_id(layer_id).layer - graph.get_layer_id(child_layer).layer
+    depth = graph.get_layer_key(layer_id).layer - graph.get_layer_key(child_layer).layer
     assert depth > 0
     for node in layer.nodes:
         bbox = compute_ancestor_bounding_box(
@@ -104,7 +104,7 @@ def _hash_layerkey(key):
 
 def _get_layer_id(graph, name):
     warnings.warn(
-        "'get_layer_id' is deprecated. Please use 'get_layer_key'",
+        "'get_layer_key' is deprecated. Please use 'get_layer_key'",
         DeprecationWarning,
         stacklevel=2,
     )

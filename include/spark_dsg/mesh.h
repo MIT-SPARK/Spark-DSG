@@ -37,6 +37,7 @@
 #include <Eigen/Dense>
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <unordered_set>
 #include <vector>
@@ -212,14 +213,14 @@ class Mesh {
    *
    * @param filepath Filepath to save graph to.
    */
-  void save(std::string filepath) const;
+  void save(std::filesystem::path filepath) const;
 
   /**
    * @brief parse mesh from binary or JSON file
    * @param filepath Complete path to file to read, including extension.
    * @returns Resulting parsed mesh
    */
-  static Ptr load(std::string filepath);
+  static Ptr load(std::filesystem::path filepath);
 
   // ------ Modification ------
 

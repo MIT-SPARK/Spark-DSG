@@ -82,7 +82,7 @@ def test_full_graph_conversion(resource_dir):
     G = dsg.DynamicSceneGraph.load(str(dsg_path))
 
     # check that we have edges between static and dynamic layers
-    agents = G.get_layer(G.get_layer_id(dsg.DsgLayers.AGENTS).layer, "a")
+    agents = G.get_layer(G.get_layer_key(dsg.DsgLayers.AGENTS).layer, "a")
     has_parents = np.array([x.has_parent() for x in agents.nodes])
     assert has_parents.any()
 

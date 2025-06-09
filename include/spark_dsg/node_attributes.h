@@ -169,7 +169,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   SemanticNodeAttributes();
   virtual ~SemanticNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
-  virtual void transform(const Eigen::Isometry3d& transform) override;
+  void transform(const Eigen::Isometry3d& transform) override;
 
   bool hasLabel() const;
   bool hasFeature() const;
@@ -210,7 +210,7 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   ObjectNodeAttributes();
   virtual ~ObjectNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
-  virtual void transform(const Eigen::Isometry3d& transform);
+  void transform(const Eigen::Isometry3d& transform) override;
 
   //! Mesh vertice connections
   std::list<size_t> mesh_connections;
@@ -375,7 +375,7 @@ struct AgentNodeAttributes : public NodeAttributes {
                       NodeId external_key);
   virtual ~AgentNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
-  virtual void transform(const Eigen::Isometry3d& transform) override;
+  void transform(const Eigen::Isometry3d& transform) override;
 
   std::chrono::nanoseconds timestamp;
   Eigen::Quaterniond world_R_body;

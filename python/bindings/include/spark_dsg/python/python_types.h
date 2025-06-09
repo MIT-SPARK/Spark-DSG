@@ -33,24 +33,43 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <string>
+#include <pybind11/pybind11.h>
+#include <spark_dsg/scene_graph_types.h>
 
-#include "spark_dsg/spark_dsg_fwd.h"
+#include <Eigen/Geometry>
 
-namespace spark_dsg::io::json {
+namespace spark_dsg::python {
 
-/**
- * @brief Get JSON string representing graph
- * @param include_mesh Optionally encode mesh (defaults to false)
- * @returns JSON string representing graph
- */
-std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh = false);
+struct PythonPartitionId {
+  PythonPartitionId(PartitionId value);
+  PythonPartitionId(char value);
+  operator PartitionId() const;
+  PartitionId value;
+};
 
-/**
- * @brief parse graph from JSON string
- * @param contents JSON string to parse
- * @returns Resulting parsed scene graph
- */
-std::shared_ptr<DynamicSceneGraph> readGraph(const std::string& contents);
+struct Quaternion {
+  Quaternion();
+  Quaternion(double w, double x, double y, double z);
 
-}  // namespace spark_dsg::io::json
+  template <typename Scalar>
+  explicit Quaternion(const Eigen::Quaternion<Scalar> other) {
+    w = other.w();
+    x = other.x();
+    y = other.y();
+    z = other.z();
+  }
+
+  template <typename Scalar>
+  operator Eigen::Quaternion<Scalar>() const {
+    return Eigen::Quaternion<Scalar>(w, x, y, z);
+  }
+
+  double w;
+  double x;
+  double y;
+  double z;
+};
+
+void init_python_types(pybind11::module_& m);
+
+}  // namespace spark_dsg::python
