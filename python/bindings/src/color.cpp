@@ -34,22 +34,28 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/python/color.h"
 
+#include <pybind11/eigen.h>
 #include <spark_dsg/color.h>
+#include <spark_dsg/colormaps.h>
+
+#include <Eigen/Dense>
 
 namespace spark_dsg::python {
 
 namespace py = pybind11;
-
-using namespace spark_dsg;
+using namespace py::literals;
 
 void init_color(py::module_& m) {
-  // TODO(nathan) colormaps
-
   py::class_<Color>(m, "Color")
       .def_readwrite("r", &Color::r)
       .def_readwrite("g", &Color::g)
       .def_readwrite("b", &Color::b)
-      .def_readwrite("a", &Color::a);
+      .def_readwrite("a", &Color::a)
+      .def("to_float_array", [](const Color& c) { return Eigen::Vector3f(c.r / 255.0, c.g / 255.0, c.b / 255.0); });
+
+  m.def("colorbrewer_color", &colormaps::colorbrewerId);
+  m.def("distinct_150_color", &colormaps::distinct150Id);
+  m.def("rainbow_color", &colormaps::rainbowId, "id"_a, "ids_per_revolution"_a = 16);
 }
 
 }  // namespace spark_dsg::python
