@@ -1,5 +1,7 @@
 """Entry point for visualizing scene graph."""
 
+import enum
+import functools
 import itertools
 import time
 from dataclasses import dataclass
@@ -13,6 +15,53 @@ import viser
 
 def _layer_name(layer_key):
     return f"layer_{layer_key.layer}p{layer_key.partition}"
+
+
+def color_from_label(G, node, default=None):
+    if not isinstance(node.attributes, dsg.SemanticNodeAttributes):
+        return default or dsg.Color()
+
+    return dsg.distinct_150_color(node.attributes.semantic_label)
+
+
+def color_from_id(G, node):
+    return dsg.colorbrewer_color(node.id.category_index())
+
+
+def color_from_parent(G, node, parent_func, default=None):
+    if not node.has_parent:
+        return default or dsg.Color()
+
+    return parent_func(G, G.get_node(node.get_parent()))
+
+
+def color_from_layer(G, node):
+    return dsg.rainbow_color(node.layer.layer)
+
+
+class ColorMode(enum.Enum):
+    LAYER = "layer"
+    ID = "id"
+    LABEL = "label"
+    PARENT = "parent"
+
+
+def colormap_from_modes(key_to_mode, default_colors=None):
+    colormap = {}
+    for layer_key, mode in key_to_mode.items():
+        default = default_colors.get(layer_key) if default_colors is not None else None
+        if mode == ColorMode.ID:
+            colormap[layer_key] = color_from_id
+        elif mode == ColorMode.LABEL:
+            colormap[layer_key] = functools.partial(color_from_label, default=default)
+        elif mode == ColorMode.PARENT:
+            colormap[layer_key] = functools.partial(
+                color_from_parent, lambda G, x: colormap[x.layer](G, x), default=default
+            )
+        else:
+            colormap[layer_key] = color_from_layer
+
+    return colormap
 
 
 class FlatGraphView:
@@ -83,6 +132,7 @@ class FlatGraphView:
 
 @dataclass
 class LayerConfig:
+    colormode: ColorMode = ColorMode.LAYER
     height_scale: float = 5.0
     draw_nodes: bool = True
     draw_edges: bool = True
@@ -93,6 +143,7 @@ class LayerHandle:
         """Add options for layer to viser."""
         self.key = key
         self.name = _layer_name(key)
+        self._colormode = config.colormode
 
         self._nodes = None
         self._edges = None
@@ -116,6 +167,10 @@ class LayerHandle:
     def draw_nodes(self):
         return self._draw_nodes.value
 
+    @property
+    def color_mode(self):
+        return self._colormode
+
     def update(self):
         draw_edges = self._draw_nodes.value and self._draw_edges.value
         if self._nodes:
@@ -124,13 +179,17 @@ class LayerHandle:
         if self._edges:
             self._edges.visible = draw_edges
 
-    def draw(self, server, G, layer, view):
+    def draw(self, server, G, layer, view, colormap):
         pos = view.pos(layer.key, self.height)
         if pos is None:
             return
 
+        colors = np.zeros(pos.shape)
+        for idx, node in enumerate(layer.nodes):
+            colors[idx] = colormap(G, node).to_float_array()
+
         self._nodes = server.scene.add_point_cloud(
-            f"{self.name}_nodes", pos, colors=(0.0, 0.0, 0.0), point_size=0.1
+            f"{self.name}_nodes", pos, colors=colors, point_size=0.1
         )
 
         edge_indices = view.layer_edges(layer.key)
@@ -160,13 +219,19 @@ class ViserRenderer:
             self.draw_mesh(G.mesh)
 
         view = FlatGraphView(G)
+        color_modes = {}
         for layer in itertools.chain(G.layers, G.layer_partitions):
             if layer.key not in self._handles:
                 self._handles[layer.key] = LayerHandle(
                     LayerConfig(), self._server, layer.key
                 )
+            color_modes[layer.key] = self._handles[layer.key].color_mode
 
-            self._handles[layer.key].draw(self._server, G, layer, view)
+        colormaps = colormap_from_modes(color_modes)
+        for layer in itertools.chain(G.layers, G.layer_partitions):
+            self._handles[layer.key].draw(
+                self._server, G, layer, view, colormaps[layer.key]
+            )
 
         self._draw_interlayer_edges(G, view)
 
