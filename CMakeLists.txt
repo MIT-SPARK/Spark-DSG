@@ -29,38 +29,42 @@ if(DEFINED SKBUILD AND "${SKBUILD}" GREATER 0)
   # nest headers, cmake and built lib under spark_dsg to make installation into sitepackages / wheel work correctly
   set(SPARK_DSG_INSTALL_PREFIX "${PROJECT_NAME}/")
   set(SPARK_DSG_BUILD_ZMQ OFF)
+endif()
 
-  include(FetchContent)
-  FetchContent_Declare(
+include(ExternalProject)
+
+find_package(nlohmann_json QUIET)
+
+if(NOT ${nlohmann_json_FOUND})
+  ExternalProject_Add(
     json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG v3.11.3
-    GIT_SHALLOW
+    GIT_SHALLOW TRUE
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
   )
+  ExternalProject_Get_Property(json SOURCE_DIR)
+  add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
+  target_include_directories(nlohmann_json::nlohmann_json INTERFACE ${SOURCE_DIR}/single_include)
+endif()
 
-  FetchContent_Declare(
+find_package(Eigen3 QUIET)
+if(NOT ${Eigen3_FOUND})
+  ExternalProject_Add(
     eigen
     URL https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip
     URL_HASH MD5=a83cb9a2cbba2dd52c137ac62d33d847
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
   )
 
-  FetchContent_GetProperties(eigen)
-  if(NOT "${eigen_POPULATED}")
-    FetchContent_Populate(eigen)
-  endif()
+  ExternalProject_Get_Property(eigen SOURCE_DIR)
   add_library(Eigen3::Eigen INTERFACE IMPORTED)
-  target_include_directories(Eigen3::Eigen INTERFACE "${eigen_SOURCE_DIR}")
-
-  FetchContent_GetProperties(json)
-  if(NOT "${json_POPULATED}")
-    FetchContent_Populate(json)
-  endif()
-  add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
-  target_include_directories(nlohmann_json::nlohmann_json INTERFACE ${json_SOURCE_DIR}/single_include)
-else()
-  find_package(nlohmann_json REQUIRED)
-  find_package(Eigen3 REQUIRED)
+  target_include_directories(Eigen3::Eigen INTERFACE "${SOURCE_DIR}")
 endif()
 
 set(SPARK_DSG_USE_ZMQ 0)
