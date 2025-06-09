@@ -2,6 +2,7 @@
 
 import itertools
 import time
+from dataclasses import dataclass
 
 import click
 import numpy as np
@@ -62,8 +63,15 @@ class FlatGraphView:
             for s, c in self._interlayer_edges.items()
         }
 
-    def pos(self, layer_key):
-        return self._pos.get(layer_key)
+    def pos(self, layer_key, height=None):
+        if layer_key not in self._pos:
+            return None
+
+        pos = self._pos[layer_key].copy()
+        if height:
+            pos[:, 2] += height
+
+        return pos
 
     @property
     def edges(self):
@@ -73,9 +81,70 @@ class FlatGraphView:
         return self._edges.get(layer_key)
 
 
+@dataclass
+class LayerConfig:
+    height_scale: float = 5.0
+    draw_nodes: bool = True
+    draw_edges: bool = True
+
+
+class LayerHandle:
+    def __init__(self, config, server, key):
+        """Add options for layer to viser."""
+        self.key = key
+        self.name = _layer_name(key)
+
+        self._nodes = None
+        self._edges = None
+
+        with server.gui.add_folder(self.name):
+            self._height = server.gui.add_number(
+                "height", initial_value=config.height_scale * key.layer
+            )
+            self._draw_nodes = server.gui.add_checkbox(
+                "draw_nodes", initial_value=config.draw_nodes
+            )
+            self._draw_edges = server.gui.add_checkbox(
+                "draw_edges", initial_value=config.draw_edges
+            )
+
+    @property
+    def height(self):
+        return self._height.value
+
+    @property
+    def draw_nodes(self):
+        return self._draw_nodes.value
+
+    def update(self):
+        draw_edges = self._draw_nodes.value and self._draw_edges.value
+        if self._nodes:
+            self._nodes.visible = self._draw_nodes.value
+
+        if self._edges:
+            self._edges.visible = draw_edges
+
+    def draw(self, server, G, layer, view):
+        pos = view.pos(layer.key, self.height)
+        if pos is None:
+            return
+
+        self._nodes = server.scene.add_point_cloud(
+            f"{self.name}_nodes", pos, colors=(0.0, 0.0, 0.0), point_size=0.1
+        )
+
+        edge_indices = view.layer_edges(layer.key)
+        if edge_indices is not None:
+            self._edges = server.scene.add_line_segments(
+                f"{self.name}_edges", pos[edge_indices], (0.0, 0.0, 0.0)
+            )
+
+
 class ViserRenderer:
     def __init__(self, ip="localhost"):
         self._server = viser.ViserServer(host=ip)
+        self._handles = {}
+        self._edge_handles = {}
 
     def draw_mesh(self, mesh):
         vertices = mesh.get_vertices()
@@ -91,48 +160,48 @@ class ViserRenderer:
             self.draw_mesh(G.mesh)
 
         view = FlatGraphView(G)
-        pos_buffer = {}
         for layer in itertools.chain(G.layers, G.layer_partitions):
-            pos_buffer[layer.key] = self._draw_layer(G, layer, view)
+            if layer.key not in self._handles:
+                self._handles[layer.key] = LayerHandle(
+                    LayerConfig(), self._server, layer.key
+                )
 
-        self._draw_interlayer_edges(G, view, pos_buffer)
+            self._handles[layer.key].draw(self._server, G, layer, view)
 
-    def _draw_layer(self, G, layer, view):
-        name = _layer_name(layer.key)
-        if layer.num_nodes() == 0:
-            return
+        self._draw_interlayer_edges(G, view)
 
-        pos = view.pos(layer.key).copy()
-        pos[:, 2] += 3.0 * layer.id
-        self._server.scene.add_point_cloud(
-            f"{name}_nodes", pos, colors=(0.0, 0.0, 0.0), point_size=0.1
-        )
+    def update(self):
+        for layer_key, handle in self._handles.items():
+            handle.update()
 
-        edge_indices = view.layer_edges(layer.key)
-        if edge_indices is not None:
-            self._server.scene.add_line_segments(
-                f"{name}_edges", pos[edge_indices], (0.0, 0.0, 0.0)
-            )
+        for source_key, targets in self._edge_handles.items():
+            for target_key, handle in targets.items():
+                handle.visible = (
+                    self._handles[source_key].draw_nodes
+                    and self._handles[target_key].draw_nodes
+                )
 
-        return pos
-
-    def _draw_interlayer_edges(self, G, view, pos_buffer):
+    def _draw_interlayer_edges(self, G, view):
         for source_layer, targets in view.edges.items():
+            self._edge_handles[source_layer] = {}
             for target_layer, edge_indices in targets.items():
-                if source_layer not in pos_buffer or target_layer not in pos_buffer:
-                    continue
+                source_pos = view.pos(source_layer, self._handles[source_layer].height)
+                target_pos = view.pos(target_layer, self._handles[target_layer].height)
+                assert source_pos is not None and target_pos is not None
 
                 source_name = _layer_name(source_layer)
                 target_name = _layer_name(target_layer)
-                source_pos = pos_buffer[source_layer]
-                pos = np.vstack((source_pos, pos_buffer[target_layer]))
+                pos = np.vstack((source_pos, target_pos))
 
                 edge_indices = edge_indices.copy()
                 edge_indices[:, 1] += source_pos.shape[0]
-                self._server.scene.add_line_segments(
-                    f"interlayer_edges_{source_name}_{target_name}",
-                    pos[edge_indices],
-                    (0.0, 0.0, 0.0),
+
+                self._edge_handles[source_layer][target_layer] = (
+                    self._server.scene.add_line_segments(
+                        f"{source_name}_to_{target_name}",
+                        pos[edge_indices],
+                        (0.0, 0.0, 0.0),
+                    )
                 )
 
 
@@ -146,3 +215,4 @@ def cli(filepath, ip):
     renderer.draw(G)
     while True:
         time.sleep(0.1)
+        renderer.update()
