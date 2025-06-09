@@ -25,11 +25,11 @@ def color_from_label(G, node, default=None):
 
 
 def color_from_id(G, node):
-    return dsg.colorbrewer_color(node.id.category_index())
+    return dsg.colorbrewer_color(node.id.category_id)
 
 
 def color_from_parent(G, node, parent_func, default=None):
-    if not node.has_parent:
+    if not node.has_parent():
         return default or dsg.Color()
 
     return parent_func(G, G.get_node(node.get_parent()))
@@ -56,7 +56,9 @@ def colormap_from_modes(key_to_mode, default_colors=None):
             colormap[layer_key] = functools.partial(color_from_label, default=default)
         elif mode == ColorMode.PARENT:
             colormap[layer_key] = functools.partial(
-                color_from_parent, lambda G, x: colormap[x.layer](G, x), default=default
+                color_from_parent,
+                parent_func=lambda G, x: colormap[x.layer](G, x),
+                default=default,
             )
         else:
             colormap[layer_key] = color_from_layer
@@ -136,6 +138,14 @@ class LayerConfig:
     height_scale: float = 5.0
     draw_nodes: bool = True
     draw_edges: bool = True
+
+
+DEFAULT_CONFIG = {
+    dsg.LayerKey(2): LayerConfig(colormode=ColorMode.LABEL),
+    dsg.LayerKey(3): LayerConfig(colormode=ColorMode.PARENT),
+    dsg.LayerKey(3, 1): LayerConfig(colormode=ColorMode.LABEL),
+    dsg.LayerKey(4): LayerConfig(colormode=ColorMode.ID),
+}
 
 
 class LayerHandle:
@@ -223,8 +233,11 @@ class ViserRenderer:
         for layer in itertools.chain(G.layers, G.layer_partitions):
             if layer.key not in self._handles:
                 self._handles[layer.key] = LayerHandle(
-                    LayerConfig(), self._server, layer.key
+                    DEFAULT_CONFIG.get(layer.key, LayerConfig()),
+                    self._server,
+                    layer.key,
                 )
+
             color_modes[layer.key] = self._handles[layer.key].color_mode
 
         colormaps = colormap_from_modes(color_modes)

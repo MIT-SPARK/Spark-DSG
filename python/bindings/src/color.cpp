@@ -47,6 +47,7 @@ using namespace py::literals;
 
 void init_color(py::module_& m) {
   py::class_<Color>(m, "Color")
+      .def(py::init())
       .def_readwrite("r", &Color::r)
       .def_readwrite("g", &Color::g)
       .def_readwrite("b", &Color::b)
