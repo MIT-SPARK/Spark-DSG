@@ -2,8 +2,7 @@
 # Adapted from:
 # https://github.com/pypa/cibuildwheel?tab=readme-ov-file#example-setup
 name: Spark-DSG Wheels
-# on: {release: {types: [published]}}
-on: {push: {branches: [fix/cross_platform]}}
+on: {release: {types: [published]}}
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
