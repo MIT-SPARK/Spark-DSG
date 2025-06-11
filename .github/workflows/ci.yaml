@@ -1,7 +1,7 @@
 ---
 # based on https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: 'Spark-DSG Build and Test'
-on: [pull_request]
+on: [pull_request, {push: {branches: [fix/cross_platform]}}]
 jobs:
   lint:
     runs-on: ubuntu-latest

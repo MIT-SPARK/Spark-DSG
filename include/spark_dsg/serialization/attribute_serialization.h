@@ -131,7 +131,7 @@ class Visitor {
   } type_;
 
   std::unique_ptr<SerializationImpl> impl_;
-  inline thread_local static std::unique_ptr<Visitor> s_instance_ = nullptr;
+  thread_local static std::unique_ptr<Visitor> s_instance_;
 };
 
 template <typename T>
