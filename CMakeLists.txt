@@ -24,11 +24,8 @@ option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 
-set(SPARK_DSG_INSTALL_PREFIX "")
 set(FIND_MODE REQUIRED)
 if(DEFINED SKBUILD AND "${SKBUILD}" GREATER 0)
-  # nest headers, cmake and built lib under spark_dsg to make installation into sitepackages / wheel work correctly
-  set(SPARK_DSG_INSTALL_PREFIX "${PROJECT_NAME}/")
   set(SPARK_DSG_BUILD_ZMQ OFF)
   set(FIND_MODE QUIET)
 endif()
@@ -150,34 +147,37 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
+if(NOT DEFINED SKBUILD OR NOT "${SKBUILD}")
+  include(GNUInstallDirs)
+  include(CMakePackageConfigHelpers)
 
-write_basic_package_version_file(
-  ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion
-)
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion
+  )
 
-configure_package_config_file(
-  ${CMAKE_CURRENT_LIST_DIR}/cmake/spark_dsgConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
-  INSTALL_DESTINATION "${SPARK_DSG_INSTALL_PREFIX}${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg"
-)
+  configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/spark_dsgConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg"
+  )
 
-install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT spark_dsg-targets
-  LIBRARY DESTINATION "${SPARK_DSG_INSTALL_PREFIX}${CMAKE_INSTALL_LIBDIR}"
-  ARCHIVE DESTINATION "${SPARK_DSG_INSTALL_PREFIX}${CMAKE_INSTALL_LIBDIR}"
-)
+  install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT spark_dsg-targets
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  )
 
-install(DIRECTORY include/ DESTINATION "${SPARK_DSG_INSTALL_PREFIX}${CMAKE_INSTALL_INCLUDEDIR}")
+  install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
-install(
-  EXPORT spark_dsg-targets
-  FILE spark_dsgTargets.cmake
-  NAMESPACE spark_dsg::
-  DESTINATION "${SPARK_DSG_INSTALL_PREFIX}${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg"
-)
+  install(
+    EXPORT spark_dsg-targets
+    FILE spark_dsgTargets.cmake
+    NAMESPACE spark_dsg::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg"
+  )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake
-        DESTINATION "${SPARK_DSG_INSTALL_PREFIX}${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg"
-)
+  install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/spark_dsgConfigVersion.cmake
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/spark_dsg"
+  )
+endif()
