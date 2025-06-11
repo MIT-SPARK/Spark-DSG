@@ -1,7 +1,7 @@
 ---
 # Adapted from:
 # https://github.com/pypa/cibuildwheel?tab=readme-ov-file#example-setup
-name: 'Spark-DSG Wheels'
+name: Spark-DSG Wheels
 on: {release: {types: [published]}}
 jobs:
   build_wheels:

@@ -1,6 +1,6 @@
 ---
 # based on https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: 'Spark-DSG Build and Test'
+name: Spark-DSG Build and Test
 on: [pull_request]
 jobs:
   lint:
