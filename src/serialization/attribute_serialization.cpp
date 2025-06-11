@@ -36,8 +36,6 @@
 
 namespace spark_dsg::serialization {
 
-std::unique_ptr<Visitor> Visitor::s_instance_ = nullptr;
-
 Visitor& Visitor::instance() {
   if (!s_instance_) {
     s_instance_.reset(new Visitor());
