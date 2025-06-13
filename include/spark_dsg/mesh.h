@@ -265,6 +265,11 @@ class Mesh {
    */
   Mesh& operator+=(const Mesh& other);
 
+  /**
+   * @brief Get memory size
+   */
+  size_t totalBytes() const;
+
  public:
   const bool has_colors;
   const bool has_timestamps;
