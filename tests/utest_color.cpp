@@ -35,6 +35,7 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
+#include <random>
 #include <unordered_map>
 
 #include "spark_dsg/color.h"
@@ -118,11 +119,15 @@ TEST(Color, fromHLS) {
 }
 
 TEST(Color, HLSConversion) {
-  const uint32_t max = 0x00FFFFFF;
-  for (uint32_t i = 0; i <= max; i += 10) {
-    const auto red = static_cast<uint8_t>(i & 0x000000FF);
-    const auto green = static_cast<uint8_t>((i & 0x0000FF00) >> 8);
-    const auto blue = static_cast<uint8_t>((i & 0x00FF0000) >> 16);
+  // generate random RGB colors
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<uint32_t> distrib(0, 0x00FFFFFF);
+  for (uint32_t sample = 0; sample <= 500; ++sample) {
+    const auto rgb = distrib(gen);
+    const auto red = static_cast<uint8_t>(rgb & 0x000000FF);
+    const auto green = static_cast<uint8_t>((rgb & 0x0000FF00) >> 8);
+    const auto blue = static_cast<uint8_t>((rgb & 0x00FF0000) >> 16);
     const Color expected(red, green, blue);
     const auto [hue, luminance, saturation] = expected.toHLS();
     const auto result = Color::fromHLS(hue, luminance, saturation);
@@ -131,11 +136,15 @@ TEST(Color, HLSConversion) {
 }
 
 TEST(Color, HSVConversion) {
-  const uint32_t max = 0x00FFFFFF;
-  for (uint32_t i = 0; i <= max; i += 10) {
-    const auto red = static_cast<uint8_t>(i & 0x000000FF);
-    const auto green = static_cast<uint8_t>((i & 0x0000FF00) >> 8);
-    const auto blue = static_cast<uint8_t>((i & 0x00FF0000) >> 16);
+  // generate random RGB colors
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<uint32_t> distrib(0, 0x00FFFFFF);
+  for (uint32_t sample = 0; sample <= 500; ++sample) {
+    const auto rgb = distrib(gen);
+    const auto red = static_cast<uint8_t>(rgb & 0x000000FF);
+    const auto green = static_cast<uint8_t>((rgb & 0x0000FF00) >> 8);
+    const auto blue = static_cast<uint8_t>((rgb & 0x00FF0000) >> 16);
     const Color expected(red, green, blue);
     const auto [hue, luminance, saturation] = expected.toHSV();
     const auto result = Color::fromHSV(hue, luminance, saturation);

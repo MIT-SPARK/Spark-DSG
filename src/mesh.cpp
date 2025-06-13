@@ -276,6 +276,16 @@ Mesh& Mesh::operator+=(const Mesh& other) {
   return *this;
 }
 
+size_t Mesh::totalBytes() const {
+  const auto point_bytes = 3 * sizeof(float) * points.size();
+  const auto color_bytes = sizeof(Color) * colors.size();
+  const auto stamp_bytes =
+      sizeof(Timestamp) * (stamps.size() + first_seen_stamps.size());
+  const auto label_bytes = sizeof(Label) * labels.size();
+  const auto face_bytes = 3 * sizeof(uint64_t) * faces.size();
+  return point_bytes + color_bytes + stamp_bytes + label_bytes + face_bytes;
+}
+
 bool operator==(const Mesh& lhs, const Mesh& rhs) {
   return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
          lhs.has_labels == rhs.has_labels &&
