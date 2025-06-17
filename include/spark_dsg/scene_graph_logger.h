@@ -36,6 +36,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "spark_dsg/scene_graph_types.h"
 #include "spark_dsg/spark_dsg_fwd.h"
@@ -47,16 +48,23 @@ namespace spark_dsg {
  */
 class SceneGraphLogger {
  public:
+  struct Entry {
+    size_t num_active_nodes = 0;
+    size_t num_removed_nodes = 0;
+    size_t num_merged_nodes = 0;
+    size_t num_nodes_with_parents = 0;
+    size_t num_nodes_with_children = 0;
+    size_t num_edges = 0;
+  };
+
   SceneGraphLogger();
   ~SceneGraphLogger();
 
-  inline void setOutputPath(const std::string& folder) { output_dir_ = folder; }
-
   void logGraph(const DynamicSceneGraph& graph);
+  void save(const std::string& folder);
 
  private:
-  std::string output_dir_;
-  bool write_header_ = true;
+  std::map<LayerId, std::vector<Entry>> layer_entries_;
 };
 
 }  // namespace spark_dsg
