@@ -422,6 +422,40 @@ bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
          has_active_mesh_indices == derived->has_active_mesh_indices;
 }
 
+void TraversabilityNodeAttributes::addBoundaryPoint(
+    const Eigen::Vector3d& point,
+    TraversabilityType type = TraversabilityType::UNKNOWN) {
+  boundary.push_back(point);
+  traversability_type.push_back(type);
+}
+
+std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
+  NodeAttributes::fill_ostream(out);
+  out << "\n  - boundary.size(): " << boundary.size();
+  out << "\n  - traversability_type.size(): " << traversability_type.size();
+  return out;
+}
+
+void TraversabilityNodeAttributes::serialization_info() {
+  NodeAttributes::serialization_info();
+  serialization::field("boundary", boundary);
+  serialization::field("traversability_type", traversability_type);
+}
+
+bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const TraversabilityNodeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!NodeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return boundary == derived->boundary &&
+         traversability_type == derived->traversability_type;
+}
+
 AgentNodeAttributes::AgentNodeAttributes() : NodeAttributes(), timestamp(0) {}
 
 AgentNodeAttributes::AgentNodeAttributes(std::chrono::nanoseconds timestamp,
@@ -475,7 +509,7 @@ bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
          dbow_values == derived->dbow_values;
 }
 
-KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false){};
+KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {};
 
 NodeAttributes::Ptr KhronosObjectAttributes::clone() const {
   return std::make_unique<KhronosObjectAttributes>(*this);

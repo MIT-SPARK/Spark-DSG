@@ -359,6 +359,41 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   REGISTER_NODE_ATTRIBUTES(Place2dNodeAttributes);
 };
 
+/**
+ * @brief First simple implementation of traversability places.
+ */
+struct TraversabilityNodeAttributes : public NodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using Ptr = std::unique_ptr<TraversabilityNodeAttributes>;
+
+  TraversabilityNodeAttributes() = default;
+  virtual ~TraversabilityNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  //! Boundary points surrounding the traversability area. n side points, where the last
+  //! line closes back to the first point.
+  std::vector<Eigen::Vector3d> boundary;
+  enum class TraversabilityType {
+    UNKNOWN = 0,
+    TRAVERSABLE = 1,
+    NON_TRAVERSABLE = 2,
+    SHOULD_BE_TRAVERSABLE = 3
+  };
+  //! Traversability types for each boundary point.
+  std::vector<TraversabilityType> traversability_type;
+
+  void addBoundaryPoint(const Eigen::Vector3d& point,
+                        TraversabilityType type = TraversabilityType::UNKNOWN);
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  REGISTER_NODE_ATTRIBUTES(TraversabilityNodeAttributes);
+};
+
 struct AgentNodeAttributes : public NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
