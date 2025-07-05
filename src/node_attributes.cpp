@@ -422,11 +422,19 @@ bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
          has_active_mesh_indices == derived->has_active_mesh_indices;
 }
 
-void TraversabilityNodeAttributes::addBoundaryPoint(
-    const Eigen::Vector3d& point,
-    TraversabilityType type = TraversabilityType::UNKNOWN) {
+NodeAttributes::Ptr TraversabilityNodeAttributes::clone() const {
+  return std::make_unique<TraversabilityNodeAttributes>(*this);
+}
+
+void TraversabilityNodeAttributes::addBoundaryPoint(const Eigen::Vector3d& point,
+                                                    TraversabilityType type) {
   boundary.push_back(point);
   traversability_type.push_back(type);
+}
+
+void TraversabilityNodeAttributes::reset() {
+  boundary.clear();
+  traversability_type.clear();
 }
 
 std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
@@ -439,7 +447,17 @@ std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) cons
 void TraversabilityNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("boundary", boundary);
-  serialization::field("traversability_type", traversability_type);
+  // Serialization work around as uint8_t
+  std::vector<uint8_t> traversability_type_uint8(traversability_type.size());
+  for (size_t i = 0; i < traversability_type.size(); ++i) {
+    traversability_type_uint8[i] = static_cast<uint8_t>(traversability_type[i]);
+  }
+  serialization::field("traversability_type", traversability_type_uint8);
+  traversability_type.resize(traversability_type_uint8.size());
+  for (size_t i = 0; i < traversability_type.size(); ++i) {
+    traversability_type[i] =
+        static_cast<TraversabilityType>(traversability_type_uint8[i]);
+  }
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
