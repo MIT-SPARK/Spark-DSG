@@ -377,8 +377,8 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   enum class TraversabilityType : uint8_t {
     UNKNOWN = 0,
     TRAVERSABLE = 1,
-    NON_TRAVERSABLE = 2,
-    SHOULD_BE_TRAVERSABLE = 3
+    INTRAVERSABLE = 2,
+    TRAVERSED = 3
   };
   //! Traversability types for each boundary point.
   std::vector<TraversabilityType> traversability_type;

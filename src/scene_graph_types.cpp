@@ -74,6 +74,8 @@ std::optional<LayerKey> DsgLayers::nameToLayerId(const std::string& name) {
     return 3;
   } else if (name == DsgLayers::MESH_PLACES) {
     return LayerKey{3, 1};
+  } else if (name == DsgLayers::TRAVERSABILITY) {
+    return LayerKey{3, 2};
   } else if (name == DsgLayers::ROOMS) {
     return 4;
   } else if (name == DsgLayers::BUILDINGS) {

@@ -91,6 +91,8 @@ struct DsgLayers {
   inline const static std::string ROOMS = "ROOMS";
   //! Building node layer
   inline const static std::string BUILDINGS = "BUILDINGS";
+  //! Traversability node layer
+  inline const static std::string TRAVERSABILITY = "TRAVERSABILITY";
 
   //! Get default layer ID for each layer name
   static std::optional<LayerKey> nameToLayerId(const std::string& name);

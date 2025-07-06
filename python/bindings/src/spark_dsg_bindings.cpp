@@ -138,6 +138,7 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readonly_static("AGENTS", &DsgLayers::AGENTS)
       .def_readonly_static("PLACES", &DsgLayers::PLACES)
       .def_readonly_static("MESH_PLACES", &DsgLayers::MESH_PLACES)
+      .def_readonly_static("TRAVERSABILITY", &DsgLayers::TRAVERSABILITY)
       .def_readonly_static("ROOMS", &DsgLayers::ROOMS)
       .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS)
       .def("name_to_layer_id", &DsgLayers::nameToLayerId);
