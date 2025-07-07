@@ -374,17 +374,17 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   //! Boundary points surrounding the traversability area. n side points, where the last
   //! line closes back to the first point.
   std::vector<Eigen::Vector3d> boundary;
-  enum class TraversabilityType : uint8_t {
+  enum class TraversabilityState : uint8_t {
     UNKNOWN = 0,
     TRAVERSABLE = 1,
     INTRAVERSABLE = 2,
     TRAVERSED = 3
   };
-  //! Traversability types for each boundary point.
-  std::vector<TraversabilityType> traversability_type;
+  //! Traversability state for each boundary point to the next point.
+  std::vector<TraversabilityState> traversability_state;
 
   void addBoundaryPoint(const Eigen::Vector3d& point,
-                        TraversabilityType type = TraversabilityType::UNKNOWN);
+                        TraversabilityState state = TraversabilityState::UNKNOWN);
   void reset();
 
  protected:

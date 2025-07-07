@@ -427,20 +427,20 @@ NodeAttributes::Ptr TraversabilityNodeAttributes::clone() const {
 }
 
 void TraversabilityNodeAttributes::addBoundaryPoint(const Eigen::Vector3d& point,
-                                                    TraversabilityType type) {
+                                                    TraversabilityState state) {
   boundary.push_back(point);
-  traversability_type.push_back(type);
+  traversability_state.push_back(state);
 }
 
 void TraversabilityNodeAttributes::reset() {
   boundary.clear();
-  traversability_type.clear();
+  traversability_state.clear();
 }
 
 std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
   out << "\n  - boundary.size(): " << boundary.size();
-  out << "\n  - traversability_type.size(): " << traversability_type.size();
+  out << "\n  - traversability_state.size(): " << traversability_state.size();
   return out;
 }
 
@@ -448,15 +448,15 @@ void TraversabilityNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("boundary", boundary);
   // Serialization work around as uint8_t
-  std::vector<uint8_t> traversability_type_uint8(traversability_type.size());
-  for (size_t i = 0; i < traversability_type.size(); ++i) {
-    traversability_type_uint8[i] = static_cast<uint8_t>(traversability_type[i]);
+  std::vector<uint8_t> traversability_state_uint8(traversability_state.size());
+  for (size_t i = 0; i < traversability_state.size(); ++i) {
+    traversability_state_uint8[i] = static_cast<uint8_t>(traversability_state[i]);
   }
-  serialization::field("traversability_type", traversability_type_uint8);
-  traversability_type.resize(traversability_type_uint8.size());
-  for (size_t i = 0; i < traversability_type.size(); ++i) {
-    traversability_type[i] =
-        static_cast<TraversabilityType>(traversability_type_uint8[i]);
+  serialization::field("traversability_state", traversability_state_uint8);
+  traversability_state.resize(traversability_state_uint8.size());
+  for (size_t i = 0; i < traversability_state.size(); ++i) {
+    traversability_state[i] =
+        static_cast<TraversabilityState>(traversability_state_uint8[i]);
   }
 }
 
@@ -471,7 +471,7 @@ bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
   }
 
   return boundary == derived->boundary &&
-         traversability_type == derived->traversability_type;
+         traversability_state == derived->traversability_state;
 }
 
 AgentNodeAttributes::AgentNodeAttributes() : NodeAttributes(), timestamp(0) {}
