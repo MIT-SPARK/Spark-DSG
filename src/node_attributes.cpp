@@ -427,7 +427,7 @@ NodeAttributes::Ptr TraversabilityNodeAttributes::clone() const {
 }
 
 void TraversabilityNodeAttributes::addBoundaryPoint(const Eigen::Vector3d& point,
-                                                    TraversabilityState state) {
+                                                    State state) {
   boundary.push_back(point);
   traversability_state.push_back(state);
 }
@@ -455,8 +455,7 @@ void TraversabilityNodeAttributes::serialization_info() {
   serialization::field("traversability_state", traversability_state_uint8);
   traversability_state.resize(traversability_state_uint8.size());
   for (size_t i = 0; i < traversability_state.size(); ++i) {
-    traversability_state[i] =
-        static_cast<TraversabilityState>(traversability_state_uint8[i]);
+    traversability_state[i] = static_cast<State>(traversability_state_uint8[i]);
   }
 }
 

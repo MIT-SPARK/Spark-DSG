@@ -371,20 +371,21 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   virtual ~TraversabilityNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
 
-  //! Boundary points surrounding the traversability area. n side points, where the last
-  //! line closes back to the first point.
-  std::vector<Eigen::Vector3d> boundary;
-  enum class TraversabilityState : uint8_t {
+  enum class State : uint8_t {
     UNKNOWN = 0,
     TRAVERSABLE = 1,
     INTRAVERSABLE = 2,
     TRAVERSED = 3
   };
-  //! Traversability state for each boundary point to the next point.
-  std::vector<TraversabilityState> traversability_state;
 
-  void addBoundaryPoint(const Eigen::Vector3d& point,
-                        TraversabilityState state = TraversabilityState::UNKNOWN);
+  //! Boundary points surrounding the traversability area. n side points, where the last
+  //! line closes back to the first point.
+  std::vector<Eigen::Vector3d> boundary;
+
+  //! Traversability state for each boundary point to the next point.
+  std::vector<State> traversability_state;
+
+  void addBoundaryPoint(const Eigen::Vector3d& point, State state = State::UNKNOWN);
   void reset();
 
  protected:
