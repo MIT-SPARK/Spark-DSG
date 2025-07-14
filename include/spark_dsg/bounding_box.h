@@ -188,7 +188,7 @@ struct BoundingBox {
 
   /**
    * @brief Transform a point from bounding box frame to world frame.
-   * @param point_B The point to transform in bounding box coordinates.
+   * @param point_W The point to transform in bounding box coordinates.
    * @returns The point in world coordinates.
    */
   Eigen::Vector3f pointToBoxFrame(const Eigen::Vector3f& point_W) const;

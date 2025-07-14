@@ -378,14 +378,23 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
     TRAVERSED = 3
   };
 
+  struct BoundaryInfo {
+    Eigen::Vector3d point;
+    State state = State::UNKNOWN;
+    size_t min_traversable = 0;
+    size_t max_traversable = 0;
+
+    bool operator==(const BoundaryInfo& other) const;
+  };
+
   //! Boundary points surrounding the traversability area. n side points, where the last
   //! line closes back to the first point.
-  std::vector<Eigen::Vector3d> boundary;
+  std::vector<BoundaryInfo> boundary;
 
-  //! Traversability state for each boundary point to the next point.
-  std::vector<State> traversability_state;
+  //! Timestamps when this place was first and last observed.
+  uint64_t first_observed_ns = 0;
+  uint64_t last_observed_ns = 0;
 
-  void addBoundaryPoint(const Eigen::Vector3d& point, State state = State::UNKNOWN);
   void reset();
 
  protected:
