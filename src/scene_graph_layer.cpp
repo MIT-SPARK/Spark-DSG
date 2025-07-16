@@ -244,8 +244,9 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
   const bool update_attributes = config.shouldUpdateAttributes(id);
   for (const auto& id_node_pair : other_layer.nodes_) {
     const auto siter = nodes_status_.find(id_node_pair.first);
-    if (siter != nodes_status_.end() && siter->second == NodeStatus::MERGED) {
-      continue;  // don't try to update or add previously merged nodes
+    if (siter != nodes_status_.end() &&
+        (siter->second == NodeStatus::MERGED || siter->second == NodeStatus::DELETED)) {
+      continue;  // don't try to update or add previously merged or removed nodes
     }
 
     const auto& other = *id_node_pair.second;
@@ -281,9 +282,16 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
       continue;
     }
 
-    NodeId new_source = config.getMergedId(edge.source);
-    NodeId new_target = config.getMergedId(edge.target);
+    const NodeId new_source = config.getMergedId(edge.source);
+    const NodeId new_target = config.getMergedId(edge.target);
     if (new_source == new_target) {
+      continue;
+    }
+
+    // TODO(lschmid): Check if it makes sense to also check for edges deleted before the
+    // merge.
+    auto status = edges_.getStatus(new_source, new_target);
+    if (status == EdgeStatus::DELETED) {
       continue;
     }
 
