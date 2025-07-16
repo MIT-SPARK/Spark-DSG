@@ -61,8 +61,8 @@ Color ironbow(float value);
 
 /**
  * @brief Generate a color based on a rainbow value.
- * @param value The rainbow value [0,1], where 0 is red, 0.5 is green, and 1 is
- * blue.
+ * @param value The rainbow value [0,1], where 0 is red, 0.5 is cyan, and 1 is
+ * back to red.
  */
 Color rainbow(float value);
 

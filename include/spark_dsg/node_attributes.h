@@ -381,6 +381,8 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   struct BoundaryInfo {
     Eigen::Vector3d point;
     State state = State::UNKNOWN;
+
+    // TODO(lschmid): Consider removing these, not sure they can reasonably be used.
     size_t min_traversable = 0;
     size_t max_traversable = 0;
 
@@ -394,6 +396,9 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   //! Timestamps when this place was first and last observed.
   uint64_t first_observed_ns = 0;
   uint64_t last_observed_ns = 0;
+
+  //! Distance to the nearest intraversable obstacle.
+  double distance = 0.0;
 
   void reset();
 
