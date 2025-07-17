@@ -430,7 +430,10 @@ void TraversabilityNodeAttributes::reset() { boundary.clear(); }
 
 std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
-  out << "\n  - boundary.size(): " << boundary.size();
+  out << "\n  - boundary.size(): " << boundary.size() << "\n"
+      << "  - first_observed_ns: " << first_observed_ns << "\n"
+      << "  - last_observed_ns: " << last_observed_ns << "\n"
+      << "  - distance: " << distance << "\n";
   return out;
 }
 
@@ -438,6 +441,7 @@ void TraversabilityNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
+  serialization::field("distance", distance);
 
   // TODO(lschmid): Fix proper serialization instead of this workaround.
   auto points = std::vector<Eigen::Vector3d>(boundary.size());
