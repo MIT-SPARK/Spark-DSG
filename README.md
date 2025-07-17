@@ -56,4 +56,4 @@ python -m http.server  # to serve them locally
 
 ### Building For ROS
 
-This repository is a valid catkin package and should build if placed in a workspace.
+This repository is a valid ROS package and should build if placed in a workspace.
