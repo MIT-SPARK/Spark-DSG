@@ -86,6 +86,13 @@ TEST(DynamicSceneGraph, customLayerInvariants) {
   EXPECT_EQ(6u, graph.numLayers());
 }
 
+TEST(DynamicSceneGraph, constructWithPartitions) {
+  auto graph = DynamicSceneGraph::fromNames({{"OBJECTS", {2, 1}}, {"PLACES", {3, 2}}});
+  EXPECT_TRUE(graph->hasLayer(2, 1));
+  ASSERT_TRUE(graph->hasLayer("OBJECTS"));
+  EXPECT_EQ(graph->getLayer("OBJECTS").id, LayerKey(2, 1));
+}
+
 TEST(DynamicSceneGraph, numNodesAndEdges) {
   DynamicSceneGraph graph;
   EXPECT_TRUE(graph.emplaceNode(2, 0, std::make_unique<NodeAttributes>()));

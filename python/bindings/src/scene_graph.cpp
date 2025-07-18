@@ -67,8 +67,10 @@ void init_scene_graph(py::module_& m) {
         "bbox_type"_a = BoundingBox::Type::AABB);
 
   py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(m, "DynamicSceneGraph", py::dynamic_attr())
-      .def(py::init<>())
-      .def(py::init<const DynamicSceneGraph::LayerIds&>())
+      .def(py::init<bool>(), "empty"_a = false)
+      .def(py::init<const DynamicSceneGraph::LayerKeys&, const DynamicSceneGraph::LayerNames&>(),
+           "layer_keys"_a,
+           "layer_names"_a = DynamicSceneGraph::LayerNames{})
       .def("clear", &DynamicSceneGraph::clear)
       .def("reset", &DynamicSceneGraph::reset)
       .def(

@@ -73,6 +73,7 @@ struct LayerKey {
   inline bool operator!=(const LayerKey& other) const {
     return !this->operator==(other);
   }
+  bool operator<(const LayerKey& other) const;
 };
 
 //! @brief Common layer names

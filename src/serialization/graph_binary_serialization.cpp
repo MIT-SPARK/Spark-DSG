@@ -143,7 +143,7 @@ void writeGraph(const DynamicSceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh) {
   BinarySerializer serializer(&buffer);
-  serializer.write(graph.layer_ids());
+  serializer.write(graph.layer_keys());
 
   // saves names to type index mapping
   serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
@@ -214,6 +214,28 @@ AttributeFactory<Attrs> loadFactory(const io::FileHeader& header,
 
 bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserializer) {
   const auto& header = io::GlobalInfo::loadedHeader();
+
+  if (header.version < io::Version(1, 1, 2)) {
+    // NOTE(nathan) we intentionally don't try to use the layer IDs to populate anything
+    // because they will not include partitions and cause lots of serialization churn
+    std::vector<LayerId> layer_ids;
+    deserializer.read(layer_ids);
+  } else {
+    DynamicSceneGraph::LayerKeys layer_keys;
+    deserializer.read(layer_keys);
+    for (const auto& key : layer_keys) {
+      graph.addLayer(key.layer, key.partition);
+    }
+
+    std::set<LayerKey> valid(layer_keys.begin(), layer_keys.end());
+    const auto curr_keys = graph.layer_keys();
+    for (const auto& key : curr_keys) {
+      if (!valid.count(key)) {
+        graph.removeLayer(key.layer, key.partition);
+      }
+    }
+  }
+
   if (header.version < io::Version(1, 0, 2)) {
     LayerId mesh_layer_id;
     deserializer.read(mesh_layer_id);
@@ -307,10 +329,8 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
 DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
 
-  std::vector<LayerId> layer_ids;
-  deserializer.read(layer_ids);
-
-  auto graph = std::make_shared<DynamicSceneGraph>(layer_ids);
+  // make an empty graph
+  auto graph = std::make_shared<DynamicSceneGraph>(true);
   if (!updateGraph(*graph, deserializer)) {
     return nullptr;
   }
@@ -354,15 +374,6 @@ std::shared_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t l
 
 bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
-
-  std::vector<LayerId> layer_ids;
-  deserializer.read(layer_ids);
-
-  if (graph.layer_ids() != layer_ids) {
-    // TODO(nathan) maybe warn about mismatch
-    graph.reset(layer_ids);
-  }
-
   return updateGraph(graph, deserializer);
 }
 
