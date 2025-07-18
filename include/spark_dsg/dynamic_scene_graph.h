@@ -80,7 +80,9 @@ class DynamicSceneGraph {
   friend class SceneGraphLogger;
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<DynamicSceneGraph>;
-  //! Container type for the layer ids
+  //! Container type for the layer keys
+  using LayerKeys = std::vector<LayerKey>;
+  //! Container type for the static layers
   using LayerIds = std::vector<LayerId>;
   //! Container type for the layer name to ID mapping
   using LayerNames = std::map<std::string, LayerKey>;
@@ -104,7 +106,7 @@ class DynamicSceneGraph {
    * @param layer_names Optional names for the layers
    * @note Adds IDs for layers in layer_names that aren't in layers
    */
-  DynamicSceneGraph(const LayerIds& layers, const LayerNames& layer_names = {});
+  DynamicSceneGraph(const LayerKeys& layers, const LayerNames& layer_names = {});
   virtual ~DynamicSceneGraph() = default;
 
   /**
@@ -115,8 +117,8 @@ class DynamicSceneGraph {
 
   //! @brief Delete all layers and edges
   void clear();
-  //! @brief Reset scene graph to use new layer ids
-  void reset(const LayerIds& layer_ids, const LayerNames& layer_names = {});
+  //! @brief Reset scene graph to use new layers
+  void reset(const LayerKeys& layer, const LayerNames& layer_names = {});
 
   /**
    * @brief Check whether the layer exists and is valid
@@ -516,7 +518,7 @@ class DynamicSceneGraph {
   void visitLayers(const std::function<void(LayerKey, const Layer&)>& cb) const;
 
  protected:
-  LayerIds layer_ids_;
+  LayerKeys layer_keys_;
   LayerNames layer_names_;
   std::map<NodeId, LayerKey> node_lookup_;
 
@@ -536,7 +538,9 @@ class DynamicSceneGraph {
   }
 
   //! @brief Current static layer ids in the graph
-  const LayerIds& layer_ids() const { return layer_ids_; }
+  std::vector<LayerId> layer_ids() const;
+  //! @brief Current layer keys of all layers in the graph
+  const LayerKeys& layer_keys() const { return layer_keys_; }
   //! @brief Current name to layer mapping
   const LayerNames layer_names() const { return layer_names_; }
   //! @brief Constant reference to the layers

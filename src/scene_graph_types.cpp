@@ -63,6 +63,14 @@ bool LayerKey::operator==(const LayerKey& other) const {
   return layer == other.layer && partition == other.partition;
 }
 
+bool LayerKey::operator<(const LayerKey& other) const {
+  if (layer == other.layer) {
+    return partition < other.partition;
+  }
+
+  return layer < other.layer;
+}
+
 std::optional<LayerKey> DsgLayers::nameToLayerId(const std::string& name) {
   if (name == DsgLayers::SEGMENTS) {
     return 1;

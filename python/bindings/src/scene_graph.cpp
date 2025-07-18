@@ -68,7 +68,7 @@ void init_scene_graph(py::module_& m) {
 
   py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(m, "DynamicSceneGraph", py::dynamic_attr())
       .def(py::init<>())
-      .def(py::init<const DynamicSceneGraph::LayerIds&>())
+      .def(py::init < const std::vector<LayerId>())
       .def("clear", &DynamicSceneGraph::clear)
       .def("reset", &DynamicSceneGraph::reset)
       .def(

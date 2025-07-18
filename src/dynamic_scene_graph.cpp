@@ -54,22 +54,22 @@ using ConstLayerCallback = std::function<void(LayerKey, const Layer&)>;
 
 using Partitions = DynamicSceneGraph::Partitions;
 using LayerNames = DynamicSceneGraph::LayerNames;
-using LayerIds = DynamicSceneGraph::LayerIds;
+using LayerKeys = DynamicSceneGraph::LayerKeys;
 
-LayerIds layersFromNames(const LayerNames& layer_names,
-                         const LayerIds& prev_layers = {}) {
-  std::set<LayerId> layers(prev_layers.begin(), prev_layers.end());
+LayerKeys layersFromNames(const LayerNames& layer_names,
+                          const LayerKeys& prev_layers = {}) {
+  std::set<LayerKey> layers(prev_layers.begin(), prev_layers.end());
   for (const auto& [name, key] : layer_names) {
-    layers.insert(key.layer);
+    layers.insert(key);
   }
 
-  return LayerIds(layers.begin(), layers.end());
+  return LayerKeys(layers.begin(), layers.end());
 }
 
 bool EdgeLayerInfo::isSameLayer() const { return source == target; }
 
 DynamicSceneGraph::DynamicSceneGraph(bool empty)
-    : DynamicSceneGraph(empty ? LayerIds{} : LayerIds{2, 3, 4, 5},
+    : DynamicSceneGraph(empty ? LayerKeys{} : LayerKeys{2, 3, 4, 5},
                         empty ? LayerNames{}
                               : LayerNames{{DsgLayers::OBJECTS, 2},
                                            {DsgLayers::AGENTS, 2},
@@ -77,9 +77,9 @@ DynamicSceneGraph::DynamicSceneGraph(bool empty)
                                            {DsgLayers::ROOMS, 4},
                                            {DsgLayers::BUILDINGS, 5}}) {}
 
-DynamicSceneGraph::DynamicSceneGraph(const LayerIds& layer_ids,
+DynamicSceneGraph::DynamicSceneGraph(const LayerKeys& layer_keys,
                                      const LayerNames& layer_names)
-    : layer_ids_(layersFromNames(layer_names, layer_ids)), layer_names_(layer_names) {
+    : layer_keys_(layersFromNames(layer_names, layer_keys)), layer_names_(layer_names) {
   clear();
 }
 
@@ -92,19 +92,18 @@ void DynamicSceneGraph::clear() {
   layer_partitions_.clear();
 
   node_lookup_.clear();
-
   interlayer_edges_.reset();
 
   mesh_.reset();
 
-  for (const auto& id : layer_ids_) {
-    layers_[id] = std::make_unique<SceneGraphLayer>(id);
+  for (const auto& key : layer_keys_) {
+    addLayer(key.layer, key.partition);
   }
 }
 
-void DynamicSceneGraph::reset(const LayerIds& layer_ids,
+void DynamicSceneGraph::reset(const LayerKeys& layer_keys,
                               const LayerNames& layer_names) {
-  layer_ids_ = layersFromNames(layer_names, layer_ids);
+  layer_keys_ = layersFromNames(layer_names, layer_keys);
   layer_names_ = layer_names;
   clear();
 }
@@ -665,7 +664,7 @@ void DynamicSceneGraph::removeAllStaleEdges() {
 }
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
-  auto to_return = std::make_shared<DynamicSceneGraph>(layer_ids_, layer_names_);
+  auto to_return = std::make_shared<DynamicSceneGraph>(layer_keys_, layer_names_);
   to_return->metadata = metadata;
 
   for (const auto [node_id, key] : node_lookup_) {
@@ -917,6 +916,14 @@ const Partitions& DynamicSceneGraph::layer_partition(LayerId layer_id) const {
   }
 
   return iter->second;
+}
+
+std::vector<LayerId> DynamicSceneGraph::layer_ids() const {
+  std::set<LayerId> layers;
+  for (const auto& key : layer_keys_) {
+    layers.insert(key.layer);
+  }
+  return std::vector<LayerId>(layers.begin(), layers.end());
 }
 
 }  // namespace spark_dsg
