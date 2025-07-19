@@ -242,6 +242,12 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              "depth"_a = 1,
              "bbox_type"_a = BoundingBox::Type::AABB);
 
+  py::enum_<TraversabilityNodeAttributes::State>(module, "TraversabilityState")
+      .value("UNKNOWN", TraversabilityNodeAttributes::State::UNKNOWN)
+      .value("TRAVERSABLE", TraversabilityNodeAttributes::State::TRAVERSABLE)
+      .value("INTRAVERSABLE", TraversabilityNodeAttributes::State::INTRAVERSABLE)
+      .value("TRAVERSED", TraversabilityNodeAttributes::State::TRAVERSED);
+
   py::class_<Metadata>(module, "_Metadata")
       .def(py::init<>())
       .def("_get", [](const Metadata& data) { return data().dump(); })
@@ -438,6 +444,17 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("mesh_vertex_labels", &Place2dNodeAttributes::mesh_vertex_labels)
       .def_readwrite("deformation_connections",
                      &Place2dNodeAttributes::deformation_connections);
+
+  py::class_<TraversabilityNodeAttributes::BoundaryInfo>(module, "BoundaryInfo")
+      .def(py::init<>())
+      .def_readwrite("point", &TraversabilityNodeAttributes::BoundaryInfo::point)
+      .def_readwrite("state", &TraversabilityNodeAttributes::BoundaryInfo::state);
+
+  py::class_<TraversabilityNodeAttributes, NodeAttributes>(
+      module, "TraversabilityNodeAttributes")
+      .def(py::init<>())
+      .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
+      .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(module, "AgentNodeAttributes")
       .def(py::init<>())
