@@ -41,6 +41,35 @@
 namespace spark_dsg {
 
 /**
+ * @brief Check whether a state is considered traversable, i.e., it is TRAVERSABLE or
+ * TRAVERSED. If optimistic is true, UNKNOWN is also considered traversable.
+ */
+bool traversable(TraversabilityState state, bool optimistic = false);
+
+/**
+ * @brief Check whether a state is considered intraversable, i.e., it is INTRAVERSABLE.
+ * If optimistic is false, UNKNOWN is also considered intraversable.
+ */
+bool intraversable(TraversabilityState state, bool optimistic = false);
+
+/**
+ * @brief Combine two TraversabilityStates into a single state. Order of precedence:
+ * Traversed -> Intraversable -> Unknown -> Traversable.
+ */
+void fuseStates(const TraversabilityState& from, TraversabilityState& to);
+void fuseStates(const std::vector<TraversabilityState>& from,
+                std::vector<TraversabilityState>& to);
+void fuseStates(const TraversabilityState& from, std::vector<TraversabilityState>& to);
+
+/**
+ * @brief Compute the minimum (pessimistic) and maximum (optimistic) length of
+ * traversable voxels in a sequence.
+ * @return <min_length, max_length> in number of voxels.
+ */
+std::pair<size_t, size_t> computeMinMaxTraversability(
+    const std::vector<TraversabilityState>& states);
+
+/**
  * @brief More human readable definitions of the four sides of a rectangle.
  */
 struct Side {
@@ -104,10 +133,18 @@ struct Boundary {
   Eigen::Vector2d min;
   Eigen::Vector2d max;
 
+  //! Traversability states for each side of the boundary.
+  // TODO(lschmid): Just copying this is not the most efficient but seems ok for now.
+  std::array<std::vector<TraversabilityState>, 4> states;
+
   // Construction.
   Boundary() = default;
   explicit Boundary(const TraversabilityNodeAttributes& attrs);
-  Boundary(const Eigen::Vector2d& min, const Eigen::Vector2d& max);
+  explicit Boundary(const BoundaryInfo& info,
+                    const Eigen::Vector3d& position = Eigen::Vector3d::Zero());
+  Boundary(const Eigen::Vector2d& min,
+           const Eigen::Vector2d& max,
+           const std::array<std::vector<TraversabilityState>, 4>& states = {});
 
   // Operators.
   operator bool() const { return valid(); }
@@ -122,6 +159,7 @@ struct Boundary {
 
   // Lookup.
   bool contains(const Eigen::Vector2d& point) const;
+  bool contains(const Eigen::Vector3d& point) const;
   bool intersects(const Boundary& other) const;
   Boundary intersection(const Boundary& other) const;
   double xIntersection(const Boundary& other) const;
@@ -131,9 +169,49 @@ struct Boundary {
   double distanceToSide(const Side side, const Eigen::Vector2d& point) const;
 
   // Sides: 0: bottom, 1: left, 2: top, 3: right.
-  double getCoordinate(const Side side) const;
-  void setCoordinate(const Side side, const double coordinate);
+  double getCoordinate(Side side) const;
+  void setCoordinate(Side side, double coordinate);
   bool containsOtherBoxWidth(const Boundary& other, bool vertical) const;
+  Side lineIntersectsSide(const Eigen::Vector2d& source) const;
+  Side lineIntersectsSide(const Eigen::Vector3d& source) const;
+
+  /**
+   * @brief 1D representation of a boundary side for side-based computations.
+   */
+  struct BoundarySide {
+    double& min;
+    double& max;
+    std::vector<TraversabilityState>& states;
+
+    BoundarySide(double& min, double& max, std::vector<TraversabilityState>& states)
+        : min(min), max(max), states(states) {}
+
+    /**
+     * @brief Get the voxel size for this boundary side.
+     */
+    double voxelSize() const { return (max - min) / states.size(); }
+
+    /**
+     * @brief Compute the maximum width of the traversable distance between two aligning
+     * sides.
+     */
+    double maxTraversableDistance(const BoundarySide& other) const;
+
+    /**
+     * @brief Get the traversability state at a specific coordinate. This assumes the
+     * coordinate is within the range of the side.
+     */
+    TraversabilityState getState(double coordinate) const;
+
+    /**
+     * @brief Get all traversability states that fall within the given range. This will
+     * not pad the result with unobserved states.
+     */
+    std::vector<TraversabilityState> getStates(double from, double to) const;
+  };
+
+  BoundarySide side(Side side);
+  const BoundarySide side(Side side) const;
 };
 
 }  // namespace spark_dsg
