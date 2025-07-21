@@ -56,10 +56,9 @@ bool intraversable(TraversabilityState state, bool optimistic = false);
  * @brief Combine two TraversabilityStates into a single state. Order of precedence:
  * Traversed -> Intraversable -> Unknown -> Traversable.
  */
-void fuseStates(const TraversabilityState& from, TraversabilityState& to);
-void fuseStates(const std::vector<TraversabilityState>& from,
-                std::vector<TraversabilityState>& to);
-void fuseStates(const TraversabilityState& from, std::vector<TraversabilityState>& to);
+void fuseStates(TraversabilityState from, TraversabilityState& to);
+void fuseStates(const TraversabilityStates& from, TraversabilityStates& to);
+void fuseStates(TraversabilityState from, TraversabilityStates& to);
 
 /**
  * @brief Compute the minimum (pessimistic) and maximum (optimistic) length of
@@ -67,7 +66,24 @@ void fuseStates(const TraversabilityState& from, std::vector<TraversabilityState
  * @return <min_length, max_length> in number of voxels.
  */
 std::pair<size_t, size_t> computeMinMaxTraversability(
-    const std::vector<TraversabilityState>& states);
+    const TraversabilityStates& states);
+
+/**
+ * @brief Simplify the traversability states if they can be represented by a single
+ * state.
+ * @param states The traversability states to simplify.
+ * @return True if the states were modified.
+ */
+bool simplifyTraversabilityStates(TraversabilityStates& states);
+
+/**
+ * @brief Fitler the traversability states to reflect the traversability for a robot of
+ * a specific width.
+ * @param states The traversability states to filter.
+ * @param width The width of the robot in number of voxels.
+ * @return True if the states were modified.
+ */
+bool filterTraversabilityStates(TraversabilityStates& states, size_t width);
 
 /**
  * @brief More human readable definitions of the four sides of a rectangle.
@@ -135,7 +151,7 @@ struct Boundary {
 
   //! Traversability states for each side of the boundary.
   // TODO(lschmid): Just copying this is not the most efficient but seems ok for now.
-  std::array<std::vector<TraversabilityState>, 4> states;
+  std::array<TraversabilityStates, 4> states;
 
   // Construction.
   Boundary() = default;
@@ -144,7 +160,7 @@ struct Boundary {
                     const Eigen::Vector3d& position = Eigen::Vector3d::Zero());
   Boundary(const Eigen::Vector2d& min,
            const Eigen::Vector2d& max,
-           const std::array<std::vector<TraversabilityState>, 4>& states = {});
+           const std::array<TraversabilityStates, 4>& states = {});
 
   // Operators.
   operator bool() const { return valid(); }
@@ -155,7 +171,7 @@ struct Boundary {
   double height() const;
   double area() const;
   Eigen::Vector2d center() const;
-  void toAttributes(spark_dsg::TraversabilityNodeAttributes& attrs) const;
+  void toAttributes(TraversabilityNodeAttributes& attrs) const;
 
   // Lookup.
   bool contains(const Eigen::Vector2d& point) const;
@@ -181,9 +197,9 @@ struct Boundary {
   struct BoundarySide {
     double& min;
     double& max;
-    std::vector<TraversabilityState>& states;
+    TraversabilityStates& states;
 
-    BoundarySide(double& min, double& max, std::vector<TraversabilityState>& states)
+    BoundarySide(double& min, double& max, TraversabilityStates& states)
         : min(min), max(max), states(states) {}
 
     /**
@@ -207,7 +223,7 @@ struct Boundary {
      * @brief Get all traversability states that fall within the given range. This will
      * not pad the result with unobserved states.
      */
-    std::vector<TraversabilityState> getStates(double from, double to) const;
+    TraversabilityStates getStates(double from, double to) const;
   };
 
   BoundarySide side(Side side);

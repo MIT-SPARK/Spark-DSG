@@ -369,6 +369,8 @@ enum class TraversabilityState : uint8_t {
   TRAVERSED = 3
 };
 
+using TraversabilityStates = std::vector<TraversabilityState>;
+
 /**
  * @brief Compact information to store a grid aligned traversability boundary.
  */
@@ -381,7 +383,7 @@ struct BoundaryInfo {
   //! (=UNKNOWN), a single state, or a sequence of states indicating uniform
   //! tessellation of the boundary. The sides are ordered bottom, left, top, right.
   //! The states per side are ordered from the lower to the higher coordinate.
-  std::array<std::vector<TraversabilityState>, 4> states;
+  std::array<TraversabilityStates, 4> states;
 
   bool operator==(const BoundaryInfo& other) const;
   bool operator!=(const BoundaryInfo& other) const { return !(*this == other); }

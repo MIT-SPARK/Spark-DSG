@@ -13,7 +13,7 @@ bool intraversable(TraversabilityState state, bool optimistic) {
          (optimistic && state == TraversabilityState::UNKNOWN);
 }
 
-void fuseStates(const TraversabilityState& from, TraversabilityState& to) {
+void fuseStates(TraversabilityState from, TraversabilityState& to) {
   if (from == TraversabilityState::TRAVERSED) {
     to = TraversabilityState::TRAVERSED;
     return;
@@ -29,8 +29,7 @@ void fuseStates(const TraversabilityState& from, TraversabilityState& to) {
   }
 }
 
-void fuseStates(const std::vector<TraversabilityState>& from,
-                std::vector<TraversabilityState>& to) {
+void fuseStates(const TraversabilityStates& from, TraversabilityStates& to) {
   if (to.size() < from.size()) {
     to.resize(from.size());
   }
@@ -39,14 +38,14 @@ void fuseStates(const std::vector<TraversabilityState>& from,
   }
 }
 
-void fuseStates(const TraversabilityState& from, std::vector<TraversabilityState>& to) {
+void fuseStates(TraversabilityState from, TraversabilityStates& to) {
   for (auto& state : to) {
     fuseStates(from, state);
   }
 }
 
 std::pair<size_t, size_t> computeMinMaxTraversability(
-    const std::vector<TraversabilityState>& states) {
+    const TraversabilityStates& states) {
   // Find the minimum and maximum traversable width.
   size_t min_traversable = 0;
   size_t max_traversable = 0;
@@ -69,6 +68,25 @@ std::pair<size_t, size_t> computeMinMaxTraversability(
   return {min_traversable, max_traversable};
 }
 
+bool simplifyTraversabilityStates(TraversabilityStates& states) {
+  if (states.size() <= 1) {
+    return false;
+  }
+
+  for (size_t i = 1; i < states.size(); ++i) {
+    if (states[i] != states[0]) {
+      return false;
+    }
+  }
+  states.resize(1);
+  return true;
+}
+
+bool filterTraversabilityStates(TraversabilityStates& states, size_t width) {
+  // TODO(lschmid): Implement.
+  return false;
+}
+
 const std::array<Side, 4> Side::ALL = {
     Side(Side::BOTTOM), Side(Side::LEFT), Side(Side::TOP), Side(Side::RIGHT)};
 
@@ -82,7 +100,7 @@ Boundary::Boundary(const BoundaryInfo& info, const Eigen::Vector3d& position)
 
 Boundary::Boundary(const Eigen::Vector2d& min,
                    const Eigen::Vector2d& max,
-                   const std::array<std::vector<TraversabilityState>, 4>& states)
+                   const std::array<TraversabilityStates, 4>& states)
     : min(min), max(max), states(states) {}
 
 bool Boundary::contains(const Eigen::Vector2d& point) const {
@@ -110,6 +128,7 @@ void Boundary::toAttributes(TraversabilityNodeAttributes& attrs) const {
   attrs.position.head(2) = c;
   attrs.boundary.min = min - c;
   attrs.boundary.max = max - c;
+  attrs.boundary.states = states;
 }
 
 double Boundary::getCoordinate(Side side) const {
@@ -275,7 +294,7 @@ double Boundary::BoundarySide::maxTraversableDistance(const BoundarySide& other)
   }
 
   // Multiple states: Interpolate and count the voxels.
-  std::vector<TraversabilityState> states_in_range;
+  TraversabilityStates states_in_range;
   if (states.size() == 1) {
     states_in_range = other.getStates(start, end);
   } else if (other.states.size() == 1) {
@@ -298,14 +317,16 @@ TraversabilityState Boundary::BoundarySide::getState(double coordinate) const {
   return states[idx];
 }
 
-std::vector<TraversabilityState> Boundary::BoundarySide::getStates(double from,
-                                                                   double to) const {
+TraversabilityStates Boundary::BoundarySide::getStates(double from, double to) const {
+  if (from > max || to < from || states.empty()) {
+    return {};
+  }
   const size_t start = std::max(
       0, static_cast<int>(std::floor((from - min) / (max - min) * states.size())));
   const size_t end = std::min(
       states.size(),
       static_cast<size_t>(std::ceil((to - min) / (max - min) * states.size())));
-  std::vector<TraversabilityState> result(end - start);
+  TraversabilityStates result(end - start);
   for (size_t i = start; i < end; ++i) {
     result[i - start] = states[i];
   }

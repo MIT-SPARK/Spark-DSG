@@ -447,26 +447,18 @@ void TraversabilityNodeAttributes::serialization_info() {
   serialization::field("distance", distance);
   serialization::field("min", boundary.min);
   serialization::field("max", boundary.max);
-
-  // TODO(lschmid): Fix proper serialization instead of this workaround.
-  // Construct pseudo structs that are serializable.
-  std::vector<std::vector<uint8_t>> states;
+  // Workaround for state serialization.
   for (size_t i = 0; i < 4; ++i) {
-    std::vector<uint8_t> s(boundary.states[i].size());
-    for (size_t j = 0; j < boundary.states[i].size(); ++j) {
-      s[j] = static_cast<uint8_t>(boundary.states[i][j]);
+    std::vector<uint8_t> s;
+    s.reserve(boundary.states[i].size());
+    for (const auto& state : boundary.states[i]) {
+      s.push_back(static_cast<uint8_t>(state));
     }
-    states.emplace_back(std::move(s));
-  }
-
-  // Serialize.
-  serialization::field("states", states);
-
-  // Reconstruct BoundaryInfo from serialized data.
-  for (size_t i = 0; i < 4; ++i) {
-    boundary.states[i].resize(states[i].size());
-    for (size_t j = 0; j < states[i].size(); ++j) {
-      boundary.states[i][j] = static_cast<TraversabilityState>(states[i][j]);
+    serialization::field("states_" + std::to_string(i), s);
+    boundary.states[i].clear();
+    boundary.states[i].reserve(s.size());
+    for (const auto& state : s) {
+      boundary.states[i].push_back(static_cast<TraversabilityState>(state));
     }
   }
 }
