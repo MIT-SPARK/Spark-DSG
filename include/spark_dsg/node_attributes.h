@@ -373,18 +373,18 @@ enum class TraversabilityState : uint8_t {
  * @brief Compact information to store a grid aligned traversability boundary.
  */
 struct BoundaryInfo {
-  //! Minimum coordinates of the boundary w.r.t. the attribute center.
+  //! Coordinates of the boundary w.r.t. the attribute center.
   Eigen::Vector2d min;
-
-  //! Maximum coordinates of the boundary w.r.t. the attribute center.
   Eigen::Vector2d max;
 
   //! Traversability states for each side of the boundary. Each side can be empty
   //! (=UNKNOWN), a single state, or a sequence of states indicating uniform
-  //! tessellation of the boundary.
+  //! tessellation of the boundary. The sides are ordered bottom, left, top, right.
+  //! The states per side are ordered from the lower to the higher coordinate.
   std::array<std::vector<TraversabilityState>, 4> states;
 
   bool operator==(const BoundaryInfo& other) const;
+  bool operator!=(const BoundaryInfo& other) const { return !(*this == other); }
 };
 
 /**

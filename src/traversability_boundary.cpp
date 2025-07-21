@@ -2,6 +2,9 @@
 
 namespace spark_dsg {
 
+const std::array<Side, 4> Side::ALL = {
+    Side(Side::BOTTOM), Side(Side::LEFT), Side(Side::TOP), Side(Side::RIGHT)};
+
 Boundary::Boundary(const TraversabilityNodeAttributes& attrs)
     : min(attrs.boundary.min + attrs.position.head<2>()),
       max(attrs.boundary.max + attrs.position.head<2>()) {}
