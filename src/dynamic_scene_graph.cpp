@@ -286,7 +286,9 @@ bool DynamicSceneGraph::insertEdge(NodeId source,
 
   if (lookup.isSameLayer()) {
     return layerFromKey(lookup.source).insertEdge(source, target, std::move(attrs));
-  } else if (enforce_parent_constraints) {
+  }
+
+  if (enforce_parent_constraints) {
     // force single parent to exist
     dropAllParents(source, target, lookup.source, lookup.target);
   }

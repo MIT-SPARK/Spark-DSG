@@ -290,10 +290,11 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
 
     // TODO(lschmid): Check if it makes sense to also check for edges deleted before the
     // merge.
-    auto status = edges_.getStatus(new_source, new_target);
-    if (status == EdgeStatus::DELETED) {
-      continue;
-    }
+    // TODO(lschmid): Re-added edges don't get propagated, e.g. through serialization?
+    // auto status = edges_.getStatus(new_source, new_target);
+    // if (status == EdgeStatus::DELETED) {
+    //   continue;
+    // }
 
     insertEdge(new_source, new_target, edge.info->clone());
   }
