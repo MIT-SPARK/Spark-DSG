@@ -84,11 +84,61 @@ bool simplifyTraversabilityStates(TraversabilityStates& states) {
 
 bool filterTraversabilityStates(TraversabilityStates& states, size_t width) {
   // TODO(lschmid): Implement.
-  return false;
+  if (states.size() < width || width == 0) {
+    return false;
+  }
+
+  TraversabilityStates filtered(states.size(), TraversabilityState::INTRAVERSABLE);
+  bool changed = false;
+
+  for (size_t i = 0; i <= states.size() - width; ++i) {
+    bool has_intraversable = false;
+    bool has_unknown = false;
+    for (size_t j = 0; j < width; ++j) {
+      if (states[i + j] == TraversabilityState::INTRAVERSABLE) {
+        has_intraversable = true;
+        break;
+      }
+      if (states[i + j] == TraversabilityState::UNKNOWN) {
+        has_unknown = true;
+      }
+    }
+    TraversabilityState new_state;
+    if (has_intraversable) {
+      new_state = TraversabilityState::INTRAVERSABLE;
+    } else if (has_unknown) {
+      new_state = TraversabilityState::UNKNOWN;
+    } else {
+      new_state = TraversabilityState::TRAVERSABLE;
+    }
+    if (filtered[i + width / 2] != new_state) {
+      filtered[i + width / 2] = new_state;
+      changed = true;
+    }
+  }
+
+  // Copy filtered states back, keeping only the filtered region
+  states = filtered;
+  return changed;
 }
 
 const std::array<Side, 4> Side::ALL = {
     Side(Side::BOTTOM), Side(Side::LEFT), Side(Side::TOP), Side(Side::RIGHT)};
+
+std::string Side::str() const {
+  switch (index) {
+    case BOTTOM:
+      return "BOTTOM";
+    case LEFT:
+      return "LEFT";
+    case TOP:
+      return "TOP";
+    case RIGHT:
+      return "RIGHT";
+    default:
+      return "INVALID";
+  }
+}
 
 Boundary::Boundary(const TraversabilityNodeAttributes& attrs)
     : Boundary(attrs.boundary, attrs.position) {}
@@ -129,6 +179,12 @@ void Boundary::toAttributes(TraversabilityNodeAttributes& attrs) const {
   attrs.boundary.min = min - c;
   attrs.boundary.max = max - c;
   attrs.boundary.states = states;
+}
+
+std::string Boundary::str() const {
+  std::stringstream ss;
+  ss << "[" << min.x() << ", " << max.x() << "]x[" << min.y() << ", " << max.y() << "]";
+  return ss.str();
 }
 
 double Boundary::getCoordinate(Side side) const {
@@ -256,6 +312,34 @@ Side Boundary::lineIntersectsSide(const Eigen::Vector2d& source) const {
 
 Side Boundary::lineIntersectsSide(const Eigen::Vector3d& source) const {
   return lineIntersectsSide(source.head<2>().eval());
+}
+
+Side Boundary::isOnSide(const Boundary& other) const {
+  // x intersection
+  if (other.max.x() >= min.x() && other.min.x() <= max.x()) {
+    if (other.max.y() <= min.y()) {
+      return Side::BOTTOM;
+    } else if (other.min.y() >= max.y()) {
+      return Side::TOP;
+    }
+  }
+
+  // y intersection
+  if (other.max.y() >= min.y() && other.min.y() <= max.y()) {
+    if (other.max.x() <= min.x()) {
+      return Side::LEFT;
+    } else if (other.min.x() >= max.x()) {
+      return Side::RIGHT;
+    }
+  }
+  return Side::INVALID;
+}
+
+double Boundary::maxTraversableDistance(const Boundary& other, Side side) const {
+  if (side == Side::INVALID) {
+    return 0.0;
+  }
+  return this->side(side).maxTraversableDistance(other.side(side.opposite()));
 }
 
 Boundary::BoundarySide Boundary::side(Side side) {

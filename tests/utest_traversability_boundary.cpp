@@ -33,25 +33,60 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <spark_dsg/traversability_boundary.h>
+
+using spark_dsg::Boundary;
+using spark_dsg::Side;
+using spark_dsg::TraversabilityState;
+using spark_dsg::TraversabilityStates;
 
 TEST(TraversabilityBoundary, IntersectsSide) {
-  //   TraversabilityNodeAttributes attrs;
-  //   Box2D({0, 0}, {10, 10}).toAttributes(attrs);
+  Boundary boundary({0, 0}, {10, 10});
 
-  //   // Check simple sides.
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(5, -1, 0), attrs), 0);  // bottom
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(-1, 5, 0), attrs), 1);  // left
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(5, 11, 0), attrs), 2);  // top
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(11, 5, 0), attrs), 3);  // right
+  // Check simple sides.
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(5, -1)), Side::BOTTOM);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(-1, 5)), Side::LEFT);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(5, 11)), Side::TOP);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(11, 5)), Side::RIGHT);
 
-  //   // Check more general rectangles.
-  //   Box2D({2, -5}, {4, 5}).toAttributes(attrs);
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(2, -5.1, 0), attrs), 0);  // bottom
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(1.9, -5, 0), attrs), 1);  // left
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(1.9, 5, 0), attrs), 1);   // left
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(2, 5.1, 0), attrs), 2);   // top
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(4, 5.1, 0), attrs), 2);   // top
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(4.1, 5, 0), attrs), 3);   // right
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(4.1, -5, 0), attrs), 3);  // right
-  //   EXPECT_EQ(intersectsSide(Eigen::Vector3d(4, -5.1, 0), attrs), 0);  // bottom
+  // Check more general rectangles.
+  boundary = Boundary({2, -5}, {4, 5});
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(2, -5.1)), Side::BOTTOM);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(1.9, -5)), Side::LEFT);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(1.9, 5)), Side::LEFT);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(2, 5.1)), Side::TOP);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(4, 5.1)), Side::TOP);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(4.1, 5)), Side::RIGHT);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(4.1, -5)), Side::RIGHT);
+  EXPECT_EQ(boundary.lineIntersectsSide(Eigen::Vector2d(4, -5.1)), Side::BOTTOM);
+}
+
+TEST(TraversabilityBoundary, IsOnSide) {
+  Boundary boundary({0, 0}, {10, 10});
+
+  // Intersects.
+  EXPECT_EQ(boundary.isOnSide(Boundary({5, 5}, {15, 15})), Side::INVALID);
+  EXPECT_EQ(boundary.isOnSide(Boundary({-5, -5}, {5, 5})), Side::INVALID);
+
+  // Bottom side.
+  EXPECT_EQ(boundary.isOnSide(Boundary({-5, -5}, {5, -1})), Side::BOTTOM);
+  EXPECT_EQ(boundary.isOnSide(Boundary({5, -5}, {15, -1})), Side::BOTTOM);
+
+  // Left side.
+  EXPECT_EQ(boundary.isOnSide(Boundary({-5, -5}, {-1, 5})), Side::LEFT);
+  EXPECT_EQ(boundary.isOnSide(Boundary({-5, 5}, {-1, 15})), Side::LEFT);
+
+  // Top side.
+  EXPECT_EQ(boundary.isOnSide(Boundary({-5, 11}, {5, 15})), Side::TOP);
+  EXPECT_EQ(boundary.isOnSide(Boundary({5, 11}, {15, 15})), Side::TOP);
+
+  // Right side.
+  EXPECT_EQ(boundary.isOnSide(Boundary({11, -5}, {15, 5})), Side::RIGHT);
+  EXPECT_EQ(boundary.isOnSide(Boundary({11, 5}, {15, 15})), Side::RIGHT);
+
+  // Corners.
+  EXPECT_EQ(boundary.isOnSide(Boundary({-5, -5}, {-1, -1})), Side::INVALID);
+  EXPECT_EQ(boundary.isOnSide(Boundary({-5, 11}, {-1, 15})), Side::INVALID);
+  EXPECT_EQ(boundary.isOnSide(Boundary({11, -5}, {15, -1})), Side::INVALID);
+  EXPECT_EQ(boundary.isOnSide(Boundary({11, 11}, {15, 15})), Side::INVALID);
 }

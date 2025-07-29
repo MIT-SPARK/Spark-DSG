@@ -134,6 +134,11 @@ struct Side {
    */
   Side previous() const { return Side((index + 3) % 4); }
 
+  /**
+   * @brief Returns a string representation of the side.
+   */
+  std::string str() const;
+
  private:
   size_t index;
 };
@@ -172,6 +177,7 @@ struct Boundary {
   double area() const;
   Eigen::Vector2d center() const;
   void toAttributes(TraversabilityNodeAttributes& attrs) const;
+  std::string str() const;
 
   // Lookup.
   bool contains(const Eigen::Vector2d& point) const;
@@ -190,6 +196,23 @@ struct Boundary {
   bool containsOtherBoxWidth(const Boundary& other, bool vertical) const;
   Side lineIntersectsSide(const Eigen::Vector2d& source) const;
   Side lineIntersectsSide(const Eigen::Vector3d& source) const;
+
+  /**
+   * @brief Whether the other boundary is besides a side of this boundary.
+   * @param other The other boundary to check.
+   * @return The side of this boundary that the other boundary is on, or INVALID if
+   * it intersects or is not aligned with any side.
+   */
+  Side isOnSide(const Boundary& other) const;
+
+  /**
+   * @brief Compute the maximum width of the traversable distance between two aligning
+   * sides.
+   * @param other The other boundary to compare with.
+   * @param side The side of this boundary to compare with the opposite side on the
+   * other boundary.
+   */
+  double maxTraversableDistance(const Boundary& other, Side side) const;
 
   /**
    * @brief 1D representation of a boundary side for side-based computations.
