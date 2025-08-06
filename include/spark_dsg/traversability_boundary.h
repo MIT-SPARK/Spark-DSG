@@ -120,9 +120,22 @@ struct Side {
   bool vertical() const { return index == LEFT || index == RIGHT; }
 
   /**
+   * @brief Returns true if the side is on the lower half of the rectangle, i.e. bottom
+   * or left.
+   */
+  bool isLower() const { return index == BOTTOM || index == LEFT; }
+
+  /**
+   * @brief Returns true if the side is on the upper half of the rectangle, i.e. top or
+   * right.
+   */
+  bool isUpper() const { return index == TOP || index == RIGHT; }
+
+  /**
    * @brief Returns the opposite side.
    */
   Side opposite() const { return Side((index + 2) % 4); }
+
   /**
    * @brief Returns the next side in clockwise order.
    */
@@ -176,24 +189,48 @@ struct Boundary {
   double height() const;
   double area() const;
   Eigen::Vector2d center() const;
-  void toAttributes(TraversabilityNodeAttributes& attrs) const;
   std::string str() const;
 
+  /**
+   * @brief Get the voxel size of a side of the boundary.
+   */
+  double voxelSize(Side side = Side::BOTTOM) const;
+
+  /**
+   * @brief Get the world coordinate of a side, i.e. x for LEFT and RIGHT, and y for
+   * BOTTOM and TOP.
+   */
+  double getCoordinate(Side side) const;
+
   // Lookup.
+  /**
+   * @brief Check whether a point is contained within the boundary.
+   */
   bool contains(const Eigen::Vector2d& point) const;
   bool contains(const Eigen::Vector3d& point) const;
+
+  /**
+   * @brief Check whether the boundary intersects with another boundary.
+   */
   bool intersects(const Boundary& other) const;
+
+  /**
+   * @brief Compute the intersection of two boundaries as a new boundary.
+   * @todo(lschmid): Note that this is only the geometric intersection and currently
+   * does not consider the traversability states.
+   */
   Boundary intersection(const Boundary& other) const;
-  double xIntersection(const Boundary& other) const;
-  double yIntersection(const Boundary& other) const;
-  double xDistance(const Boundary& other) const;
-  double yDistance(const Boundary& other) const;
+
+  /**
+   * @brief Compute the distance of a point to a side of the boundary. The side is here
+   * treated as a finite line and the 2D distance is computed.
+   */
   double distanceToSide(const Side side, const Eigen::Vector2d& point) const;
 
-  // Sides: 0: bottom, 1: left, 2: top, 3: right.
-  double getCoordinate(Side side) const;
-  void setCoordinate(Side side, double coordinate);
-  bool containsOtherBoxWidth(const Boundary& other, bool vertical) const;
+  /**
+   * @brief Compute which side a line from source to the center of this boundary
+   * intersects.
+   */
   Side lineIntersectsSide(const Eigen::Vector2d& source) const;
   Side lineIntersectsSide(const Eigen::Vector3d& source) const;
 
@@ -214,8 +251,31 @@ struct Boundary {
    */
   double maxTraversableDistance(const Boundary& other, Side side) const;
 
+  // Setters.
   /**
-   * @brief 1D representation of a boundary side for side-based computations.
+   * @brief Set the world coordinate of a side, i.e. x for LEFT and RIGHT, and y for
+   * BOTTOM and TOP.
+   * @note This assumes that voxel sizes are identical the adjacent sides.
+   * @param side The side to set.
+   * @param coordinate The new coordinate value.
+   * @param preserve_voxel_size If true, set round the coordinate to the nearest
+   * multiple of the voxel size, preserving the current voxel size. If false, the
+   * coordinate is set directly and the number of voxels is rounded, potentially
+   * changing the voxel size.
+   */
+  void setCoordinate(Side side, double coordinate, bool preserve_voxel_size = true);
+
+  /**
+   * @brief Write the boundary properties to the given TraversabilityNodeAttributes.
+   * This will set the position to the center of the boundary and the fill in the
+   * boundary info.
+   * @param attrs The attributes to write to.
+   */
+  void toAttributes(TraversabilityNodeAttributes& attrs) const;
+
+  /**
+   * @brief 1D representation of a boundary side for more detailed side-based
+   * computations.
    */
   struct BoundarySide {
     double& min;
@@ -251,6 +311,9 @@ struct Boundary {
 
   BoundarySide side(Side side);
   const BoundarySide side(Side side) const;
+
+ protected:
+  double& coord(Side side);
 };
 
 }  // namespace spark_dsg

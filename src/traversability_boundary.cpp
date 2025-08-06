@@ -153,16 +153,6 @@ Boundary::Boundary(const Eigen::Vector2d& min,
                    const std::array<TraversabilityStates, 4>& states)
     : min(min), max(max), states(states) {}
 
-bool Boundary::contains(const Eigen::Vector2d& point) const {
-  return (point.x() >= min.x() && point.x() <= max.x() && point.y() >= min.y() &&
-          point.y() <= max.y());
-}
-
-bool Boundary::intersects(const Boundary& other) const {
-  return (min.x() < other.max.x() && max.x() > other.min.x() &&
-          min.y() < other.max.y() && max.y() > other.min.y());
-}
-
 bool Boundary::valid() const { return (min.x() < max.x() && min.y() < max.y()); }
 
 double Boundary::width() const { return max.x() - min.x(); }
@@ -173,19 +163,13 @@ double Boundary::area() const { return width() * height(); }
 
 Eigen::Vector2d Boundary::center() const { return (min + max) / 2.0; }
 
-void Boundary::toAttributes(TraversabilityNodeAttributes& attrs) const {
-  const Eigen::Vector2d c = center();
-  attrs.position.head(2) = c;
-  attrs.boundary.min = min - c;
-  attrs.boundary.max = max - c;
-  attrs.boundary.states = states;
-}
-
 std::string Boundary::str() const {
   std::stringstream ss;
   ss << "[" << min.x() << ", " << max.x() << "]x[" << min.y() << ", " << max.y() << "]";
   return ss.str();
 }
+
+double Boundary::voxelSize(Side side) const { return this->side(side).voxelSize(); }
 
 double Boundary::getCoordinate(Side side) const {
   switch (side) {
@@ -202,67 +186,67 @@ double Boundary::getCoordinate(Side side) const {
   }
 }
 
-void Boundary::setCoordinate(Side side, double coordinate) {
-  switch (side) {
-    case Side::BOTTOM:
-      min.y() = coordinate;
-      break;
-    case Side::LEFT:
-      min.x() = coordinate;
-      break;
-    case Side::TOP:
-      max.y() = coordinate;
-      break;
-    case Side::RIGHT:
-      max.x() = coordinate;
-      break;
-    default:
-      throw std::out_of_range("Invalid side index for Boundary.");
-  }
+bool Boundary::contains(const Eigen::Vector2d& point) const {
+  return (point.x() >= min.x() && point.x() <= max.x() && point.y() >= min.y() &&
+          point.y() <= max.y());
 }
 
-bool Boundary::containsOtherBoxWidth(const Boundary& other, bool vertical) const {
-  if (vertical) {
-    return (min.y() <= other.min.y() && max.y() >= other.max.y());
+bool Boundary::contains(const Eigen::Vector3d& point) const {
+  return contains(point.head<2>().eval());
+}
+
+bool Boundary::intersects(const Boundary& other) const {
+  return (min.x() < other.max.x() && max.x() > other.min.x() &&
+          min.y() < other.max.y() && max.y() > other.min.y());
+}
+
+void Boundary::setCoordinate(Side side, double coordinate, bool preserve_voxel_size) {
+  // For single or unknown state there are no voxels.
+  const Side n_side = side.next();
+  auto& n_states_1 = states[n_side];
+  if (n_states_1.size() <= 1) {
+    coord(side) = coordinate;
+    return;
+  }
+
+  // Compute the new states for the new coordinate.
+  const double voxel_size = voxelSize(n_side);
+  size_t num_states =
+      std::round(std::abs(coordinate - coord(side.opposite())) / voxel_size);
+  auto& n_states_2 = states[n_side.opposite()];
+  if (side.isUpper()) {
+    // Pad the ends.
+    n_states_1.resize(num_states, TraversabilityState::UNKNOWN);
+    n_states_2.resize(num_states, TraversabilityState::UNKNOWN);
   } else {
-    return (min.x() <= other.min.x() && max.x() >= other.max.x());
+    // Pad the fronts.
+    if (num_states > n_states_1.size()) {
+      const size_t diff = num_states - n_states_1.size();
+      for (size_t i = 0; i < diff; ++i) {
+        n_states_1.insert(n_states_1.begin(), TraversabilityState::UNKNOWN);
+        n_states_2.insert(n_states_2.begin(), TraversabilityState::UNKNOWN);
+      }
+    } else if (num_states < n_states_1.size()) {
+      const size_t diff = n_states_1.size() - num_states;
+      n_states_1.erase(n_states_1.begin(), n_states_1.begin() + diff);
+      n_states_2.erase(n_states_2.begin(), n_states_2.begin() + diff);
+    }
+  }
+
+  // Set the new coordinate.
+  if (preserve_voxel_size) {
+    if (side.isLower()) {
+      coord(side) = coord(side.opposite()) - num_states * voxel_size;
+    } else {
+      coord(side) = coord(side.opposite()) + num_states * voxel_size;
+    }
+  } else {
+    coord(side) = coordinate;
   }
 }
 
 Boundary Boundary::intersection(const Boundary& other) const {
   return Boundary(min.cwiseMax(other.min), max.cwiseMin(other.max));
-}
-
-double Boundary::xIntersection(const Boundary& other) const {
-  if (min.x() > other.max.x() || max.x() < other.min.x()) {
-    return 0.0;  // No intersection
-  }
-  return std::min(max.x(), other.max.x()) - std::max(min.x(), other.min.x());
-}
-
-double Boundary::yIntersection(const Boundary& other) const {
-  if (min.y() > other.max.y() || max.y() < other.min.y()) {
-    return 0.0;  // No intersection
-  }
-  return std::min(max.y(), other.max.y()) - std::max(min.y(), other.min.y());
-}
-
-double Boundary::xDistance(const Boundary& other) const {
-  if (max.x() < other.min.x()) {
-    return other.min.x() - max.x();  // Distance to the right
-  } else if (min.x() > other.max.x()) {
-    return other.max.x() - min.x();  // Distance to the left is negative.
-  }
-  return 0.0;  // Overlapping in x-axis
-}
-
-double Boundary::yDistance(const Boundary& other) const {
-  if (max.y() < other.min.y()) {
-    return other.min.y() - max.y();  // Distance to the top
-  } else if (min.y() > other.max.y()) {
-    return other.max.y() - min.y();  // Distance to the bottom is negative.
-  }
-  return 0.0;  // Overlapping in y-axis
 }
 
 double Boundary::distanceToSide(const Side side, const Eigen::Vector2d& point) const {
@@ -305,9 +289,8 @@ Side Boundary::lineIntersectsSide(const Eigen::Vector2d& source) const {
   }
   if (theta_q > 0) {
     return Side::TOP;
-  } else {
-    return Side::BOTTOM;
   }
+  return Side::BOTTOM;
 }
 
 Side Boundary::lineIntersectsSide(const Eigen::Vector3d& source) const {
@@ -340,6 +323,14 @@ double Boundary::maxTraversableDistance(const Boundary& other, Side side) const 
     return 0.0;
   }
   return this->side(side).maxTraversableDistance(other.side(side.opposite()));
+}
+
+void Boundary::toAttributes(TraversabilityNodeAttributes& attrs) const {
+  const Eigen::Vector2d c = center();
+  attrs.position.head(2) = c;
+  attrs.boundary.min = min - c;
+  attrs.boundary.max = max - c;
+  attrs.boundary.states = states;
 }
 
 Boundary::BoundarySide Boundary::side(Side side) {
@@ -415,6 +406,21 @@ TraversabilityStates Boundary::BoundarySide::getStates(double from, double to) c
     result[i - start] = states[i];
   }
   return result;
+}
+
+double& Boundary::coord(Side side) {
+  switch (side) {
+    case Side::BOTTOM:
+      return min.y();
+    case Side::LEFT:
+      return min.x();
+    case Side::TOP:
+      return max.y();
+    case Side::RIGHT:
+      return max.x();
+    default:
+      throw std::out_of_range("Invalid side index for Boundary.");
+  }
 }
 
 }  // namespace spark_dsg
