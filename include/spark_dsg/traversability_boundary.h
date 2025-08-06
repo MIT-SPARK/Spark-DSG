@@ -46,11 +46,22 @@ namespace spark_dsg {
  */
 bool traversable(TraversabilityState state, bool optimistic = false);
 
+/** Check whether a set of states is considered traversable, i.e., all states are
+ * TRAVERSABLE or TRAVERSED. If optimistic is true, UNKNOWN is also considered
+ * traversable.
+ */
+bool traversable(const TraversabilityStates& states, bool optimistic = false);
+
 /**
  * @brief Check whether a state is considered intraversable, i.e., it is INTRAVERSABLE.
  * If optimistic is false, UNKNOWN is also considered intraversable.
  */
 bool intraversable(TraversabilityState state, bool optimistic = false);
+
+/** Check whether a set of states is considered intraversable, i.e., at least one state
+ * is INTRAVERSABLE. If optimistic is true, UNKNOWN is also considered intraversable.
+ */
+bool intraversable(const TraversabilityStates& states, bool optimistic = false);
 
 /**
  * @brief Combine two TraversabilityStates into a single state. Order of precedence:

@@ -8,9 +8,27 @@ bool traversable(TraversabilityState state, bool optimistic) {
          (optimistic && state == TraversabilityState::UNKNOWN);
 }
 
+bool traversable(const TraversabilityStates& states, bool optimistic) {
+  for (const auto& state : states) {
+    if (!traversable(state, optimistic)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool intraversable(TraversabilityState state, bool optimistic) {
   return state == TraversabilityState::INTRAVERSABLE ||
          (optimistic && state == TraversabilityState::UNKNOWN);
+}
+
+bool intraversable(const TraversabilityStates& states, bool optimistic) {
+  for (const auto& state : states) {
+    if (intraversable(state, optimistic)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void fuseStates(const TraversabilityState from, TraversabilityState& to) {
