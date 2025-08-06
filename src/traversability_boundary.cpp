@@ -481,6 +481,14 @@ void Boundary::BoundarySide::fuseBoundaryStates(
   }
 }
 
+void Boundary::BoundarySide::fuseBoundaryStates(const BoundarySide& other,
+                                                bool pessimistic) {
+  fuseBoundaryStates(other,
+                     [pessimistic](TraversabilityState from, TraversabilityState& to) {
+                       fuseStates(from, to, pessimistic);
+                     });
+}
+
 double& Boundary::coord(Side side) {
   switch (side) {
     case Side::BOTTOM:

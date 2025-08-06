@@ -338,10 +338,9 @@ struct Boundary {
      */
     void fuseBoundaryStates(
         const BoundarySide& other,
-        std::function<void(TraversabilityState, TraversabilityState&)> fuse_fn =
-            [](TraversabilityState from, TraversabilityState& to) {
-              fuseStates(from, to);
-            });
+        std::function<void(TraversabilityState, TraversabilityState&)> fuse_fn);
+
+    void fuseBoundaryStates(const BoundarySide& other, bool pessimistic = false);
   };
 
   BoundarySide side(Side side);
