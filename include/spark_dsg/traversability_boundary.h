@@ -59,17 +59,25 @@ bool traversable(const TraversabilityStates& states, bool optimistic = false);
 bool intraversable(TraversabilityState state, bool optimistic = false);
 
 /** Check whether a set of states is considered intraversable, i.e., at least one state
- * is INTRAVERSABLE. If optimistic is true, UNKNOWN is also considered intraversable.
+ * is INTRAVERSABLE. If optimistic is false, UNKNOWN is also considered intraversable.
  */
 bool intraversable(const TraversabilityStates& states, bool optimistic = false);
 
 /**
  * @brief Combine two TraversabilityStates into a single state. Order of precedence:
- * Traversed -> Intraversable -> Unknown -> Traversable.
+ * Traversed -> Intraversable -> Traversable -> Unknown.
+ * If pessimistic is true, the order of precedence is Traversed -> Intraversable ->
+ * Unknown -> Traversable.
  */
-void fuseStates(const TraversabilityState from, TraversabilityState& to);
-void fuseStates(const TraversabilityStates& from, TraversabilityStates& to);
-void fuseStates(const TraversabilityState from, TraversabilityStates& to);
+void fuseStates(const TraversabilityState from,
+                TraversabilityState& to,
+                bool pessimistic = false);
+void fuseStates(const TraversabilityStates& from,
+                TraversabilityStates& to,
+                bool pessimistic = false);
+void fuseStates(const TraversabilityState from,
+                TraversabilityStates& to,
+                bool pessimistic = false);
 
 /**
  * @brief Compute the minimum (pessimistic) and maximum (optimistic) length of

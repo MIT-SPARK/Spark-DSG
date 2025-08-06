@@ -31,34 +31,43 @@ bool intraversable(const TraversabilityStates& states, bool optimistic) {
   return false;
 }
 
-void fuseStates(const TraversabilityState from, TraversabilityState& to) {
-  if (from == TraversabilityState::TRAVERSED) {
+void fuseStates(const TraversabilityState from,
+                TraversabilityState& to,
+                bool pessimistic) {
+  if (from == TraversabilityState::TRAVERSED || to == TraversabilityState::TRAVERSED) {
     to = TraversabilityState::TRAVERSED;
     return;
   }
-  if (from == TraversabilityState::INTRAVERSABLE &&
-      to != TraversabilityState::TRAVERSED) {
+  if (from == TraversabilityState::INTRAVERSABLE ||
+      to == TraversabilityState::INTRAVERSABLE) {
     to = TraversabilityState::INTRAVERSABLE;
     return;
   }
-  if (from == TraversabilityState::UNKNOWN && to != TraversabilityState::TRAVERSED &&
-      to != TraversabilityState::INTRAVERSABLE) {
-    to = TraversabilityState::UNKNOWN;
+  if (pessimistic) {
+    if (from == TraversabilityState::UNKNOWN) {
+      to = TraversabilityState::UNKNOWN;
+    }
+  } else if (from == TraversabilityState::TRAVERSABLE) {
+    to = TraversabilityState::TRAVERSABLE;
   }
 }
 
-void fuseStates(const TraversabilityStates& from, TraversabilityStates& to) {
+void fuseStates(const TraversabilityStates& from,
+                TraversabilityStates& to,
+                bool pessimistic) {
   if (to.size() < from.size()) {
     to.resize(from.size());
   }
   for (size_t i = 0; i < from.size(); ++i) {
-    fuseStates(from[i], to[i]);
+    fuseStates(from[i], to[i], pessimistic);
   }
 }
 
-void fuseStates(const TraversabilityState from, TraversabilityStates& to) {
+void fuseStates(const TraversabilityState from,
+                TraversabilityStates& to,
+                bool pessimistic) {
   for (auto& state : to) {
-    fuseStates(from, state);
+    fuseStates(from, state, pessimistic);
   }
 }
 
@@ -415,7 +424,7 @@ double Boundary::BoundarySide::maxTraversableDistance(const BoundarySide& other)
     // NOTE(lschmid): This assumes equal voxel spacing.
     states_in_range = getStates(start, end);
     const auto other_states = other.getStates(start, end);
-    fuseStates(other_states, states_in_range);
+    fuseStates(other_states, states_in_range, true);
   }
 
   return computeMinMaxTraversability(states_in_range).first * voxelSize();

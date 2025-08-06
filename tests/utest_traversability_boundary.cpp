@@ -49,6 +49,49 @@ Boundary defaultBoundary() {
                    States(10, State::TRAVERSABLE)});
 }
 
+State fuse(State from, State to, bool pessimistic = false) {
+  spark_dsg::fuseStates(from, to, pessimistic);
+  return to;
+}
+
+TEST(TraversabilityBoundary, FuseStates) {
+  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSED), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSED), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSED), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSED), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSABLE), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSABLE), State::TRAVERSABLE);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSABLE), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSABLE), State::TRAVERSABLE);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::INTRAVERSABLE), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::INTRAVERSABLE), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::INTRAVERSABLE), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::INTRAVERSABLE), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::UNKNOWN), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::UNKNOWN), State::TRAVERSABLE);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::UNKNOWN), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::UNKNOWN), State::UNKNOWN);
+
+  // Pessimistic fusion.
+  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSED, true), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSED, true), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSED, true), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSED, true), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSABLE, true), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSABLE, true), State::TRAVERSABLE);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSABLE, true), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSABLE, true), State::UNKNOWN);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::INTRAVERSABLE, true), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::INTRAVERSABLE, true), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::INTRAVERSABLE, true),
+            State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::INTRAVERSABLE, true), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::UNKNOWN, true), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::UNKNOWN, true), State::UNKNOWN);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::UNKNOWN, true), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::UNKNOWN, true), State::UNKNOWN);
+}
+
 TEST(TraversabilityBoundary, IntersectsSide) {
   Boundary boundary = defaultBoundary();
 
@@ -248,7 +291,7 @@ TEST(TraversabilityBoundary, FuseBoundaryStates) {
   other.states[Side::BOTTOM] = {State::TRAVERSABLE};
   b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
   EXPECT_EQ(b.states[Side::BOTTOM].size(), 1);
-  EXPECT_EQ(b.states[Side::BOTTOM][0], State::UNKNOWN);
+  EXPECT_EQ(b.states[Side::BOTTOM][0], State::TRAVERSABLE);
 
   other.states[Side::BOTTOM] = {State::INTRAVERSABLE};
   b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
@@ -256,30 +299,31 @@ TEST(TraversabilityBoundary, FuseBoundaryStates) {
   EXPECT_EQ(b.states[Side::BOTTOM][0], State::INTRAVERSABLE);
 
   // With voxels.
-  b.states[Side::BOTTOM] = States(10, State::TRAVERSABLE);
-  other.states[Side::BOTTOM] = {State::UNKNOWN, State::INTRAVERSABLE, State::TRAVERSED};
+  b.states[Side::BOTTOM] = States(10, State::UNKNOWN);
+  other.states[Side::BOTTOM] = {
+      State::TRAVERSABLE, State::INTRAVERSABLE, State::TRAVERSED};
   b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
   EXPECT_EQ(b.states[Side::BOTTOM].size(), 10);
-  EXPECT_EQ(b.states[Side::BOTTOM][4], State::TRAVERSABLE);
-  EXPECT_EQ(b.states[Side::BOTTOM][5], State::UNKNOWN);
+  EXPECT_EQ(b.states[Side::BOTTOM][4], State::UNKNOWN);
+  EXPECT_EQ(b.states[Side::BOTTOM][5], State::TRAVERSABLE);
   EXPECT_EQ(b.states[Side::BOTTOM][6], State::INTRAVERSABLE);
   EXPECT_EQ(b.states[Side::BOTTOM][7], State::TRAVERSED);
 
   // Partial overlap.
-  b.states[Side::BOTTOM] = States(10, State::TRAVERSABLE);
+  b.states[Side::BOTTOM] = States(10, State::UNKNOWN);
   other.min = Eigen::Vector2d(-1, -1);
   other.max = Eigen::Vector2d(2, 2);
   b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
   EXPECT_EQ(b.states[Side::BOTTOM].size(), 10);
   EXPECT_EQ(b.states[Side::BOTTOM][0], State::INTRAVERSABLE);
   EXPECT_EQ(b.states[Side::BOTTOM][1], State::TRAVERSED);
-  EXPECT_EQ(b.states[Side::BOTTOM][2], State::TRAVERSABLE);
+  EXPECT_EQ(b.states[Side::BOTTOM][2], State::UNKNOWN);
 
   other.min = Eigen::Vector2d(8, 8);
   other.max = Eigen::Vector2d(11, 11);
   b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
   EXPECT_EQ(b.states[Side::BOTTOM].size(), 10);
-  EXPECT_EQ(b.states[Side::BOTTOM][7], State::TRAVERSABLE);
-  EXPECT_EQ(b.states[Side::BOTTOM][8], State::UNKNOWN);
+  EXPECT_EQ(b.states[Side::BOTTOM][7], State::UNKNOWN);
+  EXPECT_EQ(b.states[Side::BOTTOM][8], State::TRAVERSABLE);
   EXPECT_EQ(b.states[Side::BOTTOM][9], State::INTRAVERSABLE);
 }
