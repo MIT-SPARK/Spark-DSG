@@ -13,7 +13,7 @@ bool intraversable(TraversabilityState state, bool optimistic) {
          (optimistic && state == TraversabilityState::UNKNOWN);
 }
 
-void fuseStates(TraversabilityState from, TraversabilityState& to) {
+void fuseStates(const TraversabilityState from, TraversabilityState& to) {
   if (from == TraversabilityState::TRAVERSED) {
     to = TraversabilityState::TRAVERSED;
     return;
@@ -38,7 +38,7 @@ void fuseStates(const TraversabilityStates& from, TraversabilityStates& to) {
   }
 }
 
-void fuseStates(TraversabilityState from, TraversabilityStates& to) {
+void fuseStates(const TraversabilityState from, TraversabilityStates& to) {
   for (auto& state : to) {
     fuseStates(from, state);
   }
@@ -83,10 +83,17 @@ bool simplifyTraversabilityStates(TraversabilityStates& states) {
 }
 
 bool filterTraversabilityStates(TraversabilityStates& states, size_t width) {
-  // TODO(lschmid): Implement.
-  if (states.size() < width || width == 0) {
+  if (width <= 1) {
     return false;
   }
+
+  if (states.size() < width) {
+    states = TraversabilityStates(width, TraversabilityState::INTRAVERSABLE);
+    return true;
+  }
+
+  // TODO(lschmid): Implement.
+  return false;
 
   TraversabilityStates filtered(states.size(), TraversabilityState::INTRAVERSABLE);
   bool changed = false;
@@ -193,6 +200,11 @@ bool Boundary::contains(const Eigen::Vector2d& point) const {
 
 bool Boundary::contains(const Eigen::Vector3d& point) const {
   return contains(point.head<2>().eval());
+}
+
+bool Boundary::contains(const Boundary& other) const {
+  return (min.x() <= other.min.x() && max.x() >= other.max.x() &&
+          min.y() <= other.min.y() && max.y() >= other.max.y());
 }
 
 bool Boundary::intersects(const Boundary& other) const {
@@ -347,6 +359,13 @@ const Boundary::BoundarySide Boundary::side(Side side) const {
   return const_cast<Boundary*>(this)->side(side);
 }
 
+double Boundary::BoundarySide::voxelSize() const {
+  if (states.size() <= 1) {
+    return max - min;
+  }
+  return (max - min) / states.size();
+}
+
 double Boundary::BoundarySide::maxTraversableDistance(const BoundarySide& other) const {
   if (min > other.max || max < other.min || states.empty() || other.states.empty()) {
     return 0.0;  // No overlap
@@ -406,6 +425,33 @@ TraversabilityStates Boundary::BoundarySide::getStates(double from, double to) c
     result[i - start] = states[i];
   }
   return result;
+}
+
+void Boundary::BoundarySide::fuseBoundaryStates(
+    const BoundarySide& other,
+    std::function<void(TraversabilityState, TraversabilityState&)> fuse_fn) {
+  const double start = std::max(min, other.min);
+  const double end = std::min(max, other.max);
+  if (start > end) {
+    return;
+  }
+
+  if (states.empty()) {
+    states = {TraversabilityState::UNKNOWN};
+  }
+
+  if (states.size() == 1) {
+    fuse_fn(other.getState(start), states[0]);
+    return;
+  }
+
+  // Interpolate all voxels in the range.
+  size_t idx = static_cast<size_t>((start - min) / (max - min) * states.size());
+  const double voxel_size = voxelSize();
+  for (double coordinate = start + 0.5 * voxel_size; coordinate < end;
+       coordinate += voxel_size, ++idx) {
+    fuse_fn(other.getState(coordinate), states[idx]);
+  }
 }
 
 double& Boundary::coord(Side side) {

@@ -56,9 +56,9 @@ bool intraversable(TraversabilityState state, bool optimistic = false);
  * @brief Combine two TraversabilityStates into a single state. Order of precedence:
  * Traversed -> Intraversable -> Unknown -> Traversable.
  */
-void fuseStates(TraversabilityState from, TraversabilityState& to);
+void fuseStates(const TraversabilityState from, TraversabilityState& to);
 void fuseStates(const TraversabilityStates& from, TraversabilityStates& to);
-void fuseStates(TraversabilityState from, TraversabilityStates& to);
+void fuseStates(const TraversabilityState from, TraversabilityStates& to);
 
 /**
  * @brief Compute the minimum (pessimistic) and maximum (optimistic) length of
@@ -204,10 +204,11 @@ struct Boundary {
 
   // Lookup.
   /**
-   * @brief Check whether a point is contained within the boundary.
+   * @brief Check whether a point or a boundary is contained within the boundary.
    */
   bool contains(const Eigen::Vector2d& point) const;
   bool contains(const Eigen::Vector3d& point) const;
+  bool contains(const Boundary& other) const;
 
   /**
    * @brief Check whether the boundary intersects with another boundary.
@@ -288,7 +289,7 @@ struct Boundary {
     /**
      * @brief Get the voxel size for this boundary side.
      */
-    double voxelSize() const { return (max - min) / states.size(); }
+    double voxelSize() const;
 
     /**
      * @brief Compute the maximum width of the traversable distance between two aligning
@@ -307,6 +308,21 @@ struct Boundary {
      * not pad the result with unobserved states.
      */
     TraversabilityStates getStates(double from, double to) const;
+
+    /**
+     * @brief Fuse the states of another boundary side into this one.
+     * @note This interpolates the states for each voxel in this side from the other. If
+     * voxel sizes are different, some of the other states may be skipped.
+     * @param other The other boundary side to fuse.
+     * @param fuse_fn A function to fuse the states, where the first argument is fused
+     * in place into the second argument.
+     */
+    void fuseBoundaryStates(
+        const BoundarySide& other,
+        std::function<void(TraversabilityState, TraversabilityState&)> fuse_fn =
+            [](TraversabilityState from, TraversabilityState& to) {
+              fuseStates(from, to);
+            });
   };
 
   BoundarySide side(Side side);

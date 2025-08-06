@@ -239,3 +239,47 @@ TEST(TraversabilityBoundary, MaxTraversableDistance) {
   EXPECT_DOUBLE_EQ(from.maxTraversableDistance(to, Side::BOTTOM), 3.0);
   EXPECT_DOUBLE_EQ(from.maxTraversableDistance(to, Side::LEFT), 5.0);
 }
+
+TEST(TraversabilityBoundary, FuseBoundaryStates) {
+  auto b = Boundary({0, 0}, {10, 10});
+  auto other = Boundary({5, 5}, {8, 8});
+
+  // Simple cases.
+  other.states[Side::BOTTOM] = {State::TRAVERSABLE};
+  b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
+  EXPECT_EQ(b.states[Side::BOTTOM].size(), 1);
+  EXPECT_EQ(b.states[Side::BOTTOM][0], State::UNKNOWN);
+
+  other.states[Side::BOTTOM] = {State::INTRAVERSABLE};
+  b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
+  EXPECT_EQ(b.states[Side::BOTTOM].size(), 1);
+  EXPECT_EQ(b.states[Side::BOTTOM][0], State::INTRAVERSABLE);
+
+  // With voxels.
+  b.states[Side::BOTTOM] = States(10, State::TRAVERSABLE);
+  other.states[Side::BOTTOM] = {State::UNKNOWN, State::INTRAVERSABLE, State::TRAVERSED};
+  b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
+  EXPECT_EQ(b.states[Side::BOTTOM].size(), 10);
+  EXPECT_EQ(b.states[Side::BOTTOM][4], State::TRAVERSABLE);
+  EXPECT_EQ(b.states[Side::BOTTOM][5], State::UNKNOWN);
+  EXPECT_EQ(b.states[Side::BOTTOM][6], State::INTRAVERSABLE);
+  EXPECT_EQ(b.states[Side::BOTTOM][7], State::TRAVERSED);
+
+  // Partial overlap.
+  b.states[Side::BOTTOM] = States(10, State::TRAVERSABLE);
+  other.min = Eigen::Vector2d(-1, -1);
+  other.max = Eigen::Vector2d(2, 2);
+  b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
+  EXPECT_EQ(b.states[Side::BOTTOM].size(), 10);
+  EXPECT_EQ(b.states[Side::BOTTOM][0], State::INTRAVERSABLE);
+  EXPECT_EQ(b.states[Side::BOTTOM][1], State::TRAVERSED);
+  EXPECT_EQ(b.states[Side::BOTTOM][2], State::TRAVERSABLE);
+
+  other.min = Eigen::Vector2d(8, 8);
+  other.max = Eigen::Vector2d(11, 11);
+  b.side(Side::BOTTOM).fuseBoundaryStates(other.side(Side::BOTTOM));
+  EXPECT_EQ(b.states[Side::BOTTOM].size(), 10);
+  EXPECT_EQ(b.states[Side::BOTTOM][7], State::TRAVERSABLE);
+  EXPECT_EQ(b.states[Side::BOTTOM][8], State::UNKNOWN);
+  EXPECT_EQ(b.states[Side::BOTTOM][9], State::INTRAVERSABLE);
+}
