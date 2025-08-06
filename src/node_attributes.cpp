@@ -422,15 +422,18 @@ bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
          has_active_mesh_indices == derived->has_active_mesh_indices;
 }
 
+bool BoundaryInfo::operator==(const BoundaryInfo& other) const {
+  return min == other.min && max == other.max && states == other.states;
+}
+
 NodeAttributes::Ptr TraversabilityNodeAttributes::clone() const {
   return std::make_unique<TraversabilityNodeAttributes>(*this);
 }
 
-void TraversabilityNodeAttributes::reset() { boundary.clear(); }
-
 std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
-  out << "\n  - boundary.size(): " << boundary.size() << "\n"
+  out << "  - min: " << boundary.min.transpose() << "\n"
+      << "  - max: " << boundary.max.transpose() << "\n"
       << "  - first_observed_ns: " << first_observed_ns << "\n"
       << "  - last_observed_ns: " << last_observed_ns << "\n"
       << "  - distance: " << distance << "\n";
@@ -442,38 +445,22 @@ void TraversabilityNodeAttributes::serialization_info() {
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
   serialization::field("distance", distance);
-
-  // TODO(lschmid): Fix proper serialization instead of this workaround.
-  auto points = std::vector<Eigen::Vector3d>(boundary.size());
-  auto states = std::vector<uint8_t>(boundary.size());
-  auto min_traversables = std::vector<size_t>(boundary.size());
-  auto max_traversables = std::vector<size_t>(boundary.size());
-  for (size_t i = 0; i < boundary.size(); ++i) {
-    points[i] = boundary[i].point;
-    states[i] = static_cast<uint8_t>(boundary[i].state);
-    min_traversables[i] = boundary[i].min_traversable;
-    max_traversables[i] = boundary[i].max_traversable;
+  serialization::field("min", boundary.min);
+  serialization::field("max", boundary.max);
+  // Workaround for state serialization.
+  for (size_t i = 0; i < 4; ++i) {
+    std::vector<uint8_t> s;
+    s.reserve(boundary.states[i].size());
+    for (const auto& state : boundary.states[i]) {
+      s.push_back(static_cast<uint8_t>(state));
+    }
+    serialization::field("states_" + std::to_string(i), s);
+    boundary.states[i].clear();
+    boundary.states[i].reserve(s.size());
+    for (const auto& state : s) {
+      boundary.states[i].push_back(static_cast<TraversabilityState>(state));
+    }
   }
-
-  serialization::field("points", points);
-  serialization::field("states", states);
-  serialization::field("min_traversables", min_traversables);
-  serialization::field("max_traversables", max_traversables);
-
-  boundary.resize(points.size());
-  for (size_t i = 0; i < points.size(); ++i) {
-    boundary[i].point = points[i];
-    boundary[i].state = static_cast<State>(states[i]);
-    boundary[i].min_traversable = min_traversables[i];
-    boundary[i].max_traversable = max_traversables[i];
-  }
-}
-
-bool TraversabilityNodeAttributes::BoundaryInfo::operator==(
-    const BoundaryInfo& other) const {
-  return point == other.point && state == other.state &&
-         min_traversable == other.min_traversable &&
-         max_traversable == other.max_traversable;
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {

@@ -180,16 +180,16 @@ struct BoundingBox {
 
   // Bounding box inference.
   /**
-   * @brief Transform a point from world frame to bounding box frame.
-   * @param point_W The point to transform in world coordinates.
-   * @returns The point in bounding box coordinates.
+   * @brief Transform a point from bounding box frame to the world frame.
+   * @param point_B The point to transform in bounding box coordinates.
+   * @returns The point in world coordinates.
    */
   Eigen::Vector3f pointToWorldFrame(const Eigen::Vector3f& point_B) const;
 
   /**
-   * @brief Transform a point from bounding box frame to world frame.
-   * @param point_W The point to transform in bounding box coordinates.
-   * @returns The point in world coordinates.
+   * @brief Transform a point from world frame to bounding box frame.
+   * @param point_W The point to transform in world coordinates.
+   * @returns The point in bounding box coordinates.
    */
   Eigen::Vector3f pointToBoxFrame(const Eigen::Vector3f& point_W) const;
 
