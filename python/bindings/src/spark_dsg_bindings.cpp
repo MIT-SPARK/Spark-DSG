@@ -242,11 +242,11 @@ PYBIND11_MODULE(_dsg_bindings, module) {
              "depth"_a = 1,
              "bbox_type"_a = BoundingBox::Type::AABB);
 
-  py::enum_<TraversabilityNodeAttributes::State>(module, "TraversabilityState")
-      .value("UNKNOWN", TraversabilityNodeAttributes::State::UNKNOWN)
-      .value("TRAVERSABLE", TraversabilityNodeAttributes::State::TRAVERSABLE)
-      .value("INTRAVERSABLE", TraversabilityNodeAttributes::State::INTRAVERSABLE)
-      .value("TRAVERSED", TraversabilityNodeAttributes::State::TRAVERSED);
+  py::enum_<TraversabilityState>(module, "TraversabilityState")
+      .value("UNKNOWN", TraversabilityState::UNKNOWN)
+      .value("TRAVERSABLE", TraversabilityState::TRAVERSABLE)
+      .value("INTRAVERSABLE", TraversabilityState::INTRAVERSABLE)
+      .value("TRAVERSED", TraversabilityState::TRAVERSED);
 
   py::class_<Metadata>(module, "_Metadata")
       .def(py::init<>())
@@ -445,15 +445,20 @@ PYBIND11_MODULE(_dsg_bindings, module) {
       .def_readwrite("deformation_connections",
                      &Place2dNodeAttributes::deformation_connections);
 
-  py::class_<TraversabilityNodeAttributes::BoundaryInfo>(module, "BoundaryInfo")
+  py::class_<BoundaryInfo>(module, "BoundaryInfo")
       .def(py::init<>())
-      .def_readwrite("point", &TraversabilityNodeAttributes::BoundaryInfo::point)
-      .def_readwrite("state", &TraversabilityNodeAttributes::BoundaryInfo::state);
+      .def_readwrite("min", &BoundaryInfo::min)
+      .def_readwrite("max", &BoundaryInfo::max)
+      .def_readwrite("states", &BoundaryInfo::states);
 
   py::class_<TraversabilityNodeAttributes, NodeAttributes>(
       module, "TraversabilityNodeAttributes")
       .def(py::init<>())
       .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
+      .def_readwrite("first_observed_ns",
+                     &TraversabilityNodeAttributes::first_observed_ns)
+      .def_readwrite("last_observed_ns",
+                     &TraversabilityNodeAttributes::last_observed_ns)
       .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(module, "AgentNodeAttributes")
