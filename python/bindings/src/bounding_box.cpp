@@ -67,7 +67,7 @@ void init_bounding_box(py::module_& m) {
       .def("volume", &BoundingBox::volume)
       .def("has_rotation", &BoundingBox::hasRotation)
       .def("corners", &BoundingBox::corners)
-      .def("contains", py::overload_cast<const Eigen::Vector3f&>(BoundingBox::contains))
+      .def("contains", py::overload_cast<const Eigen::Vector3f&>(&BoundingBox::contains, py::const_))
       .def("intersects", &BoundingBox::intersects)
       .def("compute_iou", &BoundingBox::computeIoU, "other"_a, "samples"_a = 1000, "force_approx"_a = false)
       .def_property_readonly("min", [](const BoundingBox& box) { return box.pointToWorldFrame(-box.dimensions / 2); })
