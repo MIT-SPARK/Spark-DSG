@@ -224,12 +224,35 @@ bool BoundingBox::intersects(const BoundingBox& other) const {
 
 float BoundingBox::computeIoU(const BoundingBox& other) const {
   if (!isValid() || !other.isValid()) {
-    return 0;
+    return 0.0f;
   }
 
+  if (type == Type::AABB || other.type == Type::AABB) {
+    return computeIoUExact(other);
+  }
+
+  return computeIoUApprox(other);
+}
+
+float BoundingBox::computeIoUExact(const BoundingBox& other) const {
   // Currently only supports AABB-AABB intersection.
   if (type != Type::AABB || other.type != Type::AABB) {
-    return 0;
+    return 0.0f;
+  }
+
+  const Eigen::Vector3f intersection_min = minCorner().cwiseMax(other.minCorner());
+  const Eigen::Vector3f intersection_max = maxCorner().cwiseMin(other.maxCorner());
+  const Eigen::Vector3f intersection_size =
+      (intersection_max - intersection_min).cwiseMax(0);
+  const float intersection_volume = intersection_size.prod();
+  const float union_volume = volume() + other.volume() - intersection_volume;
+  return intersection_volume / union_volume;
+}
+
+float BoundingBox::computeIoUApprox(const BoundingBox& other, size_t samples) const {
+  for (size_t i = 0; i < samples; ++i) {
+    const auto sample = Eigen::Vector3f::Random();
+    const auto p_lhs = pointToWorldFrame(0.5f * );
   }
 
   const Eigen::Vector3f intersection_min = minCorner().cwiseMax(other.minCorner());

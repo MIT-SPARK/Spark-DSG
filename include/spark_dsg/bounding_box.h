@@ -253,6 +253,9 @@ struct BoundingBox {
   Eigen::Vector3f minCorner() const;
   Eigen::Vector3f maxCorner() const;
 
+  float computeIoUExact(const BoundingBox& other) const;
+  float computeIoUApprox(const BoundingBox& other, size_t samples = 100) const;
+
  public:
   // Specialized point adaptors.
   struct MeshAdaptor : PointAdaptor {
