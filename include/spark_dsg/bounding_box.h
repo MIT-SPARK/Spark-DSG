@@ -209,9 +209,14 @@ struct BoundingBox {
 
   /**
    * @brief Compute the intersection over union (IoU) of this bounding box with another.
-   * @note Currently only supports AABB-AABB intersection.
+   * @note Currently only supports exact computation for AABB-AABB intersection.
+   * @param other Other bounding box to use for computation
+   * @param samples Number of random samples to draw to estimate intersection
+   * @param force_approx Use sampling-based method for all bounding box types
    */
-  float computeIoU(const BoundingBox& other) const;
+  float computeIoU(const BoundingBox& other,
+                   size_t samples = 1000,
+                   bool force_approx = false) const;
 
   /**
    * @brief Transform the bounding box.
@@ -254,7 +259,7 @@ struct BoundingBox {
   Eigen::Vector3f maxCorner() const;
 
   float computeIoUExact(const BoundingBox& other) const;
-  float computeIoUApprox(const BoundingBox& other, size_t samples = 100) const;
+  float computeIoUApprox(const BoundingBox& other, size_t samples) const;
 
  public:
   // Specialized point adaptors.

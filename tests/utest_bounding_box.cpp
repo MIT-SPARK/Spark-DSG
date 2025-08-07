@@ -314,6 +314,41 @@ TEST(BoundingBoxTests, AABBcomputeIoU) {
   EXPECT_EQ(box.computeIoU(box2), 0.0f);
 }
 
+TEST(BoundingBoxTests, computeIoUApprox) {
+  Eigen::Vector3f size(1.0, 2.0, 3.0);
+  Eigen::Vector3f pos(0.0, 0.0, 0.0);
+  BoundingBox box(size, pos);
+  BoundingBox box2 = box;
+
+  // Self.
+  EXPECT_EQ(box.computeIoU(box2, 1000, true), 1.0f);
+
+  // Half.
+  box2.world_P_center = Eigen::Vector3f(0.5, 0, 0);
+  EXPECT_NEAR(box.computeIoU(box2, 1000, true), 1.0f / 3, 1.0e-3f);
+
+  // Corner.
+  box2.world_P_center = Eigen::Vector3f(0.5, 1, 1.5);
+  EXPECT_NEAR(box.computeIoU(box2, 1000, true), 0.06666666667, 1.0e-3f);
+
+  // No overlap.
+  box2.world_P_center = Eigen::Vector3f(1.001, 0, 0);
+  EXPECT_EQ(box.computeIoU(box2, 100, true), 0.0f);
+}
+
+TEST(BoundingBoxTests, computeOrientedIoUApprox) {
+  Eigen::Vector3f size(1.0, 1.0, 1.0);
+  Eigen::Vector3f pos(0.0, 0.0, 0.0);
+  // 90-degree rotations -> IoU of 1
+  BoundingBox box(size, pos, 0.0f);
+  BoundingBox box2(size, pos, M_PI / 2.0f);
+
+  EXPECT_EQ(box.computeIoU(box2, 1000), 1.0f);
+
+  box2 = BoundingBox(size, pos, M_PI / 4.0f);
+  EXPECT_NEAR(box.computeIoU(box2, 1000), 1.0f / std::sqrt(2.0f), 1.0e-3f);
+}
+
 TEST(BoundingBoxTests, Corners) {
   Eigen::Vector3f size(1.0, 2.0, 3.0);
   Eigen::Vector3f pos(0.5, 1.0, 1.5);
