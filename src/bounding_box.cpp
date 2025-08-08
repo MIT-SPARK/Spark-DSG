@@ -244,14 +244,12 @@ bool BoundingBox::intersects(const BoundingBox& other) const {
          (maxCorner().array() > other.minCorner().array()).all();
 }
 
-float BoundingBox::computeIoU(const BoundingBox& other,
-                              size_t samples,
-                              bool force_approx) const {
+float BoundingBox::computeIoU(const BoundingBox& other, size_t samples) const {
   if (!isValid() || !other.isValid()) {
     return 0.0f;
   }
 
-  if (!force_approx && type == Type::AABB && other.type == Type::AABB) {
+  if (type == Type::AABB && other.type == Type::AABB) {
     return computeIoUExact(other);
   }
 
