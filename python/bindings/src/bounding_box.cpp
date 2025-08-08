@@ -69,7 +69,8 @@ void init_bounding_box(py::module_& m) {
       .def("corners", &BoundingBox::corners)
       .def("contains", py::overload_cast<const Eigen::Vector3f&>(&BoundingBox::contains, py::const_))
       .def("intersects", &BoundingBox::intersects)
-      .def("compute_iou", &BoundingBox::computeIoU, "other"_a, "samples"_a = 1000, "force_approx"_a = false)
+      .def("compute_iou", &BoundingBox::computeIoU, "other"_a, "samples"_a = 1000)
+      .def("approx_iou", &BoundingBox::computeIoUApprox, "other"_a, "samples"_a = 1000)
       .def_property_readonly("min", [](const BoundingBox& box) { return box.pointToWorldFrame(-box.dimensions / 2); })
       .def_property_readonly("max", [](const BoundingBox& box) { return box.pointToWorldFrame(box.dimensions / 2); })
       .def("__repr__", [](const BoundingBox& box) {
