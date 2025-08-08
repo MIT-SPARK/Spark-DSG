@@ -43,6 +43,28 @@
 
 namespace spark_dsg {
 
+namespace {
+
+inline double halton_number(size_t base, size_t index) {
+  double result = 0.0;
+  double curr_divisor = 1.0;
+  while (index > 0) {
+    curr_divisor /= base;
+    result += curr_divisor * (index % base);
+    index /= base;
+  }
+
+  return result;
+}
+
+inline Eigen::Array3f halton_sample(size_t index) {
+  Eigen::Array3f sample;
+  sample << halton_number(2, index), halton_number(3, index), halton_number(5, index);
+  return sample - 0.5f;
+}
+
+}  // namespace
+
 BoundingBox::BoundingBox(const Eigen::Vector3f& dimensions)
     : type(Type::AABB), dimensions(dimensions), world_P_center(dimensions / 2) {}
 
@@ -222,14 +244,22 @@ bool BoundingBox::intersects(const BoundingBox& other) const {
          (maxCorner().array() > other.minCorner().array()).all();
 }
 
-float BoundingBox::computeIoU(const BoundingBox& other) const {
+float BoundingBox::computeIoU(const BoundingBox& other, size_t samples) const {
   if (!isValid() || !other.isValid()) {
-    return 0;
+    return 0.0f;
   }
 
+  if (type == Type::AABB && other.type == Type::AABB) {
+    return computeIoUExact(other);
+  }
+
+  return computeIoUApprox(other, samples);
+}
+
+float BoundingBox::computeIoUExact(const BoundingBox& other) const {
   // Currently only supports AABB-AABB intersection.
   if (type != Type::AABB || other.type != Type::AABB) {
-    return 0;
+    return 0.0f;
   }
 
   const Eigen::Vector3f intersection_min = minCorner().cwiseMax(other.minCorner());
@@ -238,6 +268,33 @@ float BoundingBox::computeIoU(const BoundingBox& other) const {
       (intersection_max - intersection_min).cwiseMax(0);
   const float intersection_volume = intersection_size.prod();
   const float union_volume = volume() + other.volume() - intersection_volume;
+  return intersection_volume / union_volume;
+}
+
+float BoundingBox::computeIoUApprox(const BoundingBox& other, size_t samples) const {
+  size_t lhs_inside = 0;
+  size_t rhs_inside = 0;
+  for (size_t i = 0; i < samples; ++i) {
+    const auto sample = halton_sample(i);
+    const auto p_lhs = pointToWorldFrame(sample * dimensions.array());
+    const auto p_rhs = other.pointToWorldFrame(sample * other.dimensions.array());
+    if (other.contains(p_lhs)) {
+      ++lhs_inside;
+    }
+
+    if (contains(p_rhs)) {
+      ++rhs_inside;
+    }
+  }
+
+  const auto lhs_volume = volume();
+  const auto rhs_volume = other.volume();
+
+  // intersection volume is hit rate * total volume, averaged across both shapes
+  const float intersection_volume =
+      (lhs_volume * lhs_inside + rhs_volume * rhs_inside) /
+      (2.0f * static_cast<float>(samples));
+  const float union_volume = lhs_volume + rhs_volume - intersection_volume;
   return intersection_volume / union_volume;
 }
 
