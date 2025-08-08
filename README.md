@@ -41,6 +41,7 @@ pip install ./Spark-DSG
 
 See [this notebook](examples/python_api.py) for some examples for the bindings (you'll want to clone the repo, even if you installed from github).
 You'll want to install `jupyter` and `jupytext` if you want to run it as a notebook, though you can also just run it directly as a python script.
+You can find an example scene graph [here](https://drive.google.com/file/d/1jwcjrE4-6PvOgEgJipETkQaLgC43biFT/view?usp=sharing).
 
 ### Python API documentation
 

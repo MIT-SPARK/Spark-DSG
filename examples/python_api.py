@@ -55,7 +55,7 @@ import pathlib
 import spark_dsg as dsg
 
 # %%
-path_to_dsg = "~/uh2_office_dsg.json"
+path_to_dsg = "~/uhumans2_office_ade20k_full_dsg_with_mesh.json"
 path_to_dsg = pathlib.Path(path_to_dsg).expanduser().absolute()
 
 
