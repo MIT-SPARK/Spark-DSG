@@ -1,3 +1,4 @@
+# %%
 # Copyright 2022, Massachusetts Institute of Technology.
 # All Rights Reserved
 #
@@ -63,7 +64,7 @@ G = dsg.DynamicSceneGraph.load(str(path_to_dsg))
 
 
 # %%
-fig = dsg.plot_scene_graph(G, marker_size=6)
+fig = dsg.plot_scene_graph(G)
 if fig is not None:
     fig.show(renderer="notebook")
 
@@ -185,3 +186,5 @@ dsg.add_bounding_boxes_to_layer(G, dsg.DsgLayers.ROOMS)
 print("Room bounding boxes:")
 for node in G.get_layer(dsg.DsgLayers.ROOMS).nodes:
     print(f"  - {node.id}: {node.attributes.bounding_box}")
+
+# %%
