@@ -240,36 +240,25 @@ bool Boundary::intersects(const Boundary& other) const {
 }
 
 void Boundary::setCoordinate(Side side, double coordinate, bool preserve_voxel_size) {
+  auto n1 = this->side(side.next());
+  auto n2 = this->side(side.previous());
+
   // For single or unknown state there are no voxels.
-  const Side n_side = side.next();
-  auto& n_states_1 = states[n_side];
-  if (n_states_1.size() <= 1) {
+  if (n1.states.size() <= 1 && n2.states.size() <= 1) {
     coord(side) = coordinate;
     return;
   }
 
   // Compute the new states for the new coordinate.
-  const double voxel_size = voxelSize(n_side);
+  const double voxel_size = std::min(n1.voxelSize(), n2.voxelSize());
   size_t num_states =
       std::round(std::abs(coordinate - coord(side.opposite())) / voxel_size);
-  auto& n_states_2 = states[n_side.opposite()];
-  if (side.isUpper()) {
-    // Pad the ends.
-    n_states_1.resize(num_states, TraversabilityState::UNKNOWN);
-    n_states_2.resize(num_states, TraversabilityState::UNKNOWN);
-  } else {
-    // Pad the fronts.
-    if (num_states > n_states_1.size()) {
-      const size_t diff = num_states - n_states_1.size();
-      for (size_t i = 0; i < diff; ++i) {
-        n_states_1.insert(n_states_1.begin(), TraversabilityState::UNKNOWN);
-        n_states_2.insert(n_states_2.begin(), TraversabilityState::UNKNOWN);
-      }
-    } else if (num_states < n_states_1.size()) {
-      const size_t diff = n_states_1.size() - num_states;
-      n_states_1.erase(n_states_1.begin(), n_states_1.begin() + diff);
-      n_states_2.erase(n_states_2.begin(), n_states_2.begin() + diff);
-    }
+  const bool is_upper = side.isUpper();
+  if (n1.states.size() > 1) {
+    n1.resizeStates(num_states, is_upper);
+  }
+  if (n2.states.size() > 1) {
+    n2.resizeStates(num_states, is_upper);
   }
 
   // Set the new coordinate.
@@ -377,9 +366,9 @@ Boundary::BoundarySide Boundary::side(Side side) {
     throw std::out_of_range("Invalid side index for BoundarySide.");
   }
   if (side.horizontal()) {
-    return BoundarySide(min.x(), max.x(), states[side]);
+    return BoundarySide(min.x(), max.x(), states[side], side);
   }
-  return BoundarySide(min.y(), max.y(), states[side]);
+  return BoundarySide(min.y(), max.y(), states[side], side);
 }
 
 const Boundary::BoundarySide Boundary::side(Side side) const {
@@ -452,6 +441,25 @@ TraversabilityStates Boundary::BoundarySide::getStates(double from, double to) c
     result[i - start] = states[i];
   }
   return result;
+}
+
+void Boundary::BoundarySide::resizeStates(size_t new_size, bool on_upper_side) {
+  if (states.size() == new_size) {
+    return;
+  }
+  if (on_upper_side) {
+    // Pad the ends.
+    states.resize(new_size, TraversabilityState::UNKNOWN);
+    return;
+  }
+  // Pad the fronts.
+  if (new_size > states.size()) {
+    const size_t diff = new_size - states.size();
+    states.insert(states.begin(), diff, TraversabilityState::UNKNOWN);
+  } else {
+    const size_t diff = states.size() - new_size;
+    states.erase(states.begin(), states.begin() + diff);
+  }
 }
 
 void Boundary::BoundarySide::fuseBoundaryStates(

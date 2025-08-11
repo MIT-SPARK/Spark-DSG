@@ -275,7 +275,7 @@ struct Boundary {
   /**
    * @brief Set the world coordinate of a side, i.e. x for LEFT and RIGHT, and y for
    * BOTTOM and TOP.
-   * @note This assumes that voxel sizes are identical the adjacent sides.
+   * @note This assumes that voxel sizes are identical on the adjacent sides.
    * @param side The side to set.
    * @param coordinate The new coordinate value.
    * @param preserve_voxel_size If true, set round the coordinate to the nearest
@@ -301,9 +301,10 @@ struct Boundary {
     double& min;
     double& max;
     TraversabilityStates& states;
+    const Side side;
 
-    BoundarySide(double& min, double& max, TraversabilityStates& states)
-        : min(min), max(max), states(states) {}
+    BoundarySide(double& min, double& max, TraversabilityStates& states, Side side)
+        : min(min), max(max), states(states), side(side) {}
 
     /**
      * @brief Get the voxel size for this boundary side.
@@ -327,6 +328,17 @@ struct Boundary {
      * not pad the result with unobserved states.
      */
     TraversabilityStates getStates(double from, double to) const;
+
+    /**
+     * @brief Resize the number of states to a new size, padding with UNKNOWN states if
+     * necessary.
+     * @param new_size The new size of the states.
+     * @param on_upper_side If true, the new states are added or removed on the max-end
+     * of the side, otherwise on the min-end.
+     * @note This does not change the min and max coordinates of the side, only the
+     * number of states.
+     */
+    void resizeStates(size_t new_size, bool on_upper_side = true);
 
     /**
      * @brief Fuse the states of another boundary side into this one.
