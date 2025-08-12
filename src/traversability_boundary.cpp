@@ -277,6 +277,22 @@ Boundary Boundary::intersection(const Boundary& other) const {
   return Boundary(min.cwiseMax(other.min), max.cwiseMin(other.max));
 }
 
+double Boundary::overlap(const Boundary& other) const {
+  const auto intersection = this->intersection(other);
+  if (!intersection.valid()) {
+    return 0.0;
+  }
+  return intersection.area() / area();
+}
+
+double Boundary::computeIoU(const Boundary& other) const {
+  const auto intersection = this->intersection(other);
+  if (!intersection.valid()) {
+    return 0.0;
+  }
+  return intersection.area() / (area() + other.area() - intersection.area());
+}
+
 double Boundary::distanceToSide(const Side side, const Eigen::Vector2d& point) const {
   // Considers the side as finite line.
   switch (side) {

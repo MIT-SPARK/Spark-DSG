@@ -242,6 +242,20 @@ struct Boundary {
   Boundary intersection(const Boundary& other) const;
 
   /**
+   * @brief Compute the overlap of this boundary within another boundary, from 0 meaning
+   * disjoint boundaries to 1 meaning this boundary is completely contained in the
+   * other.
+   */
+  double overlap(const Boundary& other) const;
+
+  /**
+   * @brief Compute the intersection over union (IoU) of this boundary with another
+   * boundary, from 0 meaning disjoint boundaries to 1 meaning the boundaries are
+   * identical.
+   */
+  double computeIoU(const Boundary& other) const;
+
+  /**
    * @brief Compute the distance of a point to a side of the boundary. The side is here
    * treated as a finite line and the 2D distance is computed.
    */
