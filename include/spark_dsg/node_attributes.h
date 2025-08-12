@@ -360,6 +360,36 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
 };
 
 /**
+ * @brief The traversability state of a traversability boundary.
+ */
+enum class TraversabilityState : uint8_t {
+  UNKNOWN = 0,
+  TRAVERSABLE = 1,
+  INTRAVERSABLE = 2,
+  TRAVERSED = 3
+};
+
+using TraversabilityStates = std::vector<TraversabilityState>;
+
+/**
+ * @brief Compact information to store a grid aligned traversability boundary.
+ */
+struct BoundaryInfo {
+  //! Coordinates of the boundary w.r.t. the attribute center.
+  Eigen::Vector2d min;
+  Eigen::Vector2d max;
+
+  //! Traversability states for each side of the boundary. Each side can be empty
+  //! (=UNKNOWN), a single state, or a sequence of states indicating uniform
+  //! tessellation of the boundary. The sides are ordered bottom, left, top, right.
+  //! The states per side are ordered from the lower to the higher coordinate.
+  std::array<TraversabilityStates, 4> states;
+
+  bool operator==(const BoundaryInfo& other) const;
+  bool operator!=(const BoundaryInfo& other) const { return !(*this == other); }
+};
+
+/**
  * @brief First simple implementation of traversability places.
  */
 struct TraversabilityNodeAttributes : public NodeAttributes {
@@ -371,36 +401,16 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   virtual ~TraversabilityNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
 
-  enum class State : uint8_t {
-    UNKNOWN = 0,
-    TRAVERSABLE = 1,
-    INTRAVERSABLE = 2,
-    TRAVERSED = 3
-  };
-
-  struct BoundaryInfo {
-    Eigen::Vector3d point;
-    State state = State::UNKNOWN;
-
-    // TODO(lschmid): Consider removing these, not sure they can reasonably be used.
-    size_t min_traversable = 0;
-    size_t max_traversable = 0;
-
-    bool operator==(const BoundaryInfo& other) const;
-  };
-
-  //! Boundary points surrounding the traversability area. n side points, where the last
-  //! line closes back to the first point.
-  std::vector<BoundaryInfo> boundary;
-
   //! Timestamps when this place was first and last observed.
   uint64_t first_observed_ns = 0;
   uint64_t last_observed_ns = 0;
 
+  //! Boundary information
+  BoundaryInfo boundary;
+
+  // TODO(lschmid): Reconsider in the future.
   //! Distance to the nearest intraversable obstacle.
   double distance = 0.0;
-
-  void reset();
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
