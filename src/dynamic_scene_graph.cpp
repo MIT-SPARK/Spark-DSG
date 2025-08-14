@@ -56,14 +56,14 @@ using Partitions = DynamicSceneGraph::Partitions;
 using LayerNames = DynamicSceneGraph::LayerNames;
 using LayerKeys = DynamicSceneGraph::LayerKeys;
 
-LayerKeys layersFromNames(const LayerNames& layer_names,
-                          const LayerKeys& prev_layers = {}) {
+std::set<LayerKey> layersFromNames(const LayerNames& layer_names,
+                                   const LayerKeys& prev_layers = {}) {
   std::set<LayerKey> layers(prev_layers.begin(), prev_layers.end());
   for (const auto& [name, key] : layer_names) {
     layers.insert(key);
   }
 
-  return LayerKeys(layers.begin(), layers.end());
+  return layers;
 }
 
 bool EdgeLayerInfo::isSameLayer() const { return source == target; }
@@ -84,7 +84,7 @@ DynamicSceneGraph::DynamicSceneGraph(const LayerKeys& layer_keys,
 }
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::fromNames(const LayerNames& layers) {
-  return std::make_shared<DynamicSceneGraph>(layersFromNames(layers), layers);
+  return std::make_shared<DynamicSceneGraph>(LayerKeys{}, layers);
 }
 
 void DynamicSceneGraph::clear() {
@@ -215,6 +215,8 @@ void DynamicSceneGraph::removeLayer(LayerId layer_id, PartitionId partition) {
       layer_partitions_.erase(iter);
     }
   }
+
+  layer_keys_.erase(key);
 }
 
 bool DynamicSceneGraph::emplaceNode(LayerKey key,
@@ -664,7 +666,7 @@ void DynamicSceneGraph::removeAllStaleEdges() {
 }
 
 DynamicSceneGraph::Ptr DynamicSceneGraph::clone() const {
-  auto to_return = std::make_shared<DynamicSceneGraph>(layer_keys_, layer_names_);
+  auto to_return = std::make_shared<DynamicSceneGraph>(layer_keys(), layer_names_);
   to_return->metadata = metadata;
 
   for (const auto [node_id, key] : node_lookup_) {
@@ -737,6 +739,7 @@ bool DynamicSceneGraph::hasMesh() const { return mesh_ != nullptr; }
 Mesh::Ptr DynamicSceneGraph::mesh() const { return mesh_; }
 
 Layer& DynamicSceneGraph::layerFromKey(const LayerKey& key) {
+  layer_keys_.insert(key);
   if (!key.partition) {
     auto iter = layers_.emplace(key.layer, std::make_unique<Layer>(key.layer)).first;
     return *iter->second;
@@ -916,6 +919,10 @@ const Partitions& DynamicSceneGraph::layer_partition(LayerId layer_id) const {
   }
 
   return iter->second;
+}
+
+LayerKeys DynamicSceneGraph::layer_keys() const {
+  return LayerKeys(layer_keys_.begin(), layer_keys_.end());
 }
 
 std::vector<LayerId> DynamicSceneGraph::layer_ids() const {
