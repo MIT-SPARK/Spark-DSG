@@ -518,7 +518,7 @@ class DynamicSceneGraph {
   void visitLayers(const std::function<void(LayerKey, const Layer&)>& cb) const;
 
  protected:
-  LayerKeys layer_keys_;
+  std::set<LayerKey> layer_keys_;
   LayerNames layer_names_;
   std::map<NodeId, LayerKey> node_lookup_;
 
@@ -540,7 +540,7 @@ class DynamicSceneGraph {
   //! @brief Current static layer ids in the graph
   std::vector<LayerId> layer_ids() const;
   //! @brief Current layer keys of all layers in the graph
-  const LayerKeys& layer_keys() const { return layer_keys_; }
+  LayerKeys layer_keys() const;
   //! @brief Current name to layer mapping
   const LayerNames layer_names() const { return layer_names_; }
   //! @brief Constant reference to the layers
