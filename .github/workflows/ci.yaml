@@ -1,7 +1,7 @@
 ---
 # based on https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: Spark-DSG Build and Test
-on: {push: {branches: [main, feature/ccache_ci]}, pull_request: {}}
+on: {push: {branches: [main]}, pull_request: {}}
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -20,7 +20,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: ${{ runner.os }}-ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha}}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ github.sha}}
+            ${{ runner.os }}-ccache-
       - name: Dependencies
         run: sudo apt-get update && sudo apt install libgtest-dev libeigen3-dev nlohmann-json3-dev libzmq3-dev ccache
       - name: Configure
@@ -62,11 +65,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {path: src/spark_dsg}
+      - name: CCache
+        id: cache-ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha}}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ github.sha}}
+            ${{ runner.os }}-ccache-
       - name: Dependencies
         run: |
-          apt update && apt install -y python3-vcstool git
+          apt update && apt install -y python3-vcstool git ccache
           rosdep update --rosdistro jazzy && rosdep install --rosdistro jazzy --from-paths src --ignore-src -r -y
       - name: Build
-        run: colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_EXAMPLES=ON
+        run: colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_EXAMPLES=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Test
         run: colcon test
