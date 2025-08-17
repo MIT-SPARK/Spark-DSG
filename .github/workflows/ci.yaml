@@ -24,7 +24,13 @@ jobs:
       - name: Dependencies
         run: sudo apt-get update && sudo apt install libgtest-dev libeigen3-dev nlohmann-json3-dev libzmq3-dev ccache
       - name: Configure
-        run: cmake -B ${{github.workspace}}/build -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release -DSPARK_DSG_BUILD_EXAMPLES=ON -CMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        run: |
+          cmake -B ${{github.workspace}}/build \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSPARK_DSG_BUILD_EXAMPLES=ON \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Release
       - name: Test
