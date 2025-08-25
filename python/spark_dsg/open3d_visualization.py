@@ -159,7 +159,7 @@ class RemoteVisualizer:
                 continue
 
             self._update_layer_geometries(layer, offset)
-            if layer.id == DsgLayers.OBJECTS:
+            if layer.id == DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer:
                 self._update_bounding_boxes(layer)
 
             offset += layer.num_nodes()
@@ -170,8 +170,9 @@ class RemoteVisualizer:
         self._update_interlayer_edges(G)
 
         if self._include_dynamic:
-            if G.has_layer(DsgLayers.AGENTS, "a"):
-                self._update_dynamic_layer(G.get_layer(DsgLayers.AGENTS, "a"))
+            layer_id = DsgLayers.name_to_layer_id(DsgLayers.AGENTS).layer
+            if G.has_layer(layer_id, "a"):
+                self._update_dynamic_layer(G.get_layer(layer_id, "a"))
 
     def _update_mesh_geometry(self, G):
         if not G.has_mesh():
@@ -215,7 +216,10 @@ class RemoteVisualizer:
                 continue
 
             layers = _get_edge_layers(edge)
-            should_skip = DsgLayers.PLACES in layers and DsgLayers.ROOMS in layers
+            should_skip = (
+                DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer in layers
+                and DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer in layers
+            )
             if should_skip and num_place_edges % self._num_place_edges_to_skip != 0:
                 num_place_edges += 1
                 continue
@@ -294,28 +298,34 @@ class RemoteVisualizer:
         return self._palette[node_id.category_id % self._num_colors]
 
     def _get_node_color(self, node):
-        if node.layer == DsgLayers.PLACES:
+        if node.layer == DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer:
             if not node.has_parent():
                 return np.zeros(3)
 
             return self._get_palette_color(NodeSymbol(node.get_parent()))
-        elif node.layer == DsgLayers.ROOMS:
+        elif node.layer == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer:
             return self._get_palette_color(node.id)
         else:
             return node.attributes.color.astype(np.float64) / 255.0
 
     def _get_edge_color(self, G, edge):
         layers = _get_edge_layers(edge)
-        if DsgLayers.PLACES in layers and DsgLayers.ROOMS in layers:
-            if layers[0] == DsgLayers.ROOMS:
+        if (
+            DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer in layers
+            and DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer in layers
+        ):
+            if layers[0] == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer:
                 return self._get_palette_color(NodeSymbol(edge.source))
-            if layers[1] == DsgLayers.ROOMS:
+            if layers[1] == DsgLayers.name_to_layer_id(DsgLayers.ROOMS).layer:
                 return self._get_palette_color(NodeSymbol(edge.target))
 
-        if DsgLayers.PLACES in layers and DsgLayers.OBJECTS in layers:
-            if layers[0] == DsgLayers.OBJECTS:
+        if (
+            DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer in layers
+            and DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer in layers
+        ):
+            if layers[0] == DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer:
                 return G.get_node(edge.source).attributes.color / 255.0
-            if layers[1] == DsgLayers.OBJECTS:
+            if layers[1] == DsgLayers.name_to_layer_id(DsgLayers.OBJECTS).layer:
                 return G.get_node(edge.target).attributes.color / 255.0
 
         return np.zeros(3)
