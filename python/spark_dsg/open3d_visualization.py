@@ -144,11 +144,13 @@ class RemoteVisualizer:
         if self._use_mesh:
             self._update_mesh_geometry(G)
 
-        N = G.num_nodes(False) if self._include_dynamic else G.num_static_nodes()
+        N = G.num_nodes(True)
 
         self._points = np.zeros((N, 3))
         self._colors = np.zeros((N, 3))
         self._id_map = {}
+
+        places_lid = DsgLayers.name_to_layer_id(DsgLayers.PLACES).layer
 
         offset = 0
         for layer in G.layers:
@@ -163,6 +165,17 @@ class RemoteVisualizer:
                 self._update_bounding_boxes(layer)
 
             offset += layer.num_nodes()
+
+        for part in G.layer_partitions:
+            if part.id not in LAYER_IDS:
+                continue
+
+            if self._layers_to_skip and part.id in self._layers_to_skip:
+                continue
+
+            if part.id == places_lid:
+                self._update_layer_geometries(part, offset)
+                offset += layer.num_nodes()
 
         # prune points and colors to just the nodes we've added
         self._points = self._points[:offset, :]
