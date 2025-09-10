@@ -57,3 +57,18 @@ We find that several other generic choices make code more readable:
 - Keep variable names specific and short.
 
 - Pay attention to how the auto-formatter creates line-breaks. `black` does a better job than `clang-format`, but it can still be worth it to tweak a longer line to either make it shorter or break more naturally.
+
+### Auto-Formatting
+
+`Spark-DSG` contains defaults for auto-formatting and linting according to the above descriptions, managed by [pre-commit](https://pre-commit.com/). To commit to this repo, you can setup pre-commit as follows:
+
+```bash
+cd spark_dsg
+pip install pre-commit
+
+# To catch all commits, set pre-commit up for the repo:
+pre-commit install
+
+# To manually run on files:
+pre-commit run --all-files
+```
