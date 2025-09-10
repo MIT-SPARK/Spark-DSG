@@ -111,7 +111,6 @@ bool filterTraversabilityStates(TraversabilityStates& states,
   size_t steps_since_intraversable = 0;
   size_t steps_since_unknown = 0;
   TraversabilityStates new_states = states;
-  new_states.push_back(TraversabilityState::INTRAVERSABLE);
   for (size_t i = 0; i < new_states.size(); ++i) {
     if (new_states[i] == TraversabilityState::INTRAVERSABLE) {
       if (steps_since_intraversable < width && steps_since_intraversable > 0) {
@@ -122,10 +121,9 @@ bool filterTraversabilityStates(TraversabilityStates& states,
       }
       steps_since_intraversable = 0;
       steps_since_unknown = 0;
-    }
-    if (!optimistic && new_states[i] == TraversabilityState::UNKNOWN) {
+    } else if (!optimistic && new_states[i] == TraversabilityState::UNKNOWN) {
       if (steps_since_unknown < width && steps_since_unknown > 0) {
-        // Change the previous states to INTRAVERSABLE.
+        // Change the previous states to UNKNOWN.
         for (size_t j = i - steps_since_unknown; j < i; ++j) {
           fuseStates(TraversabilityState::UNKNOWN, new_states[j], false);
         }
@@ -137,7 +135,20 @@ bool filterTraversabilityStates(TraversabilityStates& states,
       steps_since_unknown += 1;
     }
   }
-  new_states.pop_back();
+
+  // Handle the last segment.
+  if (steps_since_intraversable < width && steps_since_intraversable > 0) {
+    // Change the previous states to INTRAVERSABLE.
+    for (size_t j = states.size() - steps_since_intraversable; j < states.size(); ++j) {
+      fuseStates(TraversabilityState::INTRAVERSABLE, new_states[j]);
+    }
+  } else if (steps_since_unknown < width && steps_since_unknown > 0) {
+    // Change the previous states to UNKNOWN.
+    for (size_t j = states.size() - steps_since_unknown; j < states.size(); ++j) {
+      fuseStates(TraversabilityState::UNKNOWN, new_states[j], false);
+    }
+  }
+
   if (new_states != states) {
     states = new_states;
     return true;
@@ -366,7 +377,7 @@ double Boundary::maxTraversableDistance(const Boundary& other, Side side) const 
 
 void Boundary::mergeTraversabilityStates(const Boundary& other,
                                          double margin,
-                                         bool pessimistic) {
+                                         bool optimistic) {
   for (const auto s : Side::ALL) {
     if (distanceToSide1D(s, other.getCoordinate(s.opposite())) > 0.0) {
       continue;  // No overlap on orthogonal axis
@@ -389,7 +400,7 @@ void Boundary::mergeTraversabilityStates(const Boundary& other,
     if (distance > 0.0) {
       // This area is inside the other boundary, thus traversable.
       for (size_t i = this_side.index(start); i <= this_side.index(end); ++i) {
-        fuseStates(TraversabilityState::TRAVERSABLE, this_side.states[i], pessimistic);
+        fuseStates(TraversabilityState::TRAVERSABLE, this_side.states[i], optimistic);
       }
     }
     if (distance <= margin) {
@@ -397,7 +408,7 @@ void Boundary::mergeTraversabilityStates(const Boundary& other,
       for (size_t i = this_side.index(start); i <= this_side.index(end); ++i) {
         fuseStates(other_side.getState(this_side.coordFromIndex(i)),
                    this_side.states[i],
-                   pessimistic);
+                   optimistic);
       }
     }
   }
@@ -463,7 +474,7 @@ double Boundary::BoundarySide::maxTraversableDistance(const BoundarySide& other)
     // NOTE(lschmid): This assumes equal voxel spacing.
     states_in_range = getStates(start, end);
     const auto other_states = other.getStates(start, end);
-    fuseStates(other_states, states_in_range, true);
+    fuseStates(other_states, states_in_range, false);
   }
 
   return computeMinMaxTraversability(states_in_range).first * voxelSize();
@@ -539,10 +550,10 @@ void Boundary::BoundarySide::fuseBoundaryStates(
 }
 
 void Boundary::BoundarySide::fuseBoundaryStates(const BoundarySide& other,
-                                                bool pessimistic) {
+                                                bool optimistic) {
   fuseBoundaryStates(other,
-                     [pessimistic](TraversabilityState from, TraversabilityState& to) {
-                       fuseStates(from, to, pessimistic);
+                     [optimistic](TraversabilityState from, TraversabilityState& to) {
+                       fuseStates(from, to, optimistic);
                      });
 }
 

@@ -88,6 +88,8 @@ struct DsgLayers {
   inline const static std::string PLACES = "PLACES";
   //! Mesh (2D) Places node layer
   inline const static std::string MESH_PLACES = "MESH_PLACES";
+  //! Traversability node layer
+  inline const static std::string TRAVERSABILITY = "TRAVERSABILITY";
   //! Room node layer
   inline const static std::string ROOMS = "ROOMS";
   //! Building node layer

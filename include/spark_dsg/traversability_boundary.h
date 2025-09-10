@@ -307,12 +307,13 @@ struct Boundary {
    * @param other The other boundary to merge from.
    * @param margin Orthogonal distance for which a traversability state carries
    * information.
-   * @param pessimistic If true, use a pessimistic fusion of states, where UNKNOWN
+   * @param optimistic If true, use a optimistic fusion of states, where TRAVERSABLE
+   * overrides UNKNOWN states. If false, use a pessimistic fusion, where UNKNOWN
    * overrides TRAVERSABLE states.
    */
   void mergeTraversabilityStates(const Boundary& other,
                                  double margin,
-                                 bool pessimistic = false);
+                                 bool optimistic = true);
 
   /**
    * @brief Write the boundary properties to the given TraversabilityNodeAttributes.
@@ -381,7 +382,7 @@ struct Boundary {
         const BoundarySide& other,
         std::function<void(TraversabilityState, TraversabilityState&)> fuse_fn);
 
-    void fuseBoundaryStates(const BoundarySide& other, bool pessimistic = false);
+    void fuseBoundaryStates(const BoundarySide& other, bool optimistic = true);
 
    protected:
     friend Boundary;
