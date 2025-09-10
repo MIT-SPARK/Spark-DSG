@@ -19,6 +19,7 @@ add_executable(
   utest_scene_graph_layer.cpp
   utest_scene_graph_node.cpp
   utest_scene_graph_utilities.cpp
+  utest_traversability_boundary.cpp
   serialization/utest_attribute_serialization.cpp
   serialization/utest_binary_serialization.cpp
   serialization/utest_binary_conversions.cpp
