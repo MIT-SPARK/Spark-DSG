@@ -46,38 +46,28 @@ namespace spark_dsg {
  */
 bool isTraversable(TraversabilityState state, bool optimistic = false);
 
-/** Check whether a set of states is considered traversable, i.e., all states are
+/**
+ * @brief Check whether a set of states is considered traversable, i.e., all states are
  * TRAVERSABLE or TRAVERSED. If optimistic is true, UNKNOWN is also considered
  * traversable.
  */
-bool isTraversable(const TraversabilityStates& states, bool optimistic = false);
-
-/**
- * @brief Check whether a state is considered intraversable, i.e., it is INTRAVERSABLE.
- * If optimistic is false, UNKNOWN is also considered intraversable.
- */
-bool isIntraversable(TraversabilityState state, bool optimistic = false);
-
-/** Check whether a set of states is considered intraversable, i.e., at least one state
- * is INTRAVERSABLE. If optimistic is false, UNKNOWN is also considered intraversable.
- */
-bool isIntraversable(const TraversabilityStates& states, bool optimistic = false);
+bool areAllTraversable(const TraversabilityStates& states, bool optimistic = false);
 
 /**
  * @brief Combine two TraversabilityStates into a single state. Order of precedence:
  * Traversed -> Intraversable -> Traversable -> Unknown.
- * If pessimistic is true, the order of precedence is Traversed -> Intraversable ->
+ * If optimistic is false, the order of precedence is Traversed -> Intraversable ->
  * Unknown -> Traversable.
  */
 void fuseStates(const TraversabilityState from,
                 TraversabilityState& to,
-                bool pessimistic = false);
+                bool optimistic = true);
 void fuseStates(const TraversabilityStates& from,
                 TraversabilityStates& to,
-                bool pessimistic = false);
+                bool optimistic = true);
 void fuseStates(const TraversabilityState from,
                 TraversabilityStates& to,
-                bool pessimistic = false);
+                bool optimistic = true);
 
 /**
  * @brief Compute the minimum (pessimistic) and maximum (optimistic) length of
@@ -97,12 +87,16 @@ bool simplifyTraversabilityStates(TraversabilityStates& states);
 
 /**
  * @brief Fitler the traversability states to reflect the traversability for a robot of
- * a specific width.
+ * a specific width, i.e. removing traversable and unknown gaps smaller than the width.
  * @param states The traversability states to filter.
  * @param width The width of the robot in number of voxels.
+ * @param optimistic If false, also remove traversable gaps next too unknown states
+ * smaller than the width.
  * @return True if the states were modified.
  */
-bool filterTraversabilityStates(TraversabilityStates& states, size_t width);
+bool filterTraversabilityStates(TraversabilityStates& states,
+                                size_t width,
+                                bool optimistic = false);
 
 /**
  * @brief More human readable definitions of the four sides of a rectangle.

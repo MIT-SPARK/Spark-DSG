@@ -49,8 +49,8 @@ Boundary defaultBoundary() {
                    States(10, State::TRAVERSABLE)});
 }
 
-State fuse(State from, State to, bool pessimistic = false) {
-  spark_dsg::fuseStates(from, to, pessimistic);
+State fuse(State from, State to, bool optimistic = true) {
+  spark_dsg::fuseStates(from, to, optimistic);
   return to;
 }
 
@@ -73,23 +73,25 @@ TEST(TraversabilityBoundary, FuseStates) {
   EXPECT_EQ(fuse(State::UNKNOWN, State::UNKNOWN), State::UNKNOWN);
 
   // Pessimistic fusion.
-  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSED, true), State::TRAVERSED);
-  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSED, true), State::TRAVERSED);
-  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSED, true), State::TRAVERSED);
-  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSED, true), State::TRAVERSED);
-  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSABLE, true), State::TRAVERSED);
-  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSABLE, true), State::TRAVERSABLE);
-  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSABLE, true), State::INTRAVERSABLE);
-  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSABLE, true), State::UNKNOWN);
-  EXPECT_EQ(fuse(State::TRAVERSED, State::INTRAVERSABLE, true), State::TRAVERSED);
-  EXPECT_EQ(fuse(State::TRAVERSABLE, State::INTRAVERSABLE, true), State::INTRAVERSABLE);
-  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::INTRAVERSABLE, true),
+  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSED, false), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSED, false), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSED, false), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSED, false), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::TRAVERSABLE, false), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::TRAVERSABLE, false), State::TRAVERSABLE);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::TRAVERSABLE, false),
             State::INTRAVERSABLE);
-  EXPECT_EQ(fuse(State::UNKNOWN, State::INTRAVERSABLE, true), State::INTRAVERSABLE);
-  EXPECT_EQ(fuse(State::TRAVERSED, State::UNKNOWN, true), State::TRAVERSED);
-  EXPECT_EQ(fuse(State::TRAVERSABLE, State::UNKNOWN, true), State::UNKNOWN);
-  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::UNKNOWN, true), State::INTRAVERSABLE);
-  EXPECT_EQ(fuse(State::UNKNOWN, State::UNKNOWN, true), State::UNKNOWN);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::TRAVERSABLE, false), State::UNKNOWN);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::INTRAVERSABLE, false), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::INTRAVERSABLE, false),
+            State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::INTRAVERSABLE, false),
+            State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::INTRAVERSABLE, false), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::TRAVERSED, State::UNKNOWN, false), State::TRAVERSED);
+  EXPECT_EQ(fuse(State::TRAVERSABLE, State::UNKNOWN, false), State::UNKNOWN);
+  EXPECT_EQ(fuse(State::INTRAVERSABLE, State::UNKNOWN, false), State::INTRAVERSABLE);
+  EXPECT_EQ(fuse(State::UNKNOWN, State::UNKNOWN, false), State::UNKNOWN);
 }
 
 TEST(TraversabilityBoundary, IntersectsSide) {

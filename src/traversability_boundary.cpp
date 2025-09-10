@@ -8,7 +8,7 @@ bool isTraversable(TraversabilityState state, bool optimistic) {
          (optimistic && state == TraversabilityState::UNKNOWN);
 }
 
-bool isTraversable(const TraversabilityStates& states, bool optimistic) {
+bool areAllTraversable(const TraversabilityStates& states, bool optimistic) {
   for (const auto& state : states) {
     if (!isTraversable(state, optimistic)) {
       return false;
@@ -17,23 +17,9 @@ bool isTraversable(const TraversabilityStates& states, bool optimistic) {
   return true;
 }
 
-bool isIntraversable(TraversabilityState state, bool optimistic) {
-  return state == TraversabilityState::INTRAVERSABLE ||
-         (optimistic && state == TraversabilityState::UNKNOWN);
-}
-
-bool isIntraversable(const TraversabilityStates& states, bool optimistic) {
-  for (const auto& state : states) {
-    if (isIntraversable(state, optimistic)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void fuseStates(const TraversabilityState from,
                 TraversabilityState& to,
-                bool pessimistic) {
+                bool optimistic) {
   if (from == TraversabilityState::TRAVERSED || to == TraversabilityState::TRAVERSED) {
     to = TraversabilityState::TRAVERSED;
     return;
@@ -43,31 +29,31 @@ void fuseStates(const TraversabilityState from,
     to = TraversabilityState::INTRAVERSABLE;
     return;
   }
-  if (pessimistic) {
-    if (from == TraversabilityState::UNKNOWN) {
-      to = TraversabilityState::UNKNOWN;
+  if (optimistic) {
+    if (from == TraversabilityState::TRAVERSABLE) {
+      to = TraversabilityState::TRAVERSABLE;
     }
-  } else if (from == TraversabilityState::TRAVERSABLE) {
-    to = TraversabilityState::TRAVERSABLE;
+  } else if (from == TraversabilityState::UNKNOWN) {
+    to = TraversabilityState::UNKNOWN;
   }
 }
 
 void fuseStates(const TraversabilityStates& from,
                 TraversabilityStates& to,
-                bool pessimistic) {
+                bool optimistic) {
   if (to.size() < from.size()) {
     to.resize(from.size());
   }
   for (size_t i = 0; i < from.size(); ++i) {
-    fuseStates(from[i], to[i], pessimistic);
+    fuseStates(from[i], to[i], optimistic);
   }
 }
 
 void fuseStates(const TraversabilityState from,
                 TraversabilityStates& to,
-                bool pessimistic) {
+                bool optimistic) {
   for (auto& state : to) {
-    fuseStates(from, state, pessimistic);
+    fuseStates(from, state, optimistic);
   }
 }
 
@@ -109,51 +95,54 @@ bool simplifyTraversabilityStates(TraversabilityStates& states) {
   return true;
 }
 
-bool filterTraversabilityStates(TraversabilityStates& states, size_t width) {
-  if (width <= 1) {
+bool filterTraversabilityStates(TraversabilityStates& states,
+                                size_t width,
+                                bool optimistic) {
+  if (width <= 1 || states == TraversabilityStates(
+                                  states.size(), TraversabilityState::INTRAVERSABLE)) {
     return false;
   }
 
   if (states.size() < width) {
-    states = TraversabilityStates(width, TraversabilityState::INTRAVERSABLE);
+    states = TraversabilityStates(states.size(), TraversabilityState::INTRAVERSABLE);
     return true;
   }
 
-  // TODO(lschmid): Implement.
-  return false;
-
-  TraversabilityStates filtered(states.size(), TraversabilityState::INTRAVERSABLE);
-  bool changed = false;
-
-  for (size_t i = 0; i <= states.size() - width; ++i) {
-    bool has_intraversable = false;
-    bool has_unknown = false;
-    for (size_t j = 0; j < width; ++j) {
-      if (states[i + j] == TraversabilityState::INTRAVERSABLE) {
-        has_intraversable = true;
-        break;
+  size_t steps_since_intraversable = 0;
+  size_t steps_since_unknown = 0;
+  TraversabilityStates new_states = states;
+  new_states.push_back(TraversabilityState::INTRAVERSABLE);
+  for (size_t i = 0; i < new_states.size(); ++i) {
+    if (new_states[i] == TraversabilityState::INTRAVERSABLE) {
+      if (steps_since_intraversable < width && steps_since_intraversable > 0) {
+        // Change the previous states to INTRAVERSABLE.
+        for (size_t j = i - steps_since_intraversable; j < i; ++j) {
+          fuseStates(TraversabilityState::INTRAVERSABLE, new_states[j]);
+        }
       }
-      if (states[i + j] == TraversabilityState::UNKNOWN) {
-        has_unknown = true;
-      }
+      steps_since_intraversable = 0;
+      steps_since_unknown = 0;
     }
-    TraversabilityState new_state;
-    if (has_intraversable) {
-      new_state = TraversabilityState::INTRAVERSABLE;
-    } else if (has_unknown) {
-      new_state = TraversabilityState::UNKNOWN;
+    if (!optimistic && new_states[i] == TraversabilityState::UNKNOWN) {
+      if (steps_since_unknown < width && steps_since_unknown > 0) {
+        // Change the previous states to INTRAVERSABLE.
+        for (size_t j = i - steps_since_unknown; j < i; ++j) {
+          fuseStates(TraversabilityState::UNKNOWN, new_states[j], false);
+        }
+      }
+      steps_since_intraversable += 1;
+      steps_since_unknown = 0;
     } else {
-      new_state = TraversabilityState::TRAVERSABLE;
-    }
-    if (filtered[i + width / 2] != new_state) {
-      filtered[i + width / 2] = new_state;
-      changed = true;
+      steps_since_intraversable += 1;
+      steps_since_unknown += 1;
     }
   }
-
-  // Copy filtered states back, keeping only the filtered region
-  states = filtered;
-  return changed;
+  new_states.pop_back();
+  if (new_states != states) {
+    states = new_states;
+    return true;
+  }
+  return false;
 }
 
 const std::array<Side, 4> Side::ALL = {
