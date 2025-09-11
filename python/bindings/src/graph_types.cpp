@@ -57,6 +57,8 @@ void init_graph_types(py::module_& m) {
       .def("has_children", &SceneGraphNode::hasChildren)
       .def("get_parent", &SceneGraphNode::getParent)
       .def("siblings", &SceneGraphNode::siblings)
+      .def("parents", &SceneGraphNode::parents)
+      .def("connections", &SceneGraphNode::connections)
       .def("children", &SceneGraphNode::children)
       .def_property("attributes",
                     &SceneGraphNode::tryAttributes<NodeAttributes>,
