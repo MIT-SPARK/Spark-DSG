@@ -629,6 +629,9 @@ void TraversabilityNodeAttributes::serialization_info() {
       boundary.states[i].push_back(static_cast<TraversabilityState>(state));
     }
   }
+
+  // TMP
+  serialization::field("labels", labels);
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
