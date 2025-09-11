@@ -485,6 +485,9 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   //! Distance to the nearest intraversable obstacle.
   double distance = 0.0;
 
+  // TMP(lschmid): Labels for cognition_verifier
+  std::vector<int> labels;
+
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
