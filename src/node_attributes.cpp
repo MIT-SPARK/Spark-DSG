@@ -631,7 +631,7 @@ void TraversabilityNodeAttributes::serialization_info() {
   }
 
   // TMP
-  serialization::field("labels", labels);
+  serialization::field("cognition_labels", cognition_labels);
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
