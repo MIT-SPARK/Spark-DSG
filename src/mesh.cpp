@@ -217,13 +217,14 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
 void Mesh::eraseFaces(const std::unordered_set<size_t>& indices,
                       const bool update_vertices) {
   Faces new_faces;
-  new_faces.reserve(numFaces() - indices.size());
+  new_faces.reserve(numFaces());
   for (size_t old_index = 0; old_index < numFaces(); ++old_index) {
     if (!indices.count(old_index)) {
       new_faces.push_back(faces[old_index]);
     }
   }
   faces = std::move(new_faces);
+  faces.resize(faces.size());
 
   if (!update_vertices) {
     return;
