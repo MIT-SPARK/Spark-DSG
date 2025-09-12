@@ -94,7 +94,15 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def(
           "get_layer",
-          [](const DynamicSceneGraph& graph, const std::string& layer) { return LayerView(graph.getLayer(layer)); },
+          [](const DynamicSceneGraph& graph, const std::string& layer) {
+            if (graph.hasLayer(layer)) {
+              return LayerView(graph.getLayer(layer));
+            }
+            if (layer == DsgLayers::MESH_PLACES) {
+              return LayerView(graph.getLayer(20, 0));
+            }
+            return LayerView(graph.getLayer(layer));
+          },
           "layer"_a,
           py::return_value_policy::reference_internal)
       .def(
