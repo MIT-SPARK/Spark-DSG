@@ -34,8 +34,8 @@
 #
 """Test that the bindings are working appropriately."""
 
-import spark_dsg as dsg
 import numpy as np
+import spark_dsg as dsg
 
 
 def test_mesh_erase_vertices():
@@ -69,6 +69,7 @@ def test_mesh_erase_vertices():
 
     assert mesh.num_vertices() == 5
     assert mesh.num_faces() == 1
+
 
 if __name__ == "__main__":
     test_mesh_erase_vertices()
