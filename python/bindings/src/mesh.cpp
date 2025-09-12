@@ -120,6 +120,22 @@ void setEigenFaces(Mesh& mesh, const Eigen::MatrixXi& indices) {
   }
 }
 
+void eraseEigenVertices(Mesh& mesh, const Eigen::VectorXi& indices) {
+  std::unordered_set<size_t> to_erase;
+  for (int i = 0; i < indices.size(); ++i) {
+    to_erase.insert(static_cast<size_t>(indices(i)));
+  }
+  mesh.eraseVertices(to_erase);
+}
+
+void eraseEigenFaces(Mesh& mesh, const Eigen::VectorXi& indices, bool update_vertices) {
+  std::unordered_set<size_t> to_erase;
+  for (int i = 0; i < indices.size(); ++i) {
+    to_erase.insert(static_cast<size_t>(indices(i)));
+  }
+  mesh.eraseFaces(to_erase, update_vertices);
+}
+
 void init_mesh(py::module_& m) {
   py::class_<Mesh, std::shared_ptr<Mesh>>(m, "Mesh")
       .def(py::init<bool, bool, bool, bool>(),
@@ -131,6 +147,7 @@ void init_mesh(py::module_& m) {
       .def("clear", &Mesh::clear)
       .def("num_vertices", &Mesh::numVertices)
       .def("num_faces", &Mesh::numFaces)
+      .def("reserve_vertices", &Mesh::reserveVertices)
       .def("resize_vertices", &Mesh::resizeVertices)
       .def("resize_faces", &Mesh::resizeFaces)
       .def("clone", &Mesh::clone)
@@ -169,6 +186,8 @@ void init_mesh(py::module_& m) {
       .def("set_vertices",
            [](Mesh& mesh, const Eigen::MatrixXd& points) { spark_dsg::python::setEigenVertices(mesh, points); })
       .def("set_faces", [](Mesh& mesh, const Eigen::MatrixXi& faces) { spark_dsg::python::setEigenFaces(mesh, faces); })
+      .def("erase_vertices", &Mesh::eraseVertices, "indices"_a)
+      .def("erase_faces", &Mesh::eraseFaces, "indices"_a, "update_vertices"_a = true)
       .def(
           "transform",
           [](Mesh& mesh, const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation) {
@@ -178,6 +197,7 @@ void init_mesh(py::module_& m) {
           "rotation"_a = Eigen::Matrix3d::Identity(),
           "translation"_a = Eigen::Vector3d::Zero())
       .def("append", &Mesh::append)
+      .def("total_bytes", &Mesh::totalBytes)
       .def(py::self += py::self);
 }
 
