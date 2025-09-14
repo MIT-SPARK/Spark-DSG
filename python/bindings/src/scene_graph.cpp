@@ -224,6 +224,10 @@ void init_scene_graph(py::module_& m) {
       .def_static("load", &DynamicSceneGraph::load)
       .def_static("load", [](const std::string& filepath) { return DynamicSceneGraph::load(filepath); })
       .def_readwrite("_metadata", &DynamicSceneGraph::metadata)
+      .def_property_readonly("layer_ids", &DynamicSceneGraph::layer_ids)
+      .def_property_readonly("layer_keys", &DynamicSceneGraph::layer_keys)
+      .def_property_readonly("layer_names", &DynamicSceneGraph::layer_names)
+      .def_property_readonly("node_lookup", &DynamicSceneGraph::node_lookup)
       .def_property(
           "layers",
           [](const DynamicSceneGraph& graph) { return py::make_iterator(LayerIter(graph.layers()), IterSentinel()); },
