@@ -64,6 +64,8 @@ void Metadata::set(const nlohmann::json& new_metadata) { contents_ = new_metadat
 
 void Metadata::add(const nlohmann::json& to_add) { updateNested(contents_, to_add); }
 
+void Metadata::add(const Metadata& to_add) { add(to_add.get()); }
+
 size_t Metadata::memoryUsage() const {
   // Estimate memory usage of the JSON contents through serialization.
   // TODO(lschmid): This is not a very clean method but at least does not ignore the
