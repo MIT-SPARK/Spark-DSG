@@ -64,6 +64,8 @@ void Metadata::set(const nlohmann::json& new_metadata) { contents_ = new_metadat
 
 void Metadata::add(const nlohmann::json& to_add) { updateNested(contents_, to_add); }
 
+void Metadata::add(const Metadata& to_add) { add(to_add.get()); }
+
 void Metadata::clear() { contents_.clear(); }
 
 bool Metadata::empty() const { return contents_.empty(); }
