@@ -432,4 +432,65 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
   REGISTER_NODE_ATTRIBUTES(KhronosObjectAttributes);
 };
 
+/**
+ * @brief The traversability state of a traversability boundary.
+ */
+enum class TraversabilityState : uint8_t {
+  UNKNOWN = 0,
+  TRAVERSABLE = 1,
+  INTRAVERSABLE = 2,
+  TRAVERSED = 3
+};
+
+using TraversabilityStates = std::vector<TraversabilityState>;
+
+/**
+ * @brief Compact information to store a grid aligned traversability boundary.
+ */
+struct BoundaryInfo {
+  //! Coordinates of the boundary w.r.t. the attribute center.
+  Eigen::Vector2d min;
+  Eigen::Vector2d max;
+
+  //! Traversability states for each side of the boundary. Each side can be empty
+  //! (=UNKNOWN), a single state, or a sequence of states indicating uniform
+  //! tessellation of the boundary. The sides are ordered bottom, left, top, right.
+  //! The states per side are ordered from the lower to the higher coordinate.
+  std::array<TraversabilityStates, 4> states;
+
+  bool operator==(const BoundaryInfo& other) const;
+  bool operator!=(const BoundaryInfo& other) const { return !(*this == other); }
+};
+
+/**
+ * @brief First simple implementation of traversability places.
+ */
+struct TraversabilityNodeAttributes : public NodeAttributes {
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using Ptr = std::unique_ptr<TraversabilityNodeAttributes>;
+
+  TraversabilityNodeAttributes() = default;
+  virtual ~TraversabilityNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  //! Timestamps when this place was first and last observed.
+  uint64_t first_observed_ns = 0;
+  uint64_t last_observed_ns = 0;
+
+  //! Boundary information
+  BoundaryInfo boundary;
+
+  // TODO(lschmid): Reconsider in the future.
+  //! Distance to the nearest intraversable obstacle.
+  double distance = 0.0;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  REGISTER_NODE_ATTRIBUTES(TraversabilityNodeAttributes);
+};
+
 }  // namespace spark_dsg

@@ -568,4 +568,60 @@ bool KhronosObjectAttributes::is_equal(const NodeAttributes& other) const {
          details == derived->details;
 }
 
+bool BoundaryInfo::operator==(const BoundaryInfo& other) const {
+  return min == other.min && max == other.max && states == other.states;
+}
+
+NodeAttributes::Ptr TraversabilityNodeAttributes::clone() const {
+  return std::make_unique<TraversabilityNodeAttributes>(*this);
+}
+
+std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
+  NodeAttributes::fill_ostream(out);
+  out << "  - min: " << boundary.min.transpose() << "\n"
+      << "  - max: " << boundary.max.transpose() << "\n"
+      << "  - first_observed_ns: " << first_observed_ns << "\n"
+      << "  - last_observed_ns: " << last_observed_ns << "\n"
+      << "  - distance: " << distance << "\n";
+  return out;
+}
+
+void TraversabilityNodeAttributes::serialization_info() {
+  NodeAttributes::serialization_info();
+  serialization::field("first_observed_ns", first_observed_ns);
+  serialization::field("last_observed_ns", last_observed_ns);
+  serialization::field("distance", distance);
+  serialization::field("min", boundary.min);
+  serialization::field("max", boundary.max);
+  // Workaround for state serialization.
+  for (size_t i = 0; i < 4; ++i) {
+    std::vector<uint8_t> s;
+    s.reserve(boundary.states[i].size());
+    for (const auto& state : boundary.states[i]) {
+      s.push_back(static_cast<uint8_t>(state));
+    }
+    serialization::field("states_" + std::to_string(i), s);
+    boundary.states[i].clear();
+    boundary.states[i].reserve(s.size());
+    for (const auto& state : s) {
+      boundary.states[i].push_back(static_cast<TraversabilityState>(state));
+    }
+  }
+}
+
+bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const TraversabilityNodeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!NodeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return boundary == derived->boundary && distance == derived->distance &&
+         first_observed_ns == derived->first_observed_ns &&
+         last_observed_ns == derived->last_observed_ns;
+}
+
 }  // namespace spark_dsg

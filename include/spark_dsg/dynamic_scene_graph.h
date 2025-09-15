@@ -115,8 +115,12 @@ class DynamicSceneGraph {
    */
   static DynamicSceneGraph::Ptr fromNames(const LayerNames& layers);
 
-  //! @brief Delete all layers and edges
-  void clear();
+  /**
+   * @brief Delete all layers and edges
+   * @param include_mesh If true also clear the mesh
+   */
+  void clear(bool include_mesh = true);
+
   //! @brief Reset scene graph to use new layers
   void reset(const LayerKeys& layer, const LayerNames& layer_names = {});
 

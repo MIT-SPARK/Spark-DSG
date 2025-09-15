@@ -180,6 +180,19 @@ void init_attributes(py::module_& m) {
       .def_readwrite("mesh_vertex_labels", &Place2dNodeAttributes::mesh_vertex_labels)
       .def_readwrite("deformation_connections", &Place2dNodeAttributes::deformation_connections);
 
+  py::class_<BoundaryInfo>(m, "BoundaryInfo")
+      .def(py::init<>())
+      .def_readwrite("min", &BoundaryInfo::min)
+      .def_readwrite("max", &BoundaryInfo::max)
+      .def_readwrite("states", &BoundaryInfo::states);
+
+  py::class_<TraversabilityNodeAttributes, NodeAttributes>(m, "TraversabilityNodeAttributes")
+      .def(py::init<>())
+      .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
+      .def_readwrite("first_observed_ns", &TraversabilityNodeAttributes::first_observed_ns)
+      .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
+      .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
+
   py::class_<AgentNodeAttributes, NodeAttributes>(m, "AgentNodeAttributes")
       .def(py::init<>())
       .def_property(
