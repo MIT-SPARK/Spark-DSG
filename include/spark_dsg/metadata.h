@@ -44,6 +44,8 @@ struct Metadata {
   inline const nlohmann::json& operator()() const { return get(); }
   void set(const nlohmann::json& new_metadata);
   void add(const nlohmann::json& to_add);
+  void clear();
+  bool empty() const;
 
   /**
    * @brief Estimate the memory usage of the metadata in bytes.
