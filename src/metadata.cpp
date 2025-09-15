@@ -77,6 +77,8 @@ size_t Metadata::memoryUsage() const {
   }
   return total_size + serialized.size();
 }
+void Metadata::add(const Metadata& to_add) { add(to_add.get()); }
+
 void Metadata::clear() { contents_.clear(); }
 
 bool Metadata::empty() const { return contents_.empty(); }
