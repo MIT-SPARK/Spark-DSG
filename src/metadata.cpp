@@ -38,13 +38,13 @@
 
 namespace spark_dsg {
 
-void updateNested(nlohmann::json& to_update, const nlohmann::json& contents) {
-  if (!contents.is_object()) {
-    to_update = contents;
+void updateNested(nlohmann::json& to_update, const nlohmann::json& to_add) {
+  if (!to_add.is_object()) {
+    to_update = to_add;
     return;
   }
 
-  for (const auto& [key, value] : contents.items()) {
+  for (const auto& [key, value] : to_add.items()) {
     auto iter = to_update.find(key);
     if (iter == to_update.end()) {
       to_update[key] = value;
@@ -63,5 +63,9 @@ const nlohmann::json& Metadata::get() const { return contents_; }
 void Metadata::set(const nlohmann::json& new_metadata) { contents_ = new_metadata; }
 
 void Metadata::add(const nlohmann::json& to_add) { updateNested(contents_, to_add); }
+
+void Metadata::clear() { contents_.clear(); }
+
+bool Metadata::empty() const { return contents_.empty(); }
 
 }  // namespace spark_dsg

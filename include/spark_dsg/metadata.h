@@ -44,6 +44,8 @@ struct Metadata {
   inline const nlohmann::json& operator()() const { return get(); }
   void set(const nlohmann::json& new_metadata);
   void add(const nlohmann::json& to_add);
+  void clear();
+  bool empty() const;
 
  private:
   nlohmann::json contents_;
