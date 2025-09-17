@@ -599,7 +599,7 @@ NodeAttributes::Ptr TraversabilityNodeAttributes::clone() const {
 }
 
 std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
-  NodeAttributes::fill_ostream(out);
+  SemanticNodeAttributes::fill_ostream(out);
   out << "  - min: " << boundary.min.transpose() << "\n"
       << "  - max: " << boundary.max.transpose() << "\n"
       << "  - first_observed_ns: " << first_observed_ns << "\n"
@@ -609,7 +609,7 @@ std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) cons
 }
 
 void TraversabilityNodeAttributes::serialization_info() {
-  NodeAttributes::serialization_info();
+  SemanticNodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
   serialization::field("distance", distance);

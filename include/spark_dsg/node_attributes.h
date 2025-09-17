@@ -471,7 +471,7 @@ struct BoundaryInfo {
 /**
  * @brief First simple implementation of traversability places.
  */
-struct TraversabilityNodeAttributes : public NodeAttributes {
+struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::unique_ptr<TraversabilityNodeAttributes>;
