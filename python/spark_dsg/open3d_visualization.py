@@ -175,7 +175,7 @@ class RemoteVisualizer:
 
             if part.id == places_lid:
                 self._update_layer_geometries(part, offset)
-                offset += layer.num_nodes()
+                offset += part.num_nodes()
 
         # prune points and colors to just the nodes we've added
         self._points = self._points[:offset, :]
