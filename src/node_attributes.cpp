@@ -451,6 +451,7 @@ void AgentNodeAttributes::transform(const Eigen::Isometry3d& transform) {
 std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
   out << "\n  - orientation: " << quatToString(world_R_body);
+  out << "\n  - observed_semantic_labels.size(): " << observed_semantic_labels.size();
   return out;
 }
 
@@ -468,6 +469,7 @@ void AgentNodeAttributes::serialization_info() {
   serialization::field("external_key", external_key);
   serialization::field("dbow_ids", dbow_ids);
   serialization::field("dbow_values", dbow_values);
+  serialization::field("observed_semantic_labels", observed_semantic_labels);
 }
 
 bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -483,7 +485,8 @@ bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
   return timestamp == derived->timestamp &&
          quaternionsEqual(world_R_body, derived->world_R_body) &&
          external_key == derived->external_key && dbow_ids == derived->dbow_ids &&
-         dbow_values == derived->dbow_values;
+         dbow_values == derived->dbow_values &&
+         observed_semantic_labels == derived->observed_semantic_labels;
 }
 
 KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {};
