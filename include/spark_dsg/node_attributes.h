@@ -388,6 +388,7 @@ struct AgentNodeAttributes : public NodeAttributes {
   NodeId external_key;
   BowIdVector dbow_ids;
   Eigen::VectorXf dbow_values;
+  std::vector<uint32_t> observed_semantic_labels;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
