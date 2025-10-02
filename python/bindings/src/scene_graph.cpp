@@ -71,7 +71,7 @@ void init_scene_graph(py::module_& m) {
       .def(py::init<const DynamicSceneGraph::LayerKeys&, const DynamicSceneGraph::LayerNames&>(),
            "layer_keys"_a,
            "layer_names"_a = DynamicSceneGraph::LayerNames{})
-      .def("clear", &DynamicSceneGraph::clear)
+      .def("clear", &DynamicSceneGraph::clear, "include_mesh"_a = true)
       .def("reset", &DynamicSceneGraph::reset)
       .def(
           "has_layer",
