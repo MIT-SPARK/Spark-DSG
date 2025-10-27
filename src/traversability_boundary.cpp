@@ -1,6 +1,7 @@
 #include "spark_dsg/traversability_boundary.h"
 
 #include <cmath>
+#include <numbers>
 
 namespace spark_dsg {
 
@@ -336,7 +337,7 @@ Side Boundary::lineIntersectsSide(const Eigen::Vector2d& source) const {
   if (std::abs(theta_q) <= theta_0) {
     return Side::RIGHT;
   }
-  if (std::abs(theta_q) >= M_PI - theta_0) {
+  if (std::abs(theta_q) >= std::numbers::pi - theta_0) {
     return Side::LEFT;
   }
   if (theta_q > 0) {
