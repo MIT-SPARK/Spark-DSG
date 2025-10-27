@@ -53,5 +53,5 @@ BUILD_SHARED_LIBS = "OFF"
 split-on-trailing-comma = true
 
 [tool.cibuildwheel]
-skip = ["pp*", "*musl*"]
+skip = ["*musl*"]
 archs = ["native"]
