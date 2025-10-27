@@ -1,5 +1,7 @@
 #include "spark_dsg/traversability_boundary.h"
 
+#include <cmath>
+
 namespace spark_dsg {
 
 bool isTraversable(TraversabilityState state, bool optimistic) {
