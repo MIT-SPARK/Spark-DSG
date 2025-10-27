@@ -5,7 +5,7 @@
 name: Spark-DSG Wheels
 on:
   workflow_dispatch: {}
-  push: {branches: [main]}
+  push: {branches: [main, feature/pypi_releases]}
   release: {types: [published]}
 jobs:
   build_wheels:
