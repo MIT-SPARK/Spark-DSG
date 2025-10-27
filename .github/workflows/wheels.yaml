@@ -3,7 +3,10 @@
 # https://github.com/pypa/cibuildwheel?tab=readme-ov-file#example-setup
 # https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml
 name: Spark-DSG Wheels
-on: {workflow_dispatch: {}, push: {branches: {main}} release: {types: [published]}}
+on:
+  workflow_dispatch: {}
+  push: {branches: {main}}
+  release: {types: [published]}
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
