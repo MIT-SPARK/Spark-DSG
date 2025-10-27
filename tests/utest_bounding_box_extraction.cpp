@@ -36,6 +36,7 @@
 #include <spark_dsg/bounding_box_extraction.h>
 
 #include <Eigen/Geometry>
+#include <numbers>
 
 namespace spark_dsg {
 
@@ -44,7 +45,7 @@ inline float getRotationError(const Eigen::Quaternionf& rotation,
                               const BoundingBox& box) {
   // we only care up to 180 degrees orientation
   return std::fmod(rotation.angularDistance(Eigen::Quaternionf(box.world_R_center)),
-                   M_PI);
+                   std::numbers::pi);
 }
 
 struct TestAdaptor : public bounding_box::PointAdaptor {
@@ -158,7 +159,7 @@ TEST(BoundingBoxExtractionTests, RAABBFromPoints) {
 TEST(BoundingBoxExtractionTests, RAABBFromPointsNonTrivial) {
   TestAdaptor adaptor;
   const size_t num_steps = 2;
-  const float angle = M_PI / 6.0f;
+  const float angle = std::numbers::pi / 6.0f;
   const float length = 5.0;
   const float width = 2.0;
   const float height = 0.4;

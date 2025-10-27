@@ -36,6 +36,7 @@
 #include <spark_dsg/bounding_box.h>
 
 #include <Eigen/Geometry>
+#include <numbers>
 
 namespace spark_dsg {
 
@@ -143,10 +144,12 @@ TEST(BoundingBoxTests, BasicOBBVolumeChecksCorrect) {
 
 TEST(BoundingBoxTests, RotatedOBBVolumeChecksCorrect) {
   // positive pi / 6 rotation around z
-  BoundingBox box(
-      Eigen::Vector3f(2.0, 3.0, 4.0),
-      Eigen::Vector3f(5.0, 5.5, 6.0),
-      Eigen::Quaternionf(std::cos(M_PI / 12.0), 0.0, 0.0, std::sin(M_PI / 12.0)));
+  BoundingBox box(Eigen::Vector3f(2.0, 3.0, 4.0),
+                  Eigen::Vector3f(5.0, 5.5, 6.0),
+                  Eigen::Quaternionf(std::cos(std::numbers::pi / 12.0),
+                                     0.0,
+                                     0.0,
+                                     std::sin(std::numbers::pi / 12.0)));
   EXPECT_NEAR(24.0f, box.volume(), 1.0e-8f);
 
   {  // previously inside, but now outside
@@ -244,8 +247,9 @@ TEST(BoundingBoxTests, RAABBVolumeChecksNonZeroOrigin) {
 
 TEST(BoundingBoxTests, RAABBVolumeChecksCorrectWithRotation) {
   // positive pi / 12 rotation around z
-  BoundingBox box(
-      Eigen::Vector3f(1.0, 2.0, 3.0), Eigen::Vector3f(0.5, 1.0, 1.5), M_PI / 12.0);
+  BoundingBox box(Eigen::Vector3f(1.0, 2.0, 3.0),
+                  Eigen::Vector3f(0.5, 1.0, 1.5),
+                  std::numbers::pi / 12.0);
   EXPECT_NEAR(6.0f, box.volume(), 1.0e-8f);
 
   {  // inside (at center)
@@ -341,18 +345,18 @@ TEST(BoundingBoxTests, computeOrientedIoU) {
   Eigen::Vector3f pos(0.0, 0.0, 0.0);
   // 90-degree rotations -> IoU of 1
   BoundingBox box(size, pos, 0.0f);
-  BoundingBox box2(size, pos, M_PI / 2.0f);
+  BoundingBox box2(size, pos, std::numbers::pi / 2.0f);
 
   EXPECT_EQ(box.computeIoU(box2), 1.0f);
 
-  box2 = BoundingBox(size, pos, M_PI / 4.0f);
+  box2 = BoundingBox(size, pos, std::numbers::pi / 4.0f);
   EXPECT_NEAR(box.computeIoU(box2), 1.0f / std::sqrt(2.0f), 1.0e-3f);
 }
 
 TEST(BoundingBoxTests, Corners) {
   Eigen::Vector3f size(1.0, 2.0, 3.0);
   Eigen::Vector3f pos(0.5, 1.0, 1.5);
-  const float yaw = M_PI / 6;
+  const float yaw = std::numbers::pi / 6;
   const BoundingBox box(size, pos, yaw);
   const auto corners = box.corners();
 
@@ -370,7 +374,7 @@ TEST(BoundingBoxTests, Corners) {
 TEST(BoundingBoxTests, frameConversions) {
   const Eigen::Vector3f size(1.0, 2.0, 3.0);
   const Eigen::Vector3f pos(0.5, 1.0, 1.5);
-  const float yaw = M_PI / 6;
+  const float yaw = std::numbers::pi / 6;
   const BoundingBox box(size, pos, yaw);
 
   // Center.
@@ -412,17 +416,18 @@ TEST(BoundingBoxTests, merge) {
   EXPECT_EQ(Eigen::Vector3f(0, 0, 0), box1.world_P_center);
 
   // General Box (RAABB).
-  box1 =
-      BoundingBox(Eigen::Vector3f(1, 2, 3), Eigen::Vector3f(0.5, 1.0, 1.5), M_PI / 6);
-  box2 = BoundingBox(
-      Eigen::Vector3f(1.5, 1.5, 1.5), Eigen::Vector3f(0.5, 1.0, 1.5), M_PI / 6);
+  box1 = BoundingBox(
+      Eigen::Vector3f(1, 2, 3), Eigen::Vector3f(0.5, 1.0, 1.5), std::numbers::pi / 6);
+  box2 = BoundingBox(Eigen::Vector3f(1.5, 1.5, 1.5),
+                     Eigen::Vector3f(0.5, 1.0, 1.5),
+                     std::numbers::pi / 6);
   box1.merge(box2);
   const float yaw = box1.world_R_center.eulerAngles(0, 1, 2)[2];
   // The solution finds the 90deg rotated box, i.e. y=x and yaw=-60deg from 30 deg.
   EXPECT_NEAR(2, box1.dimensions(0), 1.0e-6f);
   EXPECT_NEAR(1.5, box1.dimensions(1), 1.0e-6f);
   EXPECT_NEAR(3, box1.dimensions(2), 1.0e-6f);
-  EXPECT_NEAR(-M_PI / 3, yaw, 1.0e-6f);
+  EXPECT_NEAR(-std::numbers::pi / 3, yaw, 1.0e-6f);
 }
 
 }  // namespace spark_dsg
