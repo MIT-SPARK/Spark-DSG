@@ -136,6 +136,8 @@ class FlatGraphView:
 class LayerConfig:
     colormode: ColorMode = ColorMode.LAYER
     height_scale: float = 5.0
+    node_scale: float = 0.5
+    edge_scale: float = 0.2
     draw_nodes: bool = True
     draw_edges: bool = True
 
@@ -168,6 +170,12 @@ class LayerHandle:
             self._draw_edges = server.gui.add_checkbox(
                 "draw_edges", initial_value=config.draw_edges
             )
+            self._node_scale = server.gui.add_number(
+                "node_scale", initial_value=config.node_scale
+            )
+            self._edge_scale = server.gui.add_number(
+                "edge_scale", initial_value=config.edge_scale
+            )
 
     @property
     def height(self):
@@ -199,19 +207,22 @@ class LayerHandle:
             colors[idx] = colormap(G, node).to_float_array()
 
         self._nodes = server.scene.add_point_cloud(
-            f"{self.name}_nodes", pos, colors=colors, point_size=0.1
+            f"{self.name}_nodes", pos, colors=colors, point_size=self._node_scale.value
         )
 
         edge_indices = view.layer_edges(layer.key)
         if edge_indices is not None:
             self._edges = server.scene.add_line_segments(
-                f"{self.name}_edges", pos[edge_indices], (0.0, 0.0, 0.0)
+                f"{self.name}_edges",
+                pos[edge_indices],
+                (0.0, 0.0, 0.0),
+                line_width=self._edge_scale.value,
             )
 
 
 class ViserRenderer:
-    def __init__(self, ip="localhost"):
-        self._server = viser.ViserServer(host=ip)
+    def __init__(self, ip="localhost", port=8080):
+        self._server = viser.ViserServer(host=ip, port=port)
         self._handles = {}
         self._edge_handles = {}
 
@@ -286,9 +297,10 @@ class ViserRenderer:
 @click.command("visualize")
 @click.argument("filepath", type=click.Path(exists=True))
 @click.option("--ip", default="localhost")
-def cli(filepath, ip):
+@click.option("--port", default="8080")
+def cli(filepath, ip, port):
     """Visualize a scene graph from FILEPATH using Open3D."""
-    renderer = ViserRenderer(ip)
+    renderer = ViserRenderer(ip, port=port)
     G = dsg.DynamicSceneGraph.load(filepath)
     renderer.draw(G)
     while True:
