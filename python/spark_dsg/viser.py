@@ -197,6 +197,7 @@ class LayerHandle:
             )
 
         self._nodes = None
+        self._edges = None
         pos = view.pos(layer.key, height)
         if pos is None:
             return
