@@ -13,9 +13,9 @@ from spark_dsg.viser import ViserRenderer
 @click.option("--port", default="8080")
 def cli(filepath, ip, port):
     """Visualize a scene graph from FILEPATH using Open3D."""
-    with ViserRenderer(ip, port=port) as renderer:
-        G = dsg.DynamicSceneGraph.load(filepath)
-        renderer.draw(G)
+    G = dsg.DynamicSceneGraph.load(filepath)
 
+    with ViserRenderer(ip, port=port) as renderer:
+        renderer.draw(G)
         while True:
             time.sleep(10.0)

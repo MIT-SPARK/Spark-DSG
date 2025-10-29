@@ -12,6 +12,13 @@ import viser
 import spark_dsg as dsg
 
 
+class ColorMode(enum.Enum):
+    LAYER = "layer"
+    ID = "id"
+    LABEL = "label"
+    PARENT = "parent"
+
+
 def _layer_name(layer_key):
     return f"layer_{layer_key.layer}p{layer_key.partition}"
 
@@ -36,13 +43,6 @@ def color_from_parent(G, node, parent_func, default=None):
 
 def color_from_layer(G, node):
     return dsg.rainbow_color(node.layer.layer)
-
-
-class ColorMode(enum.Enum):
-    LAYER = "layer"
-    ID = "id"
-    LABEL = "label"
-    PARENT = "parent"
 
 
 def colormap_from_modes(key_to_mode, default_colors=None):
@@ -162,7 +162,7 @@ class LayerHandle:
     """Viser handles to layer elements and gui settings."""
 
     def __init__(
-        self, config, server, G, layer, view, colormap, height, parent_callback
+        self, server, config, colormap, height, G, layer, view, parent_callback
     ):
         """Add options for layer to viser."""
         self.key = layer.key
@@ -243,105 +243,37 @@ class LayerHandle:
         self._folder.remove()
 
 
-class ViserRenderer:
-    """Rendering interface to Viser client."""
+class GraphHandle:
+    """Visualization handles for a scene graph."""
 
-    def __init__(self, ip="localhost", port=8080, height_scale=5.0, clear_at_exit=True):
-        self._server = viser.ViserServer(host=ip, port=port)
+    def __init__(self, server, G, height_scale=5.0):
+        """Draw a scene graph in the visualizer."""
         self._handles = {}
         self._edge_handles = {}
-        self._mesh_handle = None
         self._height_scale = height_scale
-        self._edge_scale = None
-        self._clear_at_exit = clear_at_exit
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, typ, exc, tb):
-        if self.clear_at_exit:
-            self.clear()
-
-        return True
-
-    def draw_mesh(self, mesh):
-        self._clear_mesh()
-
-        vertices = mesh.get_vertices()
-        mesh = trimesh.Trimesh(
-            vertices=vertices[:3, :].T,
-            faces=mesh.get_faces().T,
-            visual=trimesh.visual.ColorVisuals(vertex_colors=vertices[3:, :].T),
-        )
-        self._mesh_handle = self._server.scene.add_mesh_trimesh(name="/mesh", mesh=mesh)
-
-    def draw(self, G):
-        self.clear()
-        if G.has_mesh():
-            self.draw_mesh(G.mesh)
-
-        self._edge_scale = self._server.gui.add_number(
+        self._edge_scale = server.gui.add_number(
             "interlayer_edge_scale", initial_value=0.1
         )
-        self._edge_scale.on_update(lambda _: self._update())
 
         color_modes = {}
         for layer in itertools.chain(G.layers, G.layer_partitions):
             color_modes[layer.key] = DEFAULT_COLORMODES.get(layer.key, ColorMode.LAYER)
 
-        view = FlatGraphView(G)
         colormaps = colormap_from_modes(color_modes)
+
+        view = FlatGraphView(G)
         for layer in itertools.chain(G.layers, G.layer_partitions):
             self._handles[layer.key] = LayerHandle(
+                server,
                 DEFAULT_CONFIG.get(layer.key, LayerConfig()),
-                self._server,
+                colormaps[layer.key],
+                self._layer_height(layer.key),
                 G,
                 layer,
                 view,
-                colormaps[layer.key],
-                self._layer_height(layer.key),
                 self._update,
             )
 
-        self._draw_interlayer_edges(G, view)
-        self._update()
-
-    def clear(self):
-        self._clear_mesh()
-
-        if self._edge_scale:
-            self._edge_scale.remove()
-            self._edge_scale = None
-
-        for _, handle in self._handles.items():
-            handle.remove()
-
-        self._handles = {}
-
-        for _, handles in self._edge_handles.items():
-            for _, handle in handles.items():
-                handle.remove()
-
-        self._edge_handles = {}
-
-    def _clear_mesh(self):
-        if self._mesh_handle:
-            self._mesh_handle.remove()
-            self._mesh_handle = None
-
-    def _layer_height(self, layer_key):
-        return self._height_scale * layer_key.layer
-
-    def _update(self):
-        for source_key, targets in self._edge_handles.items():
-            for target_key, handle in targets.items():
-                handle.visible = (
-                    self._handles[source_key].draw_nodes
-                    and self._handles[target_key].draw_nodes
-                )
-                handle.line_width = self._edge_scale.value
-
-    def _draw_interlayer_edges(self, G, view):
         for source_layer, targets in view.edges.items():
             self._edge_handles[source_layer] = {}
             for target_layer, edge_indices in targets.items():
@@ -357,9 +289,105 @@ class ViserRenderer:
                 edge_indices[:, 1] += source_pos.shape[0]
 
                 self._edge_handles[source_layer][target_layer] = (
-                    self._server.scene.add_line_segments(
+                    server.scene.add_line_segments(
                         f"{source_name}_to_{target_name}",
                         pos[edge_indices],
                         (0.0, 0.0, 0.0),
                     )
                 )
+
+        self._update()
+        self._edge_scale.on_update(lambda _: self._update())
+
+    def remove(self):
+        """Remove graph elements from the visualizer."""
+        self._edge_scale.remove()
+        for _, handle in self._handles.items():
+            handle.remove()
+
+        self._handles = {}
+
+        for _, handles in self._edge_handles.items():
+            for _, handle in handles.items():
+                handle.remove()
+
+        self._edge_handles = {}
+
+    def _layer_height(self, layer_key):
+        return self._height_scale * layer_key.layer
+
+    def _update(self):
+        for source_key, targets in self._edge_handles.items():
+            for target_key, handle in targets.items():
+                handle.visible = (
+                    self._handles[source_key].draw_nodes
+                    and self._handles[target_key].draw_nodes
+                )
+                handle.line_width = self._edge_scale.value
+
+
+class MeshHandle:
+    """Visualizer handle for mesh elements."""
+
+    def __init__(self, server, mesh):
+        """Send a mesh to the visualizer."""
+        vertices = mesh.get_vertices()
+        mesh = trimesh.Trimesh(
+            vertices=vertices[:3, :].T,
+            faces=mesh.get_faces().T,
+            visual=trimesh.visual.ColorVisuals(vertex_colors=vertices[3:, :].T),
+        )
+
+        self._mesh_handle = server.scene.add_mesh_trimesh(name="/mesh", mesh=mesh)
+
+    def remove(self):
+        """Remove mesh elements from the visualizer."""
+        self._mesh_handle.remove()
+
+
+class ViserRenderer:
+    """Rendering interface to Viser client."""
+
+    def __init__(self, ip="localhost", port=8080, clear_at_exit=True):
+        self._server = viser.ViserServer(host=ip, port=port)
+        self._clear_at_exit = clear_at_exit
+        self._mesh_handle = None
+        self._graph_handle = None
+
+    def __enter__(self):
+        """Enter a context manager."""
+        return self
+
+    def __exit__(self, typ, exc, tb):
+        """Clean up visualizer on exit if desired."""
+        print(f"typ='{typ}' exc='{exc}' tb='{tb}'")
+        if self._clear_at_exit:
+            self.clear()
+
+        return True
+
+    def draw(self, G, height_scale=5.0):
+        self._clear_graph()
+        self._graph_handle = GraphHandle(self._server, G, height_scale=height_scale)
+
+        if G.has_mesh():
+            self.draw_mesh(G.mesh)
+
+    def draw_mesh(self, mesh):
+        self._clear_mesh()
+        self._mesh_handle = MeshHandle(self._server, mesh)
+
+    def clear(self):
+        """Remove all graph and mesh elements from the visualizer."""
+        self._clear_mesh()
+        self._clear_graph()
+
+    def _clear_mesh(self):
+        if self._mesh_handle:
+            self._mesh_handle.remove()
+            self._mesh_handle = None
+
+    def _clear_graph(self):
+        if self._graph_handle:
+            self._graph_handle.remove()
+            self._graph_handle = None
