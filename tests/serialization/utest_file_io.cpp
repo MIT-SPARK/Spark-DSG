@@ -63,7 +63,7 @@ TEST(FileIoTests, VersionSerialization) {
 
   // Check deserialization.
   const auto result = FileHeader::deserializeFromBinary(buffer);
-  EXPECT_TRUE(result.has_value());
+  ASSERT_TRUE(result.has_value());
   EXPECT_EQ(header.project_name, result->project_name);
   EXPECT_EQ(header.version, result->version);
 
