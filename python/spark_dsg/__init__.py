@@ -102,7 +102,7 @@ def _hash_layerkey(key):
 
 def _get_layer_id(graph, name):
     warnings.warn(
-        "'get_layer_key' is deprecated. Please use 'get_layer_key'",
+        "'get_layer_id' is deprecated. Please use 'get_layer_key'",
         DeprecationWarning,
         stacklevel=2,
     )
