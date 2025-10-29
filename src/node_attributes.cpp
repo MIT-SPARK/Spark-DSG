@@ -490,7 +490,7 @@ bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
          dbow_values == derived->dbow_values;
 }
 
-KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false){};
+KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {}
 
 NodeAttributes::Ptr KhronosObjectAttributes::clone() const {
   return std::make_unique<KhronosObjectAttributes>(*this);

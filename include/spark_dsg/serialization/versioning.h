@@ -112,7 +112,6 @@ struct FileHeader {
 
   // Stringify.
   std::string toString() const;
-
 };
 
 /**
