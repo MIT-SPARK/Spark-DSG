@@ -35,7 +35,7 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config Release
+        run: cmake --build ${{github.workspace}}/build --config Release -j
       - name: Test
         working-directory: ${{github.workspace}}/build
         run: ctest -C Release
