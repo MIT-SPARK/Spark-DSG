@@ -186,6 +186,12 @@ void init_attributes(py::module_& m) {
       .def_readwrite("max", &BoundaryInfo::max)
       .def_readwrite("states", &BoundaryInfo::states);
 
+  py::enum_<TraversabilityState>(m, "TraversabilityState")
+      .value("UNKNOWN", TraversabilityState::UNKNOWN)
+      .value("TRAVERSABLE", TraversabilityState::TRAVERSABLE)
+      .value("INTRAVERSABLE", TraversabilityState::INTRAVERSABLE)
+      .value("TRAVERSED", TraversabilityState::TRAVERSED);
+
   py::class_<TraversabilityNodeAttributes, NodeAttributes>(m, "TraversabilityNodeAttributes")
       .def(py::init<>())
       .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
