@@ -85,6 +85,8 @@ NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
   PartitionId partition = 0;
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     std::optional<std::chrono::nanoseconds> stamp;
     deserializer.read(stamp);
     // guess at interlayer IDs based on node symbol prefix
@@ -204,6 +206,8 @@ template <typename Attrs>
 AttributeFactory<Attrs> loadFactory(const io::FileHeader& header,
                                     const BinaryDeserializer& deserializer) {
   if (header.version < io::Version(1, 0, 2)) {
+    io::warnOutdatedHeader(header);
+
     return serialization::AttributeRegistry<Attrs>::current();
   }
 
@@ -216,6 +220,8 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   const auto& header = io::GlobalInfo::loadedHeader();
 
   if (header.version < io::Version(1, 1, 2)) {
+    io::warnOutdatedHeader(header);
+
     // NOTE(nathan) we intentionally don't try to use the layer IDs to populate anything
     // because they will not include partitions and cause lots of serialization churn
     std::vector<LayerId> layer_ids;
@@ -237,6 +243,8 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   }
 
   if (header.version < io::Version(1, 0, 2)) {
+    io::warnOutdatedHeader(header);
+
     LayerId mesh_layer_id;
     deserializer.read(mesh_layer_id);
   }
@@ -247,12 +255,16 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
 
   std::map<std::string, LayerKey> layer_names;
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     layer_names = {{DsgLayers::OBJECTS, 2},
                    {DsgLayers::AGENTS, 2},
                    {DsgLayers::PLACES, 3},
                    {DsgLayers::ROOMS, 4},
                    {DsgLayers::BUILDINGS, 5}};
   } else if (header.version < io::Version(1, 1, 1)) {
+    io::warnOutdatedHeader(header);
+
     std::map<std::string, LayerId> names;
     deserializer.read(names);
     layer_names = DynamicSceneGraph::LayerNames(names.begin(), names.end());
@@ -264,7 +276,9 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
     graph.addLayer(key.layer, key.partition, name);
   }
 
-  if (header.version >= io::Version(1, 0, 6)) {
+  if (header.version < io::Version(1, 0, 6)) {
+    io::warnOutdatedHeader(header);
+  } else {
     std::string metadata_json;
     deserializer.read(metadata_json);
     try {
@@ -290,6 +304,8 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   }
 
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     deserializer.checkDynamicArray();
     while (!deserializer.isDynamicArrayEnd()) {
       stale_nodes.erase(parseNode(

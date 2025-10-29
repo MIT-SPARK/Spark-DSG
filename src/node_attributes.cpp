@@ -193,16 +193,20 @@ void SemanticNodeAttributes::serialization_info() {
   serialization::field("name", name);
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version <= io::Version(1, 0, 2)) {
+    io::warnOutdatedHeader(header);
+
     Eigen::Matrix<uint8_t, 3, 1> color_uint8;
     serialization::field("color", color_uint8);
     color = Color(color_uint8[0], color_uint8[1], color_uint8[2]);
-    io::warnOutdatedHeader(header);
   } else {
     serialization::field("color", color);
   }
+
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
   if (header.version <= io::Version(1, 0, 4)) {
+    io::warnOutdatedHeader(header);
+
     Eigen::MatrixXd feature;
     serialization::field("semantic_feature", feature);
     semantic_feature = feature.cast<float>();
@@ -459,10 +463,10 @@ void AgentNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
 
   const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version >= io::Version(1, 1, 0)) {
-    serialization::field("timestamp", timestamp);
-  } else {
+  if (header.version < io::Version(1, 1, 0)) {
     io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("timestamp", timestamp);
   }
 
   serialization::field("world_R_body", world_R_body);
@@ -489,7 +493,7 @@ bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
          observed_semantic_labels == derived->observed_semantic_labels;
 }
 
-KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {};
+KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {}
 
 NodeAttributes::Ptr KhronosObjectAttributes::clone() const {
   return std::make_unique<KhronosObjectAttributes>(*this);
@@ -522,6 +526,7 @@ void KhronosObjectAttributes::serialization_info() {
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version <= io::Version(1, 0, 1)) {
     io::warnOutdatedHeader(header);
+
     std::vector<float> xyz;
     serialization::field("vertices", xyz);
     std::vector<uint8_t> rgb;

@@ -71,6 +71,8 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
   PartitionId partition = 0;
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     if (record.contains("timestamp")) {
       partition = NodeSymbol(node_id).category();
     }
@@ -111,8 +113,7 @@ namespace io::json {
 
 std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
   nlohmann::json record;
-  record[io::FileHeader::IDENTIFIER_STRING + "_header"] = io::FileHeader::current();
-
+  record[io::FileHeader::header_json_key()] = io::FileHeader::current();
   record["directed"] = false;
   record["multigraph"] = false;
   record["nodes"] = nlohmann::json::array();
@@ -161,7 +162,7 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
   const auto record = nlohmann::json::parse(contents);
 
   // Parse header.
-  const std::string header_field_name = FileHeader::IDENTIFIER_STRING + "_header";
+  const auto header_field_name = FileHeader::header_json_key();
   const auto header = record.contains(header_field_name)
                           ? record.at(header_field_name).get<io::FileHeader>()
                           : io::FileHeader::legacy();
@@ -171,6 +172,8 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
 
   DynamicSceneGraph::LayerKeys layer_keys;
   if (header.version < io::Version(1, 1, 2)) {
+    io::warnOutdatedHeader(header);
+
     const auto layer_ids = record.at("layer_ids").get<std::vector<LayerId>>();
     layer_keys = DynamicSceneGraph::LayerKeys(layer_ids.begin(), layer_ids.end());
   } else {
@@ -179,12 +182,16 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
 
   DynamicSceneGraph::LayerNames layer_names;
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     layer_names = {{DsgLayers::OBJECTS, 2},
                    {DsgLayers::AGENTS, 2},
                    {DsgLayers::PLACES, 3},
                    {DsgLayers::ROOMS, 4},
                    {DsgLayers::BUILDINGS, 5}};
   } else if (header.version < io::Version(1, 1, 1)) {
+    io::warnOutdatedHeader(header);
+
     const auto names = record.at("layer_names").get<std::map<std::string, LayerId>>();
     layer_names = DynamicSceneGraph::LayerNames(names.begin(), names.end());
   } else {
