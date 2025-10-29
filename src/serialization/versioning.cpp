@@ -124,7 +124,7 @@ std::string Version::toString() const {
 std::vector<uint8_t> FileHeader::serializeToBinary() const {
   std::vector<uint8_t> buffer;
   serialization::BinarySerializer serializer(&buffer);
-  serializer.write(IDENTIFIER_STRING);
+  serializer.write(std::string(IDENTIFIER_STRING));
   serializer.write(*this);
   return buffer;
 }

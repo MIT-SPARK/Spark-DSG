@@ -45,7 +45,7 @@ namespace spark_dsg::io {
 
 // Define the current project and version when serializing data with this
 // implementation.
-inline const std::string CURRENT_PROJECT_NAME = "main";
+inline constexpr static const char* CURRENT_PROJECT_NAME = "main";
 
 // Which project names are compatible to load given the current project. <current,
 // {compatible, ...}>. Projects are always assumed to be compatible with themselves.
@@ -89,7 +89,11 @@ struct FileHeader {
   // The file type identifier to make sure we're reading compatible binary data.
   //           ! DO NOT CHANGE THIS VALUE !
   // (Otherwise all older files will be unreadable.)
-  inline static const std::string IDENTIFIER_STRING = "SPARK_DSG";
+  inline constexpr static const char* IDENTIFIER_STRING = "SPARK_DSG";
+  //! @brief Get header key used for json serialization
+  static std::string header_json_key() {
+    return std::string(IDENTIFIER_STRING) + "_header";
+  }
 
   // String identifier for different variants of spark-dsg that may not be compatible.
   std::string project_name = "main";
