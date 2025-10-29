@@ -137,14 +137,15 @@ class LayerConfig:
     edge_scale: float = 0.1
     draw_nodes: bool = True
     draw_edges: bool = True
+    draw_labels: bool = False
 
 
 DEFAULT_CONFIG = {
-    dsg.LayerKey(2): LayerConfig(),
+    dsg.LayerKey(2): LayerConfig(node_scale=0.25, draw_labels=True),
     dsg.LayerKey(3): LayerConfig(node_scale=0.1),
     dsg.LayerKey(3, 1): LayerConfig(node_scale=0.1),
     dsg.LayerKey(3, 2): LayerConfig(node_scale=0.1),
-    dsg.LayerKey(4): LayerConfig(),
+    dsg.LayerKey(4): LayerConfig(node_scale=0.4, draw_labels=True),
     dsg.LayerKey(5): LayerConfig(draw_nodes=False),
 }
 
@@ -158,6 +159,13 @@ DEFAULT_COLORMODES = {
 }
 
 
+@dataclass
+class LabelInfo:
+    name: str
+    text: str
+    pos: np.ndarray
+
+
 class LayerHandle:
     """Viser handles to layer elements and gui settings."""
 
@@ -168,11 +176,15 @@ class LayerHandle:
         self.key = layer.key
         self.name = _layer_name(layer.key)
         self._parent_callback = parent_callback
+        self._server = server
 
         self._folder = server.gui.add_folder(self.name)
         with self._folder:
             self._draw_nodes = server.gui.add_checkbox(
                 "draw_nodes", initial_value=config.draw_nodes
+            )
+            self._draw_labels = server.gui.add_checkbox(
+                "draw_labels", initial_value=config.draw_labels
             )
             self._draw_edges = server.gui.add_checkbox(
                 "draw_edges", initial_value=config.draw_edges
@@ -184,11 +196,6 @@ class LayerHandle:
                 "edge_scale", initial_value=config.edge_scale
             )
 
-            self._draw_nodes.on_update(lambda _: self._update())
-            self._draw_edges.on_update(lambda _: self._update())
-            self._node_scale.on_update(lambda _: self._update())
-            self._edge_scale.on_update(lambda _: self._update())
-
         pos = view.pos(layer.key, height)
         if pos is None:
             return
@@ -198,8 +205,20 @@ class LayerHandle:
             colors[idx] = colormap(G, node).to_float_array()
 
         self._nodes = server.scene.add_point_cloud(
-            f"{self.name}_nodes", pos, colors=colors, point_size=self._node_scale.value
+            f"{self.name}_nodes", pos, colors=colors
         )
+
+        self._label_info = []
+        self._label_handles = []
+        labelspace = G.get_labelspace(self.key.layer, self.key.partition)
+        for idx, node in enumerate(layer.nodes):
+            text = node.id.str(literal=False)
+            if labelspace:
+                text += ": " + labelspace.get_node_category(node)
+
+            self._label_info.append(
+                LabelInfo(name=f"label_{node.id.str()}", text=text, pos=pos[idx])
+            )
 
         edge_indices = view.layer_edges(layer.key)
         self._edges = None
@@ -208,10 +227,14 @@ class LayerHandle:
                 f"{self.name}_edges",
                 pos[edge_indices],
                 (0.0, 0.0, 0.0),
-                line_width=self._edge_scale.value,
             )
 
         self._update()
+        self._draw_nodes.on_update(lambda _: self._update())
+        self._draw_labels.on_update(lambda _: self._update())
+        self._draw_edges.on_update(lambda _: self._update())
+        self._node_scale.on_update(lambda _: self._update())
+        self._edge_scale.on_update(lambda _: self._update())
 
     @property
     def draw_nodes(self):
@@ -223,11 +246,26 @@ class LayerHandle:
 
     def _update(self):
         draw_edges = self._draw_nodes.value and self._draw_edges.value
+        draw_labels = self._draw_nodes.value and self._draw_labels.value
+        labels_drawn = len(self._label_handles) > 0
+
         self._nodes.visible = self._draw_nodes.value
         self._nodes.point_size = self._node_scale.value
         if self._edges:
             self._edges.visible = draw_edges
             self._edges.line_width = self._edge_scale.value
+
+        if not draw_labels and labels_drawn:
+            for x in self._label_handles:
+                x.remove()
+
+            self._label_handles = []
+
+        if draw_labels and not labels_drawn:
+            self._label_handles = [
+                self._server.scene.add_label(x.name, x.text, position=x.pos)
+                for x in self._label_info
+            ]
 
         self._parent_callback()
 
