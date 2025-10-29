@@ -274,6 +274,11 @@ class LayerHandle:
         if self._edges:
             self._edges.remove()
 
+        for x in self._label_handles:
+            x.remove()
+
+        self._label_handles = []
+
         self._draw_nodes.remove()
         self._draw_edges.remove()
         self._node_scale.remove()
