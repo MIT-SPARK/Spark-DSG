@@ -50,9 +50,7 @@ from spark_dsg._dsg_bindings import (
     SceneGraphLayer,
     compute_ancestor_bounding_box,
 )
-from spark_dsg.open3d_visualization import render_to_open3d
 from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_to_torch
-from spark_dsg.visualization import plot_scene_graph
 
 
 def add_bounding_boxes_to_layer(
@@ -104,7 +102,7 @@ def _hash_layerkey(key):
 
 def _get_layer_id(graph, name):
     warnings.warn(
-        "'get_layer_key' is deprecated. Please use 'get_layer_key'",
+        "'get_layer_id' is deprecated. Please use 'get_layer_key'",
         DeprecationWarning,
         stacklevel=2,
     )

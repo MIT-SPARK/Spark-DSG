@@ -10,10 +10,12 @@ readme = "README.md"
 license = "BSD-3-Clause"
 requires-python = ">=3.8"
 dependencies = [
+    "click",
     "numpy",
     "seaborn",
     "shapely",
     "zmq",
+    "viser",
 ]
 authors = [
   {name ="Nathan Hughes", email = "na26933@mit.edu"},
@@ -28,11 +30,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-viz = [
-    "plotly",
-    "open3d >= 0.17",
-    "scipy",
-]
+viz = []  # no longer exists, will be dropped
 
 [project.urls]
 Repository = "https://github.com/MIT-SPARK/Spark-DSG"
