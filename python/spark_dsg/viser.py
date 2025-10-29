@@ -196,6 +196,7 @@ class LayerHandle:
                 "edge_scale", initial_value=config.edge_scale
             )
 
+        self._nodes = None
         pos = view.pos(layer.key, height)
         if pos is None:
             return
@@ -270,7 +271,8 @@ class LayerHandle:
         self._parent_callback()
 
     def remove(self):
-        self._nodes.remove()
+        if self._nodes:
+            self._nodes.remove()
         if self._edges:
             self._edges.remove()
 
