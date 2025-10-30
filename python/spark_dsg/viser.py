@@ -196,6 +196,10 @@ class LayerHandle:
                 "edge_scale", initial_value=config.edge_scale
             )
 
+        self._nodes = None
+        self._edges = None
+        self._label_info = []
+        self._label_handles = []
         pos = view.pos(layer.key, height)
         if pos is None:
             return
@@ -208,8 +212,6 @@ class LayerHandle:
             f"{self.name}_nodes", pos, colors=colors
         )
 
-        self._label_info = []
-        self._label_handles = []
         labelspace = G.get_labelspace(self.key.layer, self.key.partition)
         for idx, node in enumerate(layer.nodes):
             text = node.id.str(literal=False)
@@ -221,7 +223,6 @@ class LayerHandle:
             )
 
         edge_indices = view.layer_edges(layer.key)
-        self._edges = None
         if edge_indices is not None:
             self._edges = server.scene.add_line_segments(
                 f"{self.name}_edges",
@@ -270,7 +271,8 @@ class LayerHandle:
         self._parent_callback()
 
     def remove(self):
-        self._nodes.remove()
+        if self._nodes:
+            self._nodes.remove()
         if self._edges:
             self._edges.remove()
 
