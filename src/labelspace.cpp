@@ -37,7 +37,7 @@
 
 #include <iostream>
 
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 
@@ -83,13 +83,13 @@ Labelspace::Labelspace(const std::map<SemanticLabel, std::string>& label_to_name
 Labelspace::Labelspace(const std::vector<std::string>& names)
     : Labelspace(index(names)) {}
 
-Labelspace Labelspace::fromMetadata(const DynamicSceneGraph& graph,
+Labelspace Labelspace::fromMetadata(const SceneGraph& graph,
                                     LayerId layer,
                                     PartitionId partition) {
   return fromMetadata(graph, layerInfoToKey(layer, partition));
 }
 
-Labelspace Labelspace::fromMetadata(const DynamicSceneGraph& graph,
+Labelspace Labelspace::fromMetadata(const SceneGraph& graph,
                                     const std::string& name) {
   const auto& metadata = graph.metadata();
   const auto labelspace_node = metadata.find("labelspaces");
@@ -125,13 +125,13 @@ std::string Labelspace::getCategory(const SemanticNodeAttributes& attrs,
   return getCategory(attrs.semantic_label).value_or(unknown_name);
 }
 
-void Labelspace::save(DynamicSceneGraph& graph,
+void Labelspace::save(SceneGraph& graph,
                       LayerId layer,
                       PartitionId partition) const {
   save(graph, layerInfoToKey(layer, partition));
 }
 
-void Labelspace::save(DynamicSceneGraph& graph, const std::string& name) const {
+void Labelspace::save(SceneGraph& graph, const std::string& name) const {
   auto entry = nlohmann::json::object();
   entry["labelspaces"] = nlohmann::json::object();
   entry["labelspaces"][name] = label_to_name_;

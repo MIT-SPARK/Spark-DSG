@@ -75,11 +75,11 @@ struct EdgeLayerInfo {
  * has the implication that a const scene graph is one that is topologically constant
  * (instead of the attributes also being constant).
  */
-class DynamicSceneGraph {
+class SceneGraph {
  public:
   friend class SceneGraphLogger;
   //! Desired pointer type of the scene graph
-  using Ptr = std::shared_ptr<DynamicSceneGraph>;
+  using Ptr = std::shared_ptr<SceneGraph>;
   //! Container type for the layer keys
   using LayerKeys = std::vector<LayerKey>;
   //! Container type for the static layers
@@ -99,21 +99,21 @@ class DynamicSceneGraph {
    * @brief Construct the scene graph
    * @param empty Whether or not to skip the default layer 2-5 initialization
    */
-  explicit DynamicSceneGraph(bool empty = false);
+  explicit SceneGraph(bool empty = false);
   /**
    * @brief Construct the scene graph (with the provided layers)
    * @param layers List of layer ids
    * @param layer_names Optional names for the layers
    * @note Adds IDs for layers in layer_names that aren't in layers
    */
-  DynamicSceneGraph(const LayerKeys& layers, const LayerNames& layer_names = {});
-  virtual ~DynamicSceneGraph() = default;
+  SceneGraph(const LayerKeys& layers, const LayerNames& layer_names = {});
+  virtual ~SceneGraph() = default;
 
   /**
    * @brief Construct a scene graph
    * @param layers Mapping between layer names and layer IDs
    */
-  static DynamicSceneGraph::Ptr fromNames(const LayerNames& layers);
+  static SceneGraph::Ptr fromNames(const LayerNames& layers);
 
   /**
    * @brief Delete all layers and edges
@@ -404,7 +404,7 @@ class DynamicSceneGraph {
    * @param transform the other graph when merging
    * @returns True if merge was successful
    */
-  bool mergeGraph(const DynamicSceneGraph& other,
+  bool mergeGraph(const SceneGraph& other,
                   const GraphMergeConfig& config = {},
                   const Eigen::Isometry3d* transform = nullptr);
 
@@ -450,7 +450,7 @@ class DynamicSceneGraph {
   void removeAllStaleEdges();
 
   //! @brief Make a copy of the scene graph
-  DynamicSceneGraph::Ptr clone() const;
+  SceneGraph::Ptr clone() const;
 
   //! @brief Rigidly transform graph
   void transform(const Eigen::Isometry3d& transform);

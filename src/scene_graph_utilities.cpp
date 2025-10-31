@@ -35,13 +35,13 @@
 #include "spark_dsg/scene_graph_utilities.h"
 
 #include "spark_dsg/bounding_box_extraction.h"
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 
-using Callback = std::function<void(const DynamicSceneGraph&, const NodeId)>;
+using Callback = std::function<void(const SceneGraph&, const NodeId)>;
 
-void getNodeAncestorsAtDepth(const DynamicSceneGraph& graph,
+void getNodeAncestorsAtDepth(const SceneGraph& graph,
                              NodeId parent,
                              size_t depth,
                              const Callback& callback) {
@@ -65,7 +65,7 @@ void getNodeAncestorsAtDepth(const DynamicSceneGraph& graph,
 }
 
 struct NodeAdaptor : public bounding_box::PointAdaptor {
-  explicit NodeAdaptor(const DynamicSceneGraph* graph) : graph(graph) {}
+  explicit NodeAdaptor(const SceneGraph* graph) : graph(graph) {}
 
   ~NodeAdaptor() = default;
 
@@ -81,11 +81,11 @@ struct NodeAdaptor : public bounding_box::PointAdaptor {
 
   void add(NodeId node) { nodes.push_back(node); }
 
-  const DynamicSceneGraph* graph = nullptr;
+  const SceneGraph* graph = nullptr;
   std::vector<NodeId> nodes;
 };
 
-BoundingBox computeAncestorBoundingBox(const DynamicSceneGraph& graph,
+BoundingBox computeAncestorBoundingBox(const SceneGraph& graph,
                                        NodeId parent,
                                        size_t depth,
                                        BoundingBox::Type bbox_type) {
@@ -93,7 +93,7 @@ BoundingBox computeAncestorBoundingBox(const DynamicSceneGraph& graph,
   getNodeAncestorsAtDepth(graph,
                           parent,
                           depth,
-                          [&adaptor](const DynamicSceneGraph&, const NodeId ancestor) {
+                          [&adaptor](const SceneGraph&, const NodeId ancestor) {
                             adaptor.add(ancestor);
                           });
 

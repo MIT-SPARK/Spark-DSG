@@ -38,7 +38,7 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-#include <spark_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/labelspace.h>
 #include <spark_dsg/node_attributes.h>
@@ -66,27 +66,27 @@ void init_scene_graph(py::module_& m) {
         "depth"_a = 1,
         "bbox_type"_a = BoundingBox::Type::AABB);
 
-  py::class_<DynamicSceneGraph, std::shared_ptr<DynamicSceneGraph>>(m, "DynamicSceneGraph", py::dynamic_attr())
+  py::class_<SceneGraph, std::shared_ptr<SceneGraph>>(m, "SceneGraph", py::dynamic_attr())
       .def(py::init<bool>(), "empty"_a = false)
-      .def(py::init<const DynamicSceneGraph::LayerKeys&, const DynamicSceneGraph::LayerNames&>(),
+      .def(py::init<const SceneGraph::LayerKeys&, const SceneGraph::LayerNames&>(),
            "layer_keys"_a,
-           "layer_names"_a = DynamicSceneGraph::LayerNames{})
-      .def("clear", &DynamicSceneGraph::clear, "include_mesh"_a = true)
-      .def("reset", &DynamicSceneGraph::reset)
+           "layer_names"_a = SceneGraph::LayerNames{})
+      .def("clear", &SceneGraph::clear, "include_mesh"_a = true)
+      .def("reset", &SceneGraph::reset)
       .def(
           "has_layer",
-          [](const DynamicSceneGraph& graph, LayerId layer, PythonPartitionId partition) {
+          [](const SceneGraph& graph, LayerId layer, PythonPartitionId partition) {
             return graph.hasLayer(layer, partition);
           },
           "layer"_a,
           "partition"_a = 0)
       .def(
           "has_layer",
-          [](const DynamicSceneGraph& graph, const std::string& name) { return graph.hasLayer(name); },
+          [](const SceneGraph& graph, const std::string& name) { return graph.hasLayer(name); },
           "layer"_a)
       .def(
           "get_layer",
-          [](const DynamicSceneGraph& graph, LayerId layer, PythonPartitionId partition) {
+          [](const SceneGraph& graph, LayerId layer, PythonPartitionId partition) {
             return LayerView(graph.getLayer(layer, partition));
           },
           "layer"_a,
@@ -94,12 +94,12 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def(
           "get_layer",
-          [](const DynamicSceneGraph& graph, const std::string& layer) { return LayerView(graph.getLayer(layer)); },
+          [](const SceneGraph& graph, const std::string& layer) { return LayerView(graph.getLayer(layer)); },
           "layer"_a,
           py::return_value_policy::reference_internal)
       .def(
           "add_layer",
-          [](DynamicSceneGraph& graph, LayerId layer, PythonPartitionId partition, const std::string& name) {
+          [](SceneGraph& graph, LayerId layer, PythonPartitionId partition, const std::string& name) {
             return LayerView(graph.addLayer(layer, partition, name));
           },
           "layer"_a,
@@ -108,14 +108,14 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def(
           "remove_layer",
-          [](DynamicSceneGraph& graph, LayerId layer, PythonPartitionId partition) {
+          [](SceneGraph& graph, LayerId layer, PythonPartitionId partition) {
             graph.removeLayer(layer, partition);
           },
           "layer"_a,
           "partition"_a = 0)
       .def(
           "add_node",
-          [](DynamicSceneGraph& graph, LayerKey key, NodeSymbol node_id, const NodeAttributes& attrs) {
+          [](SceneGraph& graph, LayerKey key, NodeSymbol node_id, const NodeAttributes& attrs) {
             return graph.emplaceNode(key, node_id, attrs.clone());
           },
           "layer"_a,
@@ -123,7 +123,7 @@ void init_scene_graph(py::module_& m) {
           "attrs"_a)
       .def(
           "add_node",
-          [](DynamicSceneGraph& graph,
+          [](SceneGraph& graph,
              LayerId layer,
              NodeSymbol node_id,
              const NodeAttributes& attrs,
@@ -134,7 +134,7 @@ void init_scene_graph(py::module_& m) {
           "partition"_a = 0)
       .def(
           "add_node",
-          [](DynamicSceneGraph& graph, const std::string& layer, NodeSymbol node_id, const NodeAttributes& attrs) {
+          [](SceneGraph& graph, const std::string& layer, NodeSymbol node_id, const NodeAttributes& attrs) {
             return graph.emplaceNode(layer, node_id, attrs.clone());
           },
           "layer"_a,
@@ -142,7 +142,7 @@ void init_scene_graph(py::module_& m) {
           "attrs"_a)
       .def(
           "insert_edge",
-          [](DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target, bool enforce_single_parent) {
+          [](SceneGraph& graph, NodeSymbol source, NodeSymbol target, bool enforce_single_parent) {
             return graph.insertEdge(source, target, nullptr, enforce_single_parent);
           },
           "source"_a,
@@ -150,7 +150,7 @@ void init_scene_graph(py::module_& m) {
           "enforce_single_parent"_a = false)
       .def(
           "insert_edge",
-          [](DynamicSceneGraph& graph,
+          [](SceneGraph& graph,
              NodeSymbol source,
              NodeSymbol target,
              const EdgeAttributes& info,
@@ -161,131 +161,131 @@ void init_scene_graph(py::module_& m) {
           "target"_a,
           "info"_a,
           "enforce_single_parent"_a = false)
-      .def("has_node", [](const DynamicSceneGraph& graph, NodeSymbol node_id) { return graph.hasNode(node_id); })
+      .def("has_node", [](const SceneGraph& graph, NodeSymbol node_id) { return graph.hasNode(node_id); })
       .def("has_edge",
-           [](const DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target) {
+           [](const SceneGraph& graph, NodeSymbol source, NodeSymbol target) {
              return graph.hasEdge(source, target);
            })
-      .def("has_mesh", &DynamicSceneGraph::hasMesh)
+      .def("has_mesh", &SceneGraph::hasMesh)
       .def(
           "get_node",
-          [](const DynamicSceneGraph& graph, NodeSymbol node) -> const SceneGraphNode& { return graph.getNode(node); },
+          [](const SceneGraph& graph, NodeSymbol node) -> const SceneGraphNode& { return graph.getNode(node); },
           py::return_value_policy::reference_internal)
       .def(
           "find_node",
-          [](const DynamicSceneGraph& graph, NodeSymbol node) -> const SceneGraphNode* { return graph.findNode(node); },
+          [](const SceneGraph& graph, NodeSymbol node) -> const SceneGraphNode* { return graph.findNode(node); },
           py::return_value_policy::reference_internal)
       .def(
           "get_edge",
-          [](const DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target) -> const SceneGraphEdge& {
+          [](const SceneGraph& graph, NodeSymbol source, NodeSymbol target) -> const SceneGraphEdge& {
             return graph.getEdge(source, target);
           },
           py::return_value_policy::reference_internal)
       .def(
           "find_edge",
-          [](const DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target) -> const SceneGraphEdge* {
+          [](const SceneGraph& graph, NodeSymbol source, NodeSymbol target) -> const SceneGraphEdge* {
             return graph.findEdge(source, target);
           },
           py::return_value_policy::reference_internal)
-      .def("remove_node", [](DynamicSceneGraph& graph, NodeSymbol node) -> bool { return graph.removeNode(node); })
+      .def("remove_node", [](SceneGraph& graph, NodeSymbol node) -> bool { return graph.removeNode(node); })
       .def("remove_edge",
-           [](DynamicSceneGraph& graph, NodeSymbol source, NodeSymbol target) -> bool {
+           [](SceneGraph& graph, NodeSymbol source, NodeSymbol target) -> bool {
              return graph.removeEdge(source, target);
            })
-      .def("num_layers", &DynamicSceneGraph::numLayers)
+      .def("num_layers", &SceneGraph::numLayers)
       .def(
           "num_nodes",
-          [](const DynamicSceneGraph& graph, bool include_partitions) {
+          [](const SceneGraph& graph, bool include_partitions) {
             return include_partitions ? graph.numNodes() : graph.numUnpartitionedNodes();
           },
           "include_partitions"_a = true)
       .def(
           "num_edges",
-          [](const DynamicSceneGraph& graph, bool include_partitions) {
+          [](const SceneGraph& graph, bool include_partitions) {
             return include_partitions ? graph.numEdges() : graph.numUnpartitionedEdges();
           },
           "include_partitions"_a = true)
-      .def("empty", &DynamicSceneGraph::empty)
-      .def("get_position", &DynamicSceneGraph::getPosition)
+      .def("empty", &SceneGraph::empty)
+      .def("get_position", &SceneGraph::getPosition)
       .def(
           "save",
-          [](const DynamicSceneGraph& graph, const std::string& filepath, bool include_mesh) {
+          [](const SceneGraph& graph, const std::string& filepath, bool include_mesh) {
             graph.save(filepath, include_mesh);
           },
           "filepath"_a,
           "include_mesh"_a = true)
       .def(
           "save",
-          [](const DynamicSceneGraph& graph, const std::filesystem::path& filepath, bool include_mesh) {
+          [](const SceneGraph& graph, const std::filesystem::path& filepath, bool include_mesh) {
             graph.save(filepath, include_mesh);
           },
           "filepath"_a,
           "include_mesh"_a = true)
-      .def_static("load", &DynamicSceneGraph::load)
-      .def_static("load", [](const std::string& filepath) { return DynamicSceneGraph::load(filepath); })
-      .def_readwrite("_metadata", &DynamicSceneGraph::metadata)
-      .def_property_readonly("layer_ids", &DynamicSceneGraph::layer_ids)
-      .def_property_readonly("layer_keys", &DynamicSceneGraph::layer_keys)
-      .def_property_readonly("layer_names", &DynamicSceneGraph::layer_names)
-      .def_property_readonly("node_lookup", &DynamicSceneGraph::node_lookup)
+      .def_static("load", &SceneGraph::load)
+      .def_static("load", [](const std::string& filepath) { return SceneGraph::load(filepath); })
+      .def_readwrite("_metadata", &SceneGraph::metadata)
+      .def_property_readonly("layer_ids", &SceneGraph::layer_ids)
+      .def_property_readonly("layer_keys", &SceneGraph::layer_keys)
+      .def_property_readonly("layer_names", &SceneGraph::layer_names)
+      .def_property_readonly("node_lookup", &SceneGraph::node_lookup)
       .def_property(
           "layers",
-          [](const DynamicSceneGraph& graph) { return py::make_iterator(LayerIter(graph.layers()), IterSentinel()); },
+          [](const SceneGraph& graph) { return py::make_iterator(LayerIter(graph.layers()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "layer_partitions",
-          [](const DynamicSceneGraph& graph) {
+          [](const SceneGraph& graph) {
             return py::make_iterator(PartitionIter(graph.layer_partitions()), IterSentinel());
           },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "nodes",
-          [](const DynamicSceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph), IterSentinel()); },
+          [](const SceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const DynamicSceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph), IterSentinel()); },
+          [](const SceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "unpartitioned_nodes",
-          [](const DynamicSceneGraph& graph) {
+          [](const SceneGraph& graph) {
             return py::make_iterator(GlobalNodeIter(graph, false), IterSentinel());
           },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "unpartitioned_edges",
-          [](const DynamicSceneGraph& graph) {
+          [](const SceneGraph& graph) {
             return py::make_iterator(GlobalEdgeIter(graph, false), IterSentinel());
           },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "interlayer_edges",
-          [](const DynamicSceneGraph& graph) {
+          [](const SceneGraph& graph) {
             return py::make_iterator(EdgeIter(graph.interlayer_edges()), IterSentinel());
           },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "mesh",
-          [](const DynamicSceneGraph& graph) { return graph.mesh(); },
-          [](DynamicSceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
-      .def("get_layer_key", &DynamicSceneGraph::getLayerKey, "name"_a)
-      .def("clone", &DynamicSceneGraph::clone)
+          [](const SceneGraph& graph) { return graph.mesh(); },
+          [](SceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
+      .def("get_layer_key", &SceneGraph::getLayerKey, "name"_a)
+      .def("clone", &SceneGraph::clone)
       .def("transform",
-           [](DynamicSceneGraph& G, const Eigen::Matrix4d& mat) {
+           [](SceneGraph& G, const Eigen::Matrix4d& mat) {
              Eigen::Isometry3d iso(mat);
              G.transform(iso);
            })
-      .def("__deepcopy__", [](const DynamicSceneGraph& G, py::object) { return G.clone(); })
+      .def("__deepcopy__", [](const SceneGraph& G, py::object) { return G.clone(); })
       .def(
           "to_binary",
-          [](const DynamicSceneGraph& graph, bool include_mesh) {
+          [](const SceneGraph& graph, bool include_mesh) {
             std::vector<uint8_t> buffer;
             io::binary::writeGraph(graph, buffer, include_mesh);
             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
@@ -293,7 +293,7 @@ void init_scene_graph(py::module_& m) {
           "include_mesh"_a = false)
       .def(
           "update_from_binary",
-          [](DynamicSceneGraph& graph, const py::bytes& contents) {
+          [](SceneGraph& graph, const py::bytes& contents) {
             const auto view = static_cast<std::string_view>(contents);
             return io::binary::updateGraph(graph, reinterpret_cast<const uint8_t*>(view.data()), view.size());
           },
@@ -305,18 +305,18 @@ void init_scene_graph(py::module_& m) {
                   })
       .def(
           "get_labelspace",
-          [](const DynamicSceneGraph& graph, LayerId layer, PartitionId partition) {
+          [](const SceneGraph& graph, LayerId layer, PartitionId partition) {
             return Labelspace::fromMetadata(graph, layer, partition);
           },
           "layer"_a,
           "partition"_a = 0)
       .def(
           "get_labelspace",
-          [](const DynamicSceneGraph& graph, const std::string& name) { return Labelspace::fromMetadata(graph, name); },
+          [](const SceneGraph& graph, const std::string& name) { return Labelspace::fromMetadata(graph, name); },
           "name"_a)
       .def(
           "set_labelspace",
-          [](DynamicSceneGraph& graph, const Labelspace& labelspace, LayerId layer, PartitionId partition) {
+          [](SceneGraph& graph, const Labelspace& labelspace, LayerId layer, PartitionId partition) {
             labelspace.save(graph, layer, partition);
           },
           "labelspace"_a,
@@ -324,7 +324,7 @@ void init_scene_graph(py::module_& m) {
           "partition"_a = 0)
       .def(
           "set_labelspace",
-          [](DynamicSceneGraph& graph, const Labelspace& labelspace, const std::string& name) {
+          [](SceneGraph& graph, const Labelspace& labelspace, const std::string& name) {
             labelspace.save(graph, name);
           },
           "labelspace"_a,
