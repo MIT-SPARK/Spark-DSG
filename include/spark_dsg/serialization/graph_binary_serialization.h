@@ -39,17 +39,15 @@
 
 namespace spark_dsg::io::binary {
 
-void writeGraph(const DynamicSceneGraph& graph,
+void writeGraph(const SceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh = false);
 
 void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer);
 
-std::shared_ptr<DynamicSceneGraph> readGraph(const uint8_t* const buffer,
-                                             size_t length);
+std::shared_ptr<SceneGraph> readGraph(const uint8_t* const buffer, size_t length);
 
-inline std::shared_ptr<DynamicSceneGraph> readGraph(
-    const std::vector<uint8_t>& buffer) {
+inline std::shared_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer) {
   return readGraph(buffer.data(), buffer.size());
 }
 
@@ -59,9 +57,9 @@ inline std::shared_ptr<SceneGraphLayer> readLayer(const std::vector<uint8_t>& bu
   return readLayer(buffer.data(), buffer.size());
 }
 
-bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length);
+bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length);
 
-inline bool updateGraph(DynamicSceneGraph& graph, const std::vector<uint8_t>& buffer) {
+inline bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer) {
   return updateGraph(graph, buffer.data(), buffer.size());
 }
 

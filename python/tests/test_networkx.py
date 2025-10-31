@@ -65,7 +65,7 @@ def _check_attribute_validity(G_nx):
 def test_static_graph_conversion(resource_dir):
     """Test that graph conversion is exact."""
     dsg_path = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(dsg_path))
+    G = dsg.SceneGraph.load(str(dsg_path))
     G_nx = dsg_nx.graph_to_networkx(G, include_partitions=False)
 
     assert G_nx is not None
@@ -79,7 +79,7 @@ def test_static_graph_conversion(resource_dir):
 def test_full_graph_conversion(resource_dir):
     """Test that graph conversion is exact."""
     dsg_path = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(dsg_path))
+    G = dsg.SceneGraph.load(str(dsg_path))
 
     # check that we have edges between static and dynamic layers
     agents = G.get_layer(G.get_layer_key(dsg.DsgLayers.AGENTS).layer, "a")
@@ -99,7 +99,7 @@ def test_full_graph_conversion(resource_dir):
 def test_layer_conversion(resource_dir):
     """Test that layer conversion is exact."""
     dsg_path = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(dsg_path))
+    G = dsg.SceneGraph.load(str(dsg_path))
     places = G.get_layer(dsg.DsgLayers.PLACES)
     G_nx = dsg_nx.layer_to_networkx(places)
 

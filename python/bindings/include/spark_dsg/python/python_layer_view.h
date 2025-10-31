@@ -33,8 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/scene_graph.h>
 #include <spark_dsg/node_symbol.h>
+#include <spark_dsg/scene_graph.h>
 
 #include "spark_dsg/python/scene_graph_iterators.h"
 
@@ -61,20 +61,20 @@ class LayerView {
 
 class LayerIter {
  public:
-  LayerIter(const DynamicSceneGraph::Layers& container);
+  LayerIter(const SceneGraph::Layers& container);
   LayerView operator*() const;
   LayerIter& operator++();
   bool operator==(const IterSentinel&) const;
   bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
-  DynamicSceneGraph::Layers::const_iterator curr_iter_;
-  DynamicSceneGraph::Layers::const_iterator end_iter_;
+  SceneGraph::Layers::const_iterator curr_iter_;
+  SceneGraph::Layers::const_iterator end_iter_;
 };
 
 class PartitionIter {
  public:
-  using LayerMap = std::map<LayerId, DynamicSceneGraph::Partitions>;
+  using LayerMap = std::map<LayerId, SceneGraph::Partitions>;
 
   PartitionIter(const LayerMap& container);
   void setSubIter();
@@ -87,13 +87,13 @@ class PartitionIter {
   bool valid_;
   LayerMap::const_iterator curr_iter_;
   LayerMap::const_iterator end_iter_;
-  DynamicSceneGraph::Partitions::const_iterator curr_layer_iter_;
-  DynamicSceneGraph::Partitions::const_iterator end_layer_iter_;
+  SceneGraph::Partitions::const_iterator curr_layer_iter_;
+  SceneGraph::Partitions::const_iterator end_layer_iter_;
 };
 
 class GlobalLayerIter {
  public:
-  GlobalLayerIter(const DynamicSceneGraph& graph, bool include_partitions = true);
+  GlobalLayerIter(const SceneGraph& graph, bool include_partitions = true);
   LayerView operator*() const;
   GlobalLayerIter& operator++();
   bool operator==(const IterSentinel&) const;
@@ -107,7 +107,7 @@ class GlobalLayerIter {
 
 class GlobalNodeIter {
  public:
-  GlobalNodeIter(const DynamicSceneGraph& dsg, bool include_partitions = true);
+  GlobalNodeIter(const SceneGraph& dsg, bool include_partitions = true);
   void setNodeIter();
   const SceneGraphNode* operator*() const;
   GlobalNodeIter& operator++();
@@ -121,7 +121,7 @@ class GlobalNodeIter {
 
 class GlobalEdgeIter {
  public:
-  GlobalEdgeIter(const DynamicSceneGraph& dsg, bool include_partitions = true);
+  GlobalEdgeIter(const SceneGraph& dsg, bool include_partitions = true);
   const SceneGraphEdge* operator*() const;
   void setEdgeIter();
   void findNextValidEdge();
@@ -131,7 +131,7 @@ class GlobalEdgeIter {
  private:
   bool include_partitions_;
   bool started_interlayer_;
-  const DynamicSceneGraph& dsg_;
+  const SceneGraph& dsg_;
   GlobalLayerIter layers_;
   EdgeIter curr_edge_iter_;
   EdgeIter interlayer_edge_iter_;

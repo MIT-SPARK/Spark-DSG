@@ -42,11 +42,11 @@ from spark_dsg._dsg_bindings import *
 from spark_dsg._dsg_bindings import (
     BoundingBoxType,
     DsgLayers,
-    DynamicSceneGraph,
     EdgeAttributes,
     LayerKey,
     LayerView,
     NodeAttributes,
+    SceneGraph,
     SceneGraphLayer,
     compute_ancestor_bounding_box,
 )
@@ -63,7 +63,7 @@ def add_bounding_boxes_to_layer(
     bounding box is axis-aligned unless it is empty (in which case it is invalid).
 
     Args:
-        graph (spark_dsg._dsg_bindings.DynamicSceneGraph): scene graph
+        graph (spark_dsg._dsg_bindings.SceneGraph): scene graph
         layer_id (int): layer to add bindings to
     """
     layer = graph.get_layer(layer_id)
@@ -111,11 +111,11 @@ def _get_layer_id(graph, name):
 
 LayerKey.__hash__ = _hash_layerkey
 
-_add_metadata_interface(DynamicSceneGraph)
+_add_metadata_interface(SceneGraph)
 _add_metadata_interface(NodeAttributes)
 _add_metadata_interface(EdgeAttributes)
 
-DynamicSceneGraph.get_layer_id = _get_layer_id
-DynamicSceneGraph.to_torch = scene_graph_to_torch
+SceneGraph.get_layer_id = _get_layer_id
+SceneGraph.to_torch = scene_graph_to_torch
 SceneGraphLayer.to_torch = scene_graph_layer_to_torch
 LayerView.to_torch = scene_graph_layer_to_torch

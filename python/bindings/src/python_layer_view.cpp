@@ -65,8 +65,7 @@ Eigen::Vector3d LayerView::getPosition(NodeSymbol node_id) const {
   return layer_ref_.getNode(node_id).attributes().position;
 }
 
-LayerIter::LayerIter(const DynamicSceneGraph::Layers& container)
-    : curr_iter_(container.begin()), end_iter_(container.end()) {}
+LayerIter::LayerIter(const SceneGraph::Layers& container) : curr_iter_(container.begin()), end_iter_(container.end()) {}
 
 LayerView LayerIter::operator*() const { return LayerView(*(curr_iter_->second)); }
 
@@ -123,7 +122,7 @@ bool PartitionIter::operator==(const IterSentinel&) const {
   return curr_layer_iter_ == end_layer_iter_ && curr_iter_ == end_iter_;
 }
 
-GlobalLayerIter::GlobalLayerIter(const DynamicSceneGraph& graph, bool include_partitions)
+GlobalLayerIter::GlobalLayerIter(const SceneGraph& graph, bool include_partitions)
     : include_partitions_(include_partitions), layers_(graph.layers()), partitions_(graph.layer_partitions()) {}
 
 LayerView GlobalLayerIter::operator*() const {
@@ -152,7 +151,7 @@ bool GlobalLayerIter::operator==(const IterSentinel&) const {
   return layers_ == IterSentinel() && (!include_partitions_ || partitions_ == IterSentinel());
 }
 
-GlobalNodeIter::GlobalNodeIter(const DynamicSceneGraph& dsg, bool include_partitions)
+GlobalNodeIter::GlobalNodeIter(const SceneGraph& dsg, bool include_partitions)
     : valid_(true), layers_(dsg, include_partitions) {
   setNodeIter();
 }
@@ -195,7 +194,7 @@ bool GlobalNodeIter::operator==(const IterSentinel&) {
   return curr_node_iter_ == IterSentinel() && layers_ == IterSentinel();
 }
 
-GlobalEdgeIter::GlobalEdgeIter(const DynamicSceneGraph& dsg, bool include_partitions)
+GlobalEdgeIter::GlobalEdgeIter(const SceneGraph& dsg, bool include_partitions)
     : include_partitions_(include_partitions),
       started_interlayer_(false),
       dsg_(dsg),

@@ -34,8 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
-#include "spark_dsg/scene_graph.h"
 #include "spark_dsg/labelspace.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 
@@ -97,7 +97,7 @@ TEST(Labelspace, Serialization) {
       {0, "wall"}, {1, "floor"}, {4, "ceiling"}, {20, "lamp"}};
   Labelspace labelspace(label_to_names);
 
-  DynamicSceneGraph graph;
+  SceneGraph graph;
   labelspace.save(graph, 1, 0);
   EXPECT_FALSE(Labelspace::fromMetadata(graph, 1, 1));
   EXPECT_FALSE(Labelspace::fromMetadata(graph, 2, 0));
@@ -110,7 +110,7 @@ TEST(Labelspace, Clone) {
       {0, "wall"}, {1, "floor"}, {4, "ceiling"}, {20, "lamp"}};
   Labelspace labelspace(label_to_names);
 
-  DynamicSceneGraph graph;
+  SceneGraph graph;
   labelspace.save(graph, 1, 0);
   EXPECT_FALSE(Labelspace::fromMetadata(graph, 1, 1));
   EXPECT_FALSE(Labelspace::fromMetadata(graph, 2, 0));
