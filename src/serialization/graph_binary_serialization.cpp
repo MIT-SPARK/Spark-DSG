@@ -34,11 +34,11 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 
-#include "spark_dsg/scene_graph.h"
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
+#include "spark_dsg/scene_graph.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"

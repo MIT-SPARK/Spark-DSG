@@ -89,8 +89,7 @@ Labelspace Labelspace::fromMetadata(const SceneGraph& graph,
   return fromMetadata(graph, layerInfoToKey(layer, partition));
 }
 
-Labelspace Labelspace::fromMetadata(const SceneGraph& graph,
-                                    const std::string& name) {
+Labelspace Labelspace::fromMetadata(const SceneGraph& graph, const std::string& name) {
   const auto& metadata = graph.metadata();
   const auto labelspace_node = metadata.find("labelspaces");
   if (labelspace_node == metadata.end()) {
@@ -125,9 +124,7 @@ std::string Labelspace::getCategory(const SemanticNodeAttributes& attrs,
   return getCategory(attrs.semantic_label).value_or(unknown_name);
 }
 
-void Labelspace::save(SceneGraph& graph,
-                      LayerId layer,
-                      PartitionId partition) const {
+void Labelspace::save(SceneGraph& graph, LayerId layer, PartitionId partition) const {
   save(graph, layerInfoToKey(layer, partition));
 }
 

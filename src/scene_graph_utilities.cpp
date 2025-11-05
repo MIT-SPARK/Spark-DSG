@@ -90,12 +90,10 @@ BoundingBox computeAncestorBoundingBox(const SceneGraph& graph,
                                        size_t depth,
                                        BoundingBox::Type bbox_type) {
   NodeAdaptor adaptor(&graph);
-  getNodeAncestorsAtDepth(graph,
-                          parent,
-                          depth,
-                          [&adaptor](const SceneGraph&, const NodeId ancestor) {
-                            adaptor.add(ancestor);
-                          });
+  getNodeAncestorsAtDepth(
+      graph, parent, depth, [&adaptor](const SceneGraph&, const NodeId ancestor) {
+        adaptor.add(ancestor);
+      });
 
   return bounding_box::extract(adaptor, bbox_type);
 }

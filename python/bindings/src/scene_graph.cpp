@@ -38,10 +38,10 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-#include <spark_dsg/scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/labelspace.h>
 #include <spark_dsg/node_attributes.h>
+#include <spark_dsg/scene_graph.h>
 #include <spark_dsg/scene_graph_utilities.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
@@ -81,9 +81,7 @@ void init_scene_graph(py::module_& m) {
           "layer"_a,
           "partition"_a = 0)
       .def(
-          "has_layer",
-          [](const SceneGraph& graph, const std::string& name) { return graph.hasLayer(name); },
-          "layer"_a)
+          "has_layer", [](const SceneGraph& graph, const std::string& name) { return graph.hasLayer(name); }, "layer"_a)
       .def(
           "get_layer",
           [](const SceneGraph& graph, LayerId layer, PythonPartitionId partition) {
@@ -108,9 +106,7 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def(
           "remove_layer",
-          [](SceneGraph& graph, LayerId layer, PythonPartitionId partition) {
-            graph.removeLayer(layer, partition);
-          },
+          [](SceneGraph& graph, LayerId layer, PythonPartitionId partition) { graph.removeLayer(layer, partition); },
           "layer"_a,
           "partition"_a = 0)
       .def(
@@ -163,9 +159,7 @@ void init_scene_graph(py::module_& m) {
           "enforce_single_parent"_a = false)
       .def("has_node", [](const SceneGraph& graph, NodeSymbol node_id) { return graph.hasNode(node_id); })
       .def("has_edge",
-           [](const SceneGraph& graph, NodeSymbol source, NodeSymbol target) {
-             return graph.hasEdge(source, target);
-           })
+           [](const SceneGraph& graph, NodeSymbol source, NodeSymbol target) { return graph.hasEdge(source, target); })
       .def("has_mesh", &SceneGraph::hasMesh)
       .def(
           "get_node",
@@ -252,23 +246,17 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def_property(
           "unpartitioned_nodes",
-          [](const SceneGraph& graph) {
-            return py::make_iterator(GlobalNodeIter(graph, false), IterSentinel());
-          },
+          [](const SceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph, false), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "unpartitioned_edges",
-          [](const SceneGraph& graph) {
-            return py::make_iterator(GlobalEdgeIter(graph, false), IterSentinel());
-          },
+          [](const SceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph, false), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "interlayer_edges",
-          [](const SceneGraph& graph) {
-            return py::make_iterator(EdgeIter(graph.interlayer_edges()), IterSentinel());
-          },
+          [](const SceneGraph& graph) { return py::make_iterator(EdgeIter(graph.interlayer_edges()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
