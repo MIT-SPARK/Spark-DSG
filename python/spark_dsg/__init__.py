@@ -36,6 +36,7 @@
 
 import json
 import types
+import typing
 import warnings
 
 from spark_dsg._dsg_bindings import *
@@ -119,3 +120,5 @@ SceneGraph.get_layer_id = _get_layer_id
 SceneGraph.to_torch = scene_graph_to_torch
 SceneGraphLayer.to_torch = scene_graph_layer_to_torch
 LayerView.to_torch = scene_graph_layer_to_torch
+
+DynamicSceneGraph: typing.TypeAlias = SceneGraph
