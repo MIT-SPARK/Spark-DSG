@@ -301,6 +301,9 @@ class SceneGraphLayer {
   //! internal edge container
   EdgeContainer edges_;
 
+  Nodes merged_nodes_;
+  EdgeContainer original_edges_;
+
  public:
   /**
    * @brief constant node container
