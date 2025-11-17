@@ -292,6 +292,7 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   bool real_place = true;
   bool need_cleanup = false;
   bool active_frontier = false;
+  bool anti_frontier = false;
   Eigen::Vector3d frontier_scale;
   Eigen::Quaterniond orientation;
   size_t num_frontier_voxels = 0;
