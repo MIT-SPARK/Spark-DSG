@@ -343,11 +343,16 @@ void PlaceNodeAttributes::serialization_info() {
   serialization::field("deformation_connections", deformation_connections);
   serialization::field("real_place", real_place);
   serialization::field("active_frontier", active_frontier);
-  serialization::field("anti_frontier", anti_frontier);
   serialization::field("frontier_scale", frontier_scale);
   serialization::field("orientation", orientation);
   serialization::field("need_cleanup", need_cleanup);
   serialization::field("num_frontier_voxels", num_frontier_voxels);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 3)) {
+    io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("anti_frontier", anti_frontier);
+  }
 }
 
 bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
