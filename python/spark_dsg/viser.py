@@ -10,6 +10,11 @@ import numpy as np
 
 import spark_dsg as dsg
 
+BOUNDING_BOX_EDGE_INDICES = np.array(
+    [[0, 0, 0, 1, 1, 3, 3, 2, 4, 4, 5, 7], [1, 3, 4, 2, 5, 2, 7, 6, 5, 7, 6, 6]],
+    dtype=np.int64,
+).T
+
 
 class ColorMode(enum.Enum):
     LAYER = "layer"
@@ -136,11 +141,14 @@ class LayerConfig:
     edge_scale: float = 0.1
     draw_nodes: bool = True
     draw_edges: bool = True
+    draw_bounding_boxes: bool = False
     draw_labels: bool = False
 
 
 DEFAULT_CONFIG = {
-    dsg.LayerKey(2): LayerConfig(node_scale=0.25, draw_labels=True),
+    dsg.LayerKey(2): LayerConfig(
+        node_scale=0.25, draw_labels=True, draw_bounding_boxes=True
+    ),
     dsg.LayerKey(3): LayerConfig(node_scale=0.1),
     dsg.LayerKey(3, 1): LayerConfig(node_scale=0.1),
     dsg.LayerKey(3, 2): LayerConfig(node_scale=0.1),
@@ -180,23 +188,27 @@ class LayerHandle:
         self._folder = server.gui.add_folder(self.name)
         with self._folder:
             self._draw_nodes = server.gui.add_checkbox(
-                "draw_nodes", initial_value=config.draw_nodes
+                "Nodes", initial_value=config.draw_nodes
+            )
+            self._draw_boxes = server.gui.add_checkbox(
+                "Bounding Boxes", initial_value=config.draw_bounding_boxes
             )
             self._draw_labels = server.gui.add_checkbox(
-                "draw_labels", initial_value=config.draw_labels
+                "Labels", initial_value=config.draw_labels
             )
             self._draw_edges = server.gui.add_checkbox(
-                "draw_edges", initial_value=config.draw_edges
+                "Edges", initial_value=config.draw_edges
             )
             self._node_scale = server.gui.add_number(
-                "node_scale", initial_value=config.node_scale
+                "Node Scale", initial_value=config.node_scale
             )
             self._edge_scale = server.gui.add_number(
-                "edge_scale", initial_value=config.edge_scale
+                "Edge Scale", initial_value=config.edge_scale
             )
 
         self._nodes = None
         self._edges = None
+        self._boxes = None
         self._label_info = []
         self._label_handles = []
         pos = view.pos(layer.key, height)
@@ -221,6 +233,32 @@ class LayerHandle:
                 LabelInfo(name=f"label_{node.id.str()}", text=text, pos=pos[idx])
             )
 
+        num_valid = 0
+        bb_pos = np.zeros((12 * layer.num_nodes(), 2, 3))
+        bb_color = np.zeros((12 * layer.num_nodes(), 2, 3))
+        for idx, node in enumerate(layer.nodes):
+            attrs = node.attributes
+            if not isinstance(attrs, dsg.SemanticNodeAttributes):
+                continue
+
+            if not attrs.bounding_box.is_valid():
+                continue
+
+            start_idx = 12 * num_valid
+            end_idx = start_idx + 12
+            corners = np.array(attrs.bounding_box.corners())
+            bb_pos[start_idx:end_idx] = corners[BOUNDING_BOX_EDGE_INDICES]
+            bb_color[start_idx:end_idx, :] = colors[idx, :]
+            # print(idx, colors[idx])
+            num_valid += 1
+
+        # print(bb_color[12 * np.arange(num_valid), :, :])
+        final_idx = 12 * num_valid
+        self._bounding_boxes = server.add_line_segments(
+            f"{self.name}_bounding_boxes", bb_pos[:final_idx], bb_color[:final_idx]
+        )
+        self._bounding_boxes.line_width = 5.0
+
         edge_indices = view.layer_edges(layer.key)
         if edge_indices is not None:
             self._edges = server.scene.add_line_segments(
@@ -231,6 +269,7 @@ class LayerHandle:
 
         self._update()
         self._draw_nodes.on_update(lambda _: self._update())
+        self._draw_boxes.on_update(lambda _: self._update())
         self._draw_labels.on_update(lambda _: self._update())
         self._draw_edges.on_update(lambda _: self._update())
         self._node_scale.on_update(lambda _: self._update())
@@ -247,6 +286,7 @@ class LayerHandle:
     def _update(self):
         draw_edges = self._draw_nodes.value and self._draw_edges.value
         draw_labels = self._draw_nodes.value and self._draw_labels.value
+        draw_boxes = self._draw_nodes.value and self._draw_boxes.value
         labels_drawn = len(self._label_handles) > 0
 
         self._nodes.visible = self._draw_nodes.value
@@ -254,6 +294,9 @@ class LayerHandle:
         if self._edges:
             self._edges.visible = draw_edges
             self._edges.line_width = self._edge_scale.value
+
+        if self._bounding_boxes:
+            self._bounding_boxes.visible = draw_boxes
 
         if not draw_labels and labels_drawn:
             for x in self._label_handles:
@@ -274,6 +317,8 @@ class LayerHandle:
             self._nodes.remove()
         if self._edges:
             self._edges.remove()
+        if self._bounding_boxes:
+            self._bounding_boxes.remove()
 
         for x in self._label_handles:
             x.remove()
@@ -281,6 +326,8 @@ class LayerHandle:
         self._label_handles = []
 
         self._draw_nodes.remove()
+        self._draw_boxes.remove()
+        self._draw_labels.remove()
         self._draw_edges.remove()
         self._node_scale.remove()
         self._edge_scale.remove()
@@ -296,7 +343,7 @@ class GraphHandle:
         self._edge_handles = {}
         self._height_scale = height_scale
         self._edge_scale = server.gui.add_number(
-            "interlayer_edge_scale", initial_value=0.1
+            "Interlayer Edge Scale", initial_value=0.1
         )
 
         color_modes = {}
