@@ -15,7 +15,6 @@ dependencies = [
     "seaborn",
     "shapely",
     "zmq",
-    "viser",
 ]
 authors = [
   {name ="Nathan Hughes", email = "na26933@mit.edu"},
@@ -30,7 +29,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-viz = []  # no longer exists, will be dropped
+viz = ["trimesh", "viser"]
 
 [project.urls]
 Repository = "https://github.com/MIT-SPARK/Spark-DSG"

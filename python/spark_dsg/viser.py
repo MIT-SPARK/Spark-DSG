@@ -3,11 +3,10 @@
 import enum
 import functools
 import itertools
+import warnings
 from dataclasses import dataclass
 
 import numpy as np
-import trimesh
-import viser
 
 import spark_dsg as dsg
 
@@ -376,28 +375,42 @@ class MeshHandle:
 
     def __init__(self, server, mesh):
         """Send a mesh to the visualizer."""
-        vertices = mesh.get_vertices()
-        mesh = trimesh.Trimesh(
-            vertices=vertices[:3, :].T,
-            faces=mesh.get_faces().T,
-            visual=trimesh.visual.ColorVisuals(vertex_colors=vertices[3:, :].T),
-        )
+        try:
+            import trimesh
 
-        self._mesh_handle = server.scene.add_mesh_trimesh(name="/mesh", mesh=mesh)
+            vertices = mesh.get_vertices()
+            mesh = trimesh.Trimesh(
+                vertices=vertices[:3, :].T,
+                faces=mesh.get_faces().T,
+                visual=trimesh.visual.ColorVisuals(vertex_colors=vertices[3:, :].T),
+            )
+
+            self._mesh_handle = server.scene.add_mesh_trimesh(name="/mesh", mesh=mesh)
+        except ImportError:
+            warnings.warn("Missing [viz] deps (trimesh)! Reinstall with spark_dsg[viz]")
+            self._mesh_handle = None
 
     def remove(self):
         """Remove mesh elements from the visualizer."""
-        self._mesh_handle.remove()
+        if self._mesh_handle is not None:
+            self._mesh_handle.remove()
 
 
 class ViserRenderer:
     """Rendering interface to Viser client."""
 
     def __init__(self, ip="localhost", port=8080, clear_at_exit=True):
-        self._server = viser.ViserServer(host=ip, port=port)
-        self._clear_at_exit = clear_at_exit
         self._mesh_handle = None
         self._graph_handle = None
+        self._clear_at_exit = clear_at_exit
+
+        try:
+            import viser
+
+            self._server = viser.ViserServer(host=ip, port=port)
+        except ImportError:
+            warnings.warn("Missing [viz] deps (viser)! Reinstall with spark_dsg[viz]")
+            self._server = None
 
     def __enter__(self):
         """Enter a context manager."""
@@ -406,12 +419,16 @@ class ViserRenderer:
     def __exit__(self, typ, exc, tb):
         """Clean up visualizer on exit if desired."""
         print(f"typ='{typ}' exc='{exc}' tb='{tb}'")
-        if self._clear_at_exit:
+        if self._clear_at_exit and self._server:
             self.clear()
 
         return True
 
     def draw(self, G, height_scale=5.0):
+        if self._server is None:
+            warnings.warn("Visualization disabled because of missing deps!")
+            return
+
         self._clear_graph()
         self._graph_handle = GraphHandle(self._server, G, height_scale=height_scale)
 
@@ -419,11 +436,19 @@ class ViserRenderer:
             self.draw_mesh(G.mesh)
 
     def draw_mesh(self, mesh):
+        if self._server is None:
+            warnings.warn("Visualization disabled because of missing deps!")
+            return
+
         self._clear_mesh()
         self._mesh_handle = MeshHandle(self._server, mesh)
 
     def clear(self):
         """Remove all graph and mesh elements from the visualizer."""
+        if self._server is None:
+            warnings.warn("Visualization disabled because of missing deps!")
+            return
+
         self._clear_mesh()
         self._clear_graph()
 
