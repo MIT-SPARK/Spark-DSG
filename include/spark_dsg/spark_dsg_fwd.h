@@ -12,6 +12,6 @@ struct SceneGraphEdge;
 struct EdgeContainer;
 
 class SceneGraphLayer;
-class DynamicSceneGraph;
+class SceneGraph;
 
 }  // namespace spark_dsg

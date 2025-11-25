@@ -46,7 +46,7 @@ class ZmqSender {
 
   ~ZmqSender();
 
-  void send(const DynamicSceneGraph& graph, bool include_mesh = false);
+  void send(const SceneGraph& graph, bool include_mesh = false);
 
  private:
   struct Detail;
@@ -62,7 +62,7 @@ class ZmqReceiver {
 
   bool recv(size_t timeout_ms, bool recv_all = false);
 
-  std::shared_ptr<DynamicSceneGraph> graph() const;
+  std::shared_ptr<SceneGraph> graph() const;
 
  private:
   struct Detail;
@@ -76,7 +76,7 @@ class ZmqGraph {
   ~ZmqGraph();
 
   bool hasChange() const;
-  std::shared_ptr<DynamicSceneGraph> graph() const;
+  std::shared_ptr<SceneGraph> graph() const;
 
  private:
   struct Detail;

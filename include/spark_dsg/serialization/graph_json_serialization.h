@@ -44,13 +44,13 @@ namespace spark_dsg::io::json {
  * @param include_mesh Optionally encode mesh (defaults to false)
  * @returns JSON string representing graph
  */
-std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh = false);
+std::string writeGraph(const SceneGraph& graph, bool include_mesh = false);
 
 /**
  * @brief parse graph from JSON string
  * @param contents JSON string to parse
  * @returns Resulting parsed scene graph
  */
-std::shared_ptr<DynamicSceneGraph> readGraph(const std::string& contents);
+std::shared_ptr<SceneGraph> readGraph(const std::string& contents);
 
 }  // namespace spark_dsg::io::json

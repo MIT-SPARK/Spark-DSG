@@ -20,7 +20,7 @@ def cli():
 def send(filepath, url, rate):
     """Load a scene graph from file and send at a fix rate."""
     sender = DsgSender(url)
-    G = dsg.DynamicSceneGraph.load(filepath)
+    G = dsg.SceneGraph.load(filepath)
 
     while True:
         sender.send(G)

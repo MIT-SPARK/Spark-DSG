@@ -36,7 +36,7 @@
 Module handling conversion between scene graphs and pytorch geometric.
 
 Includes specific conversion functions for both homogeneous and heterogeneous
-graphs. Note that `DynamicSceneGraph.to_torch()` calls into the relevant
+graphs. Note that `SceneGraph.to_torch()` calls into the relevant
 homogeneous or heterogeneous conversion function.
 """
 
@@ -46,15 +46,15 @@ from typing import Callable, Dict, Optional, Union
 import numpy as np
 
 from spark_dsg._dsg_bindings import (
-    DynamicSceneGraph,
     LayerView,
+    SceneGraph,
     SceneGraphEdge,
     SceneGraphLayer,
     SceneGraphNode,
 )
 
-NodeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphNode], np.ndarray]
-EdgeConversionFunc = Callable[[DynamicSceneGraph, SceneGraphEdge], np.ndarray]
+NodeConversionFunc = Callable[[SceneGraph, SceneGraphNode], np.ndarray]
+EdgeConversionFunc = Callable[[SceneGraph, SceneGraphEdge], np.ndarray]
 
 
 DEFAULT_LAYER_MAP = {2: "objects", 3: "places", 4: "rooms", 5: "buildings"}
@@ -179,7 +179,7 @@ def scene_graph_layer_to_torch(
 
 
 def scene_graph_to_torch_homogeneous(
-    G: DynamicSceneGraph,
+    G: SceneGraph,
     node_converter: NodeConversionFunc = _centroid_bbx_embedding,
     edge_converter: Optional[EdgeConversionFunc] = None,
     is_undirected: bool = True,
@@ -272,7 +272,7 @@ def scene_graph_to_torch_homogeneous(
 
 
 def scene_graph_to_torch_heterogeneous(
-    G: DynamicSceneGraph,
+    G: SceneGraph,
     node_converter: NodeConversionFunc = _centroid_bbx_embedding,
     edge_converter: Optional[EdgeConversionFunc] = None,
     layer_name_map: Optional[Dict[int, str]] = None,
@@ -391,7 +391,7 @@ def scene_graph_to_torch_heterogeneous(
 
 
 def scene_graph_to_torch(
-    G: DynamicSceneGraph, *args, use_heterogeneous: bool = True, **kwargs
+    G: SceneGraph, *args, use_heterogeneous: bool = True, **kwargs
 ):
     """
     Convert a scene graph to a pytorch geometric graph.

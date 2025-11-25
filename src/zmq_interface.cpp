@@ -38,7 +38,7 @@
 #include <mutex>
 #include <thread>
 
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/scene_graph.h"
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 #include "spark_dsg_version.h"
 
@@ -81,7 +81,7 @@ struct ZmqSender::Detail {
 
   ~Detail() = default;
 
-  void send(const DynamicSceneGraph& graph, bool include_mesh) {
+  void send(const SceneGraph& graph, bool include_mesh) {
     std::vector<uint8_t> buffer;
     io::binary::writeGraph(graph, buffer, include_mesh);
 
@@ -156,7 +156,7 @@ struct ZmqReceiver::Detail {
   }
 
   std::unique_ptr<zmq::socket_t> socket;
-  DynamicSceneGraph::Ptr graph;
+  SceneGraph::Ptr graph;
 };
 
 struct ZmqGraph::Detail {
@@ -180,7 +180,7 @@ struct ZmqGraph::Detail {
     return has_change_;
   }
 
-  DynamicSceneGraph::Ptr graph() const {
+  SceneGraph::Ptr graph() const {
     std::lock_guard<std::mutex> lock(mutex_);
     has_change_ = false;
     if (!graph_) {
@@ -210,7 +210,7 @@ struct ZmqGraph::Detail {
   ZmqReceiver receiver_;
 
   mutable std::mutex mutex_;
-  DynamicSceneGraph::Ptr graph_;
+  SceneGraph::Ptr graph_;
   std::unique_ptr<std::thread> recv_thread_;
 };
 #else
@@ -220,19 +220,19 @@ static const std::string error_message =
 
 struct ZmqSender::Detail {
   Detail(const std::string&, size_t) { throw std::runtime_error(error_message); }
-  void send(const DynamicSceneGraph&, bool) { throw std::runtime_error(error_message); }
+  void send(const SceneGraph&, bool) { throw std::runtime_error(error_message); }
 };
 
 struct ZmqReceiver::Detail {
   Detail(const std::string&, size_t, bool) { throw std::runtime_error(error_message); }
   bool recv(size_t) { throw std::runtime_error(error_message); }
-  DynamicSceneGraph::Ptr graph;
+  SceneGraph::Ptr graph;
 };
 
 struct ZmqGraph::Detail {
   Detail(const std::string&, size_t, bool) { throw std::runtime_error(error_message); }
   bool hasChange() { throw std::runtime_error(error_message); }
-  DynamicSceneGraph::Ptr graph() { throw std::runtime_error(error_message); }
+  SceneGraph::Ptr graph() { throw std::runtime_error(error_message); }
 };
 #endif
 
@@ -241,7 +241,7 @@ ZmqSender::ZmqSender(const std::string& url, size_t num_threads)
 
 ZmqSender::~ZmqSender() {}
 
-void ZmqSender::send(const DynamicSceneGraph& graph, bool include_mesh) {
+void ZmqSender::send(const SceneGraph& graph, bool include_mesh) {
   internals_->send(graph, include_mesh);
 }
 
@@ -262,7 +262,7 @@ bool ZmqReceiver::recv(size_t timeout_ms, bool recv_all) {
   return true;
 }
 
-DynamicSceneGraph::Ptr ZmqReceiver::graph() const { return internals_->graph; }
+SceneGraph::Ptr ZmqReceiver::graph() const { return internals_->graph; }
 
 ZmqGraph::ZmqGraph(const std::string& url, size_t num_threads, size_t poll_time_ms)
     : internals_(new ZmqGraph::Detail(url, num_threads, poll_time_ms)) {}
@@ -271,6 +271,6 @@ ZmqGraph::~ZmqGraph() {}
 
 bool ZmqGraph::hasChange() const { return internals_->hasChange(); }
 
-DynamicSceneGraph::Ptr ZmqGraph::graph() const { return internals_->graph(); }
+SceneGraph::Ptr ZmqGraph::graph() const { return internals_->graph(); }
 
 }  // namespace spark_dsg
