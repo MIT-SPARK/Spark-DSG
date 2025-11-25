@@ -38,7 +38,7 @@
 #include <fstream>
 #include <map>
 
-#include "spark_dsg/dynamic_scene_graph.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 
@@ -46,7 +46,7 @@ SceneGraphLogger::SceneGraphLogger() {}
 
 SceneGraphLogger::~SceneGraphLogger() {}
 
-void SceneGraphLogger::logGraph(const DynamicSceneGraph& graph) {
+void SceneGraphLogger::logGraph(const SceneGraph& graph) {
   // What I want to log: for each layer, the number of active nodes, number of
   // merged node, number of deleted nodes
   for (const auto& [layer_id, layer] : graph.layers_) {

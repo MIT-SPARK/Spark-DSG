@@ -40,13 +40,13 @@
 namespace spark_dsg {
 
 void getNodeAncestorsAtDepth(
-    const DynamicSceneGraph& graph,
+    const SceneGraph& graph,
     NodeId parent,
     size_t depth,
-    const std::function<void(const DynamicSceneGraph&, const NodeId)>& callback);
+    const std::function<void(const SceneGraph&, const NodeId)>& callback);
 
 BoundingBox computeAncestorBoundingBox(
-    const DynamicSceneGraph& graph,
+    const SceneGraph& graph,
     NodeId parent,
     size_t depth = 1,
     BoundingBox::Type bbox_type = BoundingBox::Type::AABB);

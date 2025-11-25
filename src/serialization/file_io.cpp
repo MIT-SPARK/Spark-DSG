@@ -78,7 +78,7 @@ FileType verifyFileExtension(std::filesystem::path& filepath) {
   return type;
 }
 
-void saveDsgBinary(const DynamicSceneGraph& graph,
+void saveDsgBinary(const SceneGraph& graph,
                    const std::filesystem::path& filepath,
                    bool include_mesh) {
   // Get the header data.
@@ -95,8 +95,7 @@ void saveDsgBinary(const DynamicSceneGraph& graph,
   out.write(reinterpret_cast<const char*>(graph_buffer.data()), graph_buffer.size());
 }
 
-std::shared_ptr<DynamicSceneGraph> loadDsgBinary(
-    const std::filesystem::path& filepath) {
+std::shared_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath) {
   // Read the file into a buffer.
   std::ifstream infile(filepath, std::ios::in | std::ios::binary);
   std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(infile)),
@@ -115,14 +114,14 @@ std::shared_ptr<DynamicSceneGraph> loadDsgBinary(
   return binary::readGraph(buffer.data() + offset, buffer.size() - offset);
 }
 
-void saveDsgJson(const DynamicSceneGraph& graph,
+void saveDsgJson(const SceneGraph& graph,
                  const std::filesystem::path& filepath,
                  bool include_mesh) {
   std::ofstream outfile(filepath);
   outfile << json::writeGraph(graph, include_mesh);
 }
 
-std::shared_ptr<DynamicSceneGraph> loadDsgJson(const std::filesystem::path& filepath) {
+std::shared_ptr<SceneGraph> loadDsgJson(const std::filesystem::path& filepath) {
   std::ifstream infile(filepath);
   std::stringstream ss;
   ss << infile.rdbuf();

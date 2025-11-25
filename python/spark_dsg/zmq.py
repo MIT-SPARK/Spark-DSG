@@ -6,7 +6,7 @@ from typing import Optional
 
 import zmq
 
-from spark_dsg._dsg_bindings import DynamicSceneGraph
+from spark_dsg._dsg_bindings import SceneGraph
 
 
 def _get_context(context: Optional[zmq.Context], num_threads: Optional[int]):
@@ -31,7 +31,7 @@ class DsgSender:
         self._socket = self._context.socket(zmq.PUB)
         self._socket.bind(url)
 
-    def send(self, graph: DynamicSceneGraph, include_mesh=False):
+    def send(self, graph: SceneGraph, include_mesh=False):
         """Publish the scene graph over ZMQ."""
         self._socket.send(graph.to_binary(include_mesh=include_mesh))
 
@@ -71,14 +71,14 @@ class DsgReceiver:
 
         buf = self._socket.recv()
         if self._graph is None:
-            self._graph = DynamicSceneGraph.from_binary(buf)
+            self._graph = SceneGraph.from_binary(buf)
         else:
             self._graph.update_from_binary(buf)
 
         return True
 
     @property
-    def graph(self) -> DynamicSceneGraph:
+    def graph(self) -> SceneGraph:
         """Return the latest scene graph."""
         if self._graph is None:
             raise ValueError("no graph received yet")
@@ -138,7 +138,7 @@ class ZmqGraph:
             return self._has_change
 
     @property
-    def graph(self) -> DynamicSceneGraph:
+    def graph(self) -> SceneGraph:
         """Return the latest scene graph."""
         with self._mutex:
             self._has_change = False

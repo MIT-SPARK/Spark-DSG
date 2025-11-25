@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/scene_graph.h>
 #include <spark_dsg/zmq_interface.h>
 
 namespace spark_dsg {
@@ -43,7 +43,7 @@ TEST(ZmqInterfaceTests, BasicSendReceiveCorrect) {
   ZmqReceiver receiver("tcp://127.0.0.1:8001", 1);
   EXPECT_TRUE(receiver.graph() == nullptr);
 
-  DynamicSceneGraph graph;
+  SceneGraph graph;
 
   for (size_t i = 0; i < 15; ++i) {
     sender.send(graph);

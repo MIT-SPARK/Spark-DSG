@@ -85,7 +85,7 @@ class SceneGraphLayer {
   //! callback function for filtering nodes
   using NodeChecker = std::function<bool(const SceneGraphNode&)>;
 
-  friend class DynamicSceneGraph;
+  friend class SceneGraph;
   friend class SceneGraphLogger;
 
   /**
