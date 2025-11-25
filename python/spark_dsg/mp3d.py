@@ -38,7 +38,6 @@ import heapq
 from typing import Any, Dict, List
 
 import numpy as np
-import seaborn as sns
 import shapely.geometry
 import shapely.ops
 
@@ -46,6 +45,7 @@ from spark_dsg._dsg_bindings import (
     DsgLayers,
     NodeSymbol,
     RoomNodeAttributes,
+    rainbow_color,
 )
 
 
@@ -428,7 +428,8 @@ def repartition_rooms(
     new_rooms = get_rooms_from_mp3d_info(mp3d_info, angle_deg)
 
     if colors is None:
-        colors = sns.color_palette("husl", len(new_rooms))
+        colors = [rainbow_color(i).to_float_array() for i in range(len(new_rooms))]
+        colors = np.array(colors)
 
     buildings = [node.id.value for node in G.get_layer(DsgLayers.BUILDINGS).nodes]
 
