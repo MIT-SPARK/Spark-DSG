@@ -160,6 +160,7 @@ void init_attributes(py::module_& m) {
       .def_readwrite("deformation_connections", &PlaceNodeAttributes::deformation_connections)
       .def_readwrite("real_place", &PlaceNodeAttributes::real_place)
       .def_readwrite("active_frontier", &PlaceNodeAttributes::active_frontier)
+      .def_readwrite("anti_frontier", &PlaceNodeAttributes::anti_frontier)
       .def_readwrite("frontier_scale", &PlaceNodeAttributes::frontier_scale)
       .def_property(
           "orientation",
