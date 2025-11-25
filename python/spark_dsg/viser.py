@@ -289,7 +289,7 @@ class LayerHandle:
 
         self._parent_callback = parent_callback
         self._server = server
-        self._folder = server.add_folder(self.name)
+        self._folder = server.add_folder(self.name, expand_by_default=False)
 
         with self._folder:
             self.config.init(self._server)
@@ -312,6 +312,7 @@ class LayerHandle:
         self._labels = _layer_to_labels(G, layer, pos)
         self._nodes = server.scene.add_point_cloud(f"{name}_nodes", pos, colors=colors)
         self._boxes = server.add_line_segments(f"{name}_boxes", bb_info[0], bb_info[1])
+
         if edges is not None:
             self._edges = server.scene.add_line_segments(
                 f"{name}_edges", pos[edges], (0.0, 0.0, 0.0)
@@ -474,7 +475,9 @@ class MeshHandle:
                 visual=trimesh.visual.ColorVisuals(vertex_colors=vertices[3:, :].T),
             )
 
-            self._mesh_handle = server.scene.add_mesh_trimesh(name="/mesh", mesh=mesh)
+            self._mesh_handle = server.scene.add_mesh_trimesh(
+                name="/mesh", mesh=mesh, cast_shadow=False, receive_shadow=False
+            )
         except ImportError:
             warnings.warn("Missing [viz] deps (trimesh)! Reinstall with spark_dsg[viz]")
             self._mesh_handle = None
@@ -537,7 +540,6 @@ class ViserRenderer:
 
         self._clear_graph()
         self._graph_handle = GraphHandle(self._server, G, height_scale=height_scale)
-
         if G.has_mesh():
             self.draw_mesh(G.mesh)
 
