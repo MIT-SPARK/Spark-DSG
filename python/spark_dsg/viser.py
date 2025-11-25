@@ -137,18 +137,74 @@ class FlatGraphView:
 
 @dataclass
 class LayerConfig:
+    """General configuration for a layer in viser."""
+
     node_scale: float = 0.2
     edge_scale: float = 0.1
+    box_width: float = 2.0
     draw_nodes: bool = True
     draw_edges: bool = True
-    draw_bounding_boxes: bool = False
+    draw_bboxes: bool = False
     draw_labels: bool = False
+
+    def init(self, server):
+        """Set up config with viser server."""
+        self._draw_nodes = server.add_checkbox("Nodes", self.draw_nodes)
+        self._draw_boxes = server.add_checkbox("Bounding Boxes", self.draw_bboxes)
+        self._draw_labels = server.add_checkbox("Labels", self.draw_labels)
+        self._draw_edges = server.add_checkbox("Edges", self.draw_edges)
+        self._node_scale = server.add_number("Node Scale", self.node_scale)
+        self._edge_scale = server.add_number("Edge Scale", self.edge_scale)
+        self._box_width = server.add_number("Bounding Box Width", self.box_width)
+
+    def set_callback(self, callback):
+        self._draw_nodes.on_update(lambda _: callback())
+        self._draw_boxes.on_update(lambda _: callback())
+        self._draw_labels.on_update(lambda _: callback())
+        self._draw_edges.on_update(lambda _: callback())
+        self._node_scale.on_update(lambda _: callback())
+        self._edge_scale.on_update(lambda _: callback())
+        self._box_width.on_update(lambda _: callback())
+
+    def remove(self):
+        self._draw_nodes.remove()
+        self._draw_boxes.remove()
+        self._draw_labels.remove()
+        self._draw_edges.remove()
+        self._node_scale.remove()
+        self._edge_scale.remove()
+
+    @property
+    def should_draw_nodes(self):
+        return self._draw_nodes.value
+
+    @property
+    def should_draw_edges(self):
+        return self._draw_nodes.value and self._draw_edges.value
+
+    @property
+    def should_draw_labels(self):
+        return self._draw_nodes.value and self._draw_labels.value
+
+    @property
+    def should_draw_boxes(self):
+        return self._draw_nodes.value and self._draw_boxes.value
+
+    @property
+    def current_node_scale(self):
+        return self._node_scale.value
+
+    @property
+    def current_edge_scale(self):
+        return self._edge_scale.value
+
+    @property
+    def current_box_width(self):
+        return self._box_width.value
 
 
 DEFAULT_CONFIG = {
-    dsg.LayerKey(2): LayerConfig(
-        node_scale=0.25, draw_labels=True, draw_bounding_boxes=True
-    ),
+    dsg.LayerKey(2): LayerConfig(node_scale=0.25, draw_labels=True, draw_bboxes=True),
     dsg.LayerKey(3): LayerConfig(node_scale=0.1),
     dsg.LayerKey(3, 1): LayerConfig(node_scale=0.1),
     dsg.LayerKey(3, 2): LayerConfig(node_scale=0.1),
@@ -173,6 +229,53 @@ class LabelInfo:
     pos: np.ndarray
 
 
+def _layer_to_labels(G, layer, pos):
+    label_info = []
+    labelspace = G.get_labelspace(layer.key.layer, layer.key.partition)
+    for idx, node in enumerate(layer.nodes):
+        text = node.id.str(literal=False)
+        if labelspace:
+            text += ": " + labelspace.get_node_category(node)
+
+        name = f"label_{node.id.str()}"
+        label_info.append(LabelInfo(name=name, text=text, pos=pos[idx]))
+
+    return label_info
+
+
+def _layer_to_colors(G, layer, colormap):
+    colors = np.zeros((layer.num_nodes(), 3))
+    for idx, node in enumerate(layer.nodes):
+        colors[idx] = colormap(G, node).to_float_array()
+
+    return colors
+
+
+def _layer_to_boxes(layer, pos, colors):
+    num_valid = 0
+    bb_pos = np.zeros((12 * layer.num_nodes(), 2, 3))
+    bb_color = np.zeros((12 * layer.num_nodes(), 2, 3))
+    for idx, node in enumerate(layer.nodes):
+        attrs = node.attributes
+        if not isinstance(attrs, dsg.SemanticNodeAttributes):
+            continue
+
+        if not attrs.bounding_box.is_valid():
+            continue
+
+        start_idx = 12 * num_valid
+        end_idx = start_idx + 12
+        corners = np.array(attrs.bounding_box.corners())
+        bb_pos[start_idx:end_idx] = corners[BOUNDING_BOX_EDGE_INDICES]
+        bb_color[start_idx:end_idx, :] = colors[idx, :]
+        # print(idx, colors[idx])
+        num_valid += 1
+
+    # print(bb_color[12 * np.arange(num_valid), :, :])
+    final_idx = 12 * num_valid
+    return bb_pos[:final_idx], bb_color[:final_idx]
+
+
 class LayerHandle:
     """Viser handles to layer elements and gui settings."""
 
@@ -182,155 +285,94 @@ class LayerHandle:
         """Add options for layer to viser."""
         self.key = layer.key
         self.name = _layer_name(layer.key)
+        self.config = config
+
         self._parent_callback = parent_callback
         self._server = server
+        self._folder = server.add_folder(self.name)
 
-        self._folder = server.gui.add_folder(self.name)
         with self._folder:
-            self._draw_nodes = server.gui.add_checkbox(
-                "Nodes", initial_value=config.draw_nodes
-            )
-            self._draw_boxes = server.gui.add_checkbox(
-                "Bounding Boxes", initial_value=config.draw_bounding_boxes
-            )
-            self._draw_labels = server.gui.add_checkbox(
-                "Labels", initial_value=config.draw_labels
-            )
-            self._draw_edges = server.gui.add_checkbox(
-                "Edges", initial_value=config.draw_edges
-            )
-            self._node_scale = server.gui.add_number(
-                "Node Scale", initial_value=config.node_scale
-            )
-            self._edge_scale = server.gui.add_number(
-                "Edge Scale", initial_value=config.edge_scale
-            )
+            self.config.init(self._server)
 
         self._nodes = None
         self._edges = None
         self._boxes = None
-        self._label_info = []
+        self._labels = []
         self._label_handles = []
+
         pos = view.pos(layer.key, height)
+        edges = view.layer_edges(layer.key)
         if pos is None:
             return
 
-        colors = np.zeros(pos.shape)
-        for idx, node in enumerate(layer.nodes):
-            colors[idx] = colormap(G, node).to_float_array()
+        name = self.name
+        colors = _layer_to_colors(G, layer, colormap)
+        bb_info = _layer_to_boxes(layer, pos, colors)
 
-        self._nodes = server.scene.add_point_cloud(
-            f"{self.name}_nodes", pos, colors=colors
-        )
-
-        labelspace = G.get_labelspace(self.key.layer, self.key.partition)
-        for idx, node in enumerate(layer.nodes):
-            text = node.id.str(literal=False)
-            if labelspace:
-                text += ": " + labelspace.get_node_category(node)
-
-            self._label_info.append(
-                LabelInfo(name=f"label_{node.id.str()}", text=text, pos=pos[idx])
-            )
-
-        num_valid = 0
-        bb_pos = np.zeros((12 * layer.num_nodes(), 2, 3))
-        bb_color = np.zeros((12 * layer.num_nodes(), 2, 3))
-        for idx, node in enumerate(layer.nodes):
-            attrs = node.attributes
-            if not isinstance(attrs, dsg.SemanticNodeAttributes):
-                continue
-
-            if not attrs.bounding_box.is_valid():
-                continue
-
-            start_idx = 12 * num_valid
-            end_idx = start_idx + 12
-            corners = np.array(attrs.bounding_box.corners())
-            bb_pos[start_idx:end_idx] = corners[BOUNDING_BOX_EDGE_INDICES]
-            bb_color[start_idx:end_idx, :] = colors[idx, :]
-            # print(idx, colors[idx])
-            num_valid += 1
-
-        # print(bb_color[12 * np.arange(num_valid), :, :])
-        final_idx = 12 * num_valid
-        self._bounding_boxes = server.add_line_segments(
-            f"{self.name}_bounding_boxes", bb_pos[:final_idx], bb_color[:final_idx]
-        )
-        self._bounding_boxes.line_width = 5.0
-
-        edge_indices = view.layer_edges(layer.key)
-        if edge_indices is not None:
+        self._labels = _layer_to_labels(G, layer, pos)
+        self._nodes = server.scene.add_point_cloud(f"{name}_nodes", pos, colors=colors)
+        self._boxes = server.add_line_segments(f"{name}_boxes", bb_info[0], bb_info[1])
+        if edges is not None:
             self._edges = server.scene.add_line_segments(
-                f"{self.name}_edges",
-                pos[edge_indices],
-                (0.0, 0.0, 0.0),
+                f"{name}_edges", pos[edges], (0.0, 0.0, 0.0)
             )
 
         self._update()
-        self._draw_nodes.on_update(lambda _: self._update())
-        self._draw_boxes.on_update(lambda _: self._update())
-        self._draw_labels.on_update(lambda _: self._update())
-        self._draw_edges.on_update(lambda _: self._update())
-        self._node_scale.on_update(lambda _: self._update())
-        self._edge_scale.on_update(lambda _: self._update())
+        self.config.set_callback(self._update)
 
     @property
     def draw_nodes(self):
-        return self._draw_nodes.value
+        return self.config.should_draw_nodes
 
     @property
     def color_mode(self):
         return self._colormode
 
+    def _draw_labels(self):
+        self._label_handles = [
+            self._server.add_label(x.name, x.text, position=x.pos) for x in self._labels
+        ]
+
+    def _remove_labels(self):
+        for x in self._label_handles:
+            x.remove()
+
+        self._label_handles = []
+
     def _update(self):
-        draw_edges = self._draw_nodes.value and self._draw_edges.value
-        draw_labels = self._draw_nodes.value and self._draw_labels.value
-        draw_boxes = self._draw_nodes.value and self._draw_boxes.value
-        labels_drawn = len(self._label_handles) > 0
+        if self._nodes:
+            self._nodes.visible = self.config.should_draw_nodes
+            self._nodes.point_size = self.config.current_node_scale
 
-        self._nodes.visible = self._draw_nodes.value
-        self._nodes.point_size = self._node_scale.value
         if self._edges:
-            self._edges.visible = draw_edges
-            self._edges.line_width = self._edge_scale.value
+            self._edges.visible = self.config.should_draw_edges
+            self._edges.line_width = self.config.current_edge_scale
 
-        if self._bounding_boxes:
-            self._bounding_boxes.visible = draw_boxes
+        if self._boxes:
+            self._boxes.visible = self.config.should_draw_boxes
+            self._boxes.line_width = self.config.current_box_width
 
-        if not draw_labels and labels_drawn:
-            for x in self._label_handles:
-                x.remove()
+        labels_drawn = len(self._label_handles) > 0
+        if not self.config.should_draw_labels and labels_drawn:
+            self._remove_labels()
 
-            self._label_handles = []
-
-        if draw_labels and not labels_drawn:
-            self._label_handles = [
-                self._server.scene.add_label(x.name, x.text, position=x.pos)
-                for x in self._label_info
-            ]
+        if self.config.should_draw_labels and not labels_drawn:
+            self._draw_labels()
 
         self._parent_callback()
 
     def remove(self):
         if self._nodes:
             self._nodes.remove()
+
         if self._edges:
             self._edges.remove()
-        if self._bounding_boxes:
-            self._bounding_boxes.remove()
 
-        for x in self._label_handles:
-            x.remove()
+        if self._boxes:
+            self._boxes.remove()
 
-        self._label_handles = []
-
-        self._draw_nodes.remove()
-        self._draw_boxes.remove()
-        self._draw_labels.remove()
-        self._draw_edges.remove()
-        self._node_scale.remove()
-        self._edge_scale.remove()
+        self.config.remove()
+        self._remove_labels()
         self._folder.remove()
 
 
@@ -444,9 +486,19 @@ class MeshHandle:
 
 
 class ViserRenderer:
-    """Rendering interface to Viser client."""
+    """Scene graph renderer using [viser](."""
 
-    def __init__(self, ip="localhost", port=8080, clear_at_exit=True):
+    def __init__(
+        self, ip: str = "localhost", port: int = 8080, clear_at_exit: bool = True
+    ):
+        """
+        Construct a handle to a viser server used for drawing a scene graph.
+
+        Args:
+            ip: IP for the server to bind to
+            port: Port for the server to bind to
+            clear_at_exit: Remove scene graph elements from viser client when server exits
+        """
         self._mesh_handle = None
         self._graph_handle = None
         self._clear_at_exit = clear_at_exit
@@ -460,18 +512,25 @@ class ViserRenderer:
             self._server = None
 
     def __enter__(self):
-        """Enter a context manager."""
+        """Enable context manager for clearing viser client on exit from renderer scope."""
         return self
 
     def __exit__(self, typ, exc, tb):
-        """Clean up visualizer on exit if desired."""
+        """Handle clearing client on exit from renderer scope."""
         print(f"typ='{typ}' exc='{exc}' tb='{tb}'")
         if self._clear_at_exit and self._server:
             self.clear()
 
         return True
 
-    def draw(self, G, height_scale=5.0):
+    def draw(self, G: dsg.DynamicSceneGraph, height_scale: float = 2.0):
+        """
+        Render a scene graph to viser (requires [viz] extra).
+
+        Args:
+            G: Graph to draw
+            height_scale: z-separation between layers
+        """
         if self._server is None:
             warnings.warn("Visualization disabled because of missing deps!")
             return
@@ -483,6 +542,12 @@ class ViserRenderer:
             self.draw_mesh(G.mesh)
 
     def draw_mesh(self, mesh):
+        """
+        Render a mesh to viser (requires [viz] extra).
+
+        Args:
+            mesh: Mesh to draw
+        """
         if self._server is None:
             warnings.warn("Visualization disabled because of missing deps!")
             return
