@@ -141,30 +141,35 @@ class LayerConfig:
 
     node_scale: float = 0.2
     edge_scale: float = 0.1
-    box_width: float = 2.0
+    box_width: float = 5.0
     draw_nodes: bool = True
-    draw_edges: bool = True
     draw_bboxes: bool = False
     draw_labels: bool = False
+    draw_edges: bool = True
+    draw_interlayer: bool = True
 
     def init(self, server):
         """Set up config with viser server."""
+        self._node_scale = server.add_number("Node Scale", self.node_scale)
+        self._edge_scale = server.add_number("Edge Scale", self.edge_scale)
+        self._box_width = server.add_number("Bounding Box Width", self.box_width)
         self._draw_nodes = server.add_checkbox("Nodes", self.draw_nodes)
         self._draw_boxes = server.add_checkbox("Bounding Boxes", self.draw_bboxes)
         self._draw_labels = server.add_checkbox("Labels", self.draw_labels)
         self._draw_edges = server.add_checkbox("Edges", self.draw_edges)
-        self._node_scale = server.add_number("Node Scale", self.node_scale)
-        self._edge_scale = server.add_number("Edge Scale", self.edge_scale)
-        self._box_width = server.add_number("Bounding Box Width", self.box_width)
+        self._draw_interlayer = server.add_checkbox(
+            "Interlayer Edges", self.draw_interlayer
+        )
 
     def set_callback(self, callback):
+        self._node_scale.on_update(lambda _: callback())
+        self._edge_scale.on_update(lambda _: callback())
+        self._box_width.on_update(lambda _: callback())
         self._draw_nodes.on_update(lambda _: callback())
         self._draw_boxes.on_update(lambda _: callback())
         self._draw_labels.on_update(lambda _: callback())
         self._draw_edges.on_update(lambda _: callback())
-        self._node_scale.on_update(lambda _: callback())
-        self._edge_scale.on_update(lambda _: callback())
-        self._box_width.on_update(lambda _: callback())
+        self._draw_interlayer.on_update(lambda _: callback())
 
     def remove(self):
         self._draw_nodes.remove()
@@ -173,6 +178,7 @@ class LayerConfig:
         self._draw_edges.remove()
         self._node_scale.remove()
         self._edge_scale.remove()
+        self._draw_interlayer.remove()
 
     @property
     def should_draw_nodes(self):
@@ -181,6 +187,10 @@ class LayerConfig:
     @property
     def should_draw_edges(self):
         return self._draw_nodes.value and self._draw_edges.value
+
+    @property
+    def should_draw_interlayer(self):
+        return self._draw_nodes.value and self._draw_interlayer.value
 
     @property
     def should_draw_labels(self):
@@ -210,6 +220,7 @@ DEFAULT_CONFIG = {
     dsg.LayerKey(3, 2): LayerConfig(node_scale=0.1),
     dsg.LayerKey(4): LayerConfig(node_scale=0.4, draw_labels=True),
     dsg.LayerKey(5): LayerConfig(draw_nodes=False),
+    dsg.LayerKey(2, 97): LayerConfig(node_scale=0.1, draw_interlayer=False),
 }
 
 DEFAULT_COLORMODES = {
@@ -252,9 +263,10 @@ def _layer_to_colors(G, layer, colormap):
 
 
 def _layer_to_boxes(layer, pos, colors):
+    N_EDGES = 13
     num_valid = 0
-    bb_pos = np.zeros((12 * layer.num_nodes(), 2, 3))
-    bb_color = np.zeros((12 * layer.num_nodes(), 2, 3))
+    bb_pos = np.zeros((N_EDGES * layer.num_nodes(), 2, 3))
+    bb_color = np.zeros((N_EDGES * layer.num_nodes(), 2, 3))
     for idx, node in enumerate(layer.nodes):
         attrs = node.attributes
         if not isinstance(attrs, dsg.SemanticNodeAttributes):
@@ -263,16 +275,16 @@ def _layer_to_boxes(layer, pos, colors):
         if not attrs.bounding_box.is_valid():
             continue
 
-        start_idx = 12 * num_valid
-        end_idx = start_idx + 12
+        start_idx = N_EDGES * num_valid
+        end_idx = start_idx + N_EDGES
         corners = np.array(attrs.bounding_box.corners())
-        bb_pos[start_idx:end_idx] = corners[BOUNDING_BOX_EDGE_INDICES]
+        bb_pos[start_idx : end_idx - 1] = corners[BOUNDING_BOX_EDGE_INDICES]
+        bb_pos[end_idx - 1, 0, :] = pos[idx]
+        bb_pos[end_idx - 1, 1, :] = attrs.bounding_box.world_P_center
         bb_color[start_idx:end_idx, :] = colors[idx, :]
-        # print(idx, colors[idx])
         num_valid += 1
 
-    # print(bb_color[12 * np.arange(num_valid), :, :])
-    final_idx = 12 * num_valid
+    final_idx = N_EDGES * num_valid
     return bb_pos[:final_idx], bb_color[:final_idx]
 
 
@@ -386,7 +398,7 @@ class GraphHandle:
         self._edge_handles = {}
         self._height_scale = height_scale
         self._edge_scale = server.gui.add_number(
-            "Interlayer Edge Scale", initial_value=0.1
+            "Interlayer Edge Scale", initial_value=0.3
         )
 
         color_modes = {}
@@ -454,8 +466,8 @@ class GraphHandle:
         for source_key, targets in self._edge_handles.items():
             for target_key, handle in targets.items():
                 handle.visible = (
-                    self._handles[source_key].draw_nodes
-                    and self._handles[target_key].draw_nodes
+                    self._handles[source_key].config.should_draw_interlayer
+                    and self._handles[target_key].config.should_draw_interlayer
                 )
                 handle.line_width = self._edge_scale.value
 
