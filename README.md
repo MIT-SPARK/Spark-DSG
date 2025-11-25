@@ -2,7 +2,7 @@
 
 ## Spark-DSG
 
-This is the core c++ library that contains the dynamic scene graph data-structure used by Hydra. It also has python bindings.
+This is the core c++ library that contains the 3D Scene Graph data-structure used by Hydra. It also has python bindings.
 
 ### Change Notes
 

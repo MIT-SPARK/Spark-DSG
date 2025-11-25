@@ -40,14 +40,14 @@ import spark_dsg as dsg
 
 def test_empty_graph():
     """Test that an new graph is empty."""
-    G = dsg.DynamicSceneGraph()
+    G = dsg.SceneGraph()
     assert G.num_nodes() == 0
     assert G.num_edges() == 0
 
 
 def test_implicit_prefix():
     """Test that we got rid of the need for explicit layer prefix construction."""
-    G = dsg.DynamicSceneGraph()
+    G = dsg.SceneGraph()
     G.add_layer(2, "a", dsg.DsgLayers.AGENTS)
     assert G.has_layer(2, "a")
 
@@ -55,7 +55,7 @@ def test_implicit_prefix():
 def test_layer_ids(resource_dir):
     """Test that layer ids show up correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
+    G = dsg.SceneGraph.load(str(mp3d_dsg))
 
     layer_ids = [layer.id for layer in G.layers]
     assert layer_ids == [2, 3, 4, 5]
@@ -64,9 +64,9 @@ def test_layer_ids(resource_dir):
 def test_add_remove(resource_dir):
     """Test that adding and removing nodes works as expected."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
+    G = dsg.SceneGraph.load(str(mp3d_dsg))
 
-    G_new = dsg.DynamicSceneGraph()
+    G_new = dsg.SceneGraph()
 
     # add nodes
     for node in G.nodes:
@@ -150,7 +150,7 @@ def _check_semantic_attributes(attrs, node_id=None, bbox_valid=False):
 def test_agent_attributes(resource_dir):
     """Test that agent attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
+    G = dsg.SceneGraph.load(str(mp3d_dsg))
 
     layer_id = G.get_layer_key(dsg.DsgLayers.AGENTS).layer
     agents = G.get_layer(layer_id, "a")
@@ -169,7 +169,7 @@ def test_agent_attributes(resource_dir):
 def test_object_attributes(resource_dir):
     """Test that object attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
+    G = dsg.SceneGraph.load(str(mp3d_dsg))
 
     objects = G.get_layer(dsg.DsgLayers.OBJECTS)
     for node in objects.nodes:
@@ -188,7 +188,7 @@ def test_object_attributes(resource_dir):
 def test_place_attributes(resource_dir):
     """Test that place attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
+    G = dsg.SceneGraph.load(str(mp3d_dsg))
 
     places = G.get_layer(dsg.DsgLayers.PLACES)
     for node in places.nodes:
@@ -214,7 +214,7 @@ def test_place_attributes(resource_dir):
 def test_room_attributes(resource_dir):
     """Test that room attributes work correctly."""
     mp3d_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(mp3d_dsg))
+    G = dsg.SceneGraph.load(str(mp3d_dsg))
 
     rooms = G.get_layer(dsg.DsgLayers.ROOMS)
     for node in rooms.nodes:
@@ -238,7 +238,7 @@ def test_room_attributes(resource_dir):
 def test_building_attributes(resource_dir):
     """Test that building attributes work correctly."""
     uh2_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
+    G = dsg.SceneGraph.load(str(uh2_dsg))
 
     buildings = G.get_layer(dsg.DsgLayers.BUILDINGS)
     for node in buildings.nodes:
@@ -271,7 +271,7 @@ def _check_layer_edges(G, layer_id):
 def test_intralayer_edges(resource_dir):
     """Test that edges are present in layers that we expect."""
     uh2_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
+    G = dsg.SceneGraph.load(str(uh2_dsg))
 
     _check_layer_edges(G, dsg.DsgLayers.PLACES)
     _check_layer_edges(G, dsg.DsgLayers.ROOMS)
@@ -280,7 +280,7 @@ def test_intralayer_edges(resource_dir):
 def test_node_counts(resource_dir):
     """Test that nodes are present in layers that we expect."""
     uh2_dsg = resource_dir / "apartment_dsg.json"
-    G = dsg.DynamicSceneGraph.load(str(uh2_dsg))
+    G = dsg.SceneGraph.load(str(uh2_dsg))
 
     node_type_counts = {}
     for node in G.nodes:
@@ -299,14 +299,14 @@ def test_node_counts(resource_dir):
 
 def test_graph_metadata(tmp_path):
     """Test that graph metadata works as expected."""
-    G = dsg.DynamicSceneGraph()
+    G = dsg.SceneGraph()
     G.metadata.add({"foo": 5})
     G.metadata.add({"bar": [1, 2, 3, 4, 5]})
     G.metadata.add({"something": {"a": 13, "b": 42.0, "c": "world"}})
 
     graph_path = tmp_path / "graph.json"
     G.save(graph_path)
-    G_new = dsg.DynamicSceneGraph.load(graph_path)
+    G_new = dsg.SceneGraph.load(graph_path)
     assert G_new.metadata.get() == {
         "foo": 5,
         "bar": [1, 2, 3, 4, 5],
@@ -323,7 +323,7 @@ def test_graph_metadata(tmp_path):
 
 def test_attribute_metadata(tmp_path):
     """Test that attribute metadata works as expected."""
-    G = dsg.DynamicSceneGraph()
+    G = dsg.SceneGraph()
 
     attrs = dsg.ObjectNodeAttributes()
     attrs.metadata.add({"test": {"a": 5, "c": "hello"}})
@@ -332,7 +332,7 @@ def test_attribute_metadata(tmp_path):
 
     graph_path = tmp_path / "graph.json"
     G.save(graph_path)
-    G_new = dsg.DynamicSceneGraph.load(graph_path)
+    G_new = dsg.SceneGraph.load(graph_path)
     new_attrs = G_new.get_node(dsg.NodeSymbol("O", 1)).attributes
     assert new_attrs.metadata.get() == {"test": {"a": 6, "b": 42.0, "c": "hello"}}
 
@@ -344,7 +344,7 @@ def test_labelspace():
     assert labelspace.get_label("wall") == 0
     assert labelspace.get_label("lamp") is None
 
-    G = dsg.DynamicSceneGraph()
+    G = dsg.SceneGraph()
     G.set_labelspace(labelspace, 0, 1)
     assert not G.get_labelspace(0, 0)
     assert G.get_labelspace(0, 1).labels_to_names == labelspace.labels_to_names

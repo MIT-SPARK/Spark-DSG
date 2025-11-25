@@ -33,9 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/dynamic_scene_graph.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/node_attributes.h>
+#include <spark_dsg/scene_graph.h>
 
 #include <iostream>
 
@@ -100,7 +100,7 @@ inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
   return isSubset(lhs.edges(), rhs.edges());
 }
 
-inline bool operator==(const DynamicSceneGraph& lhs, const DynamicSceneGraph& rhs) {
+inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
   for (const auto& [layer_id, layer] : lhs.layers()) {
     if (!rhs.hasLayer(layer_id)) {
       std::cout << "Missing: " << layer_id << std::endl;

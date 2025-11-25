@@ -347,11 +347,11 @@ def expand_rooms(G_old, verbose=False):
     obstacle. Also attempts to add more room-to-room edges.
 
     Args:
-        G_old (DynamicSceneGraph): Input graph
+        G_old (SceneGraph): Input graph
         verbose (bool): Whether or not to print resulting statistics
 
     Returns:
-        DynamicSceneGraph: A copy of G_old wih more place nodes assigned to rooms
+        SceneGraph: A copy of G_old wih more place nodes assigned to rooms
     """
     G = G_old.clone()
     places = G.get_layer(DsgLayers.PLACES)
@@ -408,7 +408,7 @@ def repartition_rooms(
     Create a copy of the DSG with ground-truth room nodes.
 
     Args:
-        G_prev (DynamicSceneGraph): Graph to repartition
+        G_prev (SceneGraph): Graph to repartition
         mp3d_info (Dict[str, List[Dict[Str, Any]]]): Parsed house file information
         angle_deg (float): Degrees to rotate the parsed rooms
         min_iou_threshold (float): Minimum intersection over union for valid rooms
@@ -416,7 +416,7 @@ def repartition_rooms(
         verbose (bool): Print information about repartition process
 
     Returns:
-        DynamicSceneGraph: A copy of G_prev with a new room layer taken from mp3d_info
+        SceneGraph: A copy of G_prev with a new room layer taken from mp3d_info
     """
     G = G_prev.clone()
 
@@ -522,7 +522,7 @@ def add_gt_room_label(
     Add ground-truth room label to DSG based on maximum area of intersection.
 
     Args:
-        G (DynamicSceneGraph): Graph to add labels to
+        G (SceneGraph): Graph to add labels to
         mp3d_info (Dict[str, List[Dict[Str, Any]]]): Parsed house file information
         min_iou_threshold (float): Minimum intersection over union for rooms to overlap
         use_hydra_polygon (bool): Use places node polygon instead of rectangle

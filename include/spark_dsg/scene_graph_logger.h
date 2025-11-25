@@ -60,7 +60,7 @@ class SceneGraphLogger {
   SceneGraphLogger();
   ~SceneGraphLogger();
 
-  void logGraph(const DynamicSceneGraph& graph);
+  void logGraph(const SceneGraph& graph);
   void save(const std::string& folder);
 
  private:
