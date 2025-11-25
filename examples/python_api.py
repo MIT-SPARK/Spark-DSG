@@ -60,7 +60,7 @@ path_to_dsg = pathlib.Path(path_to_dsg).expanduser().absolute()
 
 
 # %%
-G = dsg.DynamicSceneGraph.load(str(path_to_dsg))
+G = dsg.SceneGraph.load(str(path_to_dsg))
 
 
 # %%

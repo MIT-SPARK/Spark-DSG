@@ -41,22 +41,22 @@
 
 namespace spark_dsg {
 
-void PrintTo(const DynamicSceneGraph& graph, std::ostream* os) {
+void PrintTo(const SceneGraph& graph, std::ostream* os) {
   *os << io::json::writeGraph(graph, true);
 }
 
 struct SerializationMethod {
   using Ptr = std::shared_ptr<SerializationMethod>;
   virtual ~SerializationMethod() = default;
-  virtual DynamicSceneGraph::Ptr compute(const DynamicSceneGraph& graph,
-                                         bool include_mesh = true) const = 0;
+  virtual SceneGraph::Ptr compute(const SceneGraph& graph,
+                                  bool include_mesh = true) const = 0;
   virtual std::string name() const = 0;
 };
 
 struct JsonRoundTrip : SerializationMethod {
   virtual ~JsonRoundTrip() = default;
-  DynamicSceneGraph::Ptr compute(const DynamicSceneGraph& graph,
-                                 bool include_mesh = true) const override {
+  SceneGraph::Ptr compute(const SceneGraph& graph,
+                          bool include_mesh = true) const override {
     const auto output = io::json::writeGraph(graph, include_mesh);
     return io::json::readGraph(output);
   }
@@ -66,8 +66,8 @@ struct JsonRoundTrip : SerializationMethod {
 
 struct BinaryRoundTrip : SerializationMethod {
   virtual ~BinaryRoundTrip() = default;
-  DynamicSceneGraph::Ptr compute(const DynamicSceneGraph& graph,
-                                 bool include_mesh = true) const override {
+  SceneGraph::Ptr compute(const SceneGraph& graph,
+                          bool include_mesh = true) const override {
     std::vector<uint8_t> buffer;
     io::binary::writeGraph(graph, buffer, include_mesh);
     return io::binary::readGraph(buffer);
@@ -98,7 +98,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(GraphSerializationFixture, DsgBasic) {
   const auto round_trip_serializer = GetParam();
 
-  DynamicSceneGraph expected({1, 2, 3});
+  SceneGraph expected({1, 2, 3});
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -114,7 +114,7 @@ TEST_P(GraphSerializationFixture, DsgBasic) {
 TEST_P(GraphSerializationFixture, DsgWithNaNs) {
   const auto round_trip_serializer = GetParam();
 
-  DynamicSceneGraph expected({1, 2, 3});
+  SceneGraph expected({1, 2, 3});
   expected.emplaceNode(1, 0, std::make_unique<NodeAttributes>());
   expected.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
   expected.emplaceNode(3, 2, std::make_unique<NodeAttributes>());
@@ -137,7 +137,7 @@ TEST_P(GraphSerializationFixture, DsgWithPartitions) {
   const auto round_trip_serializer = GetParam();
 
   using namespace std::chrono_literals;
-  DynamicSceneGraph expected;
+  SceneGraph expected;
   expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
 
   expected.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
@@ -154,7 +154,7 @@ TEST_P(GraphSerializationFixture, DsgWithMesh) {
   const auto round_trip_serializer = GetParam();
 
   using namespace std::chrono_literals;
-  DynamicSceneGraph expected;
+  SceneGraph expected;
   expected.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
 
   expected.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
@@ -183,7 +183,7 @@ TEST_P(GraphSerializationFixture, DsgWithMesh) {
 
 TEST(GraphSerialization, UpdateDsgFromBinaryWithCorrection) {
   using namespace std::chrono_literals;
-  DynamicSceneGraph original;
+  SceneGraph original;
   original.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
   original.emplaceNode(3, 1, std::make_unique<NodeAttributes>());
   original.emplaceNode(4, 3, std::make_unique<NodeAttributes>());
@@ -193,7 +193,7 @@ TEST(GraphSerialization, UpdateDsgFromBinaryWithCorrection) {
   original.emplaceNode(2, "a2"_id, std::make_unique<NodeAttributes>(), 'a');
   original.emplaceNode(2, "a3"_id, std::make_unique<NodeAttributes>(), 'a');
 
-  DynamicSceneGraph updated;
+  SceneGraph updated;
   updated.emplaceNode(3, 0, std::make_unique<NodeAttributes>());
   updated.emplaceNode(3, 1, std::make_unique<NodeAttributes>());
   updated.emplaceNode(3, 2, std::make_unique<NodeAttributes>());

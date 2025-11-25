@@ -87,7 +87,7 @@ def test_torch_layer(resource_dir, has_torch):
     if not has_torch:
         return pytest.skip(reason="requires pytorch and pytorch geometric")
 
-    G = dsg.DynamicSceneGraph.load(str(resource_dir / "apartment_dsg.json"))
+    G = dsg.SceneGraph.load(str(resource_dir / "apartment_dsg.json"))
     places = G.get_layer(dsg.DsgLayers.PLACES)
     assert places.num_nodes() > 0
     assert places.num_edges() > 0
@@ -105,7 +105,7 @@ def test_torch_layer_edge_features(resource_dir, has_torch):
     if not has_torch:
         return pytest.skip(reason="requires pytorch and pytorch geometric")
 
-    G = dsg.DynamicSceneGraph.load(str(resource_dir / "apartment_dsg.json"))
+    G = dsg.SceneGraph.load(str(resource_dir / "apartment_dsg.json"))
     places = G.get_layer(dsg.DsgLayers.PLACES)
     assert places.num_nodes() > 0
     assert places.num_edges() > 0
@@ -123,7 +123,7 @@ def test_torch_homogeneous(resource_dir, has_torch):
     if not has_torch:
         return pytest.skip(reason="requires pytorch and pytorch geometric")
 
-    G = dsg.DynamicSceneGraph.load(str(resource_dir / "apartment_dsg.json"))
+    G = dsg.SceneGraph.load(str(resource_dir / "apartment_dsg.json"))
     assert G.num_nodes() > 0
     assert G.num_edges() > 0
 
@@ -141,7 +141,7 @@ def test_torch_homogeneous_edge_features(resource_dir, has_torch):
     if not has_torch:
         return pytest.skip(reason="requires pytorch and pytorch geometric")
 
-    G = dsg.DynamicSceneGraph.load(str(resource_dir / "apartment_dsg.json"))
+    G = dsg.SceneGraph.load(str(resource_dir / "apartment_dsg.json"))
     assert G.num_nodes() > 0
     assert G.num_edges() > 0
 
@@ -163,7 +163,7 @@ def test_torch_hetereogeneous(resource_dir, has_torch):
     if not has_torch:
         return pytest.skip(reason="requires pytorch and pytorch geometric")
 
-    G = dsg.DynamicSceneGraph.load(str(resource_dir / "apartment_dsg.json"))
+    G = dsg.SceneGraph.load(str(resource_dir / "apartment_dsg.json"))
     assert G.num_nodes() > 0
     assert G.num_edges() > 0
 
@@ -193,7 +193,7 @@ def test_torch_hetereogeneous_edge_features(resource_dir, has_torch):
     if not has_torch:
         return pytest.skip(reason="requires pytorch and pytorch geometric")
 
-    G = dsg.DynamicSceneGraph.load(str(resource_dir / "apartment_dsg.json"))
+    G = dsg.SceneGraph.load(str(resource_dir / "apartment_dsg.json"))
     assert G.num_nodes() > 0
     assert G.num_edges() > 0
 

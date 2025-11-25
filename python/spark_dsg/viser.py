@@ -538,7 +538,7 @@ class ViserRenderer:
 
         return True
 
-    def draw(self, G: dsg.DynamicSceneGraph, height_scale: float = 2.0):
+    def draw(self, G: dsg.SceneGraph, height_scale: float = 2.0):
         """
         Render a scene graph to viser (requires [viz] extra).
 

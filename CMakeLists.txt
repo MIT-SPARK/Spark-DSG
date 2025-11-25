@@ -88,7 +88,6 @@ add_library(
   src/bounding_box.cpp
   src/color.cpp
   src/colormaps.cpp
-  src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
   src/labelspace.cpp
@@ -98,6 +97,7 @@ add_library(
   src/node_attributes.cpp
   src/node_symbol.cpp
   src/printing.cpp
+  src/scene_graph.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_logger.cpp
   src/scene_graph_node.cpp
