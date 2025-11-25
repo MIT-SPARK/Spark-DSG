@@ -12,7 +12,6 @@ requires-python = ">=3.8"
 dependencies = [
     "click",
     "numpy",
-    "seaborn",
     "shapely",
     "zmq",
 ]
