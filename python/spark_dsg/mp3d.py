@@ -38,7 +38,6 @@ import heapq
 from typing import Any, Dict, List
 
 import numpy as np
-import seaborn as sns
 import shapely.geometry
 import shapely.ops
 
@@ -236,10 +235,9 @@ class Mp3dRoom:
         """Get a NodeSymbol using the original region index from the mp3d file."""
         return NodeSymbol("R", self._index)
 
-    def get_attrs(self, color):
+    def get_attrs(self):
         """Get suitable room node attributes for inclusion in a scene graph."""
         attrs = RoomNodeAttributes()
-        attrs.color = color
         attrs.name = str(NodeSymbol("R", self._index))
         attrs.position = self._pos
         attrs.last_update_time_ns = 0
@@ -397,12 +395,11 @@ def expand_rooms(G_old, verbose=False):
 def repartition_rooms(
     G_prev,
     mp3d_info,
-    angle_deg=-90.0,
-    min_iou_threshold=0.0,
-    colors=None,
-    verbose=False,
-    eps=0.0,
-    z_eps=0.0,
+    angle_deg: float = -90.0,
+    min_iou_threshold: float = 0.0,
+    verbose: bool = False,
+    eps: float = 0.0,
+    z_eps: float = 0.0,
 ):
     """
     Create a copy of the DSG with ground-truth room nodes.
@@ -412,7 +409,6 @@ def repartition_rooms(
         mp3d_info (Dict[str, List[Dict[Str, Any]]]): Parsed house file information
         angle_deg (float): Degrees to rotate the parsed rooms
         min_iou_threshold (float): Minimum intersection over union for valid rooms
-        colors (Optional[List[Iterable[float]]]): Optional colormap to assign to rooms
         verbose (bool): Print information about repartition process
 
     Returns:
@@ -426,17 +422,12 @@ def repartition_rooms(
         G.remove_node(i)
 
     new_rooms = get_rooms_from_mp3d_info(mp3d_info, angle_deg)
-
-    if colors is None:
-        colors = sns.color_palette("husl", len(new_rooms))
-
     buildings = [node.id.value for node in G.get_layer(DsgLayers.BUILDINGS).nodes]
 
     # add new room nodes and connect them to building node
     room_id_to_gt_index = dict()  # map room node id in dsg to index in new_rooms
     for index, room in enumerate(new_rooms):
-        color = np.array([int(255 * c) for c in colors[index % len(colors)]][:3])
-        attrs = room.get_attrs(color)
+        attrs = room.get_attrs()
 
         room_id = room.get_id()
         G.add_node(DsgLayers.ROOMS, room_id.value, attrs)
@@ -558,6 +549,7 @@ def add_gt_room_label(
             # check whether hydra room position is inside the ground-truth room
             if not mp3d_room.pos_on_same_floor(room.attributes.position):
                 continue
+
             intersection_area = xy_polygon.intersection(hydra_polygon).area
             union_area = xy_polygon.union(hydra_polygon).area
             intersection_over_union.append((idx, intersection_area / union_area))

@@ -35,7 +35,7 @@
 """Conversion from spark_dsg to networkx."""
 
 import importlib
-import logging
+import warnings
 
 
 def _get_networkx():
@@ -43,7 +43,7 @@ def _get_networkx():
     try:
         networkx = importlib.import_module("networkx")
     except ImportError:
-        logging.warning("networkx not found. conversion disabled")
+        warnings.warn("Coud not find networkx! Conversion disabled!")
 
     return networkx
 
