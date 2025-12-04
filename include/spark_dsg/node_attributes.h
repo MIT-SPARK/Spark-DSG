@@ -445,6 +445,8 @@ enum class TraversabilityState : uint8_t {
 
 using TraversabilityStates = std::vector<TraversabilityState>;
 
+enum class BoundaryType : uint8_t { BLOCK = 0, REGION = 1 };
+
 /**
  * @brief Compact information to store a grid aligned traversability boundary.
  */
@@ -452,6 +454,8 @@ struct BoundaryInfo {
   //! Coordinates of the boundary w.r.t. the attribute center.
   Eigen::Vector2d min;
   Eigen::Vector2d max;
+
+  BoundaryType type;
 
   //! Traversability states for each side of the boundary. Each side can be empty
   //! (=UNKNOWN), a single state, or a sequence of states indicating uniform

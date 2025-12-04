@@ -596,6 +596,12 @@ void TraversabilityNodeAttributes::serialization_info() {
   serialization::field("distance", distance);
   serialization::field("min", boundary.min);
   serialization::field("max", boundary.max);
+
+  // Workaround for type serialization.
+  uint8_t type = static_cast<uint8_t>(boundary.type);
+  serialization::field("type", type);
+  boundary.type = static_cast<BoundaryType>(type);
+
   // Workaround for state serialization.
   for (size_t i = 0; i < 4; ++i) {
     std::vector<uint8_t> s;
