@@ -133,6 +133,11 @@ struct NodeAttributes {
     return registrationImpl();
   }
 
+  /**
+   * @brief Estimate the memory usage of the node attributes in bytes.
+   */
+  virtual size_t memoryUsage() const;
+
  protected:
   //! actually output information to the std::ostream
   virtual std::ostream& fill_ostream(std::ostream& out) const;

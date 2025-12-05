@@ -284,6 +284,11 @@ class SceneGraphLayer {
   //! ID of the layer
   const LayerKey id;
 
+  /**
+   * @brief Get memory usage of the layer in bytes.
+   */
+  size_t memoryUsage() const;
+
  protected:
   void reset();
 

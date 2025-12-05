@@ -735,6 +735,40 @@ bool SceneGraph::hasMesh() const { return mesh_ != nullptr; }
 
 Mesh::Ptr SceneGraph::mesh() const { return mesh_; }
 
+size_t SceneGraph::memoryUsage() const {
+  size_t total_memory = sizeof(*this);
+
+  // Estimate memory usage of state tracking.
+  total_memory += layer_keys_.size() * sizeof(LayerKey);
+  for (const auto& [name, key] : layer_names_) {
+    total_memory += name.size() + sizeof(LayerKey);
+  }
+  total_memory += node_lookup_.size() * (sizeof(NodeId) + sizeof(LayerKey));
+  for (const auto& [layer_id, partitions] : layer_partitions_) {
+    total_memory +=
+        sizeof(layer_id) + sizeof(partitions) +
+        partitions.size() * (sizeof(PartitionId) + sizeof(SceneGraphLayer::Ptr));
+  }
+
+  // Estimate memory usage of layers.
+  for (const auto& [layer_id, layer] : layers_) {
+    total_memory += layer->memoryUsage() + sizeof(layer_id);
+  }
+
+  // Estimate memory usage of interlayer edges.
+  total_memory += interlayer_edges_.memoryUsage();
+
+  // Estimate memory usage of the mesh.
+  if (mesh_) {
+    total_memory += mesh_->memoryUsage();
+  }
+
+  // Add metadata memory usage.
+  total_memory += metadata.memoryUsage() - sizeof(metadata);
+
+  return total_memory;
+}
+
 Layer& SceneGraph::layerFromKey(const LayerKey& key) {
   layer_keys_.insert(key);
   if (!key.partition) {
