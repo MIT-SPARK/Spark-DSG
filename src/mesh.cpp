@@ -277,14 +277,19 @@ Mesh& Mesh::operator+=(const Mesh& other) {
   return *this;
 }
 
-size_t Mesh::totalBytes() const {
-  const auto point_bytes = 3 * sizeof(float) * points.size();
-  const auto color_bytes = sizeof(Color) * colors.size();
-  const auto stamp_bytes =
-      sizeof(Timestamp) * (stamps.size() + first_seen_stamps.size());
-  const auto label_bytes = sizeof(Label) * labels.size();
-  const auto face_bytes = 3 * sizeof(uint64_t) * faces.size();
-  return point_bytes + color_bytes + stamp_bytes + label_bytes + face_bytes;
+/**
+ * @brief Get memory usage of the mesh in bytes.
+ */
+size_t Mesh::memoryUsage() const {
+  // Static parts.
+  size_t total_bytes = sizeof(Mesh);
+  total_bytes += sizeof(Pos) * points.size();
+  total_bytes += sizeof(Color) * colors.size();
+  total_bytes += sizeof(Timestamp) * stamps.size();
+  total_bytes += sizeof(Timestamp) * first_seen_stamps.size();
+  total_bytes += sizeof(Label) * labels.size();
+  total_bytes += sizeof(Face) * faces.size();
+  return total_bytes;
 }
 
 bool operator==(const Mesh& lhs, const Mesh& rhs) {
