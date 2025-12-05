@@ -43,8 +43,6 @@
 #include <spark_dsg/scene_graph_node.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
-#include "spark_dsg/logging.h"
-
 // TODO(lschmid): These tests are a quick sanity check and might break on different
 // platforms or with some future changes.
 
@@ -180,12 +178,12 @@ TEST(MemoryUsage, SceneGraph) {
 
   // Add a layer.
   graph.addLayer(1, 0, "test_layer");
-  expected_size += 458;  // Layer size.
+  expected_size += 458;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add a partitioned layer.
   graph.addLayer(2, 1, "test_layer_partition");
-  expected_size += 120;  // Layer size.
+  expected_size += 120;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add some nodes.
@@ -256,13 +254,11 @@ TEST(MemoryUsage, SerializationComparison) {
   for (const auto& size : {10, 100, 1000}) {
     // Serialize to a byte stream and compare with estimated memory usage.
     SCOPED_TRACE("Scene graph size: " + std::to_string(size));
-    std::cout << "Scene graph size: " << size << std::endl;
     auto graph = populateSceneGraph(size);
     std::vector<uint8_t> buffer;
     io::binary::writeGraph(*graph, buffer, true);
     const double ratio =
         static_cast<double>(buffer.size()) / static_cast<double>(graph->memoryUsage());
-
     EXPECT_LT(ratio, 2.0);
     EXPECT_GT(ratio, 1.9);
   }
