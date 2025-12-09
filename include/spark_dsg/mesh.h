@@ -59,11 +59,14 @@ class Mesh {
   using Timestamps = std::vector<Timestamp>;
   using Labels = std::vector<Label>;
   using Faces = std::vector<Face>;
+  using FusionCount = uint32_t;
+  using FusionCounts = std::vector<FusionCount>;
 
   Mesh(bool has_colors = true,
        bool has_timestamps = true,
        bool has_labels = true,
-       bool has_first_seen_stamps = false);
+       bool has_first_seen_stamps = false,
+       bool has_fusion_counts = false);
 
   Mesh(const Mesh& other) = default;
   Mesh(Mesh&& other) = default;
@@ -168,6 +171,21 @@ class Mesh {
    * @brief Get current label
    */
   void setLabel(size_t index, Label label);
+
+  /**
+   * @brief Get fusion count for vertex
+   */
+  FusionCount fusionCount(size_t index) const;
+
+  /**
+   * @brief Set fusion count for vertex
+   */
+  void setFusionCount(size_t index, FusionCount count);
+
+  /**
+   * @brief Increment fusion count for vertex
+   */
+  void incrementFusionCount(size_t index, FusionCount amount = 1);
 
   /**
    * @brief Get a face
@@ -275,11 +293,13 @@ class Mesh {
   const bool has_timestamps;
   const bool has_labels;
   const bool has_first_seen_stamps;
+  const bool has_fusion_counts;
   Positions points;
   Colors colors;
   Timestamps stamps;
   Timestamps first_seen_stamps;
   Labels labels;
+  FusionCounts fusion_counts;
   Faces faces;
 };
 
