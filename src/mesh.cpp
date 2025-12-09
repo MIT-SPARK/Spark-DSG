@@ -41,23 +41,27 @@ namespace spark_dsg {
 Mesh::Mesh(bool has_colors,
            bool has_timestamps,
            bool has_labels,
-           bool has_first_seen_stamps)
+           bool has_first_seen_stamps,
+           bool has_fusion_counts)
     : has_colors(has_colors),
       has_timestamps(has_timestamps),
       has_labels(has_labels),
-      has_first_seen_stamps(has_first_seen_stamps) {}
+      has_first_seen_stamps(has_first_seen_stamps),
+      has_fusion_counts(has_fusion_counts) {}
 
 Mesh& Mesh::operator=(const Mesh& other) {
   const_cast<bool&>(has_colors) = other.has_colors;
   const_cast<bool&>(has_timestamps) = other.has_timestamps;
   const_cast<bool&>(has_labels) = other.has_labels;
   const_cast<bool&>(has_first_seen_stamps) = other.has_first_seen_stamps;
+  const_cast<bool&>(has_fusion_counts) = other.has_fusion_counts;
   points = other.points;
   colors = other.colors;
   stamps = other.stamps;
   first_seen_stamps = other.first_seen_stamps;
   labels = other.labels;
   faces = other.faces;
+  fusion_counts = other.fusion_counts;
   return *this;
 }
 
@@ -66,12 +70,14 @@ Mesh& Mesh::operator=(Mesh&& other) {
   const_cast<bool&>(has_timestamps) = other.has_timestamps;
   const_cast<bool&>(has_labels) = other.has_labels;
   const_cast<bool&>(has_first_seen_stamps) = other.has_first_seen_stamps;
+  const_cast<bool&>(has_fusion_counts) = other.has_fusion_counts;
   points = std::move(other.points);
   colors = std::move(other.colors);
   stamps = std::move(other.stamps);
   first_seen_stamps = std::move(other.first_seen_stamps);
   labels = std::move(other.labels);
   faces = std::move(other.faces);
+  fusion_counts = std::move(other.fusion_counts);
   return *this;
 }
 
@@ -84,6 +90,7 @@ void Mesh::clear() {
   first_seen_stamps.clear();
   labels.clear();
   faces.clear();
+  fusion_counts.clear();
 }
 
 size_t Mesh::numVertices() const { return points.size(); }
@@ -104,6 +111,9 @@ void Mesh::reserveVertices(size_t size) {
   if (has_first_seen_stamps) {
     first_seen_stamps.reserve(size);
   }
+  if (has_fusion_counts) {
+    fusion_counts.reserve(size);
+  }
 }
 
 void Mesh::resizeVertices(size_t size) {
@@ -119,6 +129,9 @@ void Mesh::resizeVertices(size_t size) {
   }
   if (has_first_seen_stamps) {
     first_seen_stamps.resize(size, 0);
+  }
+  if (has_fusion_counts) {
+    fusion_counts.resize(size, 0);
   }
 }
 
@@ -152,6 +165,18 @@ Mesh::Label Mesh::label(size_t index) const { return labels.at(index); }
 
 void Mesh::setLabel(size_t index, Mesh::Label label) { labels.at(index) = label; }
 
+Mesh::FusionCount Mesh::fusionCount(size_t index) const {
+  return fusion_counts.at(index);
+}
+
+void Mesh::setFusionCount(size_t index, Mesh::FusionCount count) {
+  fusion_counts.at(index) = count;
+}
+
+void Mesh::incrementFusionCount(size_t index, Mesh::FusionCount amount) {
+  fusion_counts.at(index) += amount;
+}
+
 const Mesh::Face& Mesh::face(size_t index) const { return faces.at(index); }
 
 Mesh::Face& Mesh::face(size_t index) { return faces.at(index); }
@@ -159,7 +184,7 @@ Mesh::Face& Mesh::face(size_t index) { return faces.at(index); }
 void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
   // Allocating new storage is faster than erasing from all old storages.
   const auto num_new_vertices = numVertices() - indices.size();
-  Mesh other(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
+  Mesh other(has_colors, has_timestamps, has_labels, has_first_seen_stamps, has_fusion_counts);
   other.reserveVertices(num_new_vertices);
 
   // Copy over the vertices that are not being removed.
@@ -187,6 +212,10 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
 
     if (has_first_seen_stamps) {
       other.first_seen_stamps.push_back(first_seen_stamps[old_index]);
+    }
+
+    if (has_fusion_counts) {
+      other.fusion_counts.push_back(fusion_counts[old_index]);
     }
   }
 
@@ -252,7 +281,8 @@ void Mesh::transform(const Eigen::Isometry3f& transform) {
 bool Mesh::append(const Mesh& other) {
   if (has_colors != other.has_colors && has_timestamps != other.has_timestamps &&
       has_labels != other.has_labels &&
-      has_first_seen_stamps != other.has_first_seen_stamps) {
+      has_first_seen_stamps != other.has_first_seen_stamps &&
+      has_fusion_counts != other.has_fusion_counts) {
     return false;
   }
 
@@ -264,6 +294,9 @@ bool Mesh::append(const Mesh& other) {
                            other.first_seen_stamps.begin(),
                            other.first_seen_stamps.end());
   labels.insert(labels.end(), other.labels.begin(), other.labels.end());
+  fusion_counts.insert(fusion_counts.end(),
+                       other.fusion_counts.begin(),
+                       other.fusion_counts.end());
 
   for (const auto& face : other.faces) {
     faces.push_back({face[0] + offset, face[1] + offset, face[2] + offset});
@@ -289,6 +322,7 @@ size_t Mesh::memoryUsage() const {
   total_bytes += sizeof(Timestamp) * first_seen_stamps.size();
   total_bytes += sizeof(Label) * labels.size();
   total_bytes += sizeof(Face) * faces.size();
+  total_bytes += sizeof(FusionCount) * fusion_counts.size();
   return total_bytes;
 }
 
@@ -296,9 +330,10 @@ bool operator==(const Mesh& lhs, const Mesh& rhs) {
   return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
          lhs.has_labels == rhs.has_labels &&
          lhs.has_first_seen_stamps == rhs.has_first_seen_stamps &&
-         lhs.points == rhs.points && lhs.colors == rhs.colors &&
-         lhs.stamps == rhs.stamps && lhs.first_seen_stamps == rhs.first_seen_stamps &&
-         lhs.labels == rhs.labels && lhs.faces == rhs.faces;
+         lhs.has_fusion_counts == rhs.has_fusion_counts && lhs.points == rhs.points &&
+         lhs.colors == rhs.colors && lhs.stamps == rhs.stamps &&
+         lhs.first_seen_stamps == rhs.first_seen_stamps && lhs.labels == rhs.labels &&
+         lhs.faces == rhs.faces && lhs.fusion_counts == rhs.fusion_counts;
 }
 
 }  // namespace spark_dsg

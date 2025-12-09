@@ -81,6 +81,7 @@ void to_json(json& record, const Mesh& mesh) {
   record["has_timestamps"] = mesh.has_timestamps;
   record["has_labels"] = mesh.has_labels;
   record["has_first_seen_stamps"] = mesh.has_first_seen_stamps;
+  record["has_fusion_counts"] = mesh.has_fusion_counts;
 
   // Serialize all fields if present.
   if (!mesh.points.empty()) {
@@ -98,6 +99,9 @@ void to_json(json& record, const Mesh& mesh) {
   if (!mesh.labels.empty()) {
     record["labels"] = mesh.labels;
   }
+  if (!mesh.fusion_counts.empty()) {
+    record["fusion_counts"] = mesh.fusion_counts;
+  }
   if (!mesh.faces.empty()) {
     record["faces"] = mesh.faces;
   }
@@ -109,7 +113,11 @@ void from_json(const json& record, Mesh& mesh) {
   const bool has_timestamps = record.at("has_timestamps").get<bool>();
   const bool has_labels = record.at("has_labels").get<bool>();
   const bool has_first_seen_stamps = record.at("has_first_seen_stamps").get<bool>();
-  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
+  const bool has_fusion_counts =
+      record.contains("has_fusion_counts") ? record.at("has_fusion_counts").get<bool>()
+                                           : false;
+  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps,
+              has_fusion_counts);
 
   // Deserialize all fields if present.
   if (record.contains("points")) {
@@ -127,6 +135,9 @@ void from_json(const json& record, Mesh& mesh) {
   if (record.contains("labels")) {
     mesh.labels = record.at("labels").get<Mesh::Labels>();
   }
+  if (record.contains("fusion_counts")) {
+    mesh.fusion_counts = record.at("fusion_counts").get<Mesh::FusionCounts>();
+  }
   if (record.contains("faces")) {
     mesh.faces = record.at("faces").get<Mesh::Faces>();
   }
@@ -138,6 +149,7 @@ void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh)
   serializer.write(mesh.has_timestamps);
   serializer.write(mesh.has_labels);
   serializer.write(mesh.has_first_seen_stamps);
+  serializer.write(mesh.has_fusion_counts);
 
   // Write vertices.
   serializer.write(mesh.points);
@@ -150,6 +162,7 @@ void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh)
   serializer.write(mesh.stamps);
   serializer.write(mesh.labels);
   serializer.write(mesh.first_seen_stamps);
+  serializer.write(mesh.fusion_counts);
 
   // Write faces
   serializer.write(mesh.faces);
@@ -157,12 +170,14 @@ void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh)
 
 void read_binary(const serialization::BinaryDeserializer& deserializer, Mesh& mesh) {
   // Mesh flags.
-  bool has_colors, has_timestamps, has_labels, has_first_seen_stamps;
+  bool has_colors, has_timestamps, has_labels, has_first_seen_stamps, has_fusion_counts;
   deserializer.read(has_colors);
   deserializer.read(has_timestamps);
   deserializer.read(has_labels);
   deserializer.read(has_first_seen_stamps);
-  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
+  deserializer.read(has_fusion_counts);
+  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps,
+              has_fusion_counts);
 
   // Various attribute fields
   deserializer.read(mesh.points);
@@ -170,6 +185,7 @@ void read_binary(const serialization::BinaryDeserializer& deserializer, Mesh& me
   deserializer.read(mesh.stamps);
   deserializer.read(mesh.labels);
   deserializer.read(mesh.first_seen_stamps);
+  deserializer.read(mesh.fusion_counts);
 
   // Faces.
   deserializer.read(mesh.faces);
