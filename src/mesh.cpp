@@ -42,12 +42,14 @@ Mesh::Mesh(bool has_colors,
            bool has_timestamps,
            bool has_labels,
            bool has_first_seen_stamps,
-           bool has_fusion_counts)
+           bool has_fusion_counts,
+           bool has_temporal_island_ids)
     : has_colors(has_colors),
       has_timestamps(has_timestamps),
       has_labels(has_labels),
       has_first_seen_stamps(has_first_seen_stamps),
-      has_fusion_counts(has_fusion_counts) {}
+      has_fusion_counts(has_fusion_counts),
+      has_temporal_island_ids(has_temporal_island_ids) {}
 
 Mesh& Mesh::operator=(const Mesh& other) {
   const_cast<bool&>(has_colors) = other.has_colors;
@@ -55,6 +57,7 @@ Mesh& Mesh::operator=(const Mesh& other) {
   const_cast<bool&>(has_labels) = other.has_labels;
   const_cast<bool&>(has_first_seen_stamps) = other.has_first_seen_stamps;
   const_cast<bool&>(has_fusion_counts) = other.has_fusion_counts;
+  const_cast<bool&>(has_temporal_island_ids) = other.has_temporal_island_ids;
   points = other.points;
   colors = other.colors;
   stamps = other.stamps;
@@ -62,6 +65,7 @@ Mesh& Mesh::operator=(const Mesh& other) {
   labels = other.labels;
   faces = other.faces;
   fusion_counts = other.fusion_counts;
+  temporal_island_ids = other.temporal_island_ids;
   return *this;
 }
 
@@ -71,6 +75,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
   const_cast<bool&>(has_labels) = other.has_labels;
   const_cast<bool&>(has_first_seen_stamps) = other.has_first_seen_stamps;
   const_cast<bool&>(has_fusion_counts) = other.has_fusion_counts;
+  const_cast<bool&>(has_temporal_island_ids) = other.has_temporal_island_ids;
   points = std::move(other.points);
   colors = std::move(other.colors);
   stamps = std::move(other.stamps);
@@ -78,6 +83,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
   labels = std::move(other.labels);
   faces = std::move(other.faces);
   fusion_counts = std::move(other.fusion_counts);
+  temporal_island_ids = std::move(other.temporal_island_ids);
   return *this;
 }
 
@@ -91,6 +97,7 @@ void Mesh::clear() {
   labels.clear();
   faces.clear();
   fusion_counts.clear();
+  temporal_island_ids.clear();
 }
 
 size_t Mesh::numVertices() const { return points.size(); }
@@ -114,6 +121,9 @@ void Mesh::reserveVertices(size_t size) {
   if (has_fusion_counts) {
     fusion_counts.reserve(size);
   }
+  if (has_temporal_island_ids) {
+    temporal_island_ids.reserve(size);
+  }
 }
 
 void Mesh::resizeVertices(size_t size) {
@@ -132,6 +142,9 @@ void Mesh::resizeVertices(size_t size) {
   }
   if (has_fusion_counts) {
     fusion_counts.resize(size, 0);
+  }
+  if (has_temporal_island_ids) {
+    temporal_island_ids.resize(size, 0);
   }
 }
 
@@ -177,6 +190,14 @@ void Mesh::incrementFusionCount(size_t index, Mesh::FusionCount amount) {
   fusion_counts.at(index) += amount;
 }
 
+Mesh::TemporalIslandId Mesh::temporalIslandId(size_t index) const {
+  return temporal_island_ids.at(index);
+}
+
+void Mesh::setTemporalIslandId(size_t index, Mesh::TemporalIslandId id) {
+  temporal_island_ids.at(index) = id;
+}
+
 const Mesh::Face& Mesh::face(size_t index) const { return faces.at(index); }
 
 Mesh::Face& Mesh::face(size_t index) { return faces.at(index); }
@@ -184,7 +205,12 @@ Mesh::Face& Mesh::face(size_t index) { return faces.at(index); }
 void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
   // Allocating new storage is faster than erasing from all old storages.
   const auto num_new_vertices = numVertices() - indices.size();
-  Mesh other(has_colors, has_timestamps, has_labels, has_first_seen_stamps, has_fusion_counts);
+  Mesh other(has_colors,
+             has_timestamps,
+             has_labels,
+             has_first_seen_stamps,
+             has_fusion_counts,
+             has_temporal_island_ids);
   other.reserveVertices(num_new_vertices);
 
   // Copy over the vertices that are not being removed.
@@ -216,6 +242,10 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
 
     if (has_fusion_counts) {
       other.fusion_counts.push_back(fusion_counts[old_index]);
+    }
+
+    if (has_temporal_island_ids) {
+      other.temporal_island_ids.push_back(temporal_island_ids[old_index]);
     }
   }
 
@@ -282,7 +312,8 @@ bool Mesh::append(const Mesh& other) {
   if (has_colors != other.has_colors && has_timestamps != other.has_timestamps &&
       has_labels != other.has_labels &&
       has_first_seen_stamps != other.has_first_seen_stamps &&
-      has_fusion_counts != other.has_fusion_counts) {
+      has_fusion_counts != other.has_fusion_counts &&
+      has_temporal_island_ids != other.has_temporal_island_ids) {
     return false;
   }
 
@@ -297,6 +328,9 @@ bool Mesh::append(const Mesh& other) {
   fusion_counts.insert(fusion_counts.end(),
                        other.fusion_counts.begin(),
                        other.fusion_counts.end());
+  temporal_island_ids.insert(temporal_island_ids.end(),
+                             other.temporal_island_ids.begin(),
+                             other.temporal_island_ids.end());
 
   for (const auto& face : other.faces) {
     faces.push_back({face[0] + offset, face[1] + offset, face[2] + offset});
@@ -323,6 +357,7 @@ size_t Mesh::memoryUsage() const {
   total_bytes += sizeof(Label) * labels.size();
   total_bytes += sizeof(Face) * faces.size();
   total_bytes += sizeof(FusionCount) * fusion_counts.size();
+  total_bytes += sizeof(TemporalIslandId) * temporal_island_ids.size();
   return total_bytes;
 }
 
@@ -330,10 +365,12 @@ bool operator==(const Mesh& lhs, const Mesh& rhs) {
   return lhs.has_colors == rhs.has_colors && lhs.has_timestamps == rhs.has_timestamps &&
          lhs.has_labels == rhs.has_labels &&
          lhs.has_first_seen_stamps == rhs.has_first_seen_stamps &&
-         lhs.has_fusion_counts == rhs.has_fusion_counts && lhs.points == rhs.points &&
-         lhs.colors == rhs.colors && lhs.stamps == rhs.stamps &&
+         lhs.has_fusion_counts == rhs.has_fusion_counts &&
+         lhs.has_temporal_island_ids == rhs.has_temporal_island_ids &&
+         lhs.points == rhs.points && lhs.colors == rhs.colors && lhs.stamps == rhs.stamps &&
          lhs.first_seen_stamps == rhs.first_seen_stamps && lhs.labels == rhs.labels &&
-         lhs.faces == rhs.faces && lhs.fusion_counts == rhs.fusion_counts;
+         lhs.faces == rhs.faces && lhs.fusion_counts == rhs.fusion_counts &&
+         lhs.temporal_island_ids == rhs.temporal_island_ids; 
 }
 
 }  // namespace spark_dsg
