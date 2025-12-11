@@ -61,12 +61,15 @@ class Mesh {
   using Faces = std::vector<Face>;
   using FusionCount = uint32_t;
   using FusionCounts = std::vector<FusionCount>;
+  using TemporalIslandId = uint32_t;
+  using TemporalIslandIds = std::vector<TemporalIslandId>;
 
   Mesh(bool has_colors = true,
        bool has_timestamps = true,
        bool has_labels = true,
        bool has_first_seen_stamps = false,
-       bool has_fusion_counts = false);
+       bool has_fusion_counts = false,
+       bool has_temporal_island_ids = false);
 
   Mesh(const Mesh& other) = default;
   Mesh(Mesh&& other) = default;
@@ -188,6 +191,16 @@ class Mesh {
   void incrementFusionCount(size_t index, FusionCount amount = 1);
 
   /**
+   * @brief Get temporal island ID for vertex
+   */
+  TemporalIslandId temporalIslandId(size_t index) const;
+
+  /**
+   * @brief Set temporal island ID for vertex
+   */
+  void setTemporalIslandId(size_t index, TemporalIslandId id);
+
+  /**
    * @brief Get a face
    */
   const Face& face(size_t index) const;
@@ -294,12 +307,14 @@ class Mesh {
   const bool has_labels;
   const bool has_first_seen_stamps;
   const bool has_fusion_counts;
+  const bool has_temporal_island_ids;
   Positions points;
   Colors colors;
   Timestamps stamps;
   Timestamps first_seen_stamps;
   Labels labels;
   FusionCounts fusion_counts;
+  TemporalIslandIds temporal_island_ids;
   Faces faces;
 };
 

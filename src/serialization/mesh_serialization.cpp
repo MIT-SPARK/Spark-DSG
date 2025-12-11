@@ -82,6 +82,7 @@ void to_json(json& record, const Mesh& mesh) {
   record["has_labels"] = mesh.has_labels;
   record["has_first_seen_stamps"] = mesh.has_first_seen_stamps;
   record["has_fusion_counts"] = mesh.has_fusion_counts;
+  record["has_temporal_island_ids"] = mesh.has_temporal_island_ids;
 
   // Serialize all fields if present.
   if (!mesh.points.empty()) {
@@ -102,6 +103,9 @@ void to_json(json& record, const Mesh& mesh) {
   if (!mesh.fusion_counts.empty()) {
     record["fusion_counts"] = mesh.fusion_counts;
   }
+  if (!mesh.temporal_island_ids.empty()) {
+    record["temporal_island_ids"] = mesh.temporal_island_ids;
+  }
   if (!mesh.faces.empty()) {
     record["faces"] = mesh.faces;
   }
@@ -116,8 +120,16 @@ void from_json(const json& record, Mesh& mesh) {
   const bool has_fusion_counts =
       record.contains("has_fusion_counts") ? record.at("has_fusion_counts").get<bool>()
                                            : false;
-  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps,
-              has_fusion_counts);
+  const bool has_temporal_island_ids =
+      record.contains("has_temporal_island_ids")
+          ? record.at("has_temporal_island_ids").get<bool>()
+          : false;
+  mesh = Mesh(has_colors,
+              has_timestamps,
+              has_labels,
+              has_first_seen_stamps,
+              has_fusion_counts,
+              has_temporal_island_ids);
 
   // Deserialize all fields if present.
   if (record.contains("points")) {
@@ -138,6 +150,10 @@ void from_json(const json& record, Mesh& mesh) {
   if (record.contains("fusion_counts")) {
     mesh.fusion_counts = record.at("fusion_counts").get<Mesh::FusionCounts>();
   }
+  if (record.contains("temporal_island_ids")) {
+    mesh.temporal_island_ids =
+        record.at("temporal_island_ids").get<Mesh::TemporalIslandIds>();
+  }
   if (record.contains("faces")) {
     mesh.faces = record.at("faces").get<Mesh::Faces>();
   }
@@ -150,6 +166,7 @@ void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh)
   serializer.write(mesh.has_labels);
   serializer.write(mesh.has_first_seen_stamps);
   serializer.write(mesh.has_fusion_counts);
+  serializer.write(mesh.has_temporal_island_ids);
 
   // Write vertices.
   serializer.write(mesh.points);
@@ -163,6 +180,7 @@ void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh)
   serializer.write(mesh.labels);
   serializer.write(mesh.first_seen_stamps);
   serializer.write(mesh.fusion_counts);
+  serializer.write(mesh.temporal_island_ids);
 
   // Write faces
   serializer.write(mesh.faces);
@@ -170,14 +188,20 @@ void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh)
 
 void read_binary(const serialization::BinaryDeserializer& deserializer, Mesh& mesh) {
   // Mesh flags.
-  bool has_colors, has_timestamps, has_labels, has_first_seen_stamps, has_fusion_counts;
+  bool has_colors, has_timestamps, has_labels, has_first_seen_stamps, has_fusion_counts,
+      has_temporal_island_ids;
   deserializer.read(has_colors);
   deserializer.read(has_timestamps);
   deserializer.read(has_labels);
   deserializer.read(has_first_seen_stamps);
   deserializer.read(has_fusion_counts);
-  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps,
-              has_fusion_counts);
+  deserializer.read(has_temporal_island_ids);
+  mesh = Mesh(has_colors,
+              has_timestamps,
+              has_labels,
+              has_first_seen_stamps,
+              has_fusion_counts,
+              has_temporal_island_ids);
 
   // Various attribute fields
   deserializer.read(mesh.points);
@@ -186,6 +210,7 @@ void read_binary(const serialization::BinaryDeserializer& deserializer, Mesh& me
   deserializer.read(mesh.labels);
   deserializer.read(mesh.first_seen_stamps);
   deserializer.read(mesh.fusion_counts);
+  deserializer.read(mesh.temporal_island_ids);
 
   // Faces.
   deserializer.read(mesh.faces);
