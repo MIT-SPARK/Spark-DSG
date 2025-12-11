@@ -96,11 +96,12 @@ TEST(MemoryUsage, EdgeContainer) {
   size_t expected_size = sizeof(EdgeContainer);  // 144 bytes
   EXPECT_EQ(edge_container.memoryUsage(), expected_size);
 
-  // Add some edges
+  // Add some edges.
+  const auto edge_attrs = std::make_unique<EdgeAttributes>(1.0);
   for (size_t i = 0; i < 100; ++i) {
-    edge_container.insert(i, i + 1, std::make_unique<EdgeAttributes>(i * 0.1));
+    edge_container.insert(i, i + 1, edge_attrs->clone());
   }
-  expected_size += 100 * 100;
+  expected_size += 100 * (edge_attrs->memoryUsage() + 60);
   EXPECT_EQ(edge_container.memoryUsage(), expected_size);
 }
 
@@ -114,7 +115,7 @@ TEST(MemoryUsage, NodeAttributes) {
   meta_contents["type"] = "Test node";
   meta_contents["value"] = 123;
   attrs.metadata.set(meta_contents);
-  expected_size = 109;
+  expected_size += meta_contents.dump().size() - 2;  // 79 bytes
   EXPECT_EQ(attrs.memoryUsage(), expected_size);
 
   // Semantic node attributes.
@@ -259,8 +260,10 @@ TEST(MemoryUsage, SerializationComparison) {
     io::binary::writeGraph(*graph, buffer, true);
     const double ratio =
         static_cast<double>(buffer.size()) / static_cast<double>(graph->memoryUsage());
+    // NOTE(lschmid): The serialization adds some data-type overhead etc., so should be
+    // larger but probably not much more than 2 (empirically rather close to 2).
     EXPECT_LT(ratio, 2.0);
-    EXPECT_GT(ratio, 1.9);
+    EXPECT_GT(ratio, 1.0);
   }
 }
 

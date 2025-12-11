@@ -165,16 +165,12 @@ NodeAttributes::Ptr SemanticNodeAttributes::clone() const {
 }
 
 size_t NodeAttributes::memoryUsage() const {
-  // Simply dispatch serialization to estimate the attributes size. Not perfect but
-  // should be ok.
+  // By default simply dispatch serialization to estimate the attributes size. Not
+  // perfect but should be ok.
   std::vector<uint8_t> buffer;
   serialization::BinarySerializer serializer(&buffer);
   serializer.write(*this);
-  size_t total_size = buffer.size();
-
-  // Metadata size (avoid double counting the Metadata struct itself).
-  total_size += metadata.memoryUsage() - sizeof(Metadata);
-  return total_size;
+  return buffer.size();
 }
 
 void SemanticNodeAttributes::transform(const Eigen::Isometry3d& transform) {
