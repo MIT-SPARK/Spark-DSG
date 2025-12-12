@@ -479,6 +479,9 @@ class SceneGraph {
   //! @brief Get the mesh associated with the scene graph
   std::shared_ptr<Mesh> mesh() const;
 
+  //! @brief Estimate the memory usage of the scene graph in bytes.
+  size_t memoryUsage() const;
+
   //! Any extra information about the graph
   Metadata metadata;
 

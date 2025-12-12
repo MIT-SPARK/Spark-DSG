@@ -12,6 +12,7 @@ add_executable(
   utest_edge_container.cpp
   utest_graph_utilities_layer.cpp
   utest_labelspace.cpp
+  utest_memory_usage.cpp
   utest_mesh.cpp
   utest_metadata.cpp
   utest_node_attributes.cpp

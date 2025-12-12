@@ -45,6 +45,11 @@ struct Metadata {
   void set(const nlohmann::json& new_metadata);
   void add(const nlohmann::json& to_add);
 
+  /**
+   * @brief Estimate the memory usage of the metadata in bytes.
+   */
+  size_t memoryUsage() const;
+
  private:
   nlohmann::json contents_;
 };

@@ -149,6 +149,11 @@ class SceneGraphNode {
     return dynamic_cast<Derived*>(attributes_.get());
   }
 
+  /**
+   * @brief Estimate the memory usage of the node in bytes.
+   */
+  size_t memoryUsage() const;
+
   //! ID of the node
   const NodeId id;
   //! ID of the layer the node belongs to
