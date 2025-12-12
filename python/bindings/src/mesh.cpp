@@ -197,7 +197,7 @@ void init_mesh(py::module_& m) {
           "rotation"_a = Eigen::Matrix3d::Identity(),
           "translation"_a = Eigen::Vector3d::Zero())
       .def("append", &Mesh::append)
-      .def("total_bytes", &Mesh::totalBytes)
+      .def("memory_usage", &Mesh::memoryUsage)
       .def(py::self += py::self);
 }
 

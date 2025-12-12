@@ -111,6 +111,11 @@ struct EdgeContainer {
   mutable EdgeStatusMap edge_status;
   mutable std::map<EdgeKey, bool> stale_edges;
 
+  /**
+   * @brief Get memory usage of the edge container in bytes.
+   */
+  size_t memoryUsage() const;
+
  protected:
   Edge* find(const EdgeKey& key) const;
 };
