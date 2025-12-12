@@ -78,4 +78,11 @@ bool EdgeAttributes::is_equal(const EdgeAttributes& other) const {
   return weighted == other.weighted && weight == other.weight;
 }
 
+size_t EdgeAttributes::memoryUsage() const {
+  size_t total_size = sizeof(EdgeAttributes);
+  // Metadata size (avoid double counting the Metadata struct itself).
+  total_size += metadata.memoryUsage() - sizeof(Metadata);
+  return total_size;
+}
+
 }  // namespace spark_dsg

@@ -74,4 +74,19 @@ std::vector<NodeId> SceneGraphNode::connections() const {
   return to_return;
 }
 
+size_t SceneGraphNode::memoryUsage() const {
+  size_t total_size = sizeof(SceneGraphNode);
+  // Attributes size.
+  if (attributes_) {
+    total_size += attributes_->memoryUsage();
+  }
+
+  // Connected nodes size.
+  total_size += siblings_.size() * sizeof(NodeId);
+  total_size += children_.size() * sizeof(NodeId);
+  total_size += parents_.size() * sizeof(NodeId);
+
+  return total_size;
+}
+
 }  // namespace spark_dsg
