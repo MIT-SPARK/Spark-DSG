@@ -390,6 +390,24 @@ void SceneGraphLayer::transform(const Eigen::Isometry3d& transform) {
   }
 }
 
+size_t SceneGraphLayer::memoryUsage() const {
+  size_t total_memory = sizeof(*this);
+
+  // Estimate memory usage of nodes.
+  total_memory += nodes_.size() * (sizeof(NodeId) + sizeof(Node::Ptr));
+  for (const auto& [node_id, node] : nodes_) {
+    total_memory += node->memoryUsage();
+  }
+
+  // Estimate memory usage of edges.
+  total_memory += edges_.memoryUsage();
+
+  // Estimate memory usage of nodes status map.
+  total_memory += nodes_status_.size() * (sizeof(NodeId) + sizeof(NodeStatus));
+
+  return total_memory;
+}
+
 namespace graph_utilities {
 
 using LayerGraphTraits = graph_traits<SceneGraphLayer>;

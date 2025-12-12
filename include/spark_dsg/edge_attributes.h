@@ -94,6 +94,11 @@ struct EdgeAttributes {
     return registrationImpl();
   }
 
+  /**
+   * @brief Estimate the memory usage of the edge attributes in bytes.
+   */
+  virtual size_t memoryUsage() const;
+
  protected:
   //! actually output information to the std::ostream
   virtual void fill_ostream(std::ostream& out) const;
