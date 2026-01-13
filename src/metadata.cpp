@@ -70,18 +70,13 @@ size_t Metadata::memoryUsage() const {
   // Estimate memory usage of the JSON contents through serialization.
   // TODO(lschmid): This is not a very clean method but at least does not ignore the
   // meta data.
-  size_t total_size = sizeof(Metadata);
-  const std::string serialized = contents_.dump();
-  if (serialized == "{}") {
+  const size_t total_size = sizeof(Metadata);
+  if (empty()) {
     return total_size;
   }
+  const std::string serialized = contents_.dump();
   return total_size + serialized.size();
 }
-void Metadata::add(const Metadata& to_add) { add(to_add.get()); }
-
-void Metadata::clear() { contents_.clear(); }
-
-bool Metadata::empty() const { return contents_.empty(); }
 
 void Metadata::clear() { contents_.clear(); }
 
