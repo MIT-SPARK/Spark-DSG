@@ -322,15 +322,13 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   using Ptr = std::unique_ptr<Place2dNodeAttributes>;
 
   Place2dNodeAttributes();
-
-  /**
-   * @brief make places node attributes
-   * @param boundary Boundary points surrounding place
-   */
-  Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary);
   virtual ~Place2dNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
 
+  //! mesh vertices that are closest to this place
+  std::vector<size_t> mesh_connections;
+  //! mesh vertices corresponding to boundary points
+  std::vector<size_t> boundary_connections;
   //! points on boundary of place region
   std::vector<Eigen::Vector3d> boundary;
   //! center of intersection checking ellipsoid
@@ -339,24 +337,12 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   Eigen::Matrix<double, 2, 2> ellipse_matrix_compress;
   //! shape matrix for plotting ellipsoid
   Eigen::Matrix<double, 2, 2> ellipse_matrix_expand;
-  //! pcl mesh vertices corresponding to boundary points
-  std::vector<size_t> pcl_boundary_connections;
-  //! voxblox mesh vertices that are closest to this place
-  std::vector<NearestVertexInfo> voxblox_mesh_connections;
-  //! pcl mesh vertices that are closest to this place
-  std::vector<size_t> pcl_mesh_connections;
   //! min vertex index of associated mesh vertices
-  size_t pcl_min_index;
+  size_t min_mesh_index;
   //! max vertex index of associated mesh vertices
-  size_t pcl_max_index;
-  //! semantic labels of parents
-  std::vector<uint8_t> mesh_vertex_labels;
-  //! deformation vertices that are closest to this place
-  std::vector<size_t> deformation_connections;
+  size_t max_mesh_index;
   //! tracks whether the node still needs to be cleaned up during merging
   bool need_finish_merge;
-  //! whether this node has been merged to while in current active window
-  bool need_cleanup_splitting;
   //! whether this node has mesh vertices in active window
   bool has_active_mesh_indices;
 

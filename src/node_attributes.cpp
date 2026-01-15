@@ -390,15 +390,10 @@ bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
 }
 
 Place2dNodeAttributes::Place2dNodeAttributes()
-    : Place2dNodeAttributes(std::vector<Eigen::Vector3d>()) {}
-
-Place2dNodeAttributes::Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary)
     : SemanticNodeAttributes(),
-      boundary(boundary),
-      pcl_min_index(0),
-      pcl_max_index(0),
+      min_mesh_index(0),
+      max_mesh_index(0),
       need_finish_merge(false),
-      need_cleanup_splitting(false),
       has_active_mesh_indices(false) {}
 
 NodeAttributes::Ptr Place2dNodeAttributes::clone() const {
@@ -413,17 +408,44 @@ std::ostream& Place2dNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void Place2dNodeAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
-  serialization::field("boundary", boundary);
-  serialization::field("ellipse_centroid", ellipse_centroid);
-  serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
-  serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
-  serialization::field("pcl_boundary_connections", pcl_boundary_connections);
-  serialization::field("voxblox_mesh_connections", voxblox_mesh_connections);
-  serialization::field("pcl_mesh_connections", pcl_mesh_connections);
-  serialization::field("mesh_vertex_labels", mesh_vertex_labels);
-  serialization::field("deformation_connections", deformation_connections);
-  serialization::field("need_cleanup_splitting", need_cleanup_splitting);
-  serialization::field("has_active_mesh_indices", has_active_mesh_indices);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 4)) {
+    io::warnOutdatedHeader(header);
+    serialization::field("boundary", boundary);
+    serialization::field("ellipse_centroid", ellipse_centroid);
+    serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
+    serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
+    serialization::field("pcl_boundary_connections", boundary_connections);
+    {  // temp
+      std::vector<NearestVertexInfo> temp;
+      serialization::field("voxblox_mesh_connections", temp);
+    }
+    serialization::field("pcl_mesh_connections", mesh_connections);
+    {  // temp scope
+      std::vector<uint8_t> temp;
+      serialization::field("mesh_vertex_labels", temp);
+    }
+    {  // temp scope
+      std::vector<size_t> temp;
+      serialization::field("deformation_connections", temp);
+    }
+    {  // temp scope
+      bool temp;
+      serialization::field("need_cleanup_splitting", temp);
+    }
+    serialization::field("has_active_mesh_indices", has_active_mesh_indices);
+  } else {
+    serialization::field("mesh_connections", mesh_connections);
+    serialization::field("boundary_connections", boundary_connections);
+    serialization::field("boundary", boundary);
+    serialization::field("ellipse_centroid", ellipse_centroid);
+    serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
+    serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
+    serialization::field("min_mesh_index", min_mesh_index);
+    serialization::field("max_mesh_index", max_mesh_index);
+    serialization::field("need_finish_merge", need_finish_merge);
+    serialization::field("has_active_mesh_indices", has_active_mesh_indices);
+  }
 }
 
 bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -436,16 +458,15 @@ bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
     return false;
   }
 
-  return boundary == derived->boundary &&
+  return mesh_connections == derived->mesh_connections &&
+         boundary_connections == derived->boundary_connections &&
+         boundary == derived->boundary &&
          ellipse_centroid == derived->ellipse_centroid &&
          ellipse_matrix_compress == derived->ellipse_matrix_compress &&
          ellipse_matrix_expand == derived->ellipse_matrix_expand &&
-         pcl_boundary_connections == derived->pcl_boundary_connections &&
-         voxblox_mesh_connections == derived->voxblox_mesh_connections &&
-         pcl_mesh_connections == derived->pcl_mesh_connections &&
-         mesh_vertex_labels == derived->mesh_vertex_labels &&
-         deformation_connections == derived->deformation_connections &&
-         need_cleanup_splitting == derived->need_cleanup_splitting &&
+         min_mesh_index == derived->min_mesh_index &&
+         max_mesh_index == derived->max_mesh_index &&
+         need_finish_merge == derived->need_finish_merge &&
          has_active_mesh_indices == derived->has_active_mesh_indices;
 }
 
