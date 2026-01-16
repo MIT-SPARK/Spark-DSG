@@ -326,7 +326,7 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   NodeAttributes::Ptr clone() const override;
 
   //! mesh vertices that are closest to this place
-  std::vector<size_t> mesh_connections;
+  std::list<size_t> mesh_connections;
   //! mesh vertices corresponding to boundary points
   std::vector<size_t> boundary_connections;
   //! points on boundary of place region
