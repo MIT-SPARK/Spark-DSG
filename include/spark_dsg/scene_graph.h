@@ -485,6 +485,8 @@ class SceneGraph {
   //! Any extra information about the graph
   Metadata metadata;
 
+  SceneGraph::Ptr create_subgraph(const std::vector<NodeId>& nodes);
+
  protected:
   Layer& layerFromKey(const LayerKey& key);
 
