@@ -661,10 +661,10 @@ std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
   out << "  - first_observed_ns: " << first_observed_ns << "\n"
       << "  - last_observed_ns: " << last_observed_ns << "\n"
-      << "  - num traversable: " << traversable.size() << "\n"
-      << "  - num intraversable: " << intraversable.size() << "\n"
-      << "  - num unknown: " << unknown.size() << "\n"
-      << "  - min radius: " << min_radius << "\n";
+      << "  - num points: " << points.size() << "\n"
+      << "  - num states: " << states.size() << "\n"
+      << "  - min radius: " << min_radius << "\n"
+      << "  - max radius: " << max_radius;
   return out;
 }
 
@@ -672,10 +672,22 @@ void TravNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
-  serialization::field("traversable", traversable);
-  serialization::field("intraversable", intraversable);
-  serialization::field("unknown", unknown);
+  serialization::field("points", points);
   serialization::field("min_radius", min_radius);
+  serialization::field("max_radius", max_radius);
+
+  // Workaround for state serialization.
+  std::vector<uint8_t> s;
+  s.reserve(states.size());
+  for (const auto& state : states) {
+    s.push_back(static_cast<uint8_t>(state));
+  }
+  serialization::field("states", s);
+  states.clear();
+  states.reserve(s.size());
+  for (const auto& state : s) {
+    states.push_back(static_cast<TraversabilityState>(state));
+  }
 }
 
 bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -688,11 +700,15 @@ bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
     return false;
   }
 
-  return traversable == derived->traversable &&
-         intraversable == derived->intraversable && unknown == derived->unknown &&
-         min_radius == derived->min_radius &&
+  return points == derived->points && states == derived->states &&
+         min_radius == derived->min_radius && max_radius == derived->max_radius &&
          first_observed_ns == derived->first_observed_ns &&
          last_observed_ns == derived->last_observed_ns;
+}
+
+void TravNodeAttributes::clear() {
+  points.clear();
+  states.clear();
 }
 
 }  // namespace spark_dsg

@@ -504,7 +504,8 @@ struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
 };
 
 /**
- * @brief Simpler version of traversability places for region growing places.
+ * @brief Simpler version of traversability places for region growing places, containing
+ * the boundary voxels in local coordinates as well as circle approximations.
  * @todo Sort out unifiying interfaces eventually. Implemented as new attributes as
  * discussed w/ Nathan.
  * @todo Find better names for this...
@@ -523,12 +524,19 @@ struct TravNodeAttributes : public NodeAttributes {
 
   //! Exterior boundary information. These are in attribute coordinates (origin at the
   //! position).
-  std::vector<Eigen::Vector3d> traversable;
-  std::vector<Eigen::Vector3d> intraversable;
-  std::vector<Eigen::Vector3d> unknown;
+  std::vector<Eigen::Vector3d> points;
+
+  //! Corresponding traversability states for each boundary point.
+  TraversabilityStates states;
 
   //! Approximation of the boundary as circles.
   double min_radius = 0.0;
+  double max_radius = 0.0;
+
+  /**
+   * @brief Clear all voxel information. This does not clear timestamps or radii.
+   */
+  void clear();
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
