@@ -618,6 +618,7 @@ void TraversabilityNodeAttributes::serialization_info() {
   serialization::field("distance", distance);
   serialization::field("min", boundary.min);
   serialization::field("max", boundary.max);
+
   // Workaround for state serialization.
   for (size_t i = 0; i < 4; ++i) {
     std::vector<uint8_t> s;
@@ -648,6 +649,48 @@ bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
   }
 
   return boundary == derived->boundary && distance == derived->distance &&
+         first_observed_ns == derived->first_observed_ns &&
+         last_observed_ns == derived->last_observed_ns;
+}
+
+NodeAttributes::Ptr TravNodeAttributes::clone() const {
+  return std::make_unique<TravNodeAttributes>(*this);
+}
+
+std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
+  NodeAttributes::fill_ostream(out);
+  out << "  - first_observed_ns: " << first_observed_ns << "\n"
+      << "  - last_observed_ns: " << last_observed_ns << "\n"
+      << "  - num traversable: " << traversable.size() << "\n"
+      << "  - num intraversable: " << intraversable.size() << "\n"
+      << "  - num unknown: " << unknown.size() << "\n"
+      << "  - min radius: " << min_radius << "\n";
+  return out;
+}
+
+void TravNodeAttributes::serialization_info() {
+  NodeAttributes::serialization_info();
+  serialization::field("first_observed_ns", first_observed_ns);
+  serialization::field("last_observed_ns", last_observed_ns);
+  serialization::field("traversable", traversable);
+  serialization::field("intraversable", intraversable);
+  serialization::field("unknown", unknown);
+  serialization::field("min_radius", min_radius);
+}
+
+bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const TravNodeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!NodeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return traversable == derived->traversable &&
+         intraversable == derived->intraversable && unknown == derived->unknown &&
+         min_radius == derived->min_radius &&
          first_observed_ns == derived->first_observed_ns &&
          last_observed_ns == derived->last_observed_ns;
 }

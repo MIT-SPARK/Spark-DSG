@@ -503,4 +503,39 @@ struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
   REGISTER_NODE_ATTRIBUTES(TraversabilityNodeAttributes);
 };
 
+/**
+ * @brief Simpler version of traversability places for region growing places.
+ * @todo Sort out unifiying interfaces eventually. Implemented as new attributes as
+ * discussed w/ Nathan.
+ * @todo Find better names for this...
+ */
+struct TravNodeAttributes : public NodeAttributes {
+ public:
+  using Ptr = std::unique_ptr<TravNodeAttributes>;
+
+  TravNodeAttributes() = default;
+  virtual ~TravNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  //! Timestamps when this place was first and last observed.
+  uint64_t first_observed_ns = 0;
+  uint64_t last_observed_ns = 0;
+
+  //! Exterior boundary information. These are in attribute coordinates (origin at the
+  //! position).
+  std::vector<Eigen::Vector3d> traversable;
+  std::vector<Eigen::Vector3d> intraversable;
+  std::vector<Eigen::Vector3d> unknown;
+
+  //! Approximation of the boundary as circles.
+  double min_radius = 0.0;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  REGISTER_NODE_ATTRIBUTES(TravNodeAttributes);
+};
+
 }  // namespace spark_dsg
