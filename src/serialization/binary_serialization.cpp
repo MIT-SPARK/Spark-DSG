@@ -35,6 +35,7 @@
 #include "spark_dsg/serialization/binary_serialization.h"
 
 #include <iomanip>
+#include <stdexcept>
 
 namespace spark_dsg::serialization {
 
