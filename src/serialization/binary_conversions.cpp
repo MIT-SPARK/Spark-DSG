@@ -42,32 +42,12 @@
 namespace spark_dsg {
 
 void read_binary(const serialization::BinaryDeserializer& s, BoundingBox& box) {
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 0, 3)) {
-    io::warnOutdatedHeader(header);
-
-    // Legacy bboxes with min/max encoding.
-    s.checkFixedArrayLength(5);
-  } else {
-    // New bboxes with dimensions encoding.
-    s.checkFixedArrayLength(4);
-  }
+  s.checkFixedArrayLength(4);
 
   int32_t raw_type;
   s.read(raw_type);
   box.type = static_cast<BoundingBox::Type>(raw_type);
-
-  if (header.version < io::Version(1, 0, 3)) {
-    io::warnOutdatedHeader(header);
-
-    Eigen::Vector3f min, max;
-    s.read(min);
-    s.read(max);
-    box.dimensions = max - min;
-  } else {
-    s.read(box.dimensions);
-  }
-
+  s.read(box.dimensions);
   s.read(box.world_P_center);
   s.read(box.world_R_center);
 }

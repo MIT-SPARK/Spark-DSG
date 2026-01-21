@@ -136,12 +136,7 @@ void NodeAttributes::serialization_info() {
   serialization::field("position", position);
   serialization::field("last_update_time_ns", last_update_time_ns);
   serialization::field("is_active", is_active);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 0, 4)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    serialization::field("is_predicted", is_predicted);
-  }
+  serialization::field("is_predicted", is_predicted);
 }
 
 void NodeAttributes::serialization_info() const {
@@ -200,28 +195,10 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
 void SemanticNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("name", name);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version <= io::Version(1, 0, 2)) {
-    io::warnOutdatedHeader(header);
-
-    Eigen::Matrix<uint8_t, 3, 1> color_uint8;
-    serialization::field("color", color_uint8);
-    color = Color(color_uint8[0], color_uint8[1], color_uint8[2]);
-  } else {
-    serialization::field("color", color);
-  }
-
+  serialization::field("color", color);
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
-  if (header.version <= io::Version(1, 0, 4)) {
-    io::warnOutdatedHeader(header);
-
-    Eigen::MatrixXd feature;
-    serialization::field("semantic_feature", feature);
-    semantic_feature = feature.cast<float>();
-  } else {
-    serialization::field("semantic_feature", semantic_feature);
-  }
+  serialization::field("semantic_feature", semantic_feature);
 }
 
 bool SemanticNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -356,12 +333,7 @@ void PlaceNodeAttributes::serialization_info() {
   serialization::field("orientation", orientation);
   serialization::field("need_cleanup", need_cleanup);
   serialization::field("num_frontier_voxels", num_frontier_voxels);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 3)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    serialization::field("anti_frontier", anti_frontier);
-  }
+  serialization::field("anti_frontier", anti_frontier);
 }
 
 bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -408,44 +380,16 @@ std::ostream& Place2dNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void Place2dNodeAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 4)) {
-    io::warnOutdatedHeader(header);
-    serialization::field("boundary", boundary);
-    serialization::field("ellipse_centroid", ellipse_centroid);
-    serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
-    serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
-    serialization::field("pcl_boundary_connections", boundary_connections);
-    {  // temp
-      std::vector<NearestVertexInfo> temp;
-      serialization::field("voxblox_mesh_connections", temp);
-    }
-    serialization::field("pcl_mesh_connections", mesh_connections);
-    {  // temp scope
-      std::vector<uint8_t> temp;
-      serialization::field("mesh_vertex_labels", temp);
-    }
-    {  // temp scope
-      std::vector<size_t> temp;
-      serialization::field("deformation_connections", temp);
-    }
-    {  // temp scope
-      bool temp;
-      serialization::field("need_cleanup_splitting", temp);
-    }
-    serialization::field("has_active_mesh_indices", has_active_mesh_indices);
-  } else {
-    serialization::field("mesh_connections", mesh_connections);
-    serialization::field("boundary_connections", boundary_connections);
-    serialization::field("boundary", boundary);
-    serialization::field("ellipse_centroid", ellipse_centroid);
-    serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
-    serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
-    serialization::field("min_mesh_index", min_mesh_index);
-    serialization::field("max_mesh_index", max_mesh_index);
-    serialization::field("need_finish_merge", need_finish_merge);
-    serialization::field("has_active_mesh_indices", has_active_mesh_indices);
-  }
+  serialization::field("mesh_connections", mesh_connections);
+  serialization::field("boundary_connections", boundary_connections);
+  serialization::field("boundary", boundary);
+  serialization::field("ellipse_centroid", ellipse_centroid);
+  serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
+  serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
+  serialization::field("min_mesh_index", min_mesh_index);
+  serialization::field("max_mesh_index", max_mesh_index);
+  serialization::field("need_finish_merge", need_finish_merge);
+  serialization::field("has_active_mesh_indices", has_active_mesh_indices);
 }
 
 bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -498,14 +442,7 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void AgentNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
-
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    serialization::field("timestamp", timestamp);
-  }
-
+  serialization::field("timestamp", timestamp);
   serialization::field("world_R_body", world_R_body);
   serialization::field("external_key", external_key);
   serialization::field("dbow_ids", dbow_ids);
@@ -557,41 +494,7 @@ void KhronosObjectAttributes::serialization_info() {
   serialization::field("trajectory_timestamps", trajectory_timestamps);
   serialization::field("dynamic_object_points", dynamic_object_points);
   serialization::field("details", details);
-
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version <= io::Version(1, 0, 1)) {
-    io::warnOutdatedHeader(header);
-
-    std::vector<float> xyz;
-    serialization::field("vertices", xyz);
-    std::vector<uint8_t> rgb;
-    serialization::field("colors", rgb);
-    std::vector<uint32_t> faces;
-    serialization::field("faces", faces);
-    const auto num_vertices = xyz.size() / 3;
-    const auto num_colors = rgb.size() / 4;
-    const auto num_faces = faces.size();
-    if (num_vertices != num_colors || num_vertices != num_faces) {
-      return;
-    }
-
-    mesh = Mesh(true, false, false, false);
-    mesh.resizeVertices(num_vertices);
-    for (size_t i = 0; i < num_vertices; ++i) {
-      mesh.setPos(i, {xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]});
-      mesh.setColor(i, {rgb[4 * i], rgb[4 * i + 1], rgb[4 * i + 2], rgb[4 * i + 3]});
-    }
-
-    mesh.resizeFaces(num_faces);
-    for (size_t i = 0; i < num_faces; ++i) {
-      auto& face = mesh.face(i);
-      for (size_t j = 0; j < 3; ++j) {
-        face[j] = faces[3 * i + j];
-      }
-    }
-  } else {
-    serialization::field("mesh", mesh);
-  }
+  serialization::field("mesh", mesh);
 }
 
 bool KhronosObjectAttributes::is_equal(const NodeAttributes& other) const {

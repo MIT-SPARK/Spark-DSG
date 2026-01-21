@@ -34,10 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/graph_json_serialization.h"
 
-#include <fstream>
-
 #include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/scene_graph.h"
@@ -65,21 +62,9 @@ void to_json(json& record, const SceneGraphEdge& edge) {
 void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& factory,
                          const json& record,
                          SceneGraph& graph) {
-  auto node_id = record.at("id").get<NodeId>();
-  auto layer = record.at("layer").get<LayerId>();
-
-  PartitionId partition = 0;
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    if (record.contains("timestamp")) {
-      partition = NodeSymbol(node_id).category();
-    }
-  } else {
-    partition = record.at("partition").get<PartitionId>();
-  }
-
+  const auto node_id = record.at("id").get<NodeId>();
+  const auto layer = record.at("layer").get<LayerId>();
+  const auto partition = record.at("partition").get<PartitionId>();
   auto attrs = serialization::Visitor::from(factory, record.at("attributes"));
   if (!attrs) {
     std::stringstream ss;
@@ -171,35 +156,9 @@ SceneGraph::Ptr readGraph(const std::string& contents) {
   const auto edge_factory = serialization::AttributeRegistry<EdgeAttributes>::current();
 
   SceneGraph::LayerKeys layer_keys;
-  if (header.version < io::Version(1, 1, 2)) {
-    io::warnOutdatedHeader(header);
-
-    const auto layer_ids = record.at("layer_ids").get<std::vector<LayerId>>();
-    layer_keys = SceneGraph::LayerKeys(layer_ids.begin(), layer_ids.end());
-  } else {
-    record.at("layer_keys").get_to(layer_keys);
-  }
-
-  SceneGraph::LayerNames layer_names;
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    layer_names = {{DsgLayers::OBJECTS, 2},
-                   {DsgLayers::AGENTS, 2},
-                   {DsgLayers::PLACES, 3},
-                   {DsgLayers::ROOMS, 4},
-                   {DsgLayers::BUILDINGS, 5}};
-  } else if (header.version < io::Version(1, 1, 1)) {
-    io::warnOutdatedHeader(header);
-
-    const auto names = record.at("layer_names").get<std::map<std::string, LayerId>>();
-    layer_names = SceneGraph::LayerNames(names.begin(), names.end());
-  } else {
-    layer_names = record.at("layer_names").get<SceneGraph::LayerNames>();
-  }
-
+  record.at("layer_keys").get_to(layer_keys);
+  const auto layer_names = record.at("layer_names").get<SceneGraph::LayerNames>();
   auto graph = std::make_shared<SceneGraph>(layer_keys, layer_names);
-
   if (record.contains("metadata")) {
     graph->metadata = record["metadata"];
   }
