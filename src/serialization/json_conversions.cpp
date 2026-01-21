@@ -69,17 +69,8 @@ void from_json(const json& j, BoundingBox& b) {
   if (b.type == BoundingBox::Type::INVALID) {
     return;
   }
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 0, 3)) {
-    // Legacy bboxes with min/max encoding.
-    b.dimensions =
-        j.at("max").get<Eigen::Vector3f>() - j.at("min").get<Eigen::Vector3f>();
-    io::warnOutdatedHeader(header);
-  } else {
-    // New bboxes with dimensions encoding.
-    b.dimensions = j.at("dimensions").get<Eigen::Vector3f>();
-  }
 
+  b.dimensions = j.at("dimensions").get<Eigen::Vector3f>();
   b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
   auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
   b.world_R_center = world_q_center.toRotationMatrix();

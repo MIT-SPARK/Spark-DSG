@@ -45,34 +45,6 @@ namespace spark_dsg {
 
 using json = nlohmann::json;
 
-Mesh::Ptr deserializeMeshLegacy(const json& record) {
-  // Legacy mesh reading support.
-  Mesh::Ptr mesh = std::make_shared<Mesh>();
-  if (record.contains("vertices")) {
-    for (const auto& vertex : record.at("vertices")) {
-      Eigen::Vector3f pos(vertex.at("x").get<float>(),
-                          vertex.at("y").get<float>(),
-                          vertex.at("z").get<float>());
-      mesh->points.push_back(pos);
-
-      Color color{vertex.at("r").get<uint8_t>(),
-                  vertex.at("g").get<uint8_t>(),
-                  vertex.at("b").get<uint8_t>(),
-                  255};
-      mesh->colors.push_back(color);
-    }
-  }
-
-  if (record.contains("faces")) {
-    for (const auto& face : record.at("faces")) {
-      mesh->faces.push_back({{face.at(0).get<size_t>(),
-                              face.at(1).get<size_t>(),
-                              face.at(2).get<size_t>()}});
-    }
-  }
-  return mesh;
-}
-
 void to_json(json& record, const Mesh& mesh) {
   record["header"] = io::FileHeader::current();
 
@@ -186,13 +158,6 @@ Mesh::Ptr Mesh::deserializeFromJson(const std::string& contents) {
                           ? record.at("header").get<io::FileHeader>()
                           : io::FileHeader::legacy();
   const io::GlobalInfo::ScopedInfo info(header);
-
-  // Legacy support.
-  if (header.version <= io::Version(1, 0, 1)) {
-    io::warnOutdatedHeader(header);
-    return deserializeMeshLegacy(record);
-  }
-
   auto mesh = std::make_shared<Mesh>();
   *mesh = record.get<Mesh>();
   return mesh;
