@@ -61,21 +61,20 @@ using NodeAttributeRegistration =
     serialization::AttributeRegistration<NodeAttributes, T>;
 
 #define REGISTER_NODE_ATTRIBUTES(attr_type)                                  \
-  inline static const auto registration_ =                                   \
+  inline static const auto attr_type##registration_ =                        \
       NodeAttributeRegistration<attr_type>(#attr_type);                      \
   const serialization::RegistrationInfo& registrationImpl() const override { \
-    return registration_.info;                                               \
+    return attr_type##registration_.info;                                    \
   }                                                                          \
   static_assert(true, "")
 
-// TODO(nathan) handle this better
 /**
- * @brief Typedef representing the semantic class of an object or other node
+ * @brief Type alias representing the semantic class of an object or other node
  */
 using SemanticLabel = uint32_t;
 
 /**
- * @brief Information related to place to mesh coorespondence
+ * @brief Information related to place to mesh correspondence
  */
 struct NearestVertexInfo {
   int32_t block[3];
@@ -110,11 +109,11 @@ struct NodeAttributes {
 
   //! Position of the node
   Eigen::Vector3d position;
-  //! last time the place was updated (while active)
+  //! Last time the place was updated (while active)
   uint64_t last_update_time_ns;
-  //! whether or not the node is in the active window
+  //! Whether or not the node is in the active window
   bool is_active;
-  //! whether the node was observed by Hydra, or added as a prediction
+  //! Whether the node was observed by Hydra, or added as a prediction
   bool is_predicted;
   //! Arbitrary node metadata
   Metadata metadata;
@@ -139,19 +138,16 @@ struct NodeAttributes {
   virtual size_t memoryUsage() const;
 
  protected:
-  //! actually output information to the std::ostream
   virtual std::ostream& fill_ostream(std::ostream& out) const;
-  //! dispatch function for serialization
   virtual void serialization_info();
-  //! dispatch function for serialization
   void serialization_info() const;
-  //! compute equality
   virtual bool is_equal(const NodeAttributes& other) const;
 
+ private:
   inline static const auto registration_ =
       NodeAttributeRegistration<NodeAttributes>("NodeAttributes");
 
-  //! get registration
+ protected:
   virtual const serialization::RegistrationInfo& registrationImpl() const {
     return registration_.info;
   }
@@ -163,12 +159,12 @@ struct NodeAttributes {
 struct SemanticNodeAttributes : public NodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  //! pointer type for node
+  //! Pointer type for node
   using Ptr = std::unique_ptr<SemanticNodeAttributes>;
 
-  //! alias for semantic label
+  //! Alias for semantic label
   using Label = SemanticLabel;
-  // !flag for whether or not semantic label should be considered valid
+  //! Flag for whether or not semantic label should be considered valid
   inline static constexpr Label NO_SEMANTIC_LABEL = std::numeric_limits<Label>::max();
 
   SemanticNodeAttributes();
@@ -217,11 +213,11 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   NodeAttributes::Ptr clone() const override;
   void transform(const Eigen::Isometry3d& transform) override;
 
-  //! Mesh vertice connections
+  //! Mesh vertex connections
   std::list<size_t> mesh_connections;
   //! Whether or not the object is known (and registered)
   bool registered;
-  //! rotation of object w.r.t. world (only valid when registerd)
+  //! Rotation of object with respect to world (only valid when registered)
   Eigen::Quaterniond world_R_object;
 
  protected:
@@ -260,9 +256,8 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
 
 /**
  * @brief Additional node attributes for a place
- * In addition to the normal semantic properties, a room has the minimum
- * distance to an obstacle and the number of basis points for that vertex in the
- * GVD
+ * In addition to the normal semantic properties, a place has the minimum
+ * distance to an obstacle and the number of basis points for that vertex
  */
 struct PlaceNodeAttributes : public SemanticNodeAttributes {
  public:
@@ -274,7 +269,7 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
 
   /**
    * @brief make places node attributes
-   * @param distance distance to nearest obstalce
+   * @param distance distance to nearest obstacle
    * @param num_basis_points number of basis points of the places node
    */
   PlaceNodeAttributes(double distance, unsigned int num_basis_points);
@@ -285,13 +280,13 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   double distance;
   //! number of equidistant obstacles
   unsigned int num_basis_points;
-  //! voxblox mesh vertices that are closest to this place
+  //! Mesh vertices that are closest to this place
   std::vector<NearestVertexInfo> voxblox_mesh_connections;
-  //! pcl mesh vertices that are closest to this place
+  //! Mesh vertices that are closest to this place
   std::vector<size_t> pcl_mesh_connections;
   //! semantic labels of parents
   std::vector<uint8_t> mesh_vertex_labels;
-  //! deformation vertices that are closest to this place
+  //! Deformation vertices that are closest to this place
   std::vector<size_t> deformation_connections;
 
   bool real_place = true;
@@ -325,25 +320,25 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   virtual ~Place2dNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
 
-  //! mesh vertices that are closest to this place
+  //! Mesh vertices that are closest to this place
   std::list<size_t> mesh_connections;
-  //! mesh vertices corresponding to boundary points
+  //! Mesh vertices corresponding to boundary points
   std::vector<size_t> boundary_connections;
-  //! points on boundary of place region
+  //! Points on boundary of place region
   std::vector<Eigen::Vector3d> boundary;
-  //! center of intersection checking ellipsoid
+  //! Center of intersection checking ellipsoid
   Eigen::Vector3d ellipse_centroid;
-  //! shape matrix for intersection checking ellipsoid
+  //! Shape matrix for intersection checking ellipsoid
   Eigen::Matrix<double, 2, 2> ellipse_matrix_compress;
-  //! shape matrix for plotting ellipsoid
+  //! Shape matrix for plotting ellipsoid
   Eigen::Matrix<double, 2, 2> ellipse_matrix_expand;
-  //! min vertex index of associated mesh vertices
+  //! Minimum vertex index of associated mesh vertices
   size_t min_mesh_index;
-  //! max vertex index of associated mesh vertices
+  //! Max vertex index of associated mesh vertices
   size_t max_mesh_index;
-  //! tracks whether the node still needs to be cleaned up during merging
+  //! Tracks whether the node still needs to be cleaned up during merging
   bool need_finish_merge;
-  //! whether this node has mesh vertices in active window
+  //! Whether this node has mesh vertices in active window
   bool has_active_mesh_indices;
 
  protected:
