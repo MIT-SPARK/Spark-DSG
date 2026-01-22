@@ -661,8 +661,8 @@ std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
   out << "  - first_observed_ns: " << first_observed_ns << "\n"
       << "  - last_observed_ns: " << last_observed_ns << "\n"
-      << "  - num points: " << points.size() << "\n"
       << "  - num states: " << states.size() << "\n"
+      << "  - num radii: " << radii.size() << "\n"
       << "  - min radius: " << min_radius << "\n"
       << "  - max radius: " << max_radius;
   return out;
@@ -672,7 +672,7 @@ void TravNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
-  serialization::field("points", points);
+  serialization::field("radii", radii);
   serialization::field("min_radius", min_radius);
   serialization::field("max_radius", max_radius);
 
@@ -700,15 +700,81 @@ bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
     return false;
   }
 
-  return points == derived->points && states == derived->states &&
+  return states == derived->states && radii == derived->radii &&
          min_radius == derived->min_radius && max_radius == derived->max_radius &&
          first_observed_ns == derived->first_observed_ns &&
          last_observed_ns == derived->last_observed_ns;
 }
 
 void TravNodeAttributes::clear() {
-  points.clear();
+  radii.clear();
   states.clear();
+}
+
+double TravNodeAttributes::getBinPercentage(const Eigen::Vector3d& point_L) const {
+  const double angle = std::atan2(point_L.y(), point_L.x()) / (2.0 * M_PI);
+  return angle > 0.0 ? angle : angle + 1.0;
+}
+
+size_t TravNodeAttributes::getBin(const Eigen::Vector3d& point_L) const {
+  return static_cast<size_t>(getBinPercentage(point_L) * radii.size());
+}
+
+bool TravNodeAttributes::contains(const Eigen::Vector3d& point_W) const {
+  const Eigen::Vector3d p_L = point_W - position;  // local frame
+  const double distance = p_L.norm();
+  if (distance < min_radius) {
+    return true;
+  }
+  if (distance > max_radius) {
+    return false;
+  }
+
+  // Check detailed by interpolating the bin.
+  const double bin = getBinPercentage(p_L);
+  size_t bin_left = static_cast<size_t>(std::floor(bin * radii.size()));
+  size_t bin_right = (bin_left + 1) % radii.size();
+  double distance_max =
+      radii[bin_left] + (radii[bin_right] - radii[bin_left]) *
+                            (bin * radii.size() - static_cast<double>(bin_left));
+  return distance <= distance_max;
+}
+
+bool TravNodeAttributes::intersects(const TravNodeAttributes& other) const {
+  const Eigen::Vector3d p_L = other.position - position;  // local frame
+  const double distance = p_L.norm();
+  if (distance > (max_radius + other.max_radius)) {
+    return false;
+  }
+  if (distance < (min_radius + other.min_radius)) {
+    return true;
+  }
+
+  // Check detailed intersection.
+  // TODO(lschmid): For now a simple approximation by checking the bin edge points only.
+  for (size_t i = 0; i < other.radii.size(); ++i) {
+    const double angle =
+        (static_cast<double>(i) / static_cast<double>(other.radii.size())) * 2.0 * M_PI;
+    const Eigen::Vector3d point_L_other(
+        other.radii[i] * std::cos(angle), other.radii[i] * std::sin(angle), 0.0);
+    const Eigen::Vector3d point_world = other.position + point_L_other;
+    if (contains(point_world)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+double TravNodeAttributes::area() const {
+  double area = 0.0;
+  const size_t N = radii.size();
+  const double angle_increment = std::sin((2.0 * M_PI) / static_cast<double>(N));
+  for (size_t i = 0; i < N; ++i) {
+    const double r1 = radii[i];
+    const double r2 = radii[(i + 1) % N];
+    area += 0.5 * r1 * r2 * angle_increment;
+  }
+  return area;
 }
 
 }  // namespace spark_dsg

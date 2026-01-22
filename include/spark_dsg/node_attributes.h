@@ -522,9 +522,8 @@ struct TravNodeAttributes : public NodeAttributes {
   uint64_t first_observed_ns = 0;
   uint64_t last_observed_ns = 0;
 
-  //! Exterior boundary information. These are in attribute coordinates (origin at the
-  //! position).
-  std::vector<Eigen::Vector3d> points;
+  //! Radii for the boundary points.
+  std::vector<double> radii;
 
   //! Corresponding traversability states for each boundary point.
   TraversabilityStates states;
@@ -538,10 +537,40 @@ struct TravNodeAttributes : public NodeAttributes {
    */
   void clear();
 
+  /**
+   * @brief Check if a point in world coordinates is within the traversability boundary.
+   * @param point Point in world coordinates.
+   */
+  bool contains(const Eigen::Vector3d& point_W) const;
+
+  /**
+   * @brief Check if this traversability boundary intersects with another.
+   * @param other Other traversability boundary.
+   */
+  bool intersects(const TravNodeAttributes& other) const;
+
+  /**
+   * @brief Compute the area of the traversability boundary.
+   */
+  double area() const;
+
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
+
+  /**
+   * @brief Get the bin index for a point in local coordinates. The bin will always be
+   * valid and the floored index is returned.
+   * @param point Point in local coordinates.
+   */
+  size_t getBin(const Eigen::Vector3d& point_L) const;
+
+  /**
+   * @brief Get the linear coordinates [0,1] around the circle (i.e., all bins).
+   * @param point Point in local coordinates.
+   */
+  double getBinPercentage(const Eigen::Vector3d& point_L) const;
 
   REGISTER_NODE_ATTRIBUTES(TravNodeAttributes);
 };
