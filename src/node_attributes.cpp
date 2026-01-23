@@ -711,9 +711,7 @@ void TravNodeAttributes::fromExteriorPoints(
     const std::vector<Eigen::Vector3d>& points_W,
     const TraversabilityStates& states_in) {
   radii = std::vector<double>(radii.size(), std::numeric_limits<double>::max());
-  states = TraversabilityStates(radii.size(),
-                                states_in.empty() ? TraversabilityState::UNKNOWN
-                                                  : TraversabilityState::INTRAVERSABLE);
+  states = TraversabilityStates(radii.size(), TraversabilityState::UNKNOWN);
   min_radius = std::numeric_limits<double>::max();
   max_radius = 0.0;
 
@@ -735,7 +733,6 @@ void TravNodeAttributes::fromExteriorPoints(
   for (size_t i = 0; i < radii.size(); ++i) {
     if (radii[i] == std::numeric_limits<double>::max()) {
       radii[i] = min_radius;
-      states[i] = TraversabilityState::UNKNOWN;
     }
   }
 }
@@ -790,8 +787,7 @@ Eigen::Vector3d TravNodeAttributes::getBoundaryPoint(size_t bin,
 }
 
 bool TravNodeAttributes::intersects(const TravNodeAttributes& other) const {
-  const Eigen::Vector3d p_L = other.position - position;  // local frame
-  const double distance = p_L.norm();
+  const double distance = (other.position - position).norm();
   if (distance > (max_radius + other.max_radius)) {
     return false;
   }
