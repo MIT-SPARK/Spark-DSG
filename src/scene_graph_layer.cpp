@@ -242,14 +242,13 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
                                  std::vector<NodeId>* new_nodes,
                                  const Eigen::Isometry3d* transform_new_nodes) {
   const bool update_attributes = config.shouldUpdateAttributes(id);
-  for (const auto& id_node_pair : other_layer.nodes_) {
-    const auto siter = nodes_status_.find(id_node_pair.first);
+  for (const auto& [other_id, other_node] : other_layer.nodes_) {
+    const auto siter = nodes_status_.find(other_id);
     if (siter != nodes_status_.end() && siter->second == NodeStatus::MERGED) {
       continue;  // don't try to update or add previously merged nodes
     }
 
-    const auto& other = *id_node_pair.second;
-    auto iter = nodes_.find(id_node_pair.first);
+    auto iter = nodes_.find(other_id);
     if (iter != nodes_.end()) {
       if (!update_attributes) {
         continue;
@@ -259,18 +258,18 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
         continue;
       }
 
-      iter->second->attributes_ = other.attributes_->clone();
+      iter->second->attributes_ = other_node->attributes_->clone();
       continue;
     }
 
-    auto attrs = other.attributes_->clone();
+    auto attrs = other_node->attributes_->clone();
     if (transform_new_nodes) {
       attrs->transform(*transform_new_nodes);
     }
-    nodes_[other.id] = Node::Ptr(new Node(other.id, id, std::move(attrs)));
-    nodes_status_[other.id] = NodeStatus::NEW;
+    nodes_[other_id] = Node::Ptr(new Node(other_id, id, std::move(attrs)));
+    nodes_status_[other_id] = NodeStatus::NEW;
     if (new_nodes) {
-      new_nodes->push_back(other.id);
+      new_nodes->push_back(other_id);
     }
   }
 
