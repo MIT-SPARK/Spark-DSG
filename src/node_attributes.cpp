@@ -39,6 +39,7 @@
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/traversability_boundary.h"
 
 namespace spark_dsg {
 
@@ -706,14 +707,49 @@ bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
          last_observed_ns == derived->last_observed_ns;
 }
 
+void TravNodeAttributes::fromExteriorPoints(
+    const std::vector<Eigen::Vector3d>& points_W,
+    const TraversabilityStates& states_in) {
+  radii = std::vector<double>(radii.size(), std::numeric_limits<double>::max());
+  states = TraversabilityStates(radii.size(),
+                                states_in.empty() ? TraversabilityState::UNKNOWN
+                                                  : TraversabilityState::INTRAVERSABLE);
+  min_radius = std::numeric_limits<double>::max();
+  max_radius = 0.0;
+
+  // Update all bins with points.
+  for (size_t i = 0; i < points_W.size(); ++i) {
+    const Eigen::Vector3d point_L = points_W[i] - position;
+    const double distance = point_L.norm();
+    min_radius = std::min(min_radius, distance);
+    max_radius = std::max(max_radius, distance);
+    const size_t bin = getBin(point_L);
+
+    radii[bin] = std::min(radii[bin], distance);
+    if (i < states_in.size()) {
+      fuseStates(states_in[i], states[bin]);
+    }
+  }
+
+  // Fill in empty bins.
+  for (size_t i = 0; i < radii.size(); ++i) {
+    if (radii[i] == std::numeric_limits<double>::max()) {
+      radii[i] = min_radius;
+      states[i] = TraversabilityState::UNKNOWN;
+    }
+  }
+}
+
 void TravNodeAttributes::clear() {
   radii.clear();
   states.clear();
+  min_radius = 0.0;
+  max_radius = 0.0;
 }
 
 double TravNodeAttributes::getBinPercentage(const Eigen::Vector3d& point_L) const {
   const double angle = std::atan2(point_L.y(), point_L.x()) / (2.0 * M_PI);
-  return angle > 0.0 ? angle : angle + 1.0;
+  return angle >= 0.0 ? angle : angle + 1.0;
 }
 
 size_t TravNodeAttributes::getBin(const Eigen::Vector3d& point_L) const {
@@ -740,6 +776,19 @@ bool TravNodeAttributes::contains(const Eigen::Vector3d& point_W) const {
   return distance <= distance_max;
 }
 
+Eigen::Vector3d TravNodeAttributes::getBoundaryPoint(size_t bin,
+                                                     bool in_world_frame) const {
+  const double angle =
+      (static_cast<double>(bin) / static_cast<double>(radii.size())) * 2.0 * M_PI;
+  const Eigen::Vector3d point_L(
+      radii[bin] * std::cos(angle), radii[bin] * std::sin(angle), 0.0);
+  if (in_world_frame) {
+    return position + point_L;
+  } else {
+    return point_L;
+  }
+}
+
 bool TravNodeAttributes::intersects(const TravNodeAttributes& other) const {
   const Eigen::Vector3d p_L = other.position - position;  // local frame
   const double distance = p_L.norm();
@@ -751,14 +800,9 @@ bool TravNodeAttributes::intersects(const TravNodeAttributes& other) const {
   }
 
   // Check detailed intersection.
-  // TODO(lschmid): For now a simple approximation by checking the bin edge points only.
+  // TODO(lschmid): For now a simple approximation by checking the corner points only.
   for (size_t i = 0; i < other.radii.size(); ++i) {
-    const double angle =
-        (static_cast<double>(i) / static_cast<double>(other.radii.size())) * 2.0 * M_PI;
-    const Eigen::Vector3d point_L_other(
-        other.radii[i] * std::cos(angle), other.radii[i] * std::sin(angle), 0.0);
-    const Eigen::Vector3d point_world = other.position + point_L_other;
-    if (contains(point_world)) {
+    if (contains(other.getBoundaryPoint(i, true))) {
       return true;
     }
   }
