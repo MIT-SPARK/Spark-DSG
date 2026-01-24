@@ -335,7 +335,7 @@ bool SceneGraph::addOrUpdateEdge(NodeId source,
                                  std::unique_ptr<EdgeAttributes>&& edge_info,
                                  bool enforce_parent_constraints) {
   auto edge = edges_.find(source, target);
-  if (!edge) {
+  if (edge) {
     edge->info = std::move(edge_info);
     return true;
   }
@@ -425,21 +425,12 @@ size_t SceneGraph::numLayers() const {
   return static_size + unique_layer_groups;
 }
 
-size_t SceneGraph::numNodes() const {
-  size_t total_nodes = numUnpartitionedNodes();
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    for (const auto& [partition_id, partition] : partitions) {
-      total_nodes += partition->numNodes();
-    }
-  }
-
-  return total_nodes;
-}
+size_t SceneGraph::numNodes() const { return nodes_.size(); }
 
 size_t SceneGraph::numUnpartitionedNodes() const {
   size_t total_nodes = 0u;
-  for (const auto& [layer_id, layer] : layers_) {
-    total_nodes += layer->numNodes();
+  for (const auto& [_, node] : nodes_) {
+    total_nodes += node->layer.partition ? 0 : 1;
   }
 
   return total_nodes;

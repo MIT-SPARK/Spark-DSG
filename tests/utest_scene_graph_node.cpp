@@ -39,7 +39,7 @@
 using namespace spark_dsg;
 
 // Check that a default node has no edges
-TEST(SceneGraphNodeTests, DefaultNodeIvariants) {
+TEST(SceneGraphNode, DefaultNodeInvariants) {
   auto attrs = std::make_unique<NodeAttributes>();
   SceneGraphNode a(0, 0, std::move(attrs));
   EXPECT_FALSE(a.hasSiblings());
