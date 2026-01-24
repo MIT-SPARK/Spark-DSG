@@ -34,7 +34,8 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include "spark_dsg/serialization/versioning.h"
+#include <vector>
+
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::io::binary {
@@ -43,15 +44,9 @@ void writeGraph(const SceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh = false);
 
-void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer);
-
 std::unique_ptr<SceneGraph> readGraph(const uint8_t* const buffer, size_t length);
 
 std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer);
-
-std::unique_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length);
-
-std::unique_ptr<SceneGraphLayer> readLayer(const std::vector<uint8_t>& buffer);
 
 bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length);
 

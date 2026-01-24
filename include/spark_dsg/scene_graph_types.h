@@ -34,7 +34,6 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <cstdint>
-#include <limits>
 #include <optional>
 #include <string>
 
@@ -58,6 +57,8 @@ struct EdgeKey {
 
   NodeId k1;
   NodeId k2;
+
+  std::string str() const;
 };
 
 //! Layer key specifying primary layer and optional partition
@@ -74,6 +75,7 @@ struct LayerKey {
     return !this->operator==(other);
   }
   bool operator<(const LayerKey& other) const;
+  std::string str() const;
 };
 
 //! @brief Common layer names

@@ -81,19 +81,19 @@ struct EdgeContainer {
   using Edges = std::map<EdgeKey, Edge>;
   using EdgeStatusMap = std::map<EdgeKey, EdgeStatus>;
 
-  void insert(NodeId source,
+  bool insert(NodeId source,
               NodeId target,
               std::unique_ptr<EdgeAttributes>&& edge_info);
 
-  void remove(NodeId source, NodeId target);
+  bool remove(NodeId source, NodeId target);
 
-  void rewire(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
+  bool rewire(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
 
   bool contains(NodeId source, NodeId target) const;
 
   size_t size() const;
 
-  void reset();
+  void clear();
 
   Edge* find(NodeId source, NodeId target);
 
@@ -102,6 +102,8 @@ struct EdgeContainer {
   EdgeStatus getStatus(NodeId source, NodeId target) const;
 
   void getRemoved(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
+
+  std::vector<EdgeKey> getRemoved(bool clear_removed) const;
 
   void getNew(std::vector<EdgeKey>& new_edges, bool clear_new) const;
 

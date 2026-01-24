@@ -102,7 +102,6 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   record["directed"] = false;
   record["multigraph"] = false;
   record["nodes"] = nlohmann::json::array();
-  record["edges"] = nlohmann::json::array();
   record["layer_keys"] = graph.layer_keys();
   record["layer_names"] = graph.layer_names();
   record["metadata"] = graph.metadata();
@@ -111,14 +110,6 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
     for (const auto& [node_id, node] : layer->nodes()) {
       record["nodes"].push_back(*node);
     }
-
-    for (const auto& [edge_id, edge] : layer->edges()) {
-      record["edges"].push_back(edge);
-    }
-  }
-
-  for (const auto& [edge_id, edge] : graph.interlayer_edges()) {
-    record["edges"].push_back(edge);
   }
 
   for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
@@ -126,11 +117,12 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
       for (const auto& [node_id, node] : partition->nodes()) {
         record["nodes"].push_back(*node);
       }
-
-      for (const auto& [edge_id, edge] : partition->edges()) {
-        record["edges"].push_back(edge);
-      }
     }
+  }
+
+  record["edges"] = nlohmann::json::array();
+  for (const auto& [edge_id, edge] : graph.edges()) {
+    record["edges"].push_back(edge);
   }
 
   auto mesh = graph.mesh();

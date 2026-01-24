@@ -57,13 +57,6 @@ struct GraphMergeConfig {
 };
 
 /**
- * @brief Base node status.
- *
- * Mostly for keeping history and status of nodes in a graph
- */
-enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
-
-/**
  * @brief A layer in the scene graph (which is a graph itself)
  *
  * This class handles book-keeping for adding to and removing nodes from a layer
@@ -82,11 +75,8 @@ class SceneGraphLayer {
   using NodeCheckup = std::map<NodeId, NodeStatus>;
   //! edge container type for the layer
   using Edges = EdgeContainer::Edges;
-  //! callback function for filtering nodes
-  using NodeChecker = std::function<bool(const SceneGraphNode&)>;
 
   friend class SceneGraph;
-  friend class SceneGraphLogger;
 
   /**
    * @brief Makes an empty layer with the specified layer id
@@ -136,29 +126,6 @@ class SceneGraphLayer {
   const SceneGraphNode& getNode(NodeId node_id) const;
 
   /**
-   * @brief construct and add a node to the layer
-   * @param node_id node to create
-   * @param attrs node attributes
-   * @returns true if emplace into internal map was successful
-   */
-  bool emplaceNode(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
-
-  /**
-   * @brief remove a node if it exists
-   * @param node_id node to remove
-   * @returns true if the node existed prior to removal
-   */
-  bool removeNode(NodeId node_id);
-
-  /**
-   * @brief merge a node into the other if both nodes exist
-   * @param node_from node to merge into the other and remove
-   * @param node_to target node (will still exist after merge)
-   * @returns true if operation successful
-   */
-  bool mergeNodes(NodeId node_from, NodeId node_to);
-
-  /**
    * @brief Check whether the layer has the specificied edge
    * @param source first node to check for
    * @param target second node to check for
@@ -193,80 +160,6 @@ class SceneGraphLayer {
   const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
 
   /**
-   * @brief Add an edge to the layer
-   *
-   * Checks that the edge doesn't already exist and
-   * that the source and target already exist
-   *
-   * @param source start node
-   * @param target end node
-   * @param edge_info optional edge attributes
-   * @returns true if the edge was successfully added
-   */
-  bool insertEdge(NodeId source,
-                  NodeId target,
-                  std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr);
-
-  /**
-   * @brief remove an edge if it exists
-   * @param source source of edge to remove
-   * @param target target of edge to remove
-   * @returns true if the edge existed prior to removal
-   */
-  bool removeEdge(NodeId source, NodeId target);
-
-  /**
-   * @brief remove an edge if it exists
-   * @param source source of edge to rewire
-   * @param target target of edge to rewire
-   * @param new_source source of edge after rewiring
-   * @param new_target target of edge after rewiring
-   * @returns true if operation successful
-   */
-  bool rewireEdge(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
-
-  /**
-   * @brief Add the other layer into this one
-   * @param other Layer to merge into this layer
-   * @param config Merge configuration controlling contraction and attributes
-   * @param new_nodes Optional output to register new nodes
-   */
-  void mergeLayer(const SceneGraphLayer& other,
-                  const GraphMergeConfig& config,
-                  std::vector<NodeId>* new_nodes = nullptr,
-                  const Eigen::Isometry3d* transform_new_nodes = nullptr);
-
-  /**
-   * @brief Get node ids of newly inserted nodes
-   */
-  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) const;
-
-  /**
-   * @brief Get node id of deleted nodes
-   */
-  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed) const;
-
-  /**
-   * @brief Get the source and target of newly inserted edges
-   */
-  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) const;
-
-  /**
-   * @brief Get the source and target of deleted edges
-   */
-  void getRemovedEdges(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
-
-  /**
-   * @brief Get copy of the layer
-   */
-  virtual SceneGraphLayer::Ptr clone(const NodeChecker& is_valid = {}) const;
-
-  /**
-   * @brief Rigidly transform layer
-   */
-  void transform(const Eigen::Isometry3d& transform);
-
-  /**
    * @brief Get the immediate neighborhood of a node via BFS
    * @param node Node to get the neighborhood of
    * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
@@ -284,20 +177,11 @@ class SceneGraphLayer {
   //! ID of the layer
   const LayerKey id;
 
-  /**
-   * @brief Get memory usage of the layer in bytes.
-   */
-  size_t memoryUsage() const;
-
  protected:
-  void reset();
-
   void fillNeighborhoodForNode(NodeId node,
                                size_t num_hops,
                                std::unordered_set<NodeId>& result,
                                std::map<NodeId, size_t>& costs) const;
-
-  void cloneImpl(SceneGraphLayer& other, const NodeChecker& is_valid) const;
 
   //! internal node container
   Nodes nodes_;

@@ -35,7 +35,6 @@
 #include "spark_dsg/edge_container.h"
 
 #include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 
@@ -48,38 +47,47 @@ SceneGraphEdge::SceneGraphEdge(NodeId source,
 
 SceneGraphEdge::~SceneGraphEdge() = default;
 
-void EdgeContainer::insert(NodeId source,
-                           NodeId target,
-                           std::unique_ptr<EdgeAttributes>&& edge_info) {
-  auto attrs = (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
-                                      : std::move(edge_info);
+bool EdgeContainer::insert(NodeId u, NodeId v, std::unique_ptr<EdgeAttributes>&& info) {
+  auto attrs = (info == nullptr) ? std::make_unique<EdgeAttributes>() : std::move(info);
+  const auto [_, added] = edges.emplace(std::piecewise_construct,
+                                        std::forward_as_tuple(u, v),
+                                        std::forward_as_tuple(u, v, std::move(attrs)));
+  if (!added) {
+    return false;
+  }
 
-  edges.emplace(std::piecewise_construct,
-                std::forward_as_tuple(source, target),
-                std::forward_as_tuple(source, target, std::move(attrs)));
-  edge_status[EdgeKey(source, target)] = EdgeStatus::NEW;
+  edge_status[EdgeKey(u, v)] = EdgeStatus::NEW;
+  return true;
 }
 
-void EdgeContainer::remove(NodeId source, NodeId target) {
+bool EdgeContainer::remove(NodeId source, NodeId target) {
   const EdgeKey key(source, target);
-  edge_status.at(key) = EdgeStatus::DELETED;
+  auto iter = edges.find(key);
+  if (iter == edges.end()) {
+    return false;
+  }
+
   edges.erase(key);
+  edge_status.at(key) = EdgeStatus::DELETED;
+  return true;
 }
 
-void EdgeContainer::rewire(NodeId source,
+bool EdgeContainer::rewire(NodeId source,
                            NodeId target,
                            NodeId new_source,
                            NodeId new_target) {
   EdgeKey key(source, target);
-  const auto prev = find(key);
-  if (!prev) {
-    return;
+  const auto iter = edges.find(key);
+  if (iter == edges.end()) {
+    return false;
   }
 
-  auto attrs = prev->info->clone();
+  // remove old edge and attempt to add new edge with old attrs
+  auto attrs = iter->second.info->clone();
+  edges.erase(iter);
   edge_status.at(key) = EdgeStatus::MERGED;
-  remove(source, target);
   insert(new_source, new_target, std::move(attrs));
+  return true;
 }
 
 bool EdgeContainer::contains(NodeId source, NodeId target) const {
@@ -88,7 +96,7 @@ bool EdgeContainer::contains(NodeId source, NodeId target) const {
 
 size_t EdgeContainer::size() const { return edges.size(); }
 
-void EdgeContainer::reset() {
+void EdgeContainer::clear() {
   edges.clear();
   edge_status.clear();
 }
@@ -138,6 +146,12 @@ void EdgeContainer::getRemoved(std::vector<EdgeKey>& removed_edges,
       ++iter;
     }
   }
+}
+
+std::vector<EdgeKey> EdgeContainer::getRemoved(bool clear_removed) const {
+  std::vector<EdgeKey> to_remove;
+  getRemoved(to_remove, clear_removed);
+  return to_remove;
 }
 
 void EdgeContainer::setStale() {

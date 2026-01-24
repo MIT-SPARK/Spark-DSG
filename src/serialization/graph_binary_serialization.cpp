@@ -102,27 +102,6 @@ void parseEdge(const AttributeFactory<EdgeAttributes>& factory,
   callback(source, target, std::move(attrs));
 }
 
-void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer) {
-  BinarySerializer serializer(&buffer);
-  serializer.write(graph.id.layer);  // we don't save partition IDs
-
-  // saves names to type index mapping
-  serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
-  serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
-
-  serializer.startDynamicArray();
-  for (const auto& id_node_pair : graph.nodes()) {
-    serializer.write(*id_node_pair.second);
-  }
-  serializer.endDynamicArray();
-
-  serializer.startDynamicArray();
-  for (const auto& id_edge_pair : graph.edges()) {
-    serializer.write(id_edge_pair.second);
-  }
-  serializer.endDynamicArray();
-}
-
 void writeGraph(const SceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh) {
@@ -155,21 +134,7 @@ void writeGraph(const SceneGraph& graph,
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& [edge_id, edge] : layer->edges()) {
-      serializer.write(edge);
-    }
-  }
-
-  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [edge_id, edge] : partition->edges()) {
-        serializer.write(edge);
-      }
-    }
-  }
-
-  for (const auto& [edge_id, edge] : graph.interlayer_edges()) {
+  for (const auto& [edge_id, edge] : graph.edges()) {
     serializer.write(edge);
   }
   serializer.endDynamicArray();
@@ -278,42 +243,6 @@ std::unique_ptr<SceneGraph> readGraph(const uint8_t* const buffer, size_t length
 
 std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer) {
   return readGraph(buffer.data(), buffer.size());
-}
-
-std::unique_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length) {
-  BinaryDeserializer deserializer(buffer, length);
-  LayerId layer_id;
-  deserializer.read(layer_id);
-
-  auto graph = std::make_unique<SceneGraphLayer>(layer_id);
-
-  // load name to type index mapping if present
-  const auto node_factory = loadFactory<NodeAttributes>(deserializer);
-  const auto edge_factory = loadFactory<EdgeAttributes>(deserializer);
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    parseNode(node_factory,
-              deserializer,
-              [&graph](const auto&, const auto& node, auto&& attrs) {
-                graph->emplaceNode(node, std::move(attrs));
-              });
-  }
-
-  deserializer.checkDynamicArray();
-  while (!deserializer.isDynamicArrayEnd()) {
-    parseEdge(edge_factory,
-              deserializer,
-              [&](const auto& source, const auto& target, auto&& attrs) {
-                graph->insertEdge(source, target, std::move(attrs));
-              });
-  }
-
-  return graph;
-}
-
-std::unique_ptr<SceneGraphLayer> readLayer(const std::vector<uint8_t>& buffer) {
-  return readLayer(buffer.data(), buffer.size());
 }
 
 bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length) {
