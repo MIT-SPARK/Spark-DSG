@@ -519,6 +519,8 @@ class SceneGraph {
   const Layers& layers() const { return layers_; };
   //! @brief Constant reference to the mapping between nodes and layers
   const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
+  //! @brief Const reference to all the nodes in the scene graph
+  const Nodes& nodes() const { return nodes_; }
   //! @brief Const reference to all the edges in the scene graph
   const Edges& edges() const { return edges_.edges; }
   //! @brief Const reference to the interlayer edges

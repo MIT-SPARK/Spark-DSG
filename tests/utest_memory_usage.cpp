@@ -153,23 +153,7 @@ TEST(MemoryUsage, SceneGraphNode) {
 }
 
 TEST(MemoryUsage, SceneGraphLayer) {
-  SceneGraphLayer layer(LayerKey{0, 0});
-  size_t expected_size = 408;
-  EXPECT_EQ(layer.memoryUsage(), expected_size);
-
-  // Add some nodes.
-  for (size_t i = 0; i < 50; ++i) {
-    layer.emplaceNode(i, std::make_unique<NodeAttributes>());
-  }
-  expected_size += 50 * 259;  // 13358 bytes
-  EXPECT_EQ(layer.memoryUsage(), expected_size);
-
-  // Add some edges.
-  for (size_t i = 0; i < 25; ++i) {
-    layer.insertEdge(i, i + 1);
-  }
-  expected_size += 25 * 116;  // 16258 bytes
-  EXPECT_EQ(layer.memoryUsage(), expected_size);
+  FAIL();
 }
 
 TEST(MemoryUsage, SceneGraph) {

@@ -35,9 +35,6 @@
 #include "spark_dsg/python/python_layer_view.h"
 
 #include <spark_dsg/node_attributes.h>
-#include <spark_dsg/printing.h>
-
-#include <iostream>
 
 namespace spark_dsg::python {
 
@@ -149,121 +146,6 @@ GlobalLayerIter& GlobalLayerIter::operator++() {
 
 bool GlobalLayerIter::operator==(const IterSentinel&) const {
   return layers_ == IterSentinel() && (!include_partitions_ || partitions_ == IterSentinel());
-}
-
-GlobalNodeIter::GlobalNodeIter(const SceneGraph& dsg, bool include_partitions)
-    : valid_(true), layers_(dsg, include_partitions) {
-  setNodeIter();
-}
-
-void GlobalNodeIter::setNodeIter() {
-  if (layers_ == IterSentinel()) {
-    valid_ = false;
-    return;
-  }
-
-  curr_node_iter_ = (*layers_).nodes();
-  while (curr_node_iter_ == IterSentinel()) {
-    ++layers_;
-    if (layers_ == IterSentinel()) {
-      valid_ = false;
-      return;
-    }
-
-    curr_node_iter_ = (*layers_).nodes();
-  }
-}
-
-const SceneGraphNode* GlobalNodeIter::operator*() const { return *curr_node_iter_; }
-
-GlobalNodeIter& GlobalNodeIter::operator++() {
-  ++curr_node_iter_;
-  if (curr_node_iter_ == IterSentinel()) {
-    ++layers_;
-    setNodeIter();
-  }
-
-  return *this;
-}
-
-bool GlobalNodeIter::operator==(const IterSentinel&) {
-  if (!valid_) {
-    return true;
-  }
-
-  return curr_node_iter_ == IterSentinel() && layers_ == IterSentinel();
-}
-
-GlobalEdgeIter::GlobalEdgeIter(const SceneGraph& dsg, bool include_partitions)
-    : include_partitions_(include_partitions),
-      started_interlayer_(false),
-      dsg_(dsg),
-      layers_(dsg, include_partitions),
-      interlayer_edge_iter_(dsg.interlayer_edges()) {
-  setEdgeIter();
-}
-
-const SceneGraphEdge* GlobalEdgeIter::operator*() const {
-  return started_interlayer_ ? *interlayer_edge_iter_ : *curr_edge_iter_;
-}
-
-void GlobalEdgeIter::findNextValidEdge() {
-  if (include_partitions_) {
-    // every edge is valid if we include partitions
-    return;
-  }
-
-  while (dsg_.edgeToPartition(*(*interlayer_edge_iter_)) && interlayer_edge_iter_ != IterSentinel()) {
-    ++interlayer_edge_iter_;
-  }
-}
-
-void GlobalEdgeIter::setEdgeIter() {
-  if (started_interlayer_ || layers_ == IterSentinel()) {
-    started_interlayer_ = true;
-    findNextValidEdge();
-    return;
-  }
-
-  curr_edge_iter_ = (*layers_).edges();
-
-  while (curr_edge_iter_ == IterSentinel()) {
-    ++layers_;
-    if (layers_ == IterSentinel()) {
-      started_interlayer_ = true;
-      return;
-    }
-
-    curr_edge_iter_ = (*layers_).edges();
-  }
-}
-
-GlobalEdgeIter& GlobalEdgeIter::operator++() {
-  if (*this == IterSentinel()) {
-    return *this;
-  }
-
-  if (started_interlayer_) {
-    ++interlayer_edge_iter_;
-    findNextValidEdge();
-    return *this;
-  }
-
-  ++curr_edge_iter_;
-  if (curr_edge_iter_ == IterSentinel()) {
-    ++layers_;
-    setEdgeIter();
-  }
-
-  return *this;
-}
-
-bool GlobalEdgeIter::operator==(const IterSentinel&) {
-  if (!started_interlayer_) {
-    return false;
-  }
-
-  return interlayer_edge_iter_ == IterSentinel();
 }
 
 }  // namespace spark_dsg::python

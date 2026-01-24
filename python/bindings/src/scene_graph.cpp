@@ -46,8 +46,6 @@
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include <filesystem>
-#include <iomanip>
-#include <sstream>
 
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/python_types.h"
@@ -236,27 +234,38 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def_property(
           "nodes",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph), IterSentinel()); },
+          [](const SceneGraph& graph) { return py::make_iterator(NodeIter(graph.nodes()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph), IterSentinel()); },
+          [](const SceneGraph& graph) { return py::make_iterator(EdgeIter(graph.edges()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "unpartitioned_nodes",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph, false), IterSentinel()); },
+          [](const SceneGraph& graph) {
+            return py::make_iterator(NodeIter(graph.nodes(), [](const auto& node) { return !node.layer.partition; }),
+                                     IterSentinel());
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "unpartitioned_edges",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph, false), IterSentinel()); },
+          [](const SceneGraph& graph) {
+            return py::make_iterator(
+                EdgeIter(graph.edges(), [&](const auto& edge) { return !graph.edgeToPartition(edge); }),
+                IterSentinel());
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
-          "interlayer_edges",
-          [](const SceneGraph& graph) { return py::make_iterator(EdgeIter(graph.interlayer_edges()), IterSentinel()); },
+          "interlayer_edges",  // TODO(nathan) this is wrong
+          [](const SceneGraph& graph) {
+            return py::make_iterator(
+                EdgeIter(graph.edges(), [&](const auto& edge) { return !graph.edgeToPartition(edge); }),
+                IterSentinel());
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
