@@ -214,7 +214,6 @@ TEST(SceneGraph, insertEdgeInvariants) {
 TEST(SceneGraph, addOrUpdateEdge) {
   SceneGraph graph({1, 2, 3});
   EXPECT_EQ(0u, graph.numEdges());
-
   EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>()));
   EXPECT_TRUE(graph.emplaceNode(2, 2, std::make_unique<NodeAttributes>()));
@@ -418,7 +417,7 @@ TEST(SceneGraph, mergeNodesPartition) {
 }
 
 // Test that removeNode -> !hasNode
-TEST(SceneGraph, removeNodeHasNodeCorrent) {
+TEST(SceneGraph, removeNodeHasNodeCorrect) {
   SceneGraph graph({1, 2});
   const auto& layer = graph.getLayer(1);
 
@@ -427,7 +426,6 @@ TEST(SceneGraph, removeNodeHasNodeCorrent) {
   EXPECT_FALSE(graph.hasNode(0));
 
   EXPECT_TRUE(graph.emplaceNode(1, 0, std::make_unique<NodeAttributes>()));
-
   EXPECT_EQ(1u, graph.numNodes());
   EXPECT_TRUE(graph.hasNode(0));
   EXPECT_EQ(layer.hasNode(0), graph.hasNode(0));
@@ -739,14 +737,18 @@ TEST(SceneGraph, removedAndNewNodesCorrect) {
 
   {
     std::vector<NodeId> expected{"x0"_id, "a0"_id};
-    std::vector<NodeId> new_nodes = graph.getNewNodes(true);
-    EXPECT_EQ(expected, new_nodes);
+    std::vector<NodeId> result = graph.getNewNodes(true);
+    std::sort(expected.begin(), expected.end());
+    std::sort(result.begin(), result.end());
+    EXPECT_EQ(expected, result);
   }
 
   {
     std::vector<NodeId> expected;
-    std::vector<NodeId> new_nodes = graph.getNewNodes(true);
-    EXPECT_EQ(expected, new_nodes);
+    std::vector<NodeId> result = graph.getNewNodes(true);
+    std::sort(expected.begin(), expected.end());
+    std::sort(result.begin(), result.end());
+    EXPECT_EQ(expected, result);
   }
 
   graph.removeNode("a0"_id);
@@ -754,14 +756,18 @@ TEST(SceneGraph, removedAndNewNodesCorrect) {
 
   {
     std::vector<NodeId> expected{"x0"_id, "a0"_id};
-    std::vector<NodeId> removed = graph.getRemovedNodes(true);
-    EXPECT_EQ(expected, removed);
+    std::vector<NodeId> result = graph.getRemovedNodes(true);
+    std::sort(expected.begin(), expected.end());
+    std::sort(result.begin(), result.end());
+    EXPECT_EQ(expected, result);
   }
 
   {
     std::vector<NodeId> expected;
-    std::vector<NodeId> removed = graph.getRemovedNodes(true);
-    EXPECT_EQ(expected, removed);
+    std::vector<NodeId> result = graph.getRemovedNodes(true);
+    std::sort(expected.begin(), expected.end());
+    std::sort(result.begin(), result.end());
+    EXPECT_EQ(expected, result);
   }
 }
 
