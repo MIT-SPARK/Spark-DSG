@@ -6,15 +6,30 @@ In general, contributing code should be a collaborative, respectful process for 
 We do try to follow a semi-consistent code style to encourage readability, which is detailed below.
 A maintainer of the repo may reformat your code to better correspond to the style guide by running the mentioned linters below.
 
+### Auto-Formatting
+
+`Spark-DSG` contains defaults for auto-formatting and linting according to the above descriptions, managed by [pre-commit](https://pre-commit.com/). To commit to this repo, you can setup pre-commit as follows:
+
+```bash
+cd spark_dsg
+pip install pre-commit
+
+# To catch all commits, set pre-commit up for the repo:
+pre-commit install
+
+# To manually run on files:
+pre-commit run --all-files
+```
+
 ### Style Guide
 
-In general, the use of auto-formatters is encouraged:
+We use the following auto-formatters:
 
 - Use `clang-format` to format C++ code
 
-- Use [black](https://github.com/psf/black) to format python code
+- Use [ruff](https://github.com/astral-sh/ruff) to format python code
 
-- Use [cmake-format](https://github.com/cheshirekow/cmake_format) to format cmake code
+- Use [cmake-format](https://github.com/cheshirekow/cmake_format) to format CMake code
 
 Also, avoid trailing whitespace (i.e. spaces at the end of lines).
 
@@ -22,11 +37,11 @@ Also, avoid trailing whitespace (i.e. spaces at the end of lines).
 
 For python code, we follow these general principles:
 
-- Follow pep8 style for python (`flake8` can be helpful here)
+- We follow the PEP8 style for python
 
 - We mostly follow the [napoleon](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/) style docstring, and find `flake8-docstring` helpful.
 
-- Use format strings when possible (unless the line-breaking looks better with the `format` method instead).
+- Use format strings when possible
 
 #### C++
 
@@ -56,19 +71,4 @@ We find that several other generic choices make code more readable:
 
 - Keep variable names specific and short.
 
-- Pay attention to how the auto-formatter creates line-breaks. `black` does a better job than `clang-format`, but it can still be worth it to tweak a longer line to either make it shorter or break more naturally.
-
-### Auto-Formatting
-
-`Spark-DSG` contains defaults for auto-formatting and linting according to the above descriptions, managed by [pre-commit](https://pre-commit.com/). To commit to this repo, you can setup pre-commit as follows:
-
-```bash
-cd spark_dsg
-pip install pre-commit
-
-# To catch all commits, set pre-commit up for the repo:
-pre-commit install
-
-# To manually run on files:
-pre-commit run --all-files
-```
+- Pay attention to how the auto-formatter creates line-breaks. It may be worth it to tweak a longer line to either make it shorter or break more naturally.
