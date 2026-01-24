@@ -131,8 +131,7 @@ inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
     }
   }
 
-  if (!(isSubset(lhs.interlayer_edges(), rhs.interlayer_edges()) &&
-        isSubset(rhs.interlayer_edges(), lhs.interlayer_edges()))) {
+  if (!(isSubset(lhs.edges(), rhs.edges()) && isSubset(rhs.edges(), lhs.edges()))) {
     return false;
   }
 

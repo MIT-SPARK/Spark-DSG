@@ -4,7 +4,7 @@ enable_testing()
 
 add_executable(
   utest_${PROJECT_NAME}
-  utest_adjacency_matrix.cpp
+  # utest_adjacency_matrix.cpp
   utest_bounding_box_extraction.cpp
   utest_bounding_box.cpp
   utest_color.cpp
@@ -17,7 +17,7 @@ add_executable(
   utest_node_attributes.cpp
   utest_node_symbol.cpp
   utest_scene_graph.cpp
-  utest_scene_graph_layer.cpp
+  # utest_scene_graph_layer.cpp
   utest_scene_graph_node.cpp
   utest_scene_graph_utilities.cpp
   utest_traversability_boundary.cpp

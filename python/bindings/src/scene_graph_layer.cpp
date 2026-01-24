@@ -58,18 +58,6 @@ void init_scene_graph_layer(py::module_& m) {
   py::class_<SceneGraphLayer>(m, "SceneGraphLayer")
       .def(py::init<LayerId>())
       .def(py::init<const std::string&>())
-      .def("add_node",
-           [](SceneGraphLayer& layer, NodeSymbol node, const NodeAttributes& attrs) {
-             layer.emplaceNode(node, attrs.clone());
-           })
-      .def(
-          "insert_edge",
-          [](SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) { return layer.insertEdge(source, target); })
-      .def("insert_edge",
-           [](SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target, const EdgeAttributes& info) {
-             return layer.insertEdge(source, target, info.clone());
-           })
-      .def("remove_edge", &SceneGraphLayer::removeEdge)
       .def("has_node", &SceneGraphLayer::hasNode)
       .def("has_edge", &SceneGraphLayer::hasEdge)
       .def("get_node", &SceneGraphLayer::getNode, py::return_value_policy::reference_internal)
@@ -96,17 +84,7 @@ void init_scene_graph_layer(py::module_& m) {
           [](const SceneGraphLayer& view) { return py::make_iterator(EdgeIter(view.edges()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
-      .def_readonly("id", &SceneGraphLayer::id)
-      .def("to_binary",
-           [](const SceneGraphLayer& layer) -> py::bytes {
-             std::vector<uint8_t> buffer;
-             io::binary::writeLayer(layer, buffer);
-             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
-           })
-      .def_static("from_binary", [](const py::bytes& contents) {
-        const auto view = static_cast<std::string_view>(contents);
-        return io::binary::readLayer(reinterpret_cast<const uint8_t*>(view.data()), view.size());
-      });
+      .def_readonly("id", &SceneGraphLayer::id);
 
   py::class_<LayerView>(m, "LayerView")
       .def("has_node", &LayerView::hasNode)

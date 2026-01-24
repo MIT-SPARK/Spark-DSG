@@ -33,7 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/scene_graph.h>
+#include <spark_dsg/edge_container.h>
+#include <spark_dsg/scene_graph_node.h>
+
+#include <functional>
 
 namespace spark_dsg::python {
 
@@ -41,32 +44,44 @@ struct IterSentinel {};
 
 class NodeIter {
  public:
+  using Nodes = std::map<NodeId, SceneGraphNode::Ptr>;
+  using Filter = std::function<bool(const SceneGraphNode&)>;
+
   NodeIter();
-  NodeIter(const SceneGraphLayer::Nodes& container);
+  NodeIter(const Nodes& container, const Filter& filter = {});
   const SceneGraphNode* operator*() const;
   NodeIter& operator++();
   bool operator==(const IterSentinel&) const;
   bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
+  void advanceToValid();
+
   bool valid_;
-  SceneGraphLayer::Nodes::const_iterator curr_iter_;
-  SceneGraphLayer::Nodes::const_iterator end_iter_;
+  Filter filter_;
+  Nodes::const_iterator curr_iter_;
+  Nodes::const_iterator end_iter_;
 };
 
 class EdgeIter {
  public:
+  using Filter = std::function<bool(const SceneGraphEdge&)>;
+  using Edges = EdgeContainer::Edges;
+
   EdgeIter();
-  EdgeIter(const SceneGraphLayer::Edges& container);
+  EdgeIter(const Edges& container, const Filter& filter = {});
   const SceneGraphEdge* operator*() const;
   EdgeIter& operator++();
   bool operator==(const IterSentinel&) const;
   bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
+  void advanceToValid();
+
   bool valid_;
-  SceneGraphLayer::Edges::const_iterator curr_iter_;
-  SceneGraphLayer::Edges::const_iterator end_iter_;
+  Filter filter_;
+  Edges::const_iterator curr_iter_;
+  Edges::const_iterator end_iter_;
 };
 
 }  // namespace spark_dsg::python

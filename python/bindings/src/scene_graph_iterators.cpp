@@ -38,8 +38,10 @@ namespace spark_dsg::python {
 
 NodeIter::NodeIter() : valid_(false) {}
 
-NodeIter::NodeIter(const SceneGraphLayer::Nodes& container)
-    : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {}
+NodeIter::NodeIter(const Nodes& container, const Filter& filter)
+    : valid_(true), filter_(filter), curr_iter_(container.begin()), end_iter_(container.end()) {
+  advanceToValid();
+}
 
 const SceneGraphNode* NodeIter::operator*() const {
   if (!valid_) {
@@ -55,15 +57,28 @@ NodeIter& NodeIter::operator++() {
   }
 
   ++curr_iter_;
+  advanceToValid();
   return *this;
 }
 
 bool NodeIter::operator==(const IterSentinel&) const { return !valid_ || curr_iter_ == end_iter_; }
 
+void NodeIter::advanceToValid() {
+  if (filter_) {
+    return;
+  }
+
+  while (curr_iter_ != end_iter_ && !filter_(*curr_iter_->second)) {
+    ++curr_iter_;
+  }
+}
+
 EdgeIter::EdgeIter() : valid_(false) {}
 
-EdgeIter::EdgeIter(const SceneGraphLayer::Edges& container)
-    : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {}
+EdgeIter::EdgeIter(const Edges& container, const Filter& filter)
+    : valid_(true), filter_(filter), curr_iter_(container.begin()), end_iter_(container.end()) {
+  advanceToValid();
+}
 
 const SceneGraphEdge* EdgeIter::operator*() const {
   if (!valid_) {
@@ -79,9 +94,20 @@ EdgeIter& EdgeIter::operator++() {
   }
 
   ++curr_iter_;
+  advanceToValid();
   return *this;
 }
 
 bool EdgeIter::operator==(const IterSentinel&) const { return !valid_ || curr_iter_ == end_iter_; }
+
+void EdgeIter::advanceToValid() {
+  if (filter_) {
+    return;
+  }
+
+  while (curr_iter_ != end_iter_ && !filter_(curr_iter_->second)) {
+    ++curr_iter_;
+  }
+}
 
 }  // namespace spark_dsg::python
