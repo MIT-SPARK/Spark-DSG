@@ -35,23 +35,12 @@
 #pragma once
 #include <Eigen/Core>
 #include <filesystem>
-#include <nlohmann/json.hpp>
-#include <type_traits>
 
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
-
-struct EdgeLayerInfo {
-  LayerKey source;
-  LayerKey target;
-  bool valid = false;
-  bool exists = false;
-
-  bool isSameLayer() const;
-};
 
 /**
  * @brief 3D Scene Graph class
@@ -86,6 +75,8 @@ class SceneGraph {
   using LayerIds = std::vector<LayerId>;
   //! Container type for the layer name to ID mapping
   using LayerNames = std::map<std::string, LayerKey>;
+  //! node container for the layer
+  using Nodes = std::map<NodeId, std::unique_ptr<SceneGraphNode>>;
   //! Edge container
   using Edges = EdgeContainer::Edges;
   //! Scene graph layer
@@ -245,12 +236,12 @@ class SceneGraph {
                    NodeId node_id,
                    std::unique_ptr<NodeAttributes>&& attrs);
   /**
-   * @brief add a node to the graph or update an existing node
-   * @param layer layer to add to
-   * @param node_id node to add
-   * @param attrs attributes to add
-   * @param partition to add to
-   * @return true if the node was added or updated successfully
+   * @brief Add a node to the graph or update an existing node
+   * @param layer Layer to add to
+   * @param node_id Node to add
+   * @param attrs Attributes to add
+   * @param partition Partition to add to
+   * @return Return false if layer name is unknown
    */
   bool addOrUpdateNode(const std::string& layer,
                        NodeId node_id,
@@ -261,9 +252,8 @@ class SceneGraph {
    * @param node_id node to add
    * @param attrs attributes to add
    * @param partition to add to
-   * @return true if the node was added or updated successfully
    */
-  bool addOrUpdateNode(LayerId layer_id,
+  void addOrUpdateNode(LayerId layer_id,
                        NodeId node_id,
                        std::unique_ptr<NodeAttributes>&& attrs,
                        PartitionId partition = 0);
@@ -389,14 +379,6 @@ class SceneGraph {
   bool mergeNodes(NodeId node_from, NodeId node_to);
 
   /**
-   * @brief Update graph from separate layer
-   * @param other_layer Layer to update from
-   * @param edges Optional edges to add to graph
-   * @return Whether the update was successful or not
-   */
-  bool updateFromLayer(const SceneGraphLayer& other_layer, const Edges& edges = {});
-
-  /**
    * @brief Update graph from another graph
    * @note Will add the nodes and edges not previously added in current graph
    * @param other other graph to update from
@@ -413,28 +395,28 @@ class SceneGraph {
    * @param clear_removed Reset removed node tracking
    * @returns List of all removed nodes
    */
-  std::vector<NodeId> getRemovedNodes(bool clear_removed = false);
+  std::vector<NodeId> getRemovedNodes(bool clear_removed = false) const;
 
   /**
    * @brief Get all new nodes in the graph
    * @param clear_new Clear new status for all new nodes up until this point
    * @returns List of all new nodes
    */
-  std::vector<NodeId> getNewNodes(bool clear_new = false);
+  std::vector<NodeId> getNewNodes(bool clear_new = false) const;
 
   /**
    * @brief Get all removed edges from the graph
    * @param clear_removed Reset removed edge tracking
    * @returns List of all removed edges
    */
-  std::vector<EdgeKey> getRemovedEdges(bool clear_removed = false);
+  std::vector<EdgeKey> getRemovedEdges(bool clear_removed = false) const;
 
   /**
    * @brief Get all new edges in the graph
    * @param clear_new Clear new status for all new edges up until this point
    * @returns list of all new edges
    */
-  std::vector<EdgeKey> getNewEdges(bool clear_new = false);
+  std::vector<EdgeKey> getNewEdges(bool clear_new = false) const;
 
   /**
    * @brief Get whether an edge points to a partition
@@ -490,49 +472,32 @@ class SceneGraph {
 
   const Layer& layerFromKey(const LayerKey& key) const;
 
-  SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
+  void addOrUpdateNode(LayerKey key,
+                       NodeId node_id,
+                       std::unique_ptr<NodeAttributes>&& attrs);
 
-  EdgeLayerInfo lookupEdge(NodeId source, NodeId target) const;
+  void addConnections(SceneGraphNode& source, SceneGraphNode& target);
 
-  void addAncestry(NodeId source,
-                   NodeId target,
-                   const LayerKey& source_key,
-                   const LayerKey& target_key);
+  void removeConnections(SceneGraphNode& source, SceneGraphNode& target);
 
-  void removeAncestry(NodeId source,
-                      NodeId target,
-                      const LayerKey& source_key,
-                      const LayerKey& target_key);
+  void dropAllParents(SceneGraphNode& source, SceneGraphNode& target);
 
-  void dropAllParents(NodeId source,
-                      NodeId target,
-                      const LayerKey& source_key,
-                      const LayerKey& target_key);
-
-  void removeInterlayerEdge(NodeId source,
-                            NodeId target,
-                            const LayerKey& source_key,
-                            const LayerKey& target_key);
-
-  void removeInterlayerEdge(NodeId n1, NodeId n2);
-
-  void rewireInterlayerEdge(NodeId source, NodeId new_source, NodeId target);
-
-  void removeStaleEdges(EdgeContainer& edges);
-
-  void visitLayers(const std::function<void(LayerKey, Layer&)>& cb);
-
-  void visitLayers(const std::function<void(LayerKey, const Layer&)>& cb) const;
+  bool rewireEdge(NodeId source,
+                  NodeId new_source,
+                  NodeId target,
+                  std::optional<NodeId> new_target = std::nullopt);
 
  protected:
-  std::set<LayerKey> layer_keys_;
   LayerNames layer_names_;
-  std::map<NodeId, LayerKey> node_lookup_;
+  std::set<LayerKey> layer_keys_;
 
   Layers layers_;
   std::map<LayerId, Partitions> layer_partitions_;
 
-  EdgeContainer interlayer_edges_;
+  Nodes nodes_;
+  EdgeContainer edges_;
+  std::map<NodeId, LayerKey> node_lookup_;
+  mutable std::map<NodeId, NodeStatus> node_status_;
 
   std::shared_ptr<Mesh> mesh_;
 
@@ -554,8 +519,10 @@ class SceneGraph {
   const Layers& layers() const { return layers_; };
   //! @brief Constant reference to the mapping between nodes and layers
   const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
+  //! @brief Const reference to all the edges in the scene graph
+  const Edges& edges() const { return edges_.edges; }
   //! @brief Const reference to the interlayer edges
-  const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
+  // const Edges& interlayer_edges() const { return interlayer_edges_.edges; }
   //! @brief Constant reference to partitions for a particular layer
   const Partitions& layer_partition(LayerId layer_id) const;
   //! @brief Constant reference to all layer partitions

@@ -34,8 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/node_symbol.h"
 
-#include <ostream>
-#include <sstream>
+#include <stdexcept>
 
 namespace spark_dsg {
 
@@ -64,19 +63,20 @@ NodeSymbol NodeSymbol::operator++(int) {
 }
 
 std::string NodeSymbol::str(bool literal) const {
-  if (literal) {
-    const auto idx = std::to_string(value_.symbol.index);
-    return std::isalpha(value_.symbol.key) ? value_.symbol.key + idx : idx;
+  if (!std::isalpha(value_.symbol.key)) {
+    return std::to_string(value_.value);
   }
 
-  std::stringstream ss;
-  ss << *this;
-  return ss.str();
+  const std::string key_str(1, value_.symbol.key);
+  const auto idx = std::to_string(value_.symbol.index);
+  if (literal) {
+    return key_str + idx;
+  }
+
+  return key_str + "(" + idx + ")";
 }
 
-std::string NodeSymbol::getLabel() const { return str(); }
-
-NodeSymbol operator"" _id(const char* str, size_t size) {
+NodeSymbol operator""_id(const char* str, size_t size) {
   if (size < 1) {
     throw std::domain_error("invalid literal: must have at least two characters");
   }
@@ -85,15 +85,6 @@ NodeSymbol operator"" _id(const char* str, size_t size) {
   std::string number(str + 1, size - 1);
   size_t index = std::stoull(number);
   return NodeSymbol(prefix, index);
-}
-
-std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol) {
-  if (std::isalpha(symbol.value_.symbol.key)) {
-    out << symbol.value_.symbol.key << "(" << symbol.value_.symbol.index << ")";
-  } else {
-    out << symbol.value_.value;
-  }
-  return out;
 }
 
 }  // namespace spark_dsg

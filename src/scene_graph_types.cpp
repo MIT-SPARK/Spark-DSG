@@ -36,6 +36,8 @@
 
 #include <algorithm>
 
+#include "spark_dsg/node_symbol.h"
+
 namespace spark_dsg {
 
 EdgeKey::EdgeKey(NodeId k1, NodeId k2) : k1(std::min(k1, k2)), k2(std::max(k1, k2)) {}
@@ -50,6 +52,10 @@ bool EdgeKey::operator<(const EdgeKey& other) const {
   }
 
   return k1 < other.k1;
+}
+
+std::string EdgeKey::str() const {
+  return NodeSymbol(k1).str() + " -> " + NodeSymbol(k2).str();
 }
 
 LayerKey::LayerKey(LayerId layer_id) : LayerKey(layer_id, 0) {}
@@ -69,6 +75,11 @@ bool LayerKey::operator<(const LayerKey& other) const {
   }
 
   return layer < other.layer;
+}
+
+std::string LayerKey::str() const {
+  const auto layer_str = std::to_string(layer);
+  return partition ? layer_str + "[" + std::to_string(partition) + "]" : layer_str;
 }
 
 std::optional<LayerKey> DsgLayers::nameToLayerId(const std::string& name) {

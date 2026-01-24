@@ -171,4 +171,11 @@ class SceneGraphNode {
   std::set<NodeId> children_;
 };
 
+/**
+ * @brief Base node status.
+ *
+ * Mostly for keeping history and status of nodes in a graph
+ */
+enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
+
 }  // namespace spark_dsg

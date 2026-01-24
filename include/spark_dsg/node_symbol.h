@@ -77,18 +77,7 @@ class NodeSymbol {
   NodeSymbol operator++(int);
 
   //! get a string representation of the symbol
-  [[deprecated("use str() instead")]] std::string getLabel() const;
-
-  //! get a string representation of the symbol
   std::string str(bool literal = false) const;
-
-  /**
-   * @brief output node symbol information
-   * @param out output stream
-   * @param symbol symbol to print
-   * @returns original output stream
-   */
-  friend std::ostream& operator<<(std::ostream& out, const NodeSymbol& symbol);
 
  private:
   union {
@@ -102,6 +91,6 @@ class NodeSymbol {
   } value_;
 };
 
-NodeSymbol operator"" _id(const char* str, size_t size);
+NodeSymbol operator""_id(const char* str, size_t size);
 
 }  // namespace spark_dsg
