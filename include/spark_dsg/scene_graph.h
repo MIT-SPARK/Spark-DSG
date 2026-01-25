@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <filesystem>
 
 #include "spark_dsg/metadata.h"
@@ -41,6 +41,19 @@
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
+
+//! Configuration controlling graph merges
+struct GraphMergeConfig {
+  const std::map<NodeId, NodeId>* previous_merges = nullptr;
+  const std::map<LayerId, bool>* update_layer_attributes = nullptr;
+  bool update_dynamic_attributes = true;
+  bool update_archived_attributes = false;
+  bool clear_removed = false;
+  bool enforce_parent_constraints = true;
+
+  NodeId getMergedId(NodeId original) const;
+  bool shouldUpdateAttributes(LayerKey layer) const;
+};
 
 /**
  * @brief 3D Scene Graph class
@@ -496,41 +509,32 @@ class SceneGraph {
 
   Nodes nodes_;
   EdgeContainer edges_;
-  std::map<NodeId, LayerKey> node_lookup_;
   mutable std::map<NodeId, NodeStatus> node_status_;
 
   std::shared_ptr<Mesh> mesh_;
 
  public:
   //! @brief Get layer key for a named layer
-  std::optional<LayerKey> getLayerKey(const std::string& name) const {
-    auto iter = layer_names_.find(name);
-    return iter == layer_names_.end() ? std::nullopt
-                                      : std::optional<LayerKey>(iter->second);
-  }
+  std::optional<LayerKey> getLayerKey(const std::string& name) const;
 
   //! @brief Current static layer ids in the graph
   std::vector<LayerId> layer_ids() const;
   //! @brief Current layer keys of all layers in the graph
   LayerKeys layer_keys() const;
   //! @brief Current name to layer mapping
-  const LayerNames layer_names() const { return layer_names_; }
+  const LayerNames layer_names() const;
   //! @brief Constant reference to the layers
-  const Layers& layers() const { return layers_; };
-  //! @brief Constant reference to the mapping between nodes and layers
-  const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
+  const Layers& layers() const;
   //! @brief Const reference to all the nodes in the scene graph
-  const Nodes& nodes() const { return nodes_; }
+  const Nodes& nodes() const;
   //! @brief Const reference to all the edges in the scene graph
-  const Edges& edges() const { return edges_.edges; }
+  const Edges& edges() const;
   //! @brief Const reference to the interlayer edges
   // const Edges& interlayer_edges() const { return interlayer_edges_.edges; }
   //! @brief Constant reference to partitions for a particular layer
   const Partitions& layer_partition(LayerId layer_id) const;
   //! @brief Constant reference to all layer partitions
-  const std::map<LayerId, Partitions>& layer_partitions() const {
-    return layer_partitions_;
-  }
+  const std::map<LayerId, Partitions>& layer_partitions() const;
 };
 
 }  // namespace spark_dsg

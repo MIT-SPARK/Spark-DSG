@@ -34,15 +34,13 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <deque>
-#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "spark_dsg/scene_graph_types.h"
 
-namespace spark_dsg {
-namespace graph_utilities {
+namespace spark_dsg::graph_utilities {
 
 template <typename Graph, typename NodeSet>
 void breadthFirstSearch(const Graph& graph,
@@ -387,5 +385,4 @@ std::vector<std::vector<NodeId>> getConnectedComponents(
   return components;
 }
 
-}  // namespace graph_utilities
-}  // namespace spark_dsg
+}  // namespace spark_dsg::graph_utilities

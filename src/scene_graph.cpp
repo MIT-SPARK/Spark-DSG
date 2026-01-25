@@ -43,6 +43,19 @@
 #include "spark_dsg/serialization/file_io.h"
 
 namespace spark_dsg {
+namespace {
+
+std::set<LayerKey> layersFromNames(const SceneGraph::LayerNames& layer_names,
+                                   const SceneGraph::LayerKeys& prev_layers = {}) {
+  std::set<LayerKey> layers(prev_layers.begin(), prev_layers.end());
+  for (const auto& [name, key] : layer_names) {
+    layers.insert(key);
+  }
+
+  return layers;
+}
+
+}  // namespace
 
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
@@ -54,41 +67,27 @@ using Partitions = SceneGraph::Partitions;
 using LayerNames = SceneGraph::LayerNames;
 using LayerKeys = SceneGraph::LayerKeys;
 
-namespace {
-
-struct EdgeLayerInfo {
-  LayerKey source;
-  LayerKey target;
-  bool valid = false;
-};
-
-EdgeLayerInfo lookupEdge(const std::map<NodeId, LayerKey>& lookup,
-                         NodeId source,
-                         NodeId target) {
-  auto source_iter = lookup.find(source);
-  if (source_iter == lookup.end()) {
-    return {};
+NodeId GraphMergeConfig::getMergedId(NodeId original) const {
+  if (!previous_merges) {
+    return original;
   }
 
-  auto target_iter = lookup.find(target);
-  if (target_iter == lookup.end()) {
-    return {};
-  }
-
-  return {source_iter->second, target_iter->second, true};
+  auto iter = previous_merges->find(original);
+  return iter == previous_merges->end() ? original : iter->second;
 }
 
-std::set<LayerKey> layersFromNames(const LayerNames& layer_names,
-                                   const LayerKeys& prev_layers = {}) {
-  std::set<LayerKey> layers(prev_layers.begin(), prev_layers.end());
-  for (const auto& [name, key] : layer_names) {
-    layers.insert(key);
+bool GraphMergeConfig::shouldUpdateAttributes(LayerKey key) const {
+  if (!update_layer_attributes) {
+    return true;
   }
 
-  return layers;
-}
+  auto iter = update_layer_attributes->find(key.layer);
+  if (iter == update_layer_attributes->end()) {
+    return true;
+  }
 
-}  // namespace
+  return iter->second;
+}
 
 SceneGraph::SceneGraph(bool empty)
     : SceneGraph(empty ? LayerKeys{} : LayerKeys{2, 3, 4, 5},
@@ -114,7 +113,6 @@ void SceneGraph::clear(bool include_mesh) {
 
   nodes_.clear();
   edges_.clear();
-  node_lookup_.clear();
   node_status_.clear();
   if (include_mesh) {
     mesh_.reset();
@@ -243,14 +241,13 @@ void SceneGraph::removeLayer(LayerId layer_id, PartitionId partition) {
 bool SceneGraph::emplaceNode(LayerKey key,
                              NodeId node_id,
                              std::unique_ptr<NodeAttributes>&& attrs) {
-  if (node_lookup_.count(node_id)) {
+  if (nodes_.count(node_id)) {
     return false;
   }
 
-  const auto& layer = layerFromKey(key);
   node_status_[node_id] = NodeStatus::NEW;
-  nodes_.emplace(node_id, std::make_unique<Node>(node_id, layer.id, std::move(attrs)));
-  node_lookup_.emplace(node_id, key);
+  nodes_.emplace(node_id, std::make_unique<Node>(node_id, key, std::move(attrs)));
+  // TODO(nathan) register node with layer view
   return true;
 }
 
@@ -343,7 +340,7 @@ bool SceneGraph::addOrUpdateEdge(NodeId source,
   return insertEdge(source, target, std::move(edge_info), enforce_parent_constraints);
 }
 
-bool SceneGraph::hasNode(NodeId node_id) const { return node_lookup_.count(node_id); }
+bool SceneGraph::hasNode(NodeId node_id) const { return nodes_.count(node_id); }
 
 NodeStatus SceneGraph::checkNode(NodeId node_id) const {
   auto iter = node_status_.find(node_id);
@@ -396,7 +393,6 @@ bool SceneGraph::removeNode(NodeId node_id) {
   // remove the actual node
   nodes_.erase(iter);
   node_status_[node_id] = NodeStatus::DELETED;
-  node_lookup_.erase(node_id);
   return true;
 }
 
@@ -441,8 +437,9 @@ size_t SceneGraph::numEdges() const { return edges_.size(); }
 size_t SceneGraph::numUnpartitionedEdges() const {
   size_t total_edges = 0;
   for (const auto& [edge_key, edge] : edges_.edges) {
-    const auto lookup = lookupEdge(node_lookup_, edge_key.k1, edge_key.k2);
-    if (!lookup.source.partition && !lookup.target.partition) {
+    const auto source_layer = nodes_.at(edge_key.k1)->layer;
+    const auto target_layer = nodes_.at(edge_key.k2)->layer;
+    if (!source_layer.partition && !target_layer.partition) {
       ++total_edges;
     }
   }
@@ -478,7 +475,6 @@ bool SceneGraph::mergeNodes(NodeId from_id, NodeId to_id) {
   }
 
   nodes_.erase(from_id);
-  node_lookup_.erase(from_id);
   node_status_[from_id] = NodeStatus::MERGED;
   return true;
 }
@@ -678,7 +674,7 @@ size_t SceneGraph::memoryUsage() const {
   for (const auto& [name, key] : layer_names_) {
     total_memory += name.size() + sizeof(LayerKey);
   }
-  total_memory += node_lookup_.size() * (sizeof(NodeId) + sizeof(LayerKey));
+
   for (const auto& [layer_id, partitions] : layer_partitions_) {
     total_memory +=
         sizeof(layer_id) + sizeof(partitions) +
@@ -800,6 +796,33 @@ bool SceneGraph::rewireEdge(NodeId source,
   return true;
 }
 
+std::optional<LayerKey> SceneGraph::getLayerKey(const std::string& name) const {
+  auto iter = layer_names_.find(name);
+  return iter == layer_names_.end() ? std::nullopt
+                                    : std::optional<LayerKey>(iter->second);
+}
+
+std::vector<LayerId> SceneGraph::layer_ids() const {
+  std::set<LayerId> layers;
+  for (const auto& key : layer_keys_) {
+    layers.insert(key.layer);
+  }
+
+  return std::vector<LayerId>(layers.begin(), layers.end());
+}
+
+LayerKeys SceneGraph::layer_keys() const {
+  return LayerKeys(layer_keys_.begin(), layer_keys_.end());
+}
+
+const LayerNames SceneGraph::layer_names() const { return layer_names_; }
+
+const SceneGraph::Layers& SceneGraph::layers() const { return layers_; };
+
+const SceneGraph::Nodes& SceneGraph::nodes() const { return nodes_; }
+
+const SceneGraph::Edges& SceneGraph::edges() const { return edges_.edges; }
+
 const Partitions& SceneGraph::layer_partition(LayerId layer_id) const {
   auto iter = layer_partitions_.find(layer_id);
   if (iter == layer_partitions_.end()) {
@@ -810,17 +833,8 @@ const Partitions& SceneGraph::layer_partition(LayerId layer_id) const {
   return iter->second;
 }
 
-LayerKeys SceneGraph::layer_keys() const {
-  return LayerKeys(layer_keys_.begin(), layer_keys_.end());
-}
-
-std::vector<LayerId> SceneGraph::layer_ids() const {
-  std::set<LayerId> layers;
-  for (const auto& key : layer_keys_) {
-    layers.insert(key.layer);
-  }
-
-  return std::vector<LayerId>(layers.begin(), layers.end());
+const std::map<LayerId, Partitions>& SceneGraph::layer_partitions() const {
+  return layer_partitions_;
 }
 
 }  // namespace spark_dsg

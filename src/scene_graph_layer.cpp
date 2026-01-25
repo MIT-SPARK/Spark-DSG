@@ -39,53 +39,24 @@
 #include "spark_dsg/graph_utilities.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/printing.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
 
-NodeId GraphMergeConfig::getMergedId(NodeId original) const {
-  if (!previous_merges) {
-    return original;
-  }
+SceneGraphLayer::SceneGraphLayer(SceneGraph& graph, LayerKey layer_id)
+    : id(layer_id), graph_(graph) {}
 
-  auto iter = previous_merges->find(original);
-  return iter == previous_merges->end() ? original : iter->second;
-}
-
-bool GraphMergeConfig::shouldUpdateAttributes(LayerKey key) const {
-  if (!update_layer_attributes) {
-    return true;
-  }
-
-  auto iter = update_layer_attributes->find(key.layer);
-  if (iter == update_layer_attributes->end()) {
-    return true;
-  }
-
-  return iter->second;
-}
-
-SceneGraphLayer::SceneGraphLayer(LayerKey layer_id) : id(layer_id) {}
-
-SceneGraphLayer::SceneGraphLayer(const std::string& name)
-    : id(DsgLayers::nameToLayerId(name).value()) {}
-
-bool SceneGraphLayer::hasNode(NodeId node_id) const {
-  return nodes_.count(node_id) != 0;
-}
+bool SceneGraphLayer::hasNode(NodeId node_id) const { return nodes_.count(node_id); }
 
 NodeStatus SceneGraphLayer::checkNode(NodeId node_id) const {
-  if (nodes_status_.count(node_id) == 0) {
-    return NodeStatus::NONEXISTENT;
-  }
-  return nodes_status_.at(node_id);
+  return nodes_.count(node_id) ? graph_.checkNode(node_id) : NodeStatus::NONEXISTENT;
 }
 
 const Node* SceneGraphLayer::findNode(NodeId node_id) const {
-  auto iter = nodes_.find(node_id);
-  return iter == nodes_.end() ? nullptr : iter->second.get();
+  return nodes_.count(node_id) ? graph_.findNode(node_id) : nullptr;
 }
 
 const SceneGraphNode& SceneGraphLayer::getNode(NodeId node_id) const {
@@ -114,26 +85,6 @@ const SceneGraphEdge& SceneGraphLayer::getEdge(NodeId source, NodeId target) con
   }
 
   return *edge;
-}
-
-using NodeSet = std::unordered_set<NodeId>;
-
-NodeSet SceneGraphLayer::getNeighborhood(NodeId node, size_t num_hops) const {
-  NodeSet result;
-  graph_utilities::breadthFirstSearch(
-      *this, node, num_hops, [&](const SceneGraphLayer&, NodeId visited) {
-        result.insert(visited);
-      });
-  return result;
-}
-
-NodeSet SceneGraphLayer::getNeighborhood(const NodeSet& nodes, size_t num_hops) const {
-  NodeSet result;
-  graph_utilities::breadthFirstSearch(
-      *this, nodes, num_hops, [&](const SceneGraphLayer&, NodeId visited) {
-        result.insert(visited);
-      });
-  return result;
 }
 
 namespace graph_utilities {
@@ -175,5 +126,4 @@ const SceneGraphEdge& LayerGraphTraits::get_edge(const SceneGraphLayer& graph,
 }
 
 }  // namespace graph_utilities
-
 }  // namespace spark_dsg

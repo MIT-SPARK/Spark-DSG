@@ -125,34 +125,19 @@ void writeGraph(const SceneGraph& graph,
                 bool include_mesh) {
   BinarySerializer serializer(&buffer);
   serializer.write(graph.layer_keys());
-
-  // saves names to type index mapping
   serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
   serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
-
   serializer.write(graph.layer_names());
-
-  // dump metadata to serialized json and write
   serializer.write(graph.metadata().dump());
 
   serializer.startDynamicArray();
-  for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& [node_id, node] : layer->nodes()) {
-      serializer.write(*node);
-    }
-  }
-
-  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [node_id, node] : partition->nodes()) {
-        serializer.write(*node);
-      }
-    }
+  for (const auto& [_, node] : graph.nodes()) {
+    serializer.write(*node);
   }
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& [edge_id, edge] : graph.edges()) {
+  for (const auto& [_, edge] : graph.edges()) {
     serializer.write(edge);
   }
   serializer.endDynamicArray();
@@ -254,8 +239,8 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
   }
 
   std::unordered_set<NodeId> stale_nodes;
-  for (const auto& id_key_pair : graph.node_lookup()) {
-    stale_nodes.insert(id_key_pair.first);
+  for (const auto& [node_id, _] : graph.nodes()) {
+    stale_nodes.insert(node_id);
   }
 
   deserializer.checkDynamicArray();

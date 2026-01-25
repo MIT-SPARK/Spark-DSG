@@ -33,9 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Geometry>
 #include <functional>
-#include <map>
 #include <unordered_set>
 
 #include "spark_dsg/edge_container.h"
@@ -43,52 +41,13 @@
 
 namespace spark_dsg {
 
-//! Brief Configuration controlling graph merges
-struct GraphMergeConfig {
-  const std::map<NodeId, NodeId>* previous_merges = nullptr;
-  const std::map<LayerId, bool>* update_layer_attributes = nullptr;
-  bool update_dynamic_attributes = true;
-  bool update_archived_attributes = false;
-  bool clear_removed = false;
-  bool enforce_parent_constraints = true;
-
-  NodeId getMergedId(NodeId original) const;
-  bool shouldUpdateAttributes(LayerKey layer) const;
-};
-
 /**
  * @brief A layer in the scene graph (which is a graph itself)
- *
- * This class handles book-keeping for adding to and removing nodes from a layer
- * as well as adding or removing edges between nodes in a layer (i.e. siblings).
- * It is technically safe to add edges directly in the layer class
- * but it is probably preferable to use the scene graph as much as
- * possible to also handle parent child relationships.
  */
 class SceneGraphLayer {
  public:
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<SceneGraphLayer>;
-  //! node container for the layer
-  using Nodes = std::map<NodeId, std::unique_ptr<SceneGraphNode>>;
-  //! type tracking the status of nodes
-  using NodeCheckup = std::map<NodeId, NodeStatus>;
-  //! edge container type for the layer
-  using Edges = EdgeContainer::Edges;
-
-  friend class SceneGraph;
-
-  /**
-   * @brief Makes an empty layer with the specified layer id
-   * @param layer_id layer id of the layer to be constructed
-   */
-  explicit SceneGraphLayer(LayerKey layer_id);
-
-  /**
-   * @brief Make an empty layer with a layer id derived from the name
-   * @throw std::out_of_range If name doesn't correspond to one of the default layers
-   */
-  explicit SceneGraphLayer(const std::string& name);
 
   virtual ~SceneGraphLayer() = default;
 
@@ -159,57 +118,27 @@ class SceneGraphLayer {
    */
   const SceneGraphEdge& getEdge(NodeId source, NodeId target) const;
 
-  /**
-   * @brief Get the immediate neighborhood of a node via BFS
-   * @param node Node to get the neighborhood of
-   * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
-   */
-  std::unordered_set<NodeId> getNeighborhood(NodeId node, size_t num_hops = 1) const;
-
-  /**
-   * @brief Get the immediate neighborhood of a set of nodes via BFS
-   * @param nodes Nodes to get the neighborhood of
-   * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
-   */
-  std::unordered_set<NodeId> getNeighborhood(const std::unordered_set<NodeId>& nodes,
-                                             size_t num_hops = 1) const;
-
   //! ID of the layer
   const LayerKey id;
 
- protected:
-  void fillNeighborhoodForNode(NodeId node,
-                               size_t num_hops,
-                               std::unordered_set<NodeId>& result,
-                               std::map<NodeId, size_t>& costs) const;
+  //! @brief constant node container
+  // const Nodes& nodes() const;
 
-  //! internal node container
-  Nodes nodes_;
-  //! internal node status tracking
-  mutable NodeCheckup nodes_status_;
-  //! internal edge container
-  EdgeContainer edges_;
+  //! @brief constant edge container
+  const EdgeContainer::Edges& edges();
 
- public:
-  /**
-   * @brief constant node container
-   */
-  inline const Nodes& nodes() const { return nodes_; };
+  //! @brief Number of nodes in the layer
+  size_t numNodes() const;
 
-  /**
-   * @brief constant edge container
-   */
-  inline const Edges& edges() const { return edges_.edges; };
+  //! @brief Number of edges in the layer
+  size_t numEdges() const;
 
-  /**
-   * @brief Number of nodes in the layer
-   */
-  inline size_t numNodes() const { return nodes_.size(); }
+ private:
+  friend class SceneGraph;
+  explicit SceneGraphLayer(SceneGraph& graph, LayerKey layer_id);
 
-  /**
-   * @brief Number of edges in the layer
-   */
-  inline size_t numEdges() const { return edges_.size(); }
+  SceneGraph& graph_;
+  std::unordered_set<NodeId> nodes_;
 };
 
 namespace graph_utilities {
@@ -233,5 +162,4 @@ struct graph_traits<SceneGraphLayer> {
 };
 
 }  // namespace graph_utilities
-
 }  // namespace spark_dsg
