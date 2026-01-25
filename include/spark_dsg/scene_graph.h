@@ -255,6 +255,7 @@ class SceneGraph {
   bool addOrUpdateNode(const std::string& layer,
                        NodeId node_id,
                        std::unique_ptr<NodeAttributes>&& attrs);
+
   /**
    * @brief add a node to the graph or update an existing node
    * @param layer_id layer to add to
@@ -267,6 +268,7 @@ class SceneGraph {
                        NodeId node_id,
                        std::unique_ptr<NodeAttributes>&& attrs,
                        PartitionId partition = 0);
+
   /**
    * @brief Set the attributes of an existing node
    * @param node_id Node to set attributes for
@@ -274,6 +276,7 @@ class SceneGraph {
    * @return true if the attributes for the node were set
    */
   bool setNodeAttributes(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
+
   /**
    * @brief Remove a node from the graph
    * @param Node node to remove
