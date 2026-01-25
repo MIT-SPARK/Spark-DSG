@@ -126,11 +126,11 @@ bool SceneGraphLayer::removeNode(NodeId node_id) {
 }
 
 bool SceneGraphLayer::mergeNodes(NodeId node_from, NodeId node_to) {
-  if (!hasNode(node_from) || !hasNode(node_to)) {
+  if (node_from == node_to) {
     return false;
   }
 
-  if (node_from == node_to) {
+  if (!hasNode(node_from) || !hasNode(node_to)) {
     return false;
   }
 
@@ -266,17 +266,18 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
     if (transform_new_nodes) {
       attrs->transform(*transform_new_nodes);
     }
-    nodes_[other_id] = Node::Ptr(new Node(other_id, id, std::move(attrs)));
+    nodes_[other_id] = std::make_unique<Node>(other_id, id, std::move(attrs));
     nodes_status_[other_id] = NodeStatus::NEW;
     if (new_nodes) {
       new_nodes->push_back(other_id);
     }
   }
 
-  for (const auto& id_edge_pair : other_layer.edges_.edges) {
-    const auto& edge = id_edge_pair.second;
-    if (hasEdge(edge.source, edge.target)) {
-      // TODO(nathan) clone attributes
+  for (const auto& [key, edge] : other_layer.edges_.edges) {
+    const auto prev_edge = edges_.find(edge.source, edge.target);
+    if (prev_edge) {
+      // Overwrite existing edge attributes if they already exist.
+      prev_edge->info = edge.info->clone();
       continue;
     }
 
