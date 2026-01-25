@@ -711,7 +711,7 @@ void TravNodeAttributes::fromExteriorPoints(
     const std::vector<Eigen::Vector3d>& points_W,
     const TraversabilityStates& states_in) {
   radii = std::vector<double>(radii.size(), std::numeric_limits<double>::max());
-  states = TraversabilityStates(radii.size(), TraversabilityState::UNKNOWN);
+  states = TraversabilityStates(radii.size(), TraversabilityState::INTRAVERSABLE);
   min_radius = std::numeric_limits<double>::max();
   max_radius = 0.0;
 
@@ -725,7 +725,13 @@ void TravNodeAttributes::fromExteriorPoints(
 
     radii[bin] = std::min(radii[bin], distance);
     if (i < states_in.size()) {
-      fuseStates(states_in[i], states[bin]);
+      // Need separate implementation of fusion for agglomeration of states.
+      if (states_in[i] == TraversabilityState::TRAVERSABLE) {
+        states[bin] = TraversabilityState::TRAVERSABLE;
+      } else if (states_in[i] == TraversabilityState::UNKNOWN &&
+                 states[bin] != TraversabilityState::UNKNOWN) {
+        states[bin] = TraversabilityState::UNKNOWN;
+      }
     }
   }
 
@@ -733,6 +739,7 @@ void TravNodeAttributes::fromExteriorPoints(
   for (size_t i = 0; i < radii.size(); ++i) {
     if (radii[i] == std::numeric_limits<double>::max()) {
       radii[i] = min_radius;
+      states[i] = TraversabilityState::UNKNOWN;
     }
   }
 }
