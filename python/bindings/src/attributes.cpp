@@ -41,9 +41,6 @@
 #include <spark_dsg/mesh.h>
 #include <spark_dsg/node_attributes.h>
 
-#include <filesystem>
-
-#include "spark_dsg/python/mesh.h"
 #include "spark_dsg/python/python_types.h"
 
 namespace spark_dsg::python {
@@ -171,15 +168,16 @@ void init_attributes(py::module_& m) {
 
   py::class_<Place2dNodeAttributes, SemanticNodeAttributes>(m, "Place2dNodeAttributes")
       .def(py::init<>())
+      .def_readwrite("mesh_connections", &Place2dNodeAttributes::mesh_connections)
+      .def_readwrite("boundary_connections", &Place2dNodeAttributes::boundary_connections)
       .def_readwrite("boundary", &Place2dNodeAttributes::boundary)
+      .def_readwrite("ellipse_centroid", &Place2dNodeAttributes::ellipse_centroid)
       .def_readwrite("ellipse_matrix_compress", &Place2dNodeAttributes::ellipse_matrix_compress)
       .def_readwrite("ellipse_matrix_expand", &Place2dNodeAttributes::ellipse_matrix_expand)
-      .def_readwrite("ellipse_centroid", &Place2dNodeAttributes::ellipse_centroid)
-      .def_readwrite("pcl_boundary_connections", &Place2dNodeAttributes::pcl_boundary_connections)
-      .def_readwrite("voxblox_mesh_connections", &Place2dNodeAttributes::voxblox_mesh_connections)
-      .def_readwrite("pcl_mesh_connections", &Place2dNodeAttributes::pcl_mesh_connections)
-      .def_readwrite("mesh_vertex_labels", &Place2dNodeAttributes::mesh_vertex_labels)
-      .def_readwrite("deformation_connections", &Place2dNodeAttributes::deformation_connections);
+      .def_readwrite("min_mesh_index", &Place2dNodeAttributes::min_mesh_index)
+      .def_readwrite("max_mesh_index", &Place2dNodeAttributes::max_mesh_index)
+      .def_readwrite("need_finish_merge", &Place2dNodeAttributes::need_finish_merge)
+      .def_readwrite("has_active_mesh_indices", &Place2dNodeAttributes::has_active_mesh_indices);
 
   py::class_<BoundaryInfo>(m, "BoundaryInfo")
       .def(py::init<>())
