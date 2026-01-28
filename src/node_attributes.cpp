@@ -39,6 +39,7 @@
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/traversability_boundary.h"
 
 namespace spark_dsg {
 
@@ -493,6 +494,7 @@ void AgentNodeAttributes::transform(const Eigen::Isometry3d& transform) {
 std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
   out << "\n  - orientation: " << quatToString(world_R_body);
+  out << "\n  - observed_semantic_labels.size(): " << observed_semantic_labels.size();
   return out;
 }
 
@@ -510,6 +512,7 @@ void AgentNodeAttributes::serialization_info() {
   serialization::field("external_key", external_key);
   serialization::field("dbow_ids", dbow_ids);
   serialization::field("dbow_values", dbow_values);
+  serialization::field("observed_semantic_labels", observed_semantic_labels);
 }
 
 bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -525,7 +528,8 @@ bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
   return timestamp == derived->timestamp &&
          quaternionsEqual(world_R_body, derived->world_R_body) &&
          external_key == derived->external_key && dbow_ids == derived->dbow_ids &&
-         dbow_values == derived->dbow_values;
+         dbow_values == derived->dbow_values &&
+         observed_semantic_labels == derived->observed_semantic_labels;
 }
 
 KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {}
@@ -620,7 +624,7 @@ NodeAttributes::Ptr TraversabilityNodeAttributes::clone() const {
 }
 
 std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) const {
-  NodeAttributes::fill_ostream(out);
+  SemanticNodeAttributes::fill_ostream(out);
   out << "  - min: " << boundary.min.transpose() << "\n"
       << "  - max: " << boundary.max.transpose() << "\n"
       << "  - first_observed_ns: " << first_observed_ns << "\n"
@@ -630,12 +634,13 @@ std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) cons
 }
 
 void TraversabilityNodeAttributes::serialization_info() {
-  NodeAttributes::serialization_info();
+  SemanticNodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
   serialization::field("distance", distance);
   serialization::field("min", boundary.min);
   serialization::field("max", boundary.max);
+
   // Workaround for state serialization.
   for (size_t i = 0; i < 4; ++i) {
     std::vector<uint8_t> s;
@@ -650,6 +655,9 @@ void TraversabilityNodeAttributes::serialization_info() {
       boundary.states[i].push_back(static_cast<TraversabilityState>(state));
     }
   }
+
+  // TMP
+  serialization::field("cognition_labels", cognition_labels);
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -665,6 +673,176 @@ bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
   return boundary == derived->boundary && distance == derived->distance &&
          first_observed_ns == derived->first_observed_ns &&
          last_observed_ns == derived->last_observed_ns;
+}
+
+NodeAttributes::Ptr TravNodeAttributes::clone() const {
+  return std::make_unique<TravNodeAttributes>(*this);
+}
+
+std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
+  NodeAttributes::fill_ostream(out);
+  out << "  - first_observed_ns: " << first_observed_ns << "\n"
+      << "  - last_observed_ns: " << last_observed_ns << "\n"
+      << "  - num states: " << states.size() << "\n"
+      << "  - num radii: " << radii.size() << "\n"
+      << "  - min radius: " << min_radius << "\n"
+      << "  - max radius: " << max_radius;
+  return out;
+}
+
+void TravNodeAttributes::serialization_info() {
+  NodeAttributes::serialization_info();
+  serialization::field("first_observed_ns", first_observed_ns);
+  serialization::field("last_observed_ns", last_observed_ns);
+  serialization::field("radii", radii);
+  serialization::field("min_radius", min_radius);
+  serialization::field("max_radius", max_radius);
+
+  // Workaround for state serialization.
+  std::vector<uint8_t> s;
+  s.reserve(states.size());
+  for (const auto& state : states) {
+    s.push_back(static_cast<uint8_t>(state));
+  }
+  serialization::field("states", s);
+  states.clear();
+  states.reserve(s.size());
+  for (const auto& state : s) {
+    states.push_back(static_cast<TraversabilityState>(state));
+  }
+}
+
+bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const TravNodeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!NodeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return states == derived->states && radii == derived->radii &&
+         min_radius == derived->min_radius && max_radius == derived->max_radius &&
+         first_observed_ns == derived->first_observed_ns &&
+         last_observed_ns == derived->last_observed_ns;
+}
+
+void TravNodeAttributes::fromExteriorPoints(
+    const std::vector<Eigen::Vector3d>& points_W,
+    const TraversabilityStates& states_in) {
+  radii = std::vector<double>(radii.size(), std::numeric_limits<double>::max());
+  states = TraversabilityStates(radii.size(), TraversabilityState::INTRAVERSABLE);
+  min_radius = std::numeric_limits<double>::max();
+  max_radius = 0.0;
+
+  // Update all bins with points.
+  for (size_t i = 0; i < points_W.size(); ++i) {
+    const Eigen::Vector3d point_L = points_W[i] - position;
+    const double distance = point_L.norm();
+    min_radius = std::min(min_radius, distance);
+    max_radius = std::max(max_radius, distance);
+    const size_t bin = getBin(point_L);
+
+    radii[bin] = std::min(radii[bin], distance);
+    if (i < states_in.size()) {
+      // Need separate implementation of fusion for agglomeration of states.
+      if (states_in[i] == TraversabilityState::TRAVERSABLE) {
+        states[bin] = TraversabilityState::TRAVERSABLE;
+      } else if (states_in[i] == TraversabilityState::UNKNOWN &&
+                 states[bin] != TraversabilityState::UNKNOWN) {
+        states[bin] = TraversabilityState::UNKNOWN;
+      }
+    }
+  }
+
+  // Fill in empty bins.
+  for (size_t i = 0; i < radii.size(); ++i) {
+    if (radii[i] == std::numeric_limits<double>::max()) {
+      radii[i] = min_radius;
+      states[i] = TraversabilityState::UNKNOWN;
+    }
+  }
+}
+
+void TravNodeAttributes::clear() {
+  radii.clear();
+  states.clear();
+  min_radius = 0.0;
+  max_radius = 0.0;
+}
+
+double TravNodeAttributes::getBinPercentage(const Eigen::Vector3d& point_L) const {
+  const double angle = std::atan2(point_L.y(), point_L.x()) / (2.0 * M_PI);
+  return angle >= 0.0 ? angle : angle + 1.0;
+}
+
+size_t TravNodeAttributes::getBin(const Eigen::Vector3d& point_L) const {
+  return static_cast<size_t>(getBinPercentage(point_L) * radii.size());
+}
+
+bool TravNodeAttributes::contains(const Eigen::Vector3d& point_W) const {
+  const Eigen::Vector3d p_L = point_W - position;  // local frame
+  const double distance = p_L.norm();
+  if (distance < min_radius) {
+    return true;
+  }
+  if (distance > max_radius) {
+    return false;
+  }
+
+  // Check detailed by interpolating the bin.
+  const double bin = getBinPercentage(p_L);
+  size_t bin_left = static_cast<size_t>(std::floor(bin * radii.size()));
+  size_t bin_right = (bin_left + 1) % radii.size();
+  double distance_max =
+      radii[bin_left] + (radii[bin_right] - radii[bin_left]) *
+                            (bin * radii.size() - static_cast<double>(bin_left));
+  return distance <= distance_max;
+}
+
+Eigen::Vector3d TravNodeAttributes::getBoundaryPoint(size_t bin,
+                                                     bool in_world_frame) const {
+  const double angle =
+      (static_cast<double>(bin) / static_cast<double>(radii.size())) * 2.0 * M_PI;
+  const Eigen::Vector3d point_L(
+      radii[bin] * std::cos(angle), radii[bin] * std::sin(angle), 0.0);
+  if (in_world_frame) {
+    return position + point_L;
+  } else {
+    return point_L;
+  }
+}
+
+bool TravNodeAttributes::intersects(const TravNodeAttributes& other) const {
+  const double distance = (other.position - position).norm();
+  if (distance > (max_radius + other.max_radius)) {
+    return false;
+  }
+  if (distance < (min_radius + other.min_radius)) {
+    return true;
+  }
+
+  // Check detailed intersection.
+  // TODO(lschmid): For now a simple approximation by checking the corner points only.
+  for (size_t i = 0; i < other.radii.size(); ++i) {
+    if (contains(other.getBoundaryPoint(i, true))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+double TravNodeAttributes::area() const {
+  double area = 0.0;
+  const size_t N = radii.size();
+  const double angle_increment = std::sin((2.0 * M_PI) / static_cast<double>(N));
+  for (size_t i = 0; i < N; ++i) {
+    const double r1 = radii[i];
+    const double r2 = radii[(i + 1) % N];
+    area += 0.5 * r1 * r2 * angle_increment;
+  }
+  return area;
 }
 
 }  // namespace spark_dsg

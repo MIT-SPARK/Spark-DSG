@@ -196,7 +196,8 @@ void init_attributes(py::module_& m) {
       .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
       .def_readwrite("first_observed_ns", &TraversabilityNodeAttributes::first_observed_ns)
       .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
-      .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
+      .def_readwrite("distance", &TraversabilityNodeAttributes::distance)
+      .def_readwrite("cognition_labels", &TraversabilityNodeAttributes::cognition_labels);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(m, "AgentNodeAttributes")
       .def(py::init<>())
@@ -207,7 +208,8 @@ void init_attributes(py::module_& m) {
       .def_readwrite("timestamp", &AgentNodeAttributes::timestamp)
       .def_readwrite("external_key", &AgentNodeAttributes::external_key)
       .def_readwrite("dbow_ids", &AgentNodeAttributes::dbow_ids)
-      .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values);
+      .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values)
+      .def_readwrite("observed_semantic_labels", &AgentNodeAttributes::observed_semantic_labels);
 
   py::class_<EdgeAttributes>(m, "EdgeAttributes")
       .def(py::init<>())

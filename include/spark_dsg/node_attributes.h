@@ -369,6 +369,7 @@ struct AgentNodeAttributes : public NodeAttributes {
   NodeId external_key;
   BowIdVector dbow_ids;
   Eigen::VectorXf dbow_values;
+  std::vector<uint32_t> observed_semantic_labels;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
@@ -452,7 +453,7 @@ struct BoundaryInfo {
 /**
  * @brief First simple implementation of traversability places.
  */
-struct TraversabilityNodeAttributes : public NodeAttributes {
+struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::unique_ptr<TraversabilityNodeAttributes>;
@@ -472,12 +473,105 @@ struct TraversabilityNodeAttributes : public NodeAttributes {
   //! Distance to the nearest intraversable obstacle.
   double distance = 0.0;
 
+  // TMP(lschmid): Labels for cognition_verifier. <label_id, weight>
+  std::map<int, float> cognition_labels;
+
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
   REGISTER_NODE_ATTRIBUTES(TraversabilityNodeAttributes);
+};
+
+/**
+ * @brief Simpler version of traversability places for region growing places, spanning a
+ * polygon from uniform rays starting at the center (=the position).
+ * @todo Sort out unifiying interfaces eventually. Implemented as new attributes as
+ * discussed w/ Nathan.
+ * @todo Find better names for this...
+ */
+struct TravNodeAttributes : public NodeAttributes {
+ public:
+  using Ptr = std::unique_ptr<TravNodeAttributes>;
+
+  TravNodeAttributes() = default;
+  virtual ~TravNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  //! Timestamps when this place was first and last observed.
+  uint64_t first_observed_ns = 0;
+  uint64_t last_observed_ns = 0;
+
+  //! Radii for the boundary rays.
+  std::vector<double> radii;
+
+  //! Corresponding traversability states for each boundary ray.
+  TraversabilityStates states;
+
+  //! Approximation of the boundary as circles.
+  double min_radius = 0.0;
+  double max_radius = 0.0;
+
+  /**
+   * @brief Compute the boundary from exterior points in world coordinates. This assumes
+   * the current position as the center and the current size of the radii as the number
+   * of rays.
+   * @param points_W Exterior points in world coordinates.
+   * @param states Optional traversability states for each input point.
+   */
+  void fromExteriorPoints(const std::vector<Eigen::Vector3d>& points_W,
+                          const TraversabilityStates& states_in = {});
+
+  /**
+   * @brief Clear all voxel information. This does not clear timestamps or radii.
+   */
+  void clear();
+
+  /**
+   * @brief Check if a point in world coordinates is within the traversability boundary.
+   * @param point Point in world coordinates.
+   */
+  bool contains(const Eigen::Vector3d& point_W) const;
+
+  /**
+   * @brief Check if this traversability boundary intersects with another.
+   * @param other Other traversability boundary.
+   */
+  bool intersects(const TravNodeAttributes& other) const;
+
+  /**
+   * @brief Compute the area of the traversability boundary.
+   */
+  double area() const;
+
+  /**
+   * @brief Get the bin index for a point in local coordinates. The bin will always be
+   * valid and the floored index is returned.
+   * @param point Point in local coordinates.
+   */
+  size_t getBin(const Eigen::Vector3d& point_L) const;
+
+  /**
+   * @brief Get the linear coordinates [0,1] around the circle (i.e., all bins).
+   * @param point Point in local coordinates.
+   */
+  double getBinPercentage(const Eigen::Vector3d& point_L) const;
+
+  /**
+   * @brief Get the boundary point for a given bin index.
+   * @param bin Bin index.
+   * @param in_world_frame Whether to return the point in world frame (true) or
+   * local frame (false).
+   */
+  Eigen::Vector3d getBoundaryPoint(size_t bin, bool in_world_frame = true) const;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  REGISTER_NODE_ATTRIBUTES(TravNodeAttributes);
 };
 
 }  // namespace spark_dsg

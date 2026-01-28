@@ -38,13 +38,13 @@
 
 namespace spark_dsg {
 
-void updateNested(nlohmann::json& to_update, const nlohmann::json& contents) {
-  if (!contents.is_object()) {
-    to_update = contents;
+void updateNested(nlohmann::json& to_update, const nlohmann::json& to_add) {
+  if (!to_add.is_object()) {
+    to_update = to_add;
     return;
   }
 
-  for (const auto& [key, value] : contents.items()) {
+  for (const auto& [key, value] : to_add.items()) {
     auto iter = to_update.find(key);
     if (iter == to_update.end()) {
       to_update[key] = value;
@@ -64,16 +64,22 @@ void Metadata::set(const nlohmann::json& new_metadata) { contents_ = new_metadat
 
 void Metadata::add(const nlohmann::json& to_add) { updateNested(contents_, to_add); }
 
+void Metadata::add(const Metadata& to_add) { add(to_add.get()); }
+
 size_t Metadata::memoryUsage() const {
   // Estimate memory usage of the JSON contents through serialization.
   // TODO(lschmid): This is not a very clean method but at least does not ignore the
   // meta data.
-  size_t total_size = sizeof(Metadata);
-  const std::string serialized = contents_.dump();
-  if (serialized == "{}") {
+  const size_t total_size = sizeof(Metadata);
+  if (empty()) {
     return total_size;
   }
+  const std::string serialized = contents_.dump();
   return total_size + serialized.size();
 }
+
+void Metadata::clear() { contents_.clear(); }
+
+bool Metadata::empty() const { return contents_.empty(); }
 
 }  // namespace spark_dsg
