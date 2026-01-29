@@ -119,7 +119,8 @@ void init_attributes(py::module_& m) {
       .def_readwrite("bounding_box", &SemanticNodeAttributes::bounding_box)
       .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label)
       .def_readwrite("semantic_feature", &SemanticNodeAttributes::semantic_feature)
-      .def_readonly_static("NO_SEMANTIC_LABEL", &SemanticNodeAttributes::NO_SEMANTIC_LABEL);
+      .def_readonly_static("NO_SEMANTIC_LABEL", &SemanticNodeAttributes::NO_SEMANTIC_LABEL)
+      .def_readwrite("label_weights", &SemanticNodeAttributes::label_weights);
 
   py::class_<ObjectNodeAttributes, SemanticNodeAttributes>(m, "ObjectNodeAttributes")
       .def(py::init<>())
@@ -196,8 +197,7 @@ void init_attributes(py::module_& m) {
       .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
       .def_readwrite("first_observed_ns", &TraversabilityNodeAttributes::first_observed_ns)
       .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
-      .def_readwrite("distance", &TraversabilityNodeAttributes::distance)
-      .def_readwrite("cognition_labels", &TraversabilityNodeAttributes::cognition_labels);
+      .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(m, "AgentNodeAttributes")
       .def(py::init<>())

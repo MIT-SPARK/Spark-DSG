@@ -182,9 +182,11 @@ struct SemanticNodeAttributes : public NodeAttributes {
   //! Extents of the node (if they exists)
   BoundingBox bounding_box;
   //! semantic label of object
-  SemanticLabel semantic_label;
+  Label semantic_label;
   //! semantic feature of object
   Eigen::MatrixXf semantic_feature;
+  //! Optional set of weights for each label <label_id, weight>
+  std::map<Label, float> label_weights;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
@@ -472,9 +474,6 @@ struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
   // TODO(lschmid): Reconsider in the future.
   //! Distance to the nearest intraversable obstacle.
   double distance = 0.0;
-
-  // TMP(lschmid): Labels for cognition_verifier. <label_id, weight>
-  std::map<int, float> cognition_labels;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;

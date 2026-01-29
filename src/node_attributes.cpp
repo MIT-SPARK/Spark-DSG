@@ -223,6 +223,10 @@ void SemanticNodeAttributes::serialization_info() {
   } else {
     serialization::field("semantic_feature", semantic_feature);
   }
+
+  if (header.version >= io::Version(1, 1, 4)) {
+    serialization::field("label_weights", label_weights);
+  }
 }
 
 bool SemanticNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -656,8 +660,19 @@ void TraversabilityNodeAttributes::serialization_info() {
     }
   }
 
-  // TMP
-  serialization::field("cognition_labels", cognition_labels);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 4)) {
+    io::warnOutdatedHeader(header);
+    if (header.version == io::Version(1, 1, 3)) {
+      // Backwards compatibility for cognition labels.
+      std::map<int, float> temp;
+      serialization::field("cognition_labels", temp);
+      label_weights.clear();
+      for (const auto& [label, weight] : temp) {
+        label_weights[static_cast<Label>(label)] = weight;
+      }
+    }
+  }
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
