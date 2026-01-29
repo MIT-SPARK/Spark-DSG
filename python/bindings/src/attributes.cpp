@@ -119,7 +119,8 @@ void init_attributes(py::module_& m) {
       .def_readwrite("bounding_box", &SemanticNodeAttributes::bounding_box)
       .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label)
       .def_readwrite("semantic_feature", &SemanticNodeAttributes::semantic_feature)
-      .def_readonly_static("NO_SEMANTIC_LABEL", &SemanticNodeAttributes::NO_SEMANTIC_LABEL);
+      .def_readonly_static("NO_SEMANTIC_LABEL", &SemanticNodeAttributes::NO_SEMANTIC_LABEL)
+      .def_readwrite("label_weights", &SemanticNodeAttributes::label_weights);
 
   py::class_<ObjectNodeAttributes, SemanticNodeAttributes>(m, "ObjectNodeAttributes")
       .def(py::init<>())
@@ -207,7 +208,8 @@ void init_attributes(py::module_& m) {
       .def_readwrite("timestamp", &AgentNodeAttributes::timestamp)
       .def_readwrite("external_key", &AgentNodeAttributes::external_key)
       .def_readwrite("dbow_ids", &AgentNodeAttributes::dbow_ids)
-      .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values);
+      .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values)
+      .def_readwrite("observed_semantic_labels", &AgentNodeAttributes::observed_semantic_labels);
 
   py::class_<EdgeAttributes>(m, "EdgeAttributes")
       .def(py::init<>())

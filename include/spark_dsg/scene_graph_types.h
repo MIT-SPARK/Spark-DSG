@@ -63,7 +63,7 @@ struct EdgeKey {
 //! Layer key specifying primary layer and optional partition
 struct LayerKey {
   LayerId layer = 0;
-  uint32_t partition = 0;
+  PartitionId partition = 0;
 
   LayerKey() = default;
   LayerKey(LayerId layer);

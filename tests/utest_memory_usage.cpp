@@ -120,23 +120,23 @@ TEST(MemoryUsage, NodeAttributes) {
 
   // Semantic node attributes.
   SemanticNodeAttributes sem_attrs;
-  expected_size = 196;
+  expected_size = 201;
   EXPECT_EQ(sem_attrs.memoryUsage(), expected_size);
 
   sem_attrs.name = "Test Semantic Node";
   sem_attrs.semantic_feature.resize(128, 64);
-  expected_size = 41174;
+  expected_size = 41179;
   EXPECT_EQ(sem_attrs.memoryUsage(), expected_size);
 
   // Object noed attributes.
   ObjectNodeAttributes obj_attrs;
-  expected_size = 243;
+  expected_size = 248;
   EXPECT_EQ(obj_attrs.memoryUsage(), expected_size);
   obj_attrs.mesh_connections.resize(500);
 
   // NOTE(lschmid): The serialization uses up an extra byte per number for the type, so
   // a bit more than the true memory size.
-  expected_size += 9 * 500;  // 4743 bytes.
+  expected_size += 9 * 500;  // 4748 bytes.
   EXPECT_EQ(obj_attrs.memoryUsage(), expected_size);
 }
 
@@ -148,7 +148,7 @@ TEST(MemoryUsage, SceneGraphNode) {
   // Add attributes
   SceneGraphNode node2(2, {0, 0}, std::make_unique<SemanticNodeAttributes>());
   node2.attributes<SemanticNodeAttributes>().semantic_feature.resize(128, 64);
-  expected_size = 41340;
+  expected_size = 41345;
   EXPECT_EQ(node2.memoryUsage(), expected_size);
 }
 
