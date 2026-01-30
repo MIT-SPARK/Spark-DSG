@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
-project(spark_dsg VERSION 1.1.4)
 
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/package.xml PACKAGE_XML)
+string(REGEX MATCH "<version>(.+)</version>" VERSION_MATCH ${PACKAGE_XML})
+if ("${CMAKE_MATCH_0}" STREQUAL "")
+    message(FATAL_ERROR "Could not parse version from package.xml")
+endif()
+
+project(spark_dsg VERSION ${CMAKE_MATCH_1})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
