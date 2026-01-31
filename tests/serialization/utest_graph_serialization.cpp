@@ -215,4 +215,31 @@ TEST(GraphSerialization, UpdateDsgFromBinaryWithCorrection) {
   EXPECT_EQ(original, updated);
 }
 
+TEST(GraphSerialization, UpdateDsgFromBinaryInterPartition) {
+  using namespace std::chrono_literals;
+  SceneGraph original;
+  original.emplaceNode(3, 0, std::make_unique<NodeAttributes>(), 0);
+  original.emplaceNode(3, 1, std::make_unique<NodeAttributes>(), 1);
+  original.insertEdge(0, 1);
+
+  std::vector<uint8_t> buffer;
+  io::binary::writeGraph(original, buffer);
+
+  SceneGraph updated;
+  io::binary::updateGraph(updated, buffer);
+  EXPECT_TRUE(updated.hasNode(0));
+  EXPECT_TRUE(updated.hasNode(1));
+  EXPECT_TRUE(updated.hasEdge(0, 1));
+
+  original.removeNode(1);
+  EXPECT_FALSE(original.hasEdge(0, 1));
+  buffer.clear();
+  io::binary::writeGraph(original, buffer);
+
+  io::binary::updateGraph(updated, buffer);
+  EXPECT_TRUE(updated.hasNode(0));
+  EXPECT_FALSE(updated.hasNode(1));
+  EXPECT_FALSE(updated.hasEdge(0, 1));
+}
+
 }  // namespace spark_dsg
