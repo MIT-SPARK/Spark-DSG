@@ -232,7 +232,6 @@ TEST(GraphSerialization, UpdateDsgFromBinaryInterPartition) {
   EXPECT_TRUE(updated.hasEdge(0, 1));
 
   original.removeNode(1);
-  original.removeNode(0);
   EXPECT_FALSE(original.hasEdge(0, 1));
   buffer.clear();
   io::binary::writeGraph(original, buffer);
