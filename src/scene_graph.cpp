@@ -415,6 +415,15 @@ bool SceneGraph::removeNode(NodeId node_id) {
     removeInterlayerEdge(node_id, target);
   }
 
+  const auto siblings = node->siblings();
+  for (const auto& target : siblings) {
+    if (node_lookup_.at(target) == node->layer) {
+      continue;
+    }
+
+    removeInterlayerEdge(node_id, target);
+  }
+
   layerFromKey(info).removeNode(node_id);
   node_lookup_.erase(node_id);
   return true;
