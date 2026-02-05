@@ -36,11 +36,11 @@
 
 #include <fstream>
 
-#include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
+#include "spark_dsg/scene_graph.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/json_conversions.h"
@@ -64,13 +64,15 @@ void to_json(json& record, const SceneGraphEdge& edge) {
 
 void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& factory,
                          const json& record,
-                         DynamicSceneGraph& graph) {
+                         SceneGraph& graph) {
   auto node_id = record.at("id").get<NodeId>();
   auto layer = record.at("layer").get<LayerId>();
 
   PartitionId partition = 0;
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     if (record.contains("timestamp")) {
       partition = NodeSymbol(node_id).category();
     }
@@ -94,7 +96,7 @@ void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& 
 
 void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& factory,
                          const json& record,
-                         DynamicSceneGraph& graph) {
+                         SceneGraph& graph) {
   auto source = record.at("source").get<NodeId>();
   auto target = record.at("target").get<NodeId>();
   auto attrs = serialization::Visitor::from(factory, record.at("info"));
@@ -109,10 +111,9 @@ void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& 
 
 namespace io::json {
 
-std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
+std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   nlohmann::json record;
-  record[io::FileHeader::IDENTIFIER_STRING + "_header"] = io::FileHeader::current();
-
+  record[io::FileHeader::header_json_key()] = io::FileHeader::current();
   record["directed"] = false;
   record["multigraph"] = false;
   record["nodes"] = nlohmann::json::array();
@@ -157,11 +158,11 @@ std::string writeGraph(const DynamicSceneGraph& graph, bool include_mesh) {
   return record.dump();
 }
 
-DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
+SceneGraph::Ptr readGraph(const std::string& contents) {
   const auto record = nlohmann::json::parse(contents);
 
   // Parse header.
-  const std::string header_field_name = FileHeader::IDENTIFIER_STRING + "_header";
+  const auto header_field_name = FileHeader::header_json_key();
   const auto header = record.contains(header_field_name)
                           ? record.at(header_field_name).get<io::FileHeader>()
                           : io::FileHeader::legacy();
@@ -169,29 +170,35 @@ DynamicSceneGraph::Ptr readGraph(const std::string& contents) {
   const auto node_factory = serialization::AttributeRegistry<NodeAttributes>::current();
   const auto edge_factory = serialization::AttributeRegistry<EdgeAttributes>::current();
 
-  DynamicSceneGraph::LayerKeys layer_keys;
+  SceneGraph::LayerKeys layer_keys;
   if (header.version < io::Version(1, 1, 2)) {
+    io::warnOutdatedHeader(header);
+
     const auto layer_ids = record.at("layer_ids").get<std::vector<LayerId>>();
-    layer_keys = DynamicSceneGraph::LayerKeys(layer_ids.begin(), layer_ids.end());
+    layer_keys = SceneGraph::LayerKeys(layer_ids.begin(), layer_ids.end());
   } else {
     record.at("layer_keys").get_to(layer_keys);
   }
 
-  DynamicSceneGraph::LayerNames layer_names;
+  SceneGraph::LayerNames layer_names;
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     layer_names = {{DsgLayers::OBJECTS, 2},
                    {DsgLayers::AGENTS, 2},
                    {DsgLayers::PLACES, 3},
                    {DsgLayers::ROOMS, 4},
                    {DsgLayers::BUILDINGS, 5}};
   } else if (header.version < io::Version(1, 1, 1)) {
+    io::warnOutdatedHeader(header);
+
     const auto names = record.at("layer_names").get<std::map<std::string, LayerId>>();
-    layer_names = DynamicSceneGraph::LayerNames(names.begin(), names.end());
+    layer_names = SceneGraph::LayerNames(names.begin(), names.end());
   } else {
-    layer_names = record.at("layer_names").get<DynamicSceneGraph::LayerNames>();
+    layer_names = record.at("layer_names").get<SceneGraph::LayerNames>();
   }
 
-  auto graph = std::make_shared<DynamicSceneGraph>(layer_keys, layer_names);
+  auto graph = std::make_shared<SceneGraph>(layer_keys, layer_names);
 
   if (record.contains("metadata")) {
     graph->metadata = record["metadata"];

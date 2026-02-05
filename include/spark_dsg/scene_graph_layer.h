@@ -85,7 +85,7 @@ class SceneGraphLayer {
   //! callback function for filtering nodes
   using NodeChecker = std::function<bool(const SceneGraphNode&)>;
 
-  friend class DynamicSceneGraph;
+  friend class SceneGraph;
   friend class SceneGraphLogger;
 
   /**
@@ -283,6 +283,11 @@ class SceneGraphLayer {
 
   //! ID of the layer
   const LayerKey id;
+
+  /**
+   * @brief Get memory usage of the layer in bytes.
+   */
+  size_t memoryUsage() const;
 
  protected:
   void reset();

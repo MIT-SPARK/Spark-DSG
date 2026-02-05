@@ -157,4 +157,20 @@ Edge* EdgeContainer::find(const EdgeKey& key) const {
   return const_cast<SceneGraphEdge*>(&iter->second);
 }
 
+size_t EdgeContainer::memoryUsage() const {
+  size_t total_size = sizeof(EdgeContainer);
+  // Edges and attributes.
+  total_size += edges.size() * sizeof(EdgeKey);
+  for (const auto& key_edge_pair : edges) {
+    total_size += sizeof(SceneGraphEdge);
+    if (key_edge_pair.second.info) {
+      total_size += key_edge_pair.second.info->memoryUsage();
+    }
+  }
+  // Status and stale maps.
+  total_size += edge_status.size() * (sizeof(EdgeKey) + sizeof(EdgeStatus));
+  total_size += stale_edges.size() * (sizeof(EdgeKey) + sizeof(bool));
+  return total_size;
+}
+
 }  // namespace spark_dsg

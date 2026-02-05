@@ -35,13 +35,13 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config Release
+        run: cmake --build ${{github.workspace}}/build --config Release -j
       - name: Test
         working-directory: ${{github.workspace}}/build
         run: ctest -C Release
   python:
     runs-on: ubuntu-latest
-    strategy: {matrix: {python-version: ['3.8', '3.10', '3.12']}}
+    strategy: {matrix: {python-version: ['3.10', '3.12']}}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python ${{ matrix.python-version }}

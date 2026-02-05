@@ -1,4 +1,4 @@
-#include <spark_dsg/dynamic_scene_graph.h>
+#include <spark_dsg/scene_graph.h>
 #include <spark_dsg/zmq_interface.h>
 
 #include <chrono>
@@ -29,7 +29,7 @@ auto main(int argc, char* argv[]) -> int {
     address = std::string(argv[3]);
   }
 
-  const auto graph = spark_dsg::DynamicSceneGraph::load(dsg_path);
+  const auto graph = spark_dsg::SceneGraph::load(dsg_path);
   if (!graph) {
     std::cerr << "Could not load graph from '" << dsg_path << "'";
     return 1;

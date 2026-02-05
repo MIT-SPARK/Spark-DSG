@@ -56,8 +56,7 @@ class SceneGraphNode {
  public:
   //! desired pointer type of the node (unique)
   using Ptr = std::unique_ptr<SceneGraphNode>;
-  friend class DynamicSceneGraphLayer;
-  friend class DynamicSceneGraph;
+  friend class SceneGraph;
   friend class SceneGraphLayer;
 
   /**
@@ -149,6 +148,11 @@ class SceneGraphNode {
                   "attributes can only be downcast to a derived NodeAttributes class");
     return dynamic_cast<Derived*>(attributes_.get());
   }
+
+  /**
+   * @brief Estimate the memory usage of the node in bytes.
+   */
+  size_t memoryUsage() const;
 
   //! ID of the node
   const NodeId id;

@@ -20,4 +20,17 @@ pybind11_add_module(
 target_link_libraries(_dsg_bindings PRIVATE spark_dsg)
 target_include_directories(_dsg_bindings PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/bindings/include)
 
-install(TARGETS _dsg_bindings DESTINATION ${PROJECT_NAME})
+
+if(NOT DEFINED SKBUILD OR NOT "${SKBUILD}")
+    find_package(ament_cmake QUIET)
+    find_package(ament_cmake_python QUIET)
+    if(${ament_cmake_python_FOUND})
+        ament_get_python_install_dir(PYTHON_INSTALL_PATH)
+        set(PKG_PYTHON_INSTALL "${PYTHON_INSTALL_PATH}/${PROJECT_NAME}")
+        set(PKG_PYTHON_SRC "${CMAKE_CURRENT_SOURCE_DIR}/spark_dsg/")
+        install(TARGETS _dsg_bindings DESTINATION ${PKG_PYTHON_INSTALL})
+        install(DIRECTORY ${PKG_PYTHON_SRC} DESTINATION ${PKG_PYTHON_INSTALL})
+    endif()
+else()
+  install(TARGETS _dsg_bindings DESTINATION ${PROJECT_NAME})
+endif()

@@ -48,6 +48,11 @@ struct Metadata {
   void clear();
   bool empty() const;
 
+  /**
+   * @brief Estimate the memory usage of the metadata in bytes.
+   */
+  size_t memoryUsage() const;
+
  private:
   nlohmann::json contents_;
 };

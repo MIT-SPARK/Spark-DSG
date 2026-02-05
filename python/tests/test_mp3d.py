@@ -67,7 +67,7 @@ def _add_weighted_edge(G, n1, n2, weight):
 
 def test_expand_rooms():
     """Test that we correctly pad out places for a given room segmentation."""
-    G = dsg.DynamicSceneGraph()
+    G = dsg.SceneGraph()
     G.add_node(dsg.DsgLayers.ROOMS, 0, dsg.NodeAttributes())
     G.add_node(dsg.DsgLayers.ROOMS, 1, dsg.NodeAttributes())
     G.add_node(dsg.DsgLayers.PLACES, 2, dsg.NodeAttributes())

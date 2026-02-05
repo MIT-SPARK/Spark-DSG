@@ -88,7 +88,7 @@ struct SgUtilitiesFixture : public testing::TestWithParam<Config> {
     graph.insertEdge(3, 7);
   }
 
-  DynamicSceneGraph graph;
+  SceneGraph graph;
 };
 
 using AncestorTestFixture = SgUtilitiesFixture<AncestorTestConfig>;
@@ -99,10 +99,9 @@ TEST_P(AncestorTestFixture, ResultCorrect) {
 
   std::vector<NodeId> ancestors;
   getNodeAncestorsAtDepth(
-      graph,
-      config.query,
-      config.depth,
-      [&](const DynamicSceneGraph&, const NodeId node) { ancestors.push_back(node); });
+      graph, config.query, config.depth, [&](const SceneGraph&, const NodeId node) {
+        ancestors.push_back(node);
+      });
 
   EXPECT_EQ(ancestors, config.expected);
 }

@@ -39,6 +39,7 @@
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg/serialization/versioning.h"
+#include "spark_dsg/traversability_boundary.h"
 
 namespace spark_dsg {
 
@@ -164,6 +165,15 @@ NodeAttributes::Ptr SemanticNodeAttributes::clone() const {
   return std::make_unique<SemanticNodeAttributes>(*this);
 }
 
+size_t NodeAttributes::memoryUsage() const {
+  // By default simply dispatch serialization to estimate the attributes size. Not
+  // perfect but should be ok.
+  std::vector<uint8_t> buffer;
+  serialization::BinarySerializer serializer(&buffer);
+  serializer.write(*this);
+  return buffer.size();
+}
+
 void SemanticNodeAttributes::transform(const Eigen::Isometry3d& transform) {
   NodeAttributes::transform(transform);
   bounding_box.transform(transform);
@@ -193,21 +203,29 @@ void SemanticNodeAttributes::serialization_info() {
   serialization::field("name", name);
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version <= io::Version(1, 0, 2)) {
+    io::warnOutdatedHeader(header);
+
     Eigen::Matrix<uint8_t, 3, 1> color_uint8;
     serialization::field("color", color_uint8);
     color = Color(color_uint8[0], color_uint8[1], color_uint8[2]);
-    io::warnOutdatedHeader(header);
   } else {
     serialization::field("color", color);
   }
+
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
   if (header.version <= io::Version(1, 0, 4)) {
+    io::warnOutdatedHeader(header);
+
     Eigen::MatrixXd feature;
     serialization::field("semantic_feature", feature);
     semantic_feature = feature.cast<float>();
   } else {
     serialization::field("semantic_feature", semantic_feature);
+  }
+
+  if (header.version >= io::Version(1, 1, 4)) {
+    serialization::field("label_weights", label_weights);
   }
 }
 
@@ -324,6 +342,7 @@ std::ostream& PlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   out << std::boolalpha << "\n  - real place: " << real_place;
   out << std::boolalpha << "\n  - need cleanup: " << need_cleanup;
   out << std::boolalpha << "\n  - active frontier: " << active_frontier;
+  out << std::boolalpha << "\n  - anti frontier: " << active_frontier;
   out << "\n  - num frontier voxels: " << num_frontier_voxels;
   return out;
 }
@@ -342,6 +361,12 @@ void PlaceNodeAttributes::serialization_info() {
   serialization::field("orientation", orientation);
   serialization::field("need_cleanup", need_cleanup);
   serialization::field("num_frontier_voxels", num_frontier_voxels);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 3)) {
+    io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("anti_frontier", anti_frontier);
+  }
 }
 
 bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -362,6 +387,7 @@ bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
          deformation_connections == derived->deformation_connections &&
          real_place == derived->real_place &&
          active_frontier == derived->active_frontier &&
+         anti_frontier == derived->anti_frontier &&
          frontier_scale == derived->frontier_scale &&
          quaternionsEqual(orientation, derived->orientation) &&
          need_cleanup == derived->need_cleanup &&
@@ -369,15 +395,10 @@ bool PlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
 }
 
 Place2dNodeAttributes::Place2dNodeAttributes()
-    : Place2dNodeAttributes(std::vector<Eigen::Vector3d>()) {}
-
-Place2dNodeAttributes::Place2dNodeAttributes(std::vector<Eigen::Vector3d> boundary)
     : SemanticNodeAttributes(),
-      boundary(boundary),
-      pcl_min_index(0),
-      pcl_max_index(0),
+      min_mesh_index(0),
+      max_mesh_index(0),
       need_finish_merge(false),
-      need_cleanup_splitting(false),
       has_active_mesh_indices(false) {}
 
 NodeAttributes::Ptr Place2dNodeAttributes::clone() const {
@@ -392,17 +413,44 @@ std::ostream& Place2dNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void Place2dNodeAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
-  serialization::field("boundary", boundary);
-  serialization::field("ellipse_centroid", ellipse_centroid);
-  serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
-  serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
-  serialization::field("pcl_boundary_connections", pcl_boundary_connections);
-  serialization::field("voxblox_mesh_connections", voxblox_mesh_connections);
-  serialization::field("pcl_mesh_connections", pcl_mesh_connections);
-  serialization::field("mesh_vertex_labels", mesh_vertex_labels);
-  serialization::field("deformation_connections", deformation_connections);
-  serialization::field("need_cleanup_splitting", need_cleanup_splitting);
-  serialization::field("has_active_mesh_indices", has_active_mesh_indices);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 4)) {
+    io::warnOutdatedHeader(header);
+    serialization::field("boundary", boundary);
+    serialization::field("ellipse_centroid", ellipse_centroid);
+    serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
+    serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
+    serialization::field("pcl_boundary_connections", boundary_connections);
+    {  // temp
+      std::vector<NearestVertexInfo> temp;
+      serialization::field("voxblox_mesh_connections", temp);
+    }
+    serialization::field("pcl_mesh_connections", mesh_connections);
+    {  // temp scope
+      std::vector<uint8_t> temp;
+      serialization::field("mesh_vertex_labels", temp);
+    }
+    {  // temp scope
+      std::vector<size_t> temp;
+      serialization::field("deformation_connections", temp);
+    }
+    {  // temp scope
+      bool temp;
+      serialization::field("need_cleanup_splitting", temp);
+    }
+    serialization::field("has_active_mesh_indices", has_active_mesh_indices);
+  } else {
+    serialization::field("mesh_connections", mesh_connections);
+    serialization::field("boundary_connections", boundary_connections);
+    serialization::field("boundary", boundary);
+    serialization::field("ellipse_centroid", ellipse_centroid);
+    serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
+    serialization::field("ellipse_matrix_expand", ellipse_matrix_expand);
+    serialization::field("min_mesh_index", min_mesh_index);
+    serialization::field("max_mesh_index", max_mesh_index);
+    serialization::field("need_finish_merge", need_finish_merge);
+    serialization::field("has_active_mesh_indices", has_active_mesh_indices);
+  }
 }
 
 bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -415,16 +463,15 @@ bool Place2dNodeAttributes::is_equal(const NodeAttributes& other) const {
     return false;
   }
 
-  return boundary == derived->boundary &&
+  return mesh_connections == derived->mesh_connections &&
+         boundary_connections == derived->boundary_connections &&
+         boundary == derived->boundary &&
          ellipse_centroid == derived->ellipse_centroid &&
          ellipse_matrix_compress == derived->ellipse_matrix_compress &&
          ellipse_matrix_expand == derived->ellipse_matrix_expand &&
-         pcl_boundary_connections == derived->pcl_boundary_connections &&
-         voxblox_mesh_connections == derived->voxblox_mesh_connections &&
-         pcl_mesh_connections == derived->pcl_mesh_connections &&
-         mesh_vertex_labels == derived->mesh_vertex_labels &&
-         deformation_connections == derived->deformation_connections &&
-         need_cleanup_splitting == derived->need_cleanup_splitting &&
+         min_mesh_index == derived->min_mesh_index &&
+         max_mesh_index == derived->max_mesh_index &&
+         need_finish_merge == derived->need_finish_merge &&
          has_active_mesh_indices == derived->has_active_mesh_indices;
 }
 
@@ -459,10 +506,10 @@ void AgentNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
 
   const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version >= io::Version(1, 1, 0)) {
-    serialization::field("timestamp", timestamp);
-  } else {
+  if (header.version < io::Version(1, 1, 0)) {
     io::warnOutdatedHeader(header);
+  } else {
+    serialization::field("timestamp", timestamp);
   }
 
   serialization::field("world_R_body", world_R_body);
@@ -489,7 +536,7 @@ bool AgentNodeAttributes::is_equal(const NodeAttributes& other) const {
          observed_semantic_labels == derived->observed_semantic_labels;
 }
 
-KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {};
+KhronosObjectAttributes::KhronosObjectAttributes() : mesh(true, false, false) {}
 
 NodeAttributes::Ptr KhronosObjectAttributes::clone() const {
   return std::make_unique<KhronosObjectAttributes>(*this);
@@ -522,6 +569,7 @@ void KhronosObjectAttributes::serialization_info() {
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version <= io::Version(1, 0, 1)) {
     io::warnOutdatedHeader(header);
+
     std::vector<float> xyz;
     serialization::field("vertices", xyz);
     std::vector<uint8_t> rgb;
@@ -596,6 +644,7 @@ void TraversabilityNodeAttributes::serialization_info() {
   serialization::field("distance", distance);
   serialization::field("min", boundary.min);
   serialization::field("max", boundary.max);
+
   // Workaround for state serialization.
   for (size_t i = 0; i < 4; ++i) {
     std::vector<uint8_t> s;
@@ -611,8 +660,19 @@ void TraversabilityNodeAttributes::serialization_info() {
     }
   }
 
-  // TMP
-  serialization::field("cognition_labels", cognition_labels);
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version < io::Version(1, 1, 4)) {
+    io::warnOutdatedHeader(header);
+    if (header.version == io::Version(1, 1, 3)) {
+      // Backwards compatibility for cognition labels.
+      std::map<int, float> temp;
+      serialization::field("cognition_labels", temp);
+      label_weights.clear();
+      for (const auto& [label, weight] : temp) {
+        label_weights[static_cast<Label>(label)] = weight;
+      }
+    }
+  }
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -628,6 +688,176 @@ bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
   return boundary == derived->boundary && distance == derived->distance &&
          first_observed_ns == derived->first_observed_ns &&
          last_observed_ns == derived->last_observed_ns;
+}
+
+NodeAttributes::Ptr TravNodeAttributes::clone() const {
+  return std::make_unique<TravNodeAttributes>(*this);
+}
+
+std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
+  NodeAttributes::fill_ostream(out);
+  out << "  - first_observed_ns: " << first_observed_ns << "\n"
+      << "  - last_observed_ns: " << last_observed_ns << "\n"
+      << "  - num states: " << states.size() << "\n"
+      << "  - num radii: " << radii.size() << "\n"
+      << "  - min radius: " << min_radius << "\n"
+      << "  - max radius: " << max_radius;
+  return out;
+}
+
+void TravNodeAttributes::serialization_info() {
+  NodeAttributes::serialization_info();
+  serialization::field("first_observed_ns", first_observed_ns);
+  serialization::field("last_observed_ns", last_observed_ns);
+  serialization::field("radii", radii);
+  serialization::field("min_radius", min_radius);
+  serialization::field("max_radius", max_radius);
+
+  // Workaround for state serialization.
+  std::vector<uint8_t> s;
+  s.reserve(states.size());
+  for (const auto& state : states) {
+    s.push_back(static_cast<uint8_t>(state));
+  }
+  serialization::field("states", s);
+  states.clear();
+  states.reserve(s.size());
+  for (const auto& state : s) {
+    states.push_back(static_cast<TraversabilityState>(state));
+  }
+}
+
+bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const TravNodeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!NodeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return states == derived->states && radii == derived->radii &&
+         min_radius == derived->min_radius && max_radius == derived->max_radius &&
+         first_observed_ns == derived->first_observed_ns &&
+         last_observed_ns == derived->last_observed_ns;
+}
+
+void TravNodeAttributes::fromExteriorPoints(
+    const std::vector<Eigen::Vector3d>& points_W,
+    const TraversabilityStates& states_in) {
+  radii = std::vector<double>(radii.size(), std::numeric_limits<double>::max());
+  states = TraversabilityStates(radii.size(), TraversabilityState::INTRAVERSABLE);
+  min_radius = std::numeric_limits<double>::max();
+  max_radius = 0.0;
+
+  // Update all bins with points.
+  for (size_t i = 0; i < points_W.size(); ++i) {
+    const Eigen::Vector3d point_L = points_W[i] - position;
+    const double distance = point_L.norm();
+    min_radius = std::min(min_radius, distance);
+    max_radius = std::max(max_radius, distance);
+    const size_t bin = getBin(point_L);
+
+    radii[bin] = std::min(radii[bin], distance);
+    if (i < states_in.size()) {
+      // Need separate implementation of fusion for agglomeration of states.
+      if (states_in[i] == TraversabilityState::TRAVERSABLE) {
+        states[bin] = TraversabilityState::TRAVERSABLE;
+      } else if (states_in[i] == TraversabilityState::UNKNOWN &&
+                 states[bin] != TraversabilityState::UNKNOWN) {
+        states[bin] = TraversabilityState::UNKNOWN;
+      }
+    }
+  }
+
+  // Fill in empty bins.
+  for (size_t i = 0; i < radii.size(); ++i) {
+    if (radii[i] == std::numeric_limits<double>::max()) {
+      radii[i] = min_radius;
+      states[i] = TraversabilityState::UNKNOWN;
+    }
+  }
+}
+
+void TravNodeAttributes::clear() {
+  radii.clear();
+  states.clear();
+  min_radius = 0.0;
+  max_radius = 0.0;
+}
+
+double TravNodeAttributes::getBinPercentage(const Eigen::Vector3d& point_L) const {
+  const double angle = std::atan2(point_L.y(), point_L.x()) / (2.0 * M_PI);
+  return angle >= 0.0 ? angle : angle + 1.0;
+}
+
+size_t TravNodeAttributes::getBin(const Eigen::Vector3d& point_L) const {
+  return static_cast<size_t>(getBinPercentage(point_L) * radii.size());
+}
+
+bool TravNodeAttributes::contains(const Eigen::Vector3d& point_W) const {
+  const Eigen::Vector3d p_L = point_W - position;  // local frame
+  const double distance = p_L.norm();
+  if (distance < min_radius) {
+    return true;
+  }
+  if (distance > max_radius) {
+    return false;
+  }
+
+  // Check detailed by interpolating the bin.
+  const double bin = getBinPercentage(p_L);
+  size_t bin_left = static_cast<size_t>(std::floor(bin * radii.size()));
+  size_t bin_right = (bin_left + 1) % radii.size();
+  double distance_max =
+      radii[bin_left] + (radii[bin_right] - radii[bin_left]) *
+                            (bin * radii.size() - static_cast<double>(bin_left));
+  return distance <= distance_max;
+}
+
+Eigen::Vector3d TravNodeAttributes::getBoundaryPoint(size_t bin,
+                                                     bool in_world_frame) const {
+  const double angle =
+      (static_cast<double>(bin) / static_cast<double>(radii.size())) * 2.0 * M_PI;
+  const Eigen::Vector3d point_L(
+      radii[bin] * std::cos(angle), radii[bin] * std::sin(angle), 0.0);
+  if (in_world_frame) {
+    return position + point_L;
+  } else {
+    return point_L;
+  }
+}
+
+bool TravNodeAttributes::intersects(const TravNodeAttributes& other) const {
+  const double distance = (other.position - position).norm();
+  if (distance > (max_radius + other.max_radius)) {
+    return false;
+  }
+  if (distance < (min_radius + other.min_radius)) {
+    return true;
+  }
+
+  // Check detailed intersection.
+  // TODO(lschmid): For now a simple approximation by checking the corner points only.
+  for (size_t i = 0; i < other.radii.size(); ++i) {
+    if (contains(other.getBoundaryPoint(i, true))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+double TravNodeAttributes::area() const {
+  double area = 0.0;
+  const size_t N = radii.size();
+  const double angle_increment = std::sin((2.0 * M_PI) / static_cast<double>(N));
+  for (size_t i = 0; i < N; ++i) {
+    const double r1 = radii[i];
+    const double r2 = radii[(i + 1) % N];
+    area += 0.5 * r1 * r2 * angle_increment;
+  }
+  return area;
 }
 
 }  // namespace spark_dsg

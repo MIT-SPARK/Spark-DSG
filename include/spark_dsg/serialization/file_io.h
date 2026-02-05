@@ -66,37 +66,37 @@ FileType identifyFileType(const std::filesystem::path& filepath);
 FileType verifyFileExtension(std::filesystem::path& filepath);
 
 /**
- * @brief Save a DynamicSceneGraph to a JSON file.
+ * @brief Save a SceneGraph to a JSON file.
  * @param graph The graph to save.
  * @param filepath The filepath including extension to save to.
  * @param include_mesh If true, save the mesh data for each node.
  */
-void saveDsgJson(const DynamicSceneGraph& graph,
+void saveDsgJson(const SceneGraph& graph,
                  const std::filesystem::path& filepath,
                  bool include_mesh = false);
 
 /**
- * @brief Load a DynamicSceneGraph from a JSON file.
+ * @brief Load a SceneGraph from a JSON file.
  * @param filepath The filepath including extension to load from.
  * @return A pointer to the loaded graph or nullptr if loading failed.
  */
-std::shared_ptr<DynamicSceneGraph> loadDsgJson(const std::filesystem::path& filepath);
+std::shared_ptr<SceneGraph> loadDsgJson(const std::filesystem::path& filepath);
 
 /**
- * @brief Save a DynamicSceneGraph to a file in binary serialization.
+ * @brief Save a SceneGraph to a file in binary serialization.
  * @param graph The graph to save.
  * @param filepath The filepath including extension to save to.
  * @param include_mesh If true, save the mesh data for each node.
  */
-void saveDsgBinary(const DynamicSceneGraph& graph,
+void saveDsgBinary(const SceneGraph& graph,
                    const std::filesystem::path& filepath,
                    bool include_mesh = false);
 
 /**
- * @brief Load a DynamicSceneGraph from a file in binary serialization.
+ * @brief Load a SceneGraph from a file in binary serialization.
  * @param filepath The filepath including extension to load from.
  * @return A pointer to the loaded graph or nullptr if loading failed.
  */
-std::shared_ptr<DynamicSceneGraph> loadDsgBinary(const std::filesystem::path& filepath);
+std::shared_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath);
 
 }  // namespace spark_dsg::io

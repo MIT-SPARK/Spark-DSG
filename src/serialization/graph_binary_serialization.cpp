@@ -34,11 +34,11 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 
-#include "spark_dsg/dynamic_scene_graph.h"
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
+#include "spark_dsg/scene_graph.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
@@ -85,6 +85,8 @@ NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
   PartitionId partition = 0;
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     std::optional<std::chrono::nanoseconds> stamp;
     deserializer.read(stamp);
     // guess at interlayer IDs based on node symbol prefix
@@ -139,7 +141,7 @@ void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer) {
   serializer.endDynamicArray();
 }
 
-void writeGraph(const DynamicSceneGraph& graph,
+void writeGraph(const SceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh) {
   BinarySerializer serializer(&buffer);
@@ -204,6 +206,8 @@ template <typename Attrs>
 AttributeFactory<Attrs> loadFactory(const io::FileHeader& header,
                                     const BinaryDeserializer& deserializer) {
   if (header.version < io::Version(1, 0, 2)) {
+    io::warnOutdatedHeader(header);
+
     return serialization::AttributeRegistry<Attrs>::current();
   }
 
@@ -212,16 +216,18 @@ AttributeFactory<Attrs> loadFactory(const io::FileHeader& header,
   return serialization::AttributeRegistry<Attrs>::fromNames(names);
 }
 
-bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserializer) {
+bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
   const auto& header = io::GlobalInfo::loadedHeader();
 
   if (header.version < io::Version(1, 1, 2)) {
+    io::warnOutdatedHeader(header);
+
     // NOTE(nathan) we intentionally don't try to use the layer IDs to populate anything
     // because they will not include partitions and cause lots of serialization churn
     std::vector<LayerId> layer_ids;
     deserializer.read(layer_ids);
   } else {
-    DynamicSceneGraph::LayerKeys layer_keys;
+    SceneGraph::LayerKeys layer_keys;
     deserializer.read(layer_keys);
     for (const auto& key : layer_keys) {
       graph.addLayer(key.layer, key.partition);
@@ -237,6 +243,8 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   }
 
   if (header.version < io::Version(1, 0, 2)) {
+    io::warnOutdatedHeader(header);
+
     LayerId mesh_layer_id;
     deserializer.read(mesh_layer_id);
   }
@@ -247,15 +255,19 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
 
   std::map<std::string, LayerKey> layer_names;
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     layer_names = {{DsgLayers::OBJECTS, 2},
                    {DsgLayers::AGENTS, 2},
                    {DsgLayers::PLACES, 3},
                    {DsgLayers::ROOMS, 4},
                    {DsgLayers::BUILDINGS, 5}};
   } else if (header.version < io::Version(1, 1, 1)) {
+    io::warnOutdatedHeader(header);
+
     std::map<std::string, LayerId> names;
     deserializer.read(names);
-    layer_names = DynamicSceneGraph::LayerNames(names.begin(), names.end());
+    layer_names = SceneGraph::LayerNames(names.begin(), names.end());
   } else {
     deserializer.read(layer_names);
   }
@@ -264,7 +276,9 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
     graph.addLayer(key.layer, key.partition, name);
   }
 
-  if (header.version >= io::Version(1, 0, 6)) {
+  if (header.version < io::Version(1, 0, 6)) {
+    io::warnOutdatedHeader(header);
+  } else {
     std::string metadata_json;
     deserializer.read(metadata_json);
     try {
@@ -290,6 +304,8 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   }
 
   if (header.version < io::Version(1, 1, 0)) {
+    io::warnOutdatedHeader(header);
+
     deserializer.checkDynamicArray();
     while (!deserializer.isDynamicArrayEnd()) {
       stale_nodes.erase(parseNode(
@@ -326,11 +342,11 @@ bool updateGraph(DynamicSceneGraph& graph, const BinaryDeserializer& deserialize
   return true;
 }
 
-DynamicSceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
+SceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
 
   // make an empty graph
-  auto graph = std::make_shared<DynamicSceneGraph>(true);
+  auto graph = std::make_shared<SceneGraph>(true);
   if (!updateGraph(*graph, deserializer)) {
     return nullptr;
   }
@@ -372,7 +388,7 @@ std::shared_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t l
   return graph;
 }
 
-bool updateGraph(DynamicSceneGraph& graph, const uint8_t* const buffer, size_t length) {
+bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
   return updateGraph(graph, deserializer);
 }

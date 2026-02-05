@@ -1,12 +1,18 @@
-cmake_minimum_required(VERSION 3.16)
-project(spark_dsg VERSION 1.1.2)
+cmake_minimum_required(VERSION 3.22)
 
-set(CMAKE_CXX_STANDARD 17)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/package.xml PACKAGE_XML)
+string(REGEX MATCH "<version>(.+)</version>" VERSION_MATCH ${PACKAGE_XML})
+if ("${CMAKE_MATCH_0}" STREQUAL "")
+    message(FATAL_ERROR "Could not parse version from package.xml")
+endif()
+
+project(spark_dsg VERSION ${CMAKE_MATCH_1})
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -21,7 +27,7 @@ endif()
 
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
-option(SPARK_DSG_BUILD_PYTHON "Build python bindings" OFF)
+option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
 
 set(FIND_MODE REQUIRED)
@@ -88,7 +94,6 @@ add_library(
   src/bounding_box.cpp
   src/color.cpp
   src/colormaps.cpp
-  src/dynamic_scene_graph.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
   src/labelspace.cpp
@@ -98,6 +103,7 @@ add_library(
   src/node_attributes.cpp
   src/node_symbol.cpp
   src/printing.cpp
+  src/scene_graph.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_logger.cpp
   src/scene_graph_node.cpp

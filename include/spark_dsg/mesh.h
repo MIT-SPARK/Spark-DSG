@@ -222,6 +222,11 @@ class Mesh {
    */
   static Ptr load(std::filesystem::path filepath);
 
+  /**
+   * @brief Get memory usage of the mesh in bytes.
+   */
+  size_t memoryUsage() const;
+
   // ------ Modification ------
 
   /**
@@ -264,11 +269,6 @@ class Mesh {
    * @returns The current mesh
    */
   Mesh& operator+=(const Mesh& other);
-
-  /**
-   * @brief Get memory size
-   */
-  size_t totalBytes() const;
 
  public:
   const bool has_colors;
