@@ -6,7 +6,6 @@
 
   <author email="na26933@mit.edu">Nathan Hughes</author>
   <author email="yunchang@mit.edu">Yun Chang</author>
-  <author email="arosinol@mit.edu">Toni Rosinol</author>
   <maintainer email="na26933@mit.edu">Nathan Hughes</maintainer>
 
   <license>BSD</license>
@@ -17,6 +16,10 @@
   <depend>nlohmann-json-dev</depend>
   <depend>pybind11-dev</depend>
   <depend>python3-dev</depend>
+  <exec_depend>python3-click</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-shapely</exec_depend>
+  <exec_depend>python3-zmq</exec_depend>
 
   <export>
       <build_type>cmake</build_type>
