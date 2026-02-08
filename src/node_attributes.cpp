@@ -664,9 +664,9 @@ void TraversabilityNodeAttributes::serialization_info() {
   if (header.version < io::Version(1, 1, 4)) {
     io::warnOutdatedHeader(header);
     if (header.version == io::Version(1, 1, 3)) {
-      // Backwards compatibility for cognition labels.
+      // Backwards compatibility for daaam labels.
       std::map<int, float> temp;
-      serialization::field("cognition_labels", temp);
+      serialization::field("daaam_labels", temp);
       label_weights.clear();
       for (const auto& [label, weight] : temp) {
         label_weights[static_cast<Label>(label)] = weight;

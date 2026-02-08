@@ -198,7 +198,7 @@ void init_attributes(py::module_& m) {
       .def_readwrite("first_observed_ns", &TraversabilityNodeAttributes::first_observed_ns)
       .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
       .def_readwrite("distance", &TraversabilityNodeAttributes::distance)
-      .def_readwrite("cognition_labels", &TraversabilityNodeAttributes::cognition_labels);
+      .def_readwrite("daaam_labels", &TraversabilityNodeAttributes::daaam_labels);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(m, "AgentNodeAttributes")
       .def(py::init<>())
