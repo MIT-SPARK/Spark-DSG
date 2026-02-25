@@ -199,6 +199,15 @@ void init_attributes(py::module_& m) {
       .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
       .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
 
+  py::class_<TravNodeAttributes, NodeAttributes>(m, "TravNodeAttributes")
+      .def(py::init<>())
+      .def_readwrite("radii", &TravNodeAttributes::radii)
+      .def_readwrite("states", &TravNodeAttributes::states)
+      .def_readwrite("min_radius", &TravNodeAttributes::min_radius)
+      .def_readwrite("max_radius", &TravNodeAttributes::max_radius)
+      .def_readwrite("first_observed_ns", &TravNodeAttributes::first_observed_ns)
+      .def_readwrite("last_observed_ns", &TravNodeAttributes::last_observed_ns);
+
   py::class_<AgentNodeAttributes, NodeAttributes>(m, "AgentNodeAttributes")
       .def(py::init<>())
       .def_property(
