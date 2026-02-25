@@ -984,10 +984,10 @@ SceneGraph::Ptr SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
         node.layer.layer, n, node.attributes().clone(), node.layer.partition);
   }
 
-  for (const auto& n : nodes)  {
+  for (const auto& n : nodes) {
     auto& node = getNode(n);
     for (const auto& neighbor : node.connections()) {
-        sg->insertEdge(node.id, neighbor, getEdge(n, neighbor).attributes().clone());
+      sg->insertEdge(node.id, neighbor, getEdge(n, neighbor).attributes().clone());
     }
   }
 
