@@ -1,7 +1,7 @@
 ---
 # based on https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: Spark-DSG Build and Test
-on: {push: {branches: [main]}, pull_request: {}}
+on: {push: {branches: [main, develop]}, pull_request: {}}
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -25,7 +25,7 @@ jobs:
             ${{ runner.os }}-ccache-${{ github.sha}}
             ${{ runner.os }}-ccache-
       - name: Dependencies
-        run: sudo apt-get update && sudo apt install libgtest-dev libeigen3-dev nlohmann-json3-dev libzmq3-dev ccache
+        run: sudo apt-get update && sudo apt install libgtest-dev libeigen3-dev nlohmann-json3-dev libzmq3-dev pybind11-dev ccache
       - name: Configure
         run: |
           cmake -B ${{github.workspace}}/build \
