@@ -192,13 +192,12 @@ void init_attributes(py::module_& m) {
       .value("INTRAVERSABLE", TraversabilityState::INTRAVERSABLE)
       .value("TRAVERSED", TraversabilityState::TRAVERSED);
 
-  py::class_<TraversabilityNodeAttributes, NodeAttributes>(m, "TraversabilityNodeAttributes")
+  py::class_<TraversabilityNodeAttributes, SemanticNodeAttributes>(m, "TraversabilityNodeAttributes")
       .def(py::init<>())
       .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
       .def_readwrite("first_observed_ns", &TraversabilityNodeAttributes::first_observed_ns)
       .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
-      .def_readwrite("distance", &TraversabilityNodeAttributes::distance)
-      .def_readwrite("daaam_labels", &TraversabilityNodeAttributes::daaam_labels);
+      .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(m, "AgentNodeAttributes")
       .def(py::init<>())

@@ -475,9 +475,6 @@ struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
   //! Distance to the nearest intraversable obstacle.
   double distance = 0.0;
 
-  // TMP(lschmid): Labels for daaam. <label_id, weight>
-  std::map<int, float> daaam_labels;
-
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;

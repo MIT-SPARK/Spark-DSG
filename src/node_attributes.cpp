@@ -663,14 +663,15 @@ void TraversabilityNodeAttributes::serialization_info() {
   const auto& header = io::GlobalInfo::loadedHeader();
   if (header.version < io::Version(1, 1, 4)) {
     io::warnOutdatedHeader(header);
+    std::map<int, float> temp;
     if (header.version == io::Version(1, 1, 3)) {
-      // Backwards compatibility for daaam labels.
-      std::map<int, float> temp;
       serialization::field("daaam_labels", temp);
-      label_weights.clear();
-      for (const auto& [label, weight] : temp) {
-        label_weights[static_cast<Label>(label)] = weight;
-      }
+    } else {
+      serialization::field("cognition_labels", temp);
+    }
+    label_weights.clear();
+    for (const auto& [label, weight] : temp) {
+      label_weights[static_cast<Label>(label)] = weight;
     }
   }
 }
