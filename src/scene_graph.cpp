@@ -971,4 +971,28 @@ std::vector<LayerId> SceneGraph::layer_ids() const {
   return std::vector<LayerId>(layers.begin(), layers.end());
 }
 
+SceneGraph::Ptr SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
+  auto graph = std::make_shared<SceneGraph>();
+
+  for (auto& [string, layerkey] : layer_names_) {
+    graph->addLayer(layerkey.layer, layerkey.partition, string);
+  }
+
+  for (const auto& node_id : nodes) {
+    const auto node = findNode(node_id);
+    if (!node) {
+      continue;
+    }
+
+    graph->addOrUpdateNode(
+        node->layer.layer, node_id, node->attributes().clone(), node->layer.partition);
+    for (const auto neighbor : node->connections()) {
+      graph->insertEdge(
+          node_id, neighbor, getEdge(node_id, neighbor).attributes().clone());
+    }
+  }
+
+  return graph;
+}
+
 }  // namespace spark_dsg

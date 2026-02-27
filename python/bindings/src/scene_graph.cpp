@@ -215,6 +215,7 @@ void init_scene_graph(py::module_& m) {
           },
           "filepath"_a,
           "include_mesh"_a = true)
+      .def("create_subgraph", &SceneGraph::create_subgraph)
       .def_static("load", &SceneGraph::load)
       .def_static("load", [](const std::string& filepath) { return SceneGraph::load(filepath); })
       .def_readwrite("_metadata", &SceneGraph::metadata)
