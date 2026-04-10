@@ -37,6 +37,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 #include <spark_dsg/bounding_box.h>
+#include <spark_dsg/bounding_box_extraction.h>
 
 namespace spark_dsg::python {
 
@@ -78,6 +79,21 @@ void init_bounding_box(py::module_& m) {
         ss << box;
         return ss.str();
       });
-}
 
+  m.def("get_2d_convex_hull", [](const std::vector<Eigen::Vector3f>& points) {
+    BoundingBox::PointVectorAdaptor adaptor(points);
+    return bounding_box::get2dConvexHull(adaptor);
+  });
+
+  py::class_<bounding_box::BoxResult2D>(m, "BoxResult2D")
+      .def_readwrite("x_min", &bounding_box::BoxResult2D::x_min)
+      .def_readwrite("x_max", &bounding_box::BoxResult2D::x_max)
+      .def_readwrite("min_area", &bounding_box::BoxResult2D::min_area)
+      .def_readwrite("yaw", &bounding_box::BoxResult2D::yaw);
+
+  m.def("get_min_2d_box", [](const std::vector<Eigen::Vector3f>& points, const std::list<size_t>& hull) {
+    BoundingBox::PointVectorAdaptor adaptor(points);
+    return bounding_box::getMin2DBox(adaptor, hull);
+  });
+}
 }  // namespace spark_dsg::python

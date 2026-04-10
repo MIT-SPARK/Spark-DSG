@@ -118,13 +118,6 @@ std::list<size_t> get2dConvexHull(const PointAdaptor& points) {
   return hull;
 }
 
-struct BoxResult2D {
-  Eigen::Vector2f x_min = Eigen::Vector2f::Zero();
-  Eigen::Vector2f x_max = Eigen::Vector2f::Zero();
-  std::optional<float> min_area;
-  float yaw = 0.0f;
-};
-
 BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull) {
   BoxResult2D result;
   std::vector<size_t> indices(hull.begin(), hull.end());

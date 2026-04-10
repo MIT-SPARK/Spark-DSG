@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <list>
+#include <optional>
 
 #include "spark_dsg/bounding_box.h"
 
@@ -51,6 +52,14 @@ using PointAdaptor = BoundingBox::PointAdaptor;
  * @returns indices of hull points in ccw order
  */
 std::list<size_t> get2dConvexHull(const PointAdaptor& points);
+
+struct BoxResult2D {
+  Eigen::Vector2f x_min = Eigen::Vector2f::Zero();
+  Eigen::Vector2f x_max = Eigen::Vector2f::Zero();
+  std::optional<float> min_area;
+  float yaw = 0.0f;
+};
+BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull);
 
 /**
  * @brief construct a bounding box directly from a pointcloud
