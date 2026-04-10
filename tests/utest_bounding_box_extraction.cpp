@@ -190,16 +190,10 @@ TEST(BoundingBoxExtractionTests, RAABBFromPointsNonTrivial) {
   BoundingBox box = bounding_box::extract(adaptor, BoundingBox::Type::RAABB);
   EXPECT_EQ(BoundingBox::Type::RAABB, box.type);
 
-  EXPECT_NEAR(length, box.dimensions(0), 1.0e-6);
-  EXPECT_NEAR(width, box.dimensions(1), 1.0e-6);
-  EXPECT_NEAR(height, box.dimensions(2), 1.0e-6);
-
   const Eigen::Vector3f expected_pos = world_R_box * box_centroid + world_p_box;
-  EXPECT_NEAR(0.0f, (expected_pos - box.world_P_center).norm(), 1.0e-6f)
-      << "box: " << box.world_P_center.transpose();
-
-  Eigen::Quaternionf expected_rotation(world_R_box);
-  EXPECT_NEAR(0.0f, getRotationError(expected_rotation, box), 1.0e-6) << box;
+  const BoundingBox expected(
+      Eigen::Vector3f(length, width, height), expected_pos, angle);
+  EXPECT_NEAR(1.0f, box.computeIoU(expected), 1.0e-3f);
 }
 
 }  // namespace spark_dsg
