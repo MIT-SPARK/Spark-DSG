@@ -114,6 +114,22 @@ TEST(BoundingBoxExtractionTests, ConvexHull) {
   EXPECT_EQ(hull, expected);
 }
 
+TEST(BoundingBoxExtractionTests, Box2DFailureCase) {
+  TestAdaptor adaptor;
+  adaptor.points = {
+      {218.83964056385122, 121.4129602188533, 0.0},
+      {193.93899844219004, 200.00561191534632, 0.0},
+      {277.97866560279647, 216.34665830768643, 1.0},
+      {295.0978570614385, 138.53215167749534, 1.0},
+  };
+
+  const auto result = bounding_box::getMin2DBox(adaptor);
+  EXPECT_TRUE(result.min_area);
+  EXPECT_GT(result.min_area.value(), 0.0);
+  EXPECT_GT(result.x_max.x(), result.x_min.x());
+  EXPECT_GT(result.x_max.y(), result.x_min.y());
+}
+
 TEST(BoundingBoxExtractionTests, RAABBFromTwoPoints) {
   TestAdaptor adaptor;
   adaptor.points = {

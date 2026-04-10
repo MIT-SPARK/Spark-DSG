@@ -118,16 +118,16 @@ std::list<size_t> get2dConvexHull(const PointAdaptor& points) {
   return hull;
 }
 
-struct BoxResult2D {
-  Eigen::Vector2f x_min = Eigen::Vector2f::Zero();
-  Eigen::Vector2f x_max = Eigen::Vector2f::Zero();
-  std::optional<float> min_area;
-  float yaw = 0.0f;
-};
-
 BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull) {
+  std::vector<size_t> indices;
+  if (hull.empty()) {
+    const auto new_hull = get2dConvexHull(points);
+    indices.insert(indices.end(), new_hull.begin(), new_hull.end());
+  } else {
+    indices.insert(indices.end(), hull.begin(), hull.end());
+  }
+
   BoxResult2D result;
-  std::vector<size_t> indices(hull.begin(), hull.end());
   // technically this can be implemented in O(n) instead via rotation calipers,
   // but this is easier to understand and n << points.size() due to 2d projection
   for (size_t i = 0; i < indices.size(); ++i) {

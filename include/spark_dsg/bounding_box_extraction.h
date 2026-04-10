@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <list>
+#include <optional>
 
 #include "spark_dsg/bounding_box.h"
 
@@ -41,6 +42,13 @@ namespace spark_dsg {
 namespace bounding_box {
 
 using PointAdaptor = BoundingBox::PointAdaptor;
+
+struct BoxResult2D {
+  Eigen::Vector2f x_min = Eigen::Vector2f::Zero();
+  Eigen::Vector2f x_max = Eigen::Vector2f::Zero();
+  std::optional<float> min_area;
+  float yaw = 0.0f;
+};
 
 /**
  * @brief compute 2D convex hull in x-y plane
@@ -51,6 +59,17 @@ using PointAdaptor = BoundingBox::PointAdaptor;
  * @returns indices of hull points in ccw order
  */
 std::list<size_t> get2dConvexHull(const PointAdaptor& points);
+
+/**
+ * @brief compute the minimum area bounding box in the x-y plane
+ *
+ * Exposed primarily for testing
+ *
+ * @param points Point adapter to use
+ * @param hull Optional convex hull
+ * @returns resulting bounding box if one exists
+ */
+BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull = {});
 
 /**
  * @brief construct a bounding box directly from a pointcloud
