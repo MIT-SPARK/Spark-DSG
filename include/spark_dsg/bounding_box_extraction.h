@@ -44,8 +44,8 @@ namespace bounding_box {
 using PointAdaptor = BoundingBox::PointAdaptor;
 
 struct BoxResult2D {
-  Eigen::Vector2f x_min = Eigen::Vector2f::Zero();
-  Eigen::Vector2f x_max = Eigen::Vector2f::Zero();
+  Eigen::Vector2f center = Eigen::Vector2f::Zero();
+  Eigen::Vector2f dims = Eigen::Vector2f::Zero();
   std::optional<float> min_area;
   float yaw = 0.0f;
 };

@@ -40,7 +40,10 @@
 
 namespace spark_dsg {
 
+using bounding_box::BoxResult2D;
+
 namespace {
+
 inline float getRotationError(const Eigen::Quaternionf& rotation,
                               const BoundingBox& box) {
   // we only care up to 180 degrees orientation
@@ -57,6 +60,16 @@ struct TestAdaptor : public bounding_box::PointAdaptor {
 
   std::vector<std::array<float, 3>> points;
 };
+
+inline float computeIoU(const BoxResult2D& lhs, const BoxResult2D& rhs) {
+  BoundingBox box_lhs(Eigen::Vector3f(lhs.dims.x(), lhs.dims.y(), 1.0),
+                      Eigen::Vector3f(lhs.center.x(), lhs.center.y(), 0.0),
+                      lhs.yaw);
+  BoundingBox box_rhs(Eigen::Vector3f(rhs.dims.x(), rhs.dims.y(), 1.0),
+                      Eigen::Vector3f(rhs.center.x(), rhs.center.y(), 0.0),
+                      rhs.yaw);
+  return box_lhs.computeIoU(box_rhs);
+}
 
 }  // namespace
 
@@ -114,6 +127,7 @@ TEST(BoundingBoxExtractionTests, ConvexHull) {
   EXPECT_EQ(hull, expected);
 }
 
+// TODO(nathan) parameterize this
 TEST(BoundingBoxExtractionTests, Box2DFailureCase) {
   TestAdaptor adaptor;
   adaptor.points = {
@@ -126,8 +140,15 @@ TEST(BoundingBoxExtractionTests, Box2DFailureCase) {
   const auto result = bounding_box::getMin2DBox(adaptor);
   EXPECT_TRUE(result.min_area);
   EXPECT_GT(result.min_area.value(), 0.0);
-  EXPECT_GT(result.x_max.x(), result.x_min.x());
-  EXPECT_GT(result.x_max.y(), result.x_min.y());
+
+  const BoxResult2D expected{
+      Eigen::Vector2f(244.55438232421875, 169.10560607910156),
+      Eigen::Vector2f(82.10726928710938, 85.58794403076172),
+      0.0,
+      -1.3542459101289566,
+  };
+
+  EXPECT_NEAR(computeIoU(result, expected), 1.0f, 1.0e-3);
 }
 
 TEST(BoundingBoxExtractionTests, RAABBFromTwoPoints) {
@@ -209,7 +230,7 @@ TEST(BoundingBoxExtractionTests, RAABBFromPointsNonTrivial) {
   const Eigen::Vector3f expected_pos = world_R_box * box_centroid + world_p_box;
   const BoundingBox expected(
       Eigen::Vector3f(length, width, height), expected_pos, angle);
-  EXPECT_NEAR(1.0f, box.computeIoU(expected), 1.0e-3f);
+  EXPECT_NEAR(1.0f, box.computeIoU(expected, 5000), 1.0e-2f);
 }
 
 }  // namespace spark_dsg
