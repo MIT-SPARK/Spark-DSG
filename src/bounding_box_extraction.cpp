@@ -128,6 +128,10 @@ BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hul
   }
 
   BoxResult2D result;
+  if (indices.size() <= 2) {
+    return result;
+  }
+
   // technically this can be implemented in O(n) instead via rotation calipers,
   // but this is easier to understand and n << points.size() due to 2d projection
   for (size_t i = 0; i < indices.size(); ++i) {
