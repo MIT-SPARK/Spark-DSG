@@ -94,8 +94,8 @@ void init_bounding_box(py::module_& m) {
       .def("__repr__", [](const BoxResult2D& box) {
         std::stringstream ss;
         const Eigen::IOFormat fmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "; ", "", "", "[", "]");
-        ss << "BoxResult2d<(center=" << box.center.format(fmt) << ", dims=" << box.dims.format(fmt) << ", yaw=" << box.yaw
-           << ")>";
+        ss << "BoxResult2d<(center=" << box.center.format(fmt) << ", dims=" << box.dims.format(fmt)
+           << ", yaw=" << box.yaw << ")>";
         return ss.str();
       });
 
