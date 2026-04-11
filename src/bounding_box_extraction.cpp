@@ -118,69 +118,69 @@ std::list<size_t> get2dConvexHull(const PointAdaptor& points) {
   return hull;
 }
 
-struct BoxResult2D {
-  Eigen::Vector2f x_min = Eigen::Vector2f::Zero();
-  Eigen::Vector2f x_max = Eigen::Vector2f::Zero();
-  std::optional<float> min_area;
-  float yaw = 0.0f;
-};
-
 BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull) {
+  std::vector<size_t> indices;
+  if (hull.empty()) {
+    const auto new_hull = get2dConvexHull(points);
+    indices.insert(indices.end(), new_hull.begin(), new_hull.end());
+  } else {
+    indices.insert(indices.end(), hull.begin(), hull.end());
+  }
+
   BoxResult2D result;
-  std::vector<size_t> indices(hull.begin(), hull.end());
+  if (indices.size() <= 1) {
+    return result;
+  }
+
   // technically this can be implemented in O(n) instead via rotation calipers,
   // but this is easier to understand and n << points.size() due to 2d projection
   for (size_t i = 0; i < indices.size(); ++i) {
     const auto curr_idx = indices[i];
     const auto next_idx = indices[(i + 1) % indices.size()];
-    const Eigen::Vector2f x_c = points[curr_idx].head<2>();
-    const Eigen::Vector2f x_n = points[next_idx].head<2>();
-    // normals and offsets for height / width hyperplanes
-    const Eigen::Vector2f n_h = (x_n - x_c).normalized();
-    const Eigen::Vector2f n_w(-n_h.y(), n_h.x());  // equivalent to a 90 degree rotation
-    const auto b_w = -n_w.dot(x_c);
-    const auto b_h = -n_h.dot(x_c);
-
-    // distances from hyperplanes
-    float max_w = 0.0f;
-    float min_h = 0.0f;
-    float max_h = 0.0f;
+    const Eigen::Vector2f p_c = points[curr_idx].head<2>();
+    const Eigen::Vector2f p_n = points[next_idx].head<2>();
+    // normals and offsets for height / width hyperplanes and local coordinates
+    const Eigen::Vector2f n_x = (p_n - p_c).normalized();
+    const Eigen::Vector2f n_y(-n_x.y(), n_x.x());  // equivalent to a 90 degree rotation
+    const auto b_x = -n_x.dot(p_c);
+    const auto b_y = -n_y.dot(p_c);
+    // distances from hyperplanes (all points will be above 0 for y hyperplane)
+    float max_y = 0.0f;
+    float min_x = 0.0f;  // only points with negative distance will override this
+    float max_x = 0.0f;
     for (size_t j = 1; j < indices.size(); ++j) {
-      const Eigen::Vector2f x_j = points[indices[(i + j) % indices.size()]].head<2>();
-      const auto w_dist = n_w.dot(x_j) + b_w;
-      const auto h_dist = n_h.dot(x_j) + b_h;
-      if (w_dist >= max_w) {
-        max_w = w_dist;
+      const Eigen::Vector2f p_j = points[indices[(i + j) % indices.size()]].head<2>();
+      const auto x_dist = n_x.dot(p_j) + b_x;
+      if (x_dist <= min_x) {
+        min_x = x_dist;
       }
 
-      if (h_dist <= min_h) {
-        min_h = h_dist;
+      if (x_dist >= max_x) {
+        max_x = x_dist;
       }
 
-      if (h_dist >= max_h) {
-        max_h = h_dist;
+      const auto y_dist = n_y.dot(p_j) + b_y;
+      if (y_dist >= max_y) {
+        max_y = y_dist;
       }
     }
 
-    // technically (max_w - min_w) * (max_h - min_h) but min_w is 0
-    const auto area = max_w * (max_h - min_h);
+    // technically (max_y - min_x) * (max_y - min_x) but min_y is 0
+    const auto area = max_y * (max_x - min_x);
     if (result.min_area && area >= *result.min_area) {
       continue;
     }
 
     result.min_area = area;
-    Eigen::Matrix2f A;
-    A.row(0) = n_w.transpose();
-    A.row(1) = n_h.transpose();
-    const auto A_inv = A.inverse();
-    // hyperplane along normal d dist away is n * x + b - d
-    // we want lower right corner
-    const Eigen::Vector2f b_low(b_w, b_h - min_h);
-    // we want upper left corner
-    const Eigen::Vector2f b_high(b_w - max_w, b_h - max_h);
-    result.x_min = -A_inv * b_low;
-    result.x_max = -A_inv * b_high;
-    result.yaw = std::atan2(n_h.y(), n_h.x());
+    result.dims << max_x - min_x, max_y;
+    result.yaw = std::atan2(n_x.y(), n_x.x());
+
+    Eigen::IOFormat fmt(3, Eigen::DontAlignCols, ", ", "; ", "", "", "[", "]");
+    // transform center point to global coordinates
+    Eigen::Matrix2f R;
+    R.col(0) = n_x;
+    R.col(1) = n_y;
+    result.center = R * (0.5 * result.dims + Eigen::Vector2f(min_x, 0.0f)) + p_c;
   }
 
   return result;
@@ -213,15 +213,11 @@ BoundingBox extractRAABB(const PointAdaptor& points) {
     max_z = std::max(curr_z, max_z);
   }
 
-  const auto& yaw = min_2d_box.yaw;
-  Eigen::Vector3f p_min;
-  p_min << min_2d_box.x_min, min_z;
-  Eigen::Vector3f p_max;
-  p_max << min_2d_box.x_max, max_z;
-
-  BoundingBox result(Eigen::Vector3f::Zero(), (p_min + p_max) / 2.0f, yaw);
-  result.dimensions = result.pointToBoxFrame(p_max) - result.pointToBoxFrame(p_min);
-  return result;
+  Eigen::Vector3f dims;
+  dims << min_2d_box.dims, max_z - min_z;
+  Eigen::Vector3f center;
+  center << min_2d_box.center, 0.5f * (max_z + min_z);
+  return BoundingBox(dims, center, min_2d_box.yaw);
 }
 
 BoundingBox extract(const PointAdaptor& points, BoundingBox::Type type) {

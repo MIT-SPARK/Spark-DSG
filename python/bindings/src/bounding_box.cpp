@@ -37,11 +37,14 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 #include <spark_dsg/bounding_box.h>
+#include <spark_dsg/bounding_box_extraction.h>
 
 namespace spark_dsg::python {
 
 namespace py = pybind11;
 using namespace py::literals;
+
+using bounding_box::BoxResult2D;
 
 void init_bounding_box(py::module_& m) {
   py::enum_<BoundingBox::Type>(m, "BoundingBoxType")
@@ -78,6 +81,33 @@ void init_bounding_box(py::module_& m) {
         ss << box;
         return ss.str();
       });
+
+  m.def("get_2d_convex_hull", [](const std::vector<Eigen::Vector3f>& points) {
+    BoundingBox::PointVectorAdaptor adaptor(points);
+    return bounding_box::get2dConvexHull(adaptor);
+  });
+
+  py::class_<BoxResult2D>(m, "BoxResult2D")
+      .def_readwrite("center", &BoxResult2D::center)
+      .def_readwrite("dims", &BoxResult2D::dims)
+      .def_readwrite("yaw", &BoxResult2D::yaw)
+      .def("__repr__", [](const BoxResult2D& box) {
+        std::stringstream ss;
+        const Eigen::IOFormat fmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "; ", "", "", "[", "]");
+        ss << "BoxResult2d<(center=" << box.center.format(fmt) << ", dims=" << box.dims.format(fmt)
+           << ", yaw=" << box.yaw << ")>";
+        return ss.str();
+      });
+
+  m.def(
+      "get_min_2d_box",
+      [](const std::vector<Eigen::Vector3f>& points, const std::list<size_t>& hull) -> std::optional<BoxResult2D> {
+        BoundingBox::PointVectorAdaptor adaptor(points);
+        const auto result = bounding_box::getMin2DBox(adaptor, hull);
+        return !result.min_area ? std::nullopt : std::optional<BoxResult2D>(result);
+      },
+      "points"_a,
+      "hull"_a = std::list<size_t>{});
 }
 
 }  // namespace spark_dsg::python
