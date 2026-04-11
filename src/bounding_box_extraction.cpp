@@ -128,7 +128,7 @@ BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hul
   }
 
   BoxResult2D result;
-  if (indices.size() <= 2) {
+  if (indices.size() <= 1) {
     return result;
   }
 
