@@ -39,7 +39,6 @@
 
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/graph_utilities.h"
-#include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/printing.h"
@@ -169,7 +168,6 @@ bool SceneGraphLayer::insertEdge(NodeId source,
                                  NodeId target,
                                  std::unique_ptr<EdgeAttributes>&& edge_info) {
   if (source == target) {
-    SG_LOG(WARNING) << "Attempted to add a self-edge" << std::endl;
     return false;
   }
 
@@ -178,12 +176,10 @@ bool SceneGraphLayer::insertEdge(NodeId source,
   }
 
   if (!hasNode(source)) {
-    // TODO(nathan) maybe consider logging here
     return false;
   }
 
   if (!hasNode(target)) {
-    // TODO(nathan) maybe consider logging here
     return false;
   }
 
@@ -447,5 +443,4 @@ const SceneGraphEdge& LayerGraphTraits::get_edge(const SceneGraphLayer& graph,
 }
 
 }  // namespace graph_utilities
-
 }  // namespace spark_dsg

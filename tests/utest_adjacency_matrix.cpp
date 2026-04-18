@@ -38,8 +38,6 @@
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_layer.h>
 
-#include "spark_dsg/logging.h"
-
 namespace spark_dsg {
 
 struct AdjacencyMatrixTestConfig {
