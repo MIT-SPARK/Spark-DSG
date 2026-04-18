@@ -36,9 +36,9 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
-#include "spark_dsg/logging.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg_version.h"
 
@@ -154,12 +154,13 @@ void warnOutdatedHeader(const FileHeader& header) {
   if (GlobalInfo::warnedLegacy()) {
     return;
   }
-  SG_LOG_DEV << "[SPARK-DSG] [WARNING] Loading file with outdated encoding ("
-             << header.toString()
-             << "). This format may be discontinued in the future. For optimal "
-                "preservation and performance load the file "
-                "and save it again to update to the current encoding ("
-             << FileHeader::current().toString() << ").";
+
+  std::cerr << "[SPARK-DSG] [WARNING] Loading file with outdated encoding ("
+            << header.toString()
+            << "). This format may be discontinued in the future. For optimal "
+               "preservation and performance load the file "
+               "and save it again to update to the current encoding ("
+            << FileHeader::current().toString() << ")." << std::endl;
 }
 
 // TODO(nathan) this and the header write might belong in file_io instead

@@ -37,7 +37,6 @@
 #include <filesystem>
 
 #include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/logging.h"
 #include "spark_dsg/mesh.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"

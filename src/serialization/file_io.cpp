@@ -38,7 +38,6 @@
 #include <fstream>
 #include <sstream>
 
-#include "spark_dsg/logging.h"
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 #include "spark_dsg/serialization/graph_json_serialization.h"
 #include "spark_dsg/serialization/versioning.h"

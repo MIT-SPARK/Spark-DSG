@@ -35,7 +35,6 @@
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 
 #include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/scene_graph.h"
@@ -284,7 +283,7 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
     try {
       graph.metadata = nlohmann::json::parse(metadata_json);
     } catch (const std::exception& e) {
-      SG_LOG(WARNING) << "Invalid json metadata: " << e.what();
+      throw std::domain_error(std::string("Invalid json metadata: ") + e.what());
     }
   }
 

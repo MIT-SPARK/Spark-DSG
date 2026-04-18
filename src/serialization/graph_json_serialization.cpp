@@ -34,10 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/graph_json_serialization.h"
 
-#include <fstream>
-
 #include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/logging.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/scene_graph.h"
