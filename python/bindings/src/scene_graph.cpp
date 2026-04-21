@@ -63,7 +63,7 @@ void init_scene_graph(py::module_& m) {
         "depth"_a = 1,
         "bbox_type"_a = BoundingBox::Type::AABB);
 
-  py::class_<SceneGraph, std::shared_ptr<SceneGraph>>(m, "SceneGraph", py::dynamic_attr())
+  py::class_<SceneGraph>(m, "SceneGraph", py::dynamic_attr())
       .def(py::init<bool>(), "empty"_a = false)
       .def(py::init<const SceneGraph::LayerKeys&, const SceneGraph::LayerNames&>(),
            "layer_keys"_a,
