@@ -43,11 +43,8 @@
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph.h>
 #include <spark_dsg/scene_graph_utilities.h>
+#include <spark_dsg/serialization/file_io.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
-
-#include <filesystem>
-#include <iomanip>
-#include <sstream>
 
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/python_types.h"
@@ -66,7 +63,7 @@ void init_scene_graph(py::module_& m) {
         "depth"_a = 1,
         "bbox_type"_a = BoundingBox::Type::AABB);
 
-  py::class_<SceneGraph, std::shared_ptr<SceneGraph>>(m, "SceneGraph", py::dynamic_attr())
+  py::class_<SceneGraph>(m, "SceneGraph", py::dynamic_attr())
       .def(py::init<bool>(), "empty"_a = false)
       .def(py::init<const SceneGraph::LayerKeys&, const SceneGraph::LayerNames&>(),
            "layer_keys"_a,
@@ -216,8 +213,8 @@ void init_scene_graph(py::module_& m) {
           "filepath"_a,
           "include_mesh"_a = true)
       .def("create_subgraph", &SceneGraph::create_subgraph)
-      .def_static("load", &SceneGraph::load)
-      .def_static("load", [](const std::string& filepath) { return SceneGraph::load(filepath); })
+      .def_static("load", [](const std::filesystem::path& filepath) { return io::loadDsgFromFile(filepath); })
+      .def_static("load", [](const std::string& filepath) { return io::loadDsgFromFile(filepath); })
       .def_readwrite("_metadata", &SceneGraph::metadata)
       .def_property_readonly("layer_ids", &SceneGraph::layer_ids)
       .def_property_readonly("layer_keys", &SceneGraph::layer_keys)
@@ -265,13 +262,13 @@ void init_scene_graph(py::module_& m) {
           [](const SceneGraph& graph) { return graph.mesh(); },
           [](SceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
       .def("get_layer_key", &SceneGraph::getLayerKey, "name"_a)
-      .def("clone", &SceneGraph::clone)
+      .def("clone", &SceneGraph::clone_unique)
       .def("transform",
            [](SceneGraph& G, const Eigen::Matrix4d& mat) {
              Eigen::Isometry3d iso(mat);
              G.transform(iso);
            })
-      .def("__deepcopy__", [](const SceneGraph& G, py::object) { return G.clone(); })
+      .def("__deepcopy__", [](const SceneGraph& G, py::object) { return G.clone_unique(); })
       .def(
           "to_binary",
           [](const SceneGraph& graph, bool include_mesh) {

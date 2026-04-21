@@ -455,6 +455,9 @@ class SceneGraph {
   //! @brief Make a copy of the scene graph
   SceneGraph::Ptr clone() const;
 
+  //! @brief Make a copy of the scene graph (for bindings)
+  std::unique_ptr<SceneGraph> clone_unique() const;
+
   //! @brief Rigidly transform graph
   void transform(const Eigen::Isometry3d& transform);
 
@@ -488,7 +491,7 @@ class SceneGraph {
   //! Any extra information about the graph
   Metadata metadata;
 
-  SceneGraph::Ptr create_subgraph(const std::vector<NodeId>& nodes);
+  std::unique_ptr<SceneGraph> create_subgraph(const std::vector<NodeId>& nodes);
 
  protected:
   Layer& layerFromKey(const LayerKey& key);

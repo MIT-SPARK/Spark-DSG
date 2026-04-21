@@ -54,7 +54,7 @@ namespace py = pybind11;
 using namespace py::literals;
 
 void init_scene_graph_layer(py::module_& m) {
-  py::class_<SceneGraphLayer, std::shared_ptr<SceneGraphLayer>>(m, "SceneGraphLayer")
+  py::class_<SceneGraphLayer>(m, "SceneGraphLayer")
       .def(py::init<LayerId>())
       .def(py::init<const std::string&>())
       .def("add_node",

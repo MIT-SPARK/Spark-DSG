@@ -155,7 +155,7 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   return record.dump();
 }
 
-SceneGraph::Ptr readGraph(const std::string& contents) {
+std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
   const auto record = nlohmann::json::parse(contents);
 
   // Parse header.
@@ -195,7 +195,7 @@ SceneGraph::Ptr readGraph(const std::string& contents) {
     layer_names = record.at("layer_names").get<SceneGraph::LayerNames>();
   }
 
-  auto graph = std::make_shared<SceneGraph>(layer_keys, layer_names);
+  auto graph = std::make_unique<SceneGraph>(layer_keys, layer_names);
 
   if (record.contains("metadata")) {
     graph->metadata = record["metadata"];
