@@ -341,11 +341,11 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
   return true;
 }
 
-SceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
+std::unique_ptr<SceneGraph> readGraph(const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
 
   // make an empty graph
-  auto graph = std::make_shared<SceneGraph>(true);
+  auto graph = std::make_unique<SceneGraph>(true);
   if (!updateGraph(*graph, deserializer)) {
     return nullptr;
   }
@@ -353,14 +353,18 @@ SceneGraph::Ptr readGraph(const uint8_t* const buffer, size_t length) {
   return graph;
 }
 
-std::shared_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length) {
+std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer) {
+  return readGraph(buffer.data(), buffer.size());
+}
+
+std::unique_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length) {
   const auto& header = io::GlobalInfo::loadedHeader();
 
   BinaryDeserializer deserializer(buffer, length);
   LayerId layer_id;
   deserializer.read(layer_id);
 
-  auto graph = std::make_shared<SceneGraphLayer>(layer_id);
+  auto graph = std::make_unique<SceneGraphLayer>(layer_id);
 
   // load name to type index mapping if present
   const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);
@@ -387,9 +391,17 @@ std::shared_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t l
   return graph;
 }
 
+std::unique_ptr<SceneGraphLayer> readLayer(const std::vector<uint8_t>& buffer) {
+  return readLayer(buffer.data(), buffer.size());
+}
+
 bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
   return updateGraph(graph, deserializer);
+}
+
+bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer) {
+  return updateGraph(graph, buffer.data(), buffer.size());
 }
 
 }  // namespace io::binary

@@ -38,6 +38,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "spark_dsg/scene_graph.h"
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 #include "spark_dsg/serialization/graph_json_serialization.h"
 #include "spark_dsg/serialization/versioning.h"
@@ -56,13 +57,12 @@ FileType identifyFileType(const std::filesystem::path& filepath) {
   return FileType::UNKNOWN;
 }
 
-FileType verifyFileExtension(std::filesystem::path& filepath) {
+FileType verifyFileExtension(const std::filesystem::path& filepath) {
   io::FileType type = io::identifyFileType(filepath);
 
   // If no file extension is provided, default to binary.
   if (type == io::FileType::NONE) {
     type = io::FileType::BINARY;
-    filepath += io::BINARY_EXTENSION;
   }
 
   // Check the file extension is valid.
@@ -94,7 +94,7 @@ void saveDsgBinary(const SceneGraph& graph,
   out.write(reinterpret_cast<const char*>(graph_buffer.data()), graph_buffer.size());
 }
 
-std::shared_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath) {
+std::unique_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath) {
   // Read the file into a buffer.
   std::ifstream infile(filepath, std::ios::in | std::ios::binary);
   std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(infile)),
@@ -120,11 +120,25 @@ void saveDsgJson(const SceneGraph& graph,
   outfile << json::writeGraph(graph, include_mesh);
 }
 
-std::shared_ptr<SceneGraph> loadDsgJson(const std::filesystem::path& filepath) {
+std::unique_ptr<SceneGraph> loadDsgJson(const std::filesystem::path& filepath) {
   std::ifstream infile(filepath);
   std::stringstream ss;
   ss << infile.rdbuf();
   return json::readGraph(ss.str());
+}
+
+std::unique_ptr<SceneGraph> loadDsgFromFile(const std::filesystem::path& filepath) {
+  if (!std::filesystem::exists(filepath)) {
+    throw std::runtime_error("graph file does not exist: " + filepath.string());
+  }
+
+  const auto type = verifyFileExtension(filepath);
+  if (type == FileType::JSON) {
+    return loadDsgJson(filepath);
+  }
+
+  // Can only be binary after verification (worstcase: throws meaningful error)
+  return loadDsgBinary(filepath);
 }
 
 }  // namespace spark_dsg::io

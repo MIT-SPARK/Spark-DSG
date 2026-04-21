@@ -50,6 +50,7 @@ using Edge = SceneGraphEdge;
 using Layer = SceneGraphLayer;
 using LayerCallback = std::function<void(LayerKey, Layer&)>;
 using ConstLayerCallback = std::function<void(LayerKey, const Layer&)>;
+using UniqueGraph = std::unique_ptr<SceneGraph>;
 
 using Partitions = SceneGraph::Partitions;
 using LayerNames = SceneGraph::LayerNames;
@@ -670,8 +671,10 @@ void SceneGraph::removeAllStaleEdges() {
   removeStaleEdges(interlayer_edges_);
 }
 
-SceneGraph::Ptr SceneGraph::clone() const {
-  auto to_return = std::make_shared<SceneGraph>(layer_keys(), layer_names_);
+SceneGraph::Ptr SceneGraph::clone() const { return clone_unique(); }
+
+UniqueGraph SceneGraph::clone_unique() const {
+  auto to_return = std::make_unique<SceneGraph>(layer_keys(), layer_names_);
   to_return->metadata = metadata;
 
   for (const auto [node_id, key] : node_lookup_) {
@@ -724,17 +727,7 @@ void SceneGraph::save(std::filesystem::path filepath, bool include_mesh) const {
 }
 
 SceneGraph::Ptr SceneGraph::load(std::filesystem::path filepath) {
-  if (!std::filesystem::exists(filepath)) {
-    throw std::runtime_error("graph file does not exist: " + filepath.string());
-  }
-
-  const auto type = io::verifyFileExtension(filepath);
-  if (type == io::FileType::JSON) {
-    return io::loadDsgJson(filepath);
-  }
-
-  // Can only be binary after verification (worstcase: throws meaningful error)
-  return io::loadDsgBinary(filepath);
+  return io::loadDsgFromFile(filepath);
 }
 
 void SceneGraph::setMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
@@ -970,8 +963,8 @@ std::vector<LayerId> SceneGraph::layer_ids() const {
   return std::vector<LayerId>(layers.begin(), layers.end());
 }
 
-SceneGraph::Ptr SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
-  auto graph = std::make_shared<SceneGraph>();
+UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
+  auto graph = std::make_unique<SceneGraph>();
 
   for (auto& [string, layerkey] : layer_names_) {
     graph->addLayer(layerkey.layer, layerkey.partition, string);
