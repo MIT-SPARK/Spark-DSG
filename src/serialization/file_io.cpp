@@ -57,12 +57,13 @@ FileType identifyFileType(const std::filesystem::path& filepath) {
   return FileType::UNKNOWN;
 }
 
-FileType verifyFileExtension(const std::filesystem::path& filepath) {
+FileType verifyFileExtension(std::filesystem::path& filepath) {
   io::FileType type = io::identifyFileType(filepath);
 
   // If no file extension is provided, default to binary.
   if (type == io::FileType::NONE) {
     type = io::FileType::BINARY;
+    filepath += io::BINARY_EXTENSION;
   }
 
   // Check the file extension is valid.
@@ -132,7 +133,8 @@ std::unique_ptr<SceneGraph> loadDsgFromFile(const std::filesystem::path& filepat
     throw std::runtime_error("graph file does not exist: " + filepath.string());
   }
 
-  const auto type = verifyFileExtension(filepath);
+  auto path_for_verification = filepath;
+  const auto type = verifyFileExtension(path_for_verification);
   if (type == FileType::JSON) {
     return loadDsgJson(filepath);
   }

@@ -63,7 +63,7 @@ FileType identifyFileType(const std::filesystem::path& filepath);
  * @throws std::runtime_error if the extension is invalid.
  * @return The file type of the resulting filepath.
  */
-FileType verifyFileExtension(const std::filesystem::path& filepath);
+FileType verifyFileExtension(std::filesystem::path& filepath);
 
 /**
  * @brief Save a SceneGraph to a JSON file.
@@ -102,7 +102,6 @@ std::unique_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath)
 /**
  * @brief Load a SceneGraph from a provided filepath
  * @param filepath The filepath including extension to load from.
- * @return A pointer to the loaded graph or nullptr if loading failed.
  */
 std::unique_ptr<SceneGraph> loadDsgFromFile(const std::filesystem::path& filepath);
 
