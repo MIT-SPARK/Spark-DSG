@@ -29,6 +29,7 @@ classifiers = [
 
 [project.optional-dependencies]
 viz = ["trimesh", "viser"]
+dev = ["build", "mypy", "pybind11-stubgen", "pytest", "pytest-cov"]
 
 [project.urls]
 Repository = "https://github.com/MIT-SPARK/Spark-DSG"
@@ -52,6 +53,16 @@ BUILD_SHARED_LIBS = "OFF"
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
+
+[tool.mypy]
+exclude = []
+
+[tool.coverage]
+run.omit = ["__main__.py", "*/commands/*"]
+
+[tool.pytest]
+addopts = ["--cov=spark_dsg", "--cov-report=term-missing:skip-covered"]
+testpaths = ["python/tests"]
 
 [tool.cibuildwheel]
 skip = ["*musl*", "*win32*"]
