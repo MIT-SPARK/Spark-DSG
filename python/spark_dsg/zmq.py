@@ -48,7 +48,7 @@ class DsgReceiver:
     ):
         """Initialize the ZMQ socket."""
         self._context = _get_context(context, num_threads)
-        self._graph = None
+        self._graph: SceneGraph | None = None
 
         self._socket = self._context.socket(zmq.SUB)
         self._socket.connect(url)
@@ -138,7 +138,7 @@ class ZmqGraph:
             return self._has_change
 
     @property
-    def graph(self) -> SceneGraph:
+    def graph(self) -> SceneGraph | None:
         """Return the latest scene graph."""
         with self._mutex:
             self._has_change = False

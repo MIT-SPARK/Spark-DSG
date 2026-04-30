@@ -177,9 +177,7 @@ void init_mesh(py::module_& m) {
                     return Mesh::deserializeFromBinary(reinterpret_cast<const uint8_t*>(view.data()), view.size());
                   })
       .def("save", &Mesh::save)
-      .def("save", [](const Mesh& mesh, const std::string& path) { mesh.save(path); })
       .def_static("load", &Mesh::load)
-      .def_static("load", [](const std::string& path) { return Mesh::load(path); })
       .def("get_vertices", [](const Mesh& mesh) { return spark_dsg::python::getEigenVertices(mesh); })
       .def("get_faces", [](const Mesh& mesh) { return spark_dsg::python::getEigenFaces(mesh); })
       .def("get_labels", [](const Mesh& mesh) { return mesh.labels; })

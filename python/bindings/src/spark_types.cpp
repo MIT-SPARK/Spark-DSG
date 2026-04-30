@@ -103,7 +103,7 @@ void init_spark_types(py::module_& m) {
           "value", [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); }, nullptr)
       .def("__repr__", [](const NodeSymbol& ns) { return ns.str(false); })
       .def("__hash__", [](const NodeSymbol& symbol) { return static_cast<NodeId>(symbol); })
-      .def("str", &NodeSymbol::str, "literal"_a = true)
+      .def("string", &NodeSymbol::str, "literal"_a = true)
       .def(pybind11::self == pybind11::self)
       .def(pybind11::self != pybind11::self);
 

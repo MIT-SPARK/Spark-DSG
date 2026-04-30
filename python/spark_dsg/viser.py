@@ -515,13 +515,15 @@ class ViserRenderer:
             clear_at_exit: Remove scene graph elements from viser client when server exits
         """
         self._mesh_handle = None
-        self._graph_handle = None
+        self._graph_handle: GraphHandle | None = None
         self._clear_at_exit = clear_at_exit
 
         try:
             import viser
 
-            self._server = viser.ViserServer(host=ip, port=port)
+            self._server: viser.ViserServer | None = viser.ViserServer(
+                host=ip, port=port
+            )
         except ImportError:
             warnings.warn("Missing [viz] deps (viser)! Reinstall with spark_dsg[viz]")
             self._server = None

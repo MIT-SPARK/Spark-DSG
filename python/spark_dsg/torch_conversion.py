@@ -41,7 +41,7 @@ homogeneous or heterogeneous conversion function.
 """
 
 import importlib
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional
 
 import numpy as np
 
@@ -51,16 +51,19 @@ from spark_dsg._dsg_bindings import (
     SceneGraphEdge,
     SceneGraphLayer,
     SceneGraphNode,
+    SemanticNodeAttributes
 )
 
-NodeConversionFunc = Callable[[SceneGraph, SceneGraphNode], np.ndarray]
-EdgeConversionFunc = Callable[[SceneGraph, SceneGraphEdge], np.ndarray]
+
+GraphView = SceneGraph | SceneGraphLayer | LayerView
+NodeConversionFunc = Callable[[GraphView, SceneGraphNode], np.ndarray]
+EdgeConversionFunc = Callable[[GraphView, SceneGraphEdge], np.ndarray]
 
 
 DEFAULT_LAYER_MAP = {2: "objects", 3: "places", 4: "rooms", 5: "buildings"}
 
 
-def _centroid_bbx_embedding(G, x) -> NodeConversionFunc:
+def _centroid_bbx_embedding(G, x) -> np.ndarray:
     return np.hstack(
         (
             x.attributes.position,
@@ -110,7 +113,7 @@ def _get_directed_edge(G, edge, id_map):
 
 
 def scene_graph_layer_to_torch(
-    G: Union[SceneGraphLayer, LayerView],
+    G: SceneGraphLayer | LayerView,
     node_converter: NodeConversionFunc,
     edge_converter: Optional[EdgeConversionFunc] = None,
     double_precision: bool = False,
@@ -137,7 +140,7 @@ def scene_graph_layer_to_torch(
 
     N = G.num_nodes()
 
-    node_features = []
+    node_features: list[np.ndarray] = []
     node_positions = torch.zeros((N, 3), dtype=dtype_float)
     id_map = {}
 
@@ -217,12 +220,12 @@ def scene_graph_to_torch_homogeneous(
     N = G.num_nodes(include_partitions=False)
     M = G.num_edges(include_partitions=False)
 
-    node_features = []
+    node_features: list[np.ndarray] = []
     node_positions = torch.zeros((N, 3), dtype=torch.float64)
     node_masks = {x.id: torch.zeros(N, dtype=torch.bool) for x in G.layers}
-    node_labels = []
-    node_ids = []
-    id_map = {}
+    node_labels: list[int] = []
+    node_ids: list[int] = []
+    id_map: dict[int, int] = {}
 
     for node in G.unpartitioned_nodes:
         idx = len(node_features)
@@ -233,7 +236,10 @@ def scene_graph_to_torch_homogeneous(
         node_features.append(node_converter(G, node))
         id_map[node.id.value] = idx
         node_ids.append(node.id.value)
-        node_labels.append(node.attributes.semantic_label)
+        if isinstance(node.attributes, SemanticNodeAttributes):
+            node_labels.append(node.attributes.semantic_label)
+        else:
+            node_labels.append(-1)
 
     node_features = torch.tensor(np.array(node_features), dtype=dtype_float)
     node_labels = torch.tensor(np.array(node_labels), dtype=dtype_int)
@@ -318,11 +324,11 @@ def scene_graph_to_torch_heterogeneous(
 
     data = torch_geometric.data.HeteroData()
 
-    node_features = {}
-    node_positions = {}
-    node_labels = {}
-    node_ids = {}
-    id_map = {}
+    node_features: dict[int, list[np.ndarray]] = {}
+    node_positions: dict[int, list[np.ndarray]] = {}
+    node_labels: dict[int, list[int]] = {}
+    node_ids: dict[int, list[int]] = {}
+    id_map: dict[int, int] = {}
 
     for node in G.unpartitioned_nodes:
         layer_id = node.layer.layer
@@ -335,7 +341,11 @@ def scene_graph_to_torch_heterogeneous(
         idx = len(node_features[layer_id])
         node_positions[layer_id].append(np.squeeze(node.attributes.position))
         node_features[layer_id].append(node_converter(G, node))
-        node_labels[layer_id].append(node.attributes.semantic_label)
+        if isinstance(node.attributes, SemanticNodeAttributes):
+            node_labels[layer_id].append(node.attributes.semantic_label)
+        else:
+            node_labels[layer_id].append(-1)
+
         node_ids[layer_id].append(node.id.value)
         id_map[node.id.value] = idx
 
@@ -352,8 +362,8 @@ def scene_graph_to_torch_heterogeneous(
         id_tensor = torch.tensor(np.array(node_ids[layer]), dtype=torch.int64)
         data[layer_map[layer]].node_ids = id_tensor
 
-    edge_indices = {}
-    edge_features = {}
+    edge_indices: dict[str, list[tuple[int, int]]] = {}
+    edge_features: dict[str, list[np.ndarray]] = {}
     for edge in G.unpartitioned_edges:
         source = G.get_node(edge.source)
         target = G.get_node(edge.target)

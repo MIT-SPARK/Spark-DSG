@@ -270,7 +270,7 @@ def load_mp3d_info(house_path) -> Dict[str, List[Dict[str, Any]]]:
     Returns:
         Dict[str, List[Dict[Str, Any]]]: Parsed house file information
     """
-    info = {x: [] for x in PARSERS}
+    info: dict[str, list[dict[str, Any]]] = {x: [] for x in PARSERS}
     with open(house_path, "r") as fin:
         for line in fin:
             line_type, line = _filter_line(line)
