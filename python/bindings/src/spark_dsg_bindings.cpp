@@ -50,16 +50,17 @@
 PYBIND11_MODULE(_dsg_bindings, m) {
   pybind11::options options;
 
-  spark_dsg::python::init_attributes(m);
+  spark_dsg::python::init_python_types(m);
+  spark_dsg::python::init_spark_types(m);
   spark_dsg::python::init_bounding_box(m);
   spark_dsg::python::init_color(m);
-  spark_dsg::python::init_graph_types(m);
-  spark_dsg::python::init_mesh(m);
   spark_dsg::python::init_metadata(m);
-  spark_dsg::python::init_python_types(m);
-  spark_dsg::python::init_scene_graph(m);
+
+  spark_dsg::python::init_mesh(m);
+  spark_dsg::python::init_attributes(m);
+  spark_dsg::python::init_graph_types(m);
   spark_dsg::python::init_scene_graph_layer(m);
-  spark_dsg::python::init_spark_types(m);
+  spark_dsg::python::init_scene_graph(m);
 
   m.def("version", []() { return spark_dsg::io::FileHeader::current().version.toString(); });
 }

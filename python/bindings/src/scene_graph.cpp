@@ -56,13 +56,6 @@ namespace py = pybind11;
 using namespace py::literals;
 
 void init_scene_graph(py::module_& m) {
-  m.def("compute_ancestor_bounding_box",
-        &computeAncestorBoundingBox,
-        "G"_a,
-        "node_id"_a,
-        "depth"_a = 1,
-        "bbox_type"_a = BoundingBox::Type::AABB);
-
   py::class_<SceneGraph>(m, "SceneGraph", py::dynamic_attr())
       .def(py::init<bool>(), "empty"_a = false)
       .def(py::init<const SceneGraph::LayerKeys&, const SceneGraph::LayerNames&>(),
@@ -315,6 +308,13 @@ void init_scene_graph(py::module_& m) {
           },
           "labelspace"_a,
           "name"_a);
+
+  m.def("compute_ancestor_bounding_box",
+        &computeAncestorBoundingBox,
+        "G"_a,
+        "node_id"_a,
+        "depth"_a = 1,
+        "bbox_type"_a = BoundingBox::Type::AABB);
 }
 
 }  // namespace spark_dsg::python

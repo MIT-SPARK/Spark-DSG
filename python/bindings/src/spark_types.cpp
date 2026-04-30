@@ -55,20 +55,6 @@ using namespace py::literals;
 using namespace spark_dsg;
 
 void init_spark_types(py::module_& m) {
-  py::class_<DsgLayers>(m, "DsgLayers")
-      .def_readonly_static("SEGMENTS", &DsgLayers::SEGMENTS)
-      .def_readonly_static("OBJECTS", &DsgLayers::OBJECTS)
-      .def_readonly_static("AGENTS", &DsgLayers::AGENTS)
-      .def_readonly_static("PLACES", &DsgLayers::PLACES)
-      .def_readonly_static("MESH_PLACES", &DsgLayers::MESH_PLACES)
-      .def_readonly_static("TRAVERSABILITY", &DsgLayers::TRAVERSABILITY)
-      .def_readonly_static("ROOMS", &DsgLayers::ROOMS)
-      .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS)
-      .def_static(
-          "name_to_layer_id",
-          [](const std::string& name) -> std::optional<LayerKey> { return DsgLayers::nameToLayerId(name); },
-          "name"_a);
-
   py::class_<LayerKey>(m, "LayerKey")
       .def(py::init<LayerId>())
       .def(py::init<LayerId, PythonPartitionId>())
@@ -93,6 +79,20 @@ void init_spark_types(py::module_& m) {
       });
 
   py::implicitly_convertible<LayerId, LayerKey>();
+
+  py::class_<DsgLayers>(m, "DsgLayers")
+      .def_readonly_static("SEGMENTS", &DsgLayers::SEGMENTS)
+      .def_readonly_static("OBJECTS", &DsgLayers::OBJECTS)
+      .def_readonly_static("AGENTS", &DsgLayers::AGENTS)
+      .def_readonly_static("PLACES", &DsgLayers::PLACES)
+      .def_readonly_static("MESH_PLACES", &DsgLayers::MESH_PLACES)
+      .def_readonly_static("TRAVERSABILITY", &DsgLayers::TRAVERSABILITY)
+      .def_readonly_static("ROOMS", &DsgLayers::ROOMS)
+      .def_readonly_static("BUILDINGS", &DsgLayers::BUILDINGS)
+      .def_static(
+          "name_to_layer_id",
+          [](const std::string& name) -> std::optional<LayerKey> { return DsgLayers::nameToLayerId(name); },
+          "name"_a);
 
   py::class_<NodeSymbol>(m, "NodeSymbol")
       .def(py::init([](char key, size_t index) { return NodeSymbol(key, index); }))
