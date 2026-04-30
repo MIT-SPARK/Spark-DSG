@@ -314,7 +314,7 @@ void init_scene_graph(py::module_& m) {
         "G"_a,
         "node_id"_a,
         "depth"_a = 1,
-        "bbox_type"_a = BoundingBox::Type::AABB);
+        py::arg_v("bbox_type", BoundingBox::Type::AABB, "BoundingBoxType.AABB"));
 }
 
 }  // namespace spark_dsg::python
