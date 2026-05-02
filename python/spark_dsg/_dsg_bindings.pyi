@@ -1,10 +1,12 @@
 from __future__ import annotations
-import os
+
 import collections.abc
 import datetime
+import os
+import typing
+
 import numpy
 import numpy.typing
-import typing
 
 __all__: list[str] = [
     "AgentNodeAttributes",

@@ -44,7 +44,6 @@ from typing import Dict, Union
 
 from spark_dsg._dsg_bindings import SceneGraphLayer
 
-
 PathT = os.PathLike | str
 
 

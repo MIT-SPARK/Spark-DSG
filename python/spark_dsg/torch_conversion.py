@@ -51,9 +51,8 @@ from spark_dsg._dsg_bindings import (
     SceneGraphEdge,
     SceneGraphLayer,
     SceneGraphNode,
-    SemanticNodeAttributes
+    SemanticNodeAttributes,
 )
-
 
 GraphView = SceneGraph | SceneGraphLayer | LayerView
 NodeConversionFunc = Callable[[GraphView, SceneGraphNode], np.ndarray]
