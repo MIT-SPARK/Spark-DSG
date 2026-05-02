@@ -56,13 +56,6 @@ namespace py = pybind11;
 using namespace py::literals;
 
 void init_scene_graph(py::module_& m) {
-  m.def("compute_ancestor_bounding_box",
-        &computeAncestorBoundingBox,
-        "G"_a,
-        "node_id"_a,
-        "depth"_a = 1,
-        "bbox_type"_a = BoundingBox::Type::AABB);
-
   py::class_<SceneGraph>(m, "SceneGraph", py::dynamic_attr())
       .def(py::init<bool>(), "empty"_a = false)
       .def(py::init<const SceneGraph::LayerKeys&, const SceneGraph::LayerNames&>(),
@@ -76,7 +69,7 @@ void init_scene_graph(py::module_& m) {
             return graph.hasLayer(layer, partition);
           },
           "layer"_a,
-          "partition"_a = 0)
+          py::arg_v("partition", 0, "PartitionId(0)"))
       .def(
           "has_layer", [](const SceneGraph& graph, const std::string& name) { return graph.hasLayer(name); }, "layer"_a)
       .def(
@@ -85,7 +78,7 @@ void init_scene_graph(py::module_& m) {
             return LayerView(graph.getLayer(layer, partition));
           },
           "layer"_a,
-          "partition"_a = 0,
+          py::arg_v("partition", 0, "PartitionId(0)"),
           py::return_value_policy::reference_internal)
       .def(
           "get_layer",
@@ -98,14 +91,14 @@ void init_scene_graph(py::module_& m) {
             return LayerView(graph.addLayer(layer, partition, name));
           },
           "layer"_a,
-          "partition"_a = 0,
+          py::arg_v("partition", 0, "PartitionId(0)"),
           "name"_a = "",
           py::return_value_policy::reference_internal)
       .def(
           "remove_layer",
           [](SceneGraph& graph, LayerId layer, PythonPartitionId partition) { graph.removeLayer(layer, partition); },
           "layer"_a,
-          "partition"_a = 0)
+          py::arg_v("partition", 0, "PartitionId(0)"))
       .def(
           "add_node",
           [](SceneGraph& graph, LayerKey key, NodeSymbol node_id, const NodeAttributes& attrs) {
@@ -124,7 +117,7 @@ void init_scene_graph(py::module_& m) {
           "layer"_a,
           "node_id"_a,
           "attrs"_a,
-          "partition"_a = 0)
+          py::arg_v("partition", 0, "PartitionId(0)"))
       .def(
           "add_node",
           [](SceneGraph& graph, const std::string& layer, NodeSymbol node_id, const NodeAttributes& attrs) {
@@ -200,13 +193,6 @@ void init_scene_graph(py::module_& m) {
       .def("get_position", &SceneGraph::getPosition)
       .def(
           "save",
-          [](const SceneGraph& graph, const std::string& filepath, bool include_mesh) {
-            graph.save(filepath, include_mesh);
-          },
-          "filepath"_a,
-          "include_mesh"_a = true)
-      .def(
-          "save",
           [](const SceneGraph& graph, const std::filesystem::path& filepath, bool include_mesh) {
             graph.save(filepath, include_mesh);
           },
@@ -214,7 +200,6 @@ void init_scene_graph(py::module_& m) {
           "include_mesh"_a = true)
       .def("create_subgraph", &SceneGraph::create_subgraph)
       .def_static("load", [](const std::filesystem::path& filepath) { return io::loadDsgFromFile(filepath); })
-      .def_static("load", [](const std::string& filepath) { return io::loadDsgFromFile(filepath); })
       .def_readwrite("_metadata", &SceneGraph::metadata)
       .def_property_readonly("layer_ids", &SceneGraph::layer_ids)
       .def_property_readonly("layer_keys", &SceneGraph::layer_keys)
@@ -295,7 +280,7 @@ void init_scene_graph(py::module_& m) {
             return Labelspace::fromMetadata(graph, layer, partition);
           },
           "layer"_a,
-          "partition"_a = 0)
+          py::arg_v("partition", 0, "PartitionId(0)"))
       .def(
           "get_labelspace",
           [](const SceneGraph& graph, const std::string& name) { return Labelspace::fromMetadata(graph, name); },
@@ -307,7 +292,7 @@ void init_scene_graph(py::module_& m) {
           },
           "labelspace"_a,
           "layer"_a,
-          "partition"_a = 0)
+          py::arg_v("partition", 0, "PartitionId(0)"))
       .def(
           "set_labelspace",
           [](SceneGraph& graph, const Labelspace& labelspace, const std::string& name) {
@@ -315,6 +300,13 @@ void init_scene_graph(py::module_& m) {
           },
           "labelspace"_a,
           "name"_a);
+
+  m.def("compute_ancestor_bounding_box",
+        &computeAncestorBoundingBox,
+        "G"_a,
+        "node_id"_a,
+        "depth"_a = 1,
+        py::arg_v("bbox_type", BoundingBox::Type::AABB, "BoundingBoxType.AABB"));
 }
 
 }  // namespace spark_dsg::python

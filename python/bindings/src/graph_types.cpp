@@ -37,12 +37,11 @@
 #include <pybind11/stl.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/edge_container.h>
+#include <spark_dsg/labelspace.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
 #include <spark_dsg/printing.h>
 #include <spark_dsg/scene_graph_node.h>
-
-#include <sstream>
 
 namespace spark_dsg::python {
 
@@ -84,6 +83,24 @@ void init_graph_types(py::module_& m) {
         ss << "Edge<source=" << NodeSymbol(edge.source).str() << ", target=" << NodeSymbol(edge.target).str() << ">";
         return ss.str();
       });
+
+  py::class_<Labelspace>(m, "Labelspace")
+      .def(py::init<>())
+      .def(py::init<const std::map<SemanticLabel, std::string>&>())
+      .def("get_label", &Labelspace::getLabel)
+      .def("get_category",
+           [](const Labelspace& labelspace, SemanticLabel label) { return labelspace.getCategory(label); })
+      .def(
+          "get_node_category",
+          [](const Labelspace& labelspace, const SceneGraphNode& node, const std::string& unknown_name) {
+            const auto attrs = node.tryAttributes<SemanticNodeAttributes>();
+            return attrs ? labelspace.getCategory(*attrs, unknown_name) : unknown_name;
+          },
+          "node"_a,
+          "unknown_name"_a = "UNKNOWN")
+      .def("__bool__", [](const Labelspace& labelspace) { return static_cast<bool>(labelspace); })
+      .def_property_readonly("labels_to_names", &Labelspace::labels_to_names)
+      .def_property_readonly("names_to_labels", &Labelspace::names_to_labels);
 }
 
 }  // namespace spark_dsg::python

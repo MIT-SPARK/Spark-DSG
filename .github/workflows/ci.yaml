@@ -57,7 +57,7 @@ jobs:
       - name: Test
         run: |-
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install pytest networkx torch_geometric
+          pip install pytest pytest-cov networkx torch_geometric
           pytest ${{github.workspace}}/python/tests
   ros2:
     runs-on: ubuntu-latest

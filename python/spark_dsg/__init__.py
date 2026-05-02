@@ -110,15 +110,15 @@ def _get_layer_id(graph, name):
     return graph.get_layer_key(name)
 
 
-LayerKey.__hash__ = _hash_layerkey
+LayerKey.__hash__ = _hash_layerkey  # type: ignore[method-assign,assignment]
 
 _add_metadata_interface(SceneGraph)
 _add_metadata_interface(NodeAttributes)
 _add_metadata_interface(EdgeAttributes)
 
-SceneGraph.get_layer_id = _get_layer_id
-SceneGraph.to_torch = scene_graph_to_torch
-SceneGraphLayer.to_torch = scene_graph_layer_to_torch
-LayerView.to_torch = scene_graph_layer_to_torch
+SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign]
+SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign]
+SceneGraphLayer.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
+LayerView.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
 
 DynamicSceneGraph: typing.TypeAlias = SceneGraph

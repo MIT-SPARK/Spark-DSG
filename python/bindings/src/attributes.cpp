@@ -180,17 +180,17 @@ void init_attributes(py::module_& m) {
       .def_readwrite("need_finish_merge", &Place2dNodeAttributes::need_finish_merge)
       .def_readwrite("has_active_mesh_indices", &Place2dNodeAttributes::has_active_mesh_indices);
 
-  py::class_<BoundaryInfo>(m, "BoundaryInfo")
-      .def(py::init<>())
-      .def_readwrite("min", &BoundaryInfo::min)
-      .def_readwrite("max", &BoundaryInfo::max)
-      .def_readwrite("states", &BoundaryInfo::states);
-
   py::enum_<TraversabilityState>(m, "TraversabilityState")
       .value("UNKNOWN", TraversabilityState::UNKNOWN)
       .value("TRAVERSABLE", TraversabilityState::TRAVERSABLE)
       .value("INTRAVERSABLE", TraversabilityState::INTRAVERSABLE)
       .value("TRAVERSED", TraversabilityState::TRAVERSED);
+
+  py::class_<BoundaryInfo>(m, "BoundaryInfo")
+      .def(py::init<>())
+      .def_readwrite("min", &BoundaryInfo::min)
+      .def_readwrite("max", &BoundaryInfo::max)
+      .def_readwrite("states", &BoundaryInfo::states);
 
   py::class_<TraversabilityNodeAttributes, NodeAttributes>(m, "TraversabilityNodeAttributes")
       .def(py::init<>())

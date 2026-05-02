@@ -44,6 +44,8 @@ from typing import Dict, Union
 
 from spark_dsg._dsg_bindings import SceneGraphLayer
 
+PathT = os.PathLike | str
+
 
 @dataclass
 class IndexInfo:
@@ -193,8 +195,9 @@ class LayerCollection:
         return len(self._index)
 
     @staticmethod
-    def save(collection: Dict[int, SceneGraphLayer], path: Union[str, pathlib.Path]):
+    def save(collection: Dict[int, SceneGraphLayer], path: PathT):
         """Save a collection of graphs to disk."""
+        path = pathlib.Path(path).expanduser().absolute()
         record_path = path.with_suffix(".json")
         graph_path = path.with_suffix(".graphs")
 
