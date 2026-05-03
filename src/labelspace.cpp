@@ -35,8 +35,6 @@
 
 #include "spark_dsg/labelspace.h"
 
-#include <iostream>
-
 #include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
@@ -86,10 +84,22 @@ Labelspace::Labelspace(const std::vector<std::string>& names)
 Labelspace Labelspace::fromMetadata(const SceneGraph& graph,
                                     LayerId layer,
                                     PartitionId partition) {
-  return fromMetadata(graph, layerInfoToKey(layer, partition));
+  return fromMetadata(graph, layerInfoToKey(layer, partition), false);
 }
 
-Labelspace Labelspace::fromMetadata(const SceneGraph& graph, const std::string& name) {
+Labelspace Labelspace::fromMetadata(const SceneGraph& graph,
+                                    const std::string& name,
+                                    bool resolve_layer) {
+  std::string name_to_use = name;
+  if (resolve_layer) {
+    auto key = graph.getLayerKey(name);
+    if (!key) {
+      throw std::runtime_error("Invalid layer name '" + name + "'");
+    }
+
+    name_to_use = layerInfoToKey(key->layer, key->partition);
+  }
+
   const auto& metadata = graph.metadata();
   const auto labelspace_node = metadata.find("labelspaces");
   if (labelspace_node == metadata.end()) {
@@ -125,10 +135,22 @@ std::string Labelspace::getCategory(const SemanticNodeAttributes& attrs,
 }
 
 void Labelspace::save(SceneGraph& graph, LayerId layer, PartitionId partition) const {
-  save(graph, layerInfoToKey(layer, partition));
+  save(graph, layerInfoToKey(layer, partition), false);
 }
 
-void Labelspace::save(SceneGraph& graph, const std::string& name) const {
+void Labelspace::save(SceneGraph& graph,
+                      const std::string& name,
+                      bool resolve_layer) const {
+  std::string name_to_use = name;
+  if (resolve_layer) {
+    auto key = graph.getLayerKey(name);
+    if (!key) {
+      throw std::runtime_error("Invalid layer name '" + name + "'");
+    }
+
+    name_to_use = layerInfoToKey(key->layer, key->partition);
+  }
+
   auto entry = nlohmann::json::object();
   entry["labelspaces"] = nlohmann::json::object();
   entry["labelspaces"][name] = label_to_name_;

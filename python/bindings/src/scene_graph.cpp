@@ -283,8 +283,11 @@ void init_scene_graph(py::module_& m) {
           py::arg_v("partition", 0, "PartitionId(0)"))
       .def(
           "get_labelspace",
-          [](const SceneGraph& graph, const std::string& name) { return Labelspace::fromMetadata(graph, name); },
-          "name"_a)
+          [](const SceneGraph& graph, const std::string& name, bool resolve_layer) {
+            return Labelspace::fromMetadata(graph, name, resolve_layer);
+          },
+          "name"_a,
+          "resolve_layer"_a = true)
       .def(
           "set_labelspace",
           [](SceneGraph& graph, const Labelspace& labelspace, LayerId layer, PartitionId partition) {
@@ -295,11 +298,12 @@ void init_scene_graph(py::module_& m) {
           py::arg_v("partition", 0, "PartitionId(0)"))
       .def(
           "set_labelspace",
-          [](SceneGraph& graph, const Labelspace& labelspace, const std::string& name) {
-            labelspace.save(graph, name);
+          [](SceneGraph& graph, const Labelspace& labelspace, const std::string& name, bool resolve_layer) {
+            labelspace.save(graph, name, resolve_layer);
           },
           "labelspace"_a,
-          "name"_a);
+          "name"_a,
+          "resolve_layer"_a = true);
 
   m.def("compute_ancestor_bounding_box",
         &computeAncestorBoundingBox,
