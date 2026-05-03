@@ -65,6 +65,8 @@ class Labelspace {
 
   /**
    * @brief Pull the labelspace from scene graph metadata
+   * @param layer Layer to save the labelspace for
+   * @param partition Partition to save the labespace for
    */
   static Labelspace fromMetadata(const SceneGraph& graph,
                                  LayerId layer,
@@ -72,8 +74,12 @@ class Labelspace {
 
   /**
    * @brief Pull the labelspace from scene graph metadata
+   * @param name Name to save the labelspace under
+   * @param resolve_layer Whether or not to treat the name as a layer name
    */
-  static Labelspace fromMetadata(const SceneGraph& graph, const std::string& name);
+  static Labelspace fromMetadata(const SceneGraph& graph,
+                                 const std::string& name,
+                                 bool resolve_layer = true);
 
   /**
    * @brief Get whether or not the label space is populated
@@ -103,13 +109,19 @@ class Labelspace {
 
   /**
    * @brief Save the label space to metadata
+   * @param layer Layer to save the labelspace for
+   * @param partition Partition to save the labespace for
    */
   void save(SceneGraph& graph, LayerId layer, PartitionId partition = 0) const;
 
   /**
    * @brief Save the label space to metadata
+   * @param name Name to save the labelspace under
+   * @param resolve_layer Whether or not to treat the name as a layer name
    */
-  void save(SceneGraph& graph, const std::string& name) const;
+  void save(SceneGraph& graph,
+            const std::string& name,
+            bool resolve_layer = true) const;
 
  private:
   std::map<SemanticLabel, std::string> label_to_name_;
