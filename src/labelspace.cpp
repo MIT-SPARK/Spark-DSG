@@ -106,7 +106,7 @@ Labelspace Labelspace::fromMetadata(const SceneGraph& graph,
     return {};
   }
 
-  const auto mapping_node = labelspace_node->find(name);
+  const auto mapping_node = labelspace_node->find(name_to_use);
   if (mapping_node == labelspace_node->end()) {
     return {};
   }
@@ -153,7 +153,7 @@ void Labelspace::save(SceneGraph& graph,
 
   auto entry = nlohmann::json::object();
   entry["labelspaces"] = nlohmann::json::object();
-  entry["labelspaces"][name] = label_to_name_;
+  entry["labelspaces"][name_to_use] = label_to_name_;
   graph.metadata.add(entry);
 }
 
