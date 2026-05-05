@@ -860,4 +860,37 @@ double TravNodeAttributes::area() const {
   return area;
 }
 
+PolygonPlaceNodeAttributes::PolygonPlaceNodeAttributes()
+    : SemanticNodeAttributes(), max_z(std::numeric_limits<double>::infinity()) {}
+
+NodeAttributes::Ptr PolygonPlaceNodeAttributes::clone() const {
+  return std::make_unique<PolygonPlaceNodeAttributes>(*this);
+}
+
+std::ostream& PolygonPlaceNodeAttributes::fill_ostream(std::ostream& out) const {
+  SemanticNodeAttributes::fill_ostream(out);
+  out << "\n  - max_z: " << max_z;
+  out << "\n  - boundary: " << boundary.size() << " elements";
+  return out;
+}
+
+void PolygonPlaceNodeAttributes::serialization_info() {
+  SemanticNodeAttributes::serialization_info();
+  serialization::field("boundary", boundary);
+  serialization::field("min_z", max_z);
+}
+
+bool PolygonPlaceNodeAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const PolygonPlaceNodeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  if (!SemanticNodeAttributes::is_equal(other)) {
+    return false;
+  }
+
+  return boundary == derived->boundary && max_z == derived->max_z;
+}
+
 }  // namespace spark_dsg

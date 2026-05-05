@@ -228,6 +228,11 @@ void init_attributes(py::module_& m) {
       .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values)
       .def_readwrite("observed_semantic_labels", &AgentNodeAttributes::observed_semantic_labels);
 
+  py::class_<PolygonPlaceNodeAttributes, SemanticNodeAttributes>(m, "PolygonPlaceNodeAttributes")
+      .def(py::init<>())
+      .def_readwrite("boundary", &PolygonPlaceNodeAttributes::boundary)
+      .def_readwrite("max_z", &PolygonPlaceNodeAttributes::max_z);
+
   py::class_<EdgeAttributes>(m, "EdgeAttributes")
       .def(py::init<>())
       .def_readwrite("weighted", &EdgeAttributes::weighted)

@@ -573,4 +573,27 @@ struct TravNodeAttributes : public NodeAttributes {
   REGISTER_NODE_ATTRIBUTES(TravNodeAttributes);
 };
 
+//! @brief Node attributes for a 2.5D polygonal region of freespace
+struct PolygonPlaceNodeAttributes : public SemanticNodeAttributes {
+ public:
+  //! desired pointer type of node
+  using Ptr = std::unique_ptr<PolygonPlaceNodeAttributes>;
+
+  PolygonPlaceNodeAttributes();
+  virtual ~PolygonPlaceNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  //! Points forming polygonal boundary
+  std::vector<Eigen::Vector2f> boundary;
+  //! Height above position that is free (position is assumed to be at lowest z-value)
+  double max_z;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  REGISTER_NODE_ATTRIBUTES(PolygonPlaceNodeAttributes);
+};
+
 }  // namespace spark_dsg
