@@ -54,9 +54,7 @@ class LayerView {
   Eigen::Vector3d getPosition(NodeSymbol node_id) const;
 
   const LayerKey id;
-
- private:
-  const SceneGraphLayer& layer_ref_;
+  const SceneGraphLayer& layer_ref;
 };
 
 class LayerIter {
