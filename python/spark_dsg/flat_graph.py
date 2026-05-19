@@ -2,35 +2,78 @@ import itertools
 
 import numpy as np
 
-from spark_dsg._dsg_bindings import SceneGraph, LayerKey
+from spark_dsg._dsg_bindings import (
+    SceneGraph,
+    LayerKey,
+    LayerView,
+    SceneGraphLayer,
+    NodeSymbol,
+    NodeAttributes,
+)
+
+
+class FlatLayerView:
+    """Build a tensor representation of a scene layer."""
+
+    def __init__(self, layer: LayerView | SceneGraphLayer):
+        self._lookup = {}
+
+        ids = []
+        attrs = []
+        pos = np.zeros((layer.num_nodes(), 3))
+        for idx, node in enumerate(layer.nodes):
+            pos[idx, :] = node.attributes.position
+            ids.append(node.id.value)
+            attrs.append(node.attributes)
+            self._lookup[node.id.value] = idx
+
+        edge_tensor = np.zeros((layer.num_edges(), 2), dtype=np.int64)
+        for idx, edge in enumerate(layer.edges):
+            edge_tensor[idx, 0] = self._lookup[edge.source]
+            edge_tensor[idx, 1] = self._lookup[edge.target]
+
+        self._node_ids = np.array(ids)
+        self._pos = pos
+        self._attributes = attrs
+        self._edges = edge_tensor
+
+    @property
+    def ids(self) -> np.ndarray:
+        return self._node_ids
+
+    @property
+    def node_symbols(self) -> list[NodeSymbol]:
+        return [NodeSymbol(x) for x in self._node_ids]
+
+    @property
+    def positions(self) -> np.ndarray:
+        return self._pos
+
+    @property
+    def attributes(self) -> list[NodeAttributes]:
+        return self._attributes
+
+    @property
+    def edges(self) -> np.ndarray:
+        return self._edges
 
 
 class FlatGraphView:
     """Build a tensor representation of the scene graph."""
 
     def __init__(self, G: SceneGraph):
-        self._pos = {}
+        self._layers = {}
         self._lookup = {}
-        self._edges = {}
-        self._interlayer_edges = {}
-
         for layer in itertools.chain(G.layers, G.layer_partitions):
             if layer.num_nodes() == 0:
                 continue
 
-            pos = np.zeros((layer.num_nodes(), 3))
-            for idx, node in enumerate(layer.nodes):
-                pos[idx, :] = node.attributes.position
-                self._lookup[node.id.value] = (idx, layer.key)
+            view = FlatLayerView(layer)
+            self._layers[layer.key] = view
+            for idx, node_id in enumerate(view.ids):
+                self._lookup[node_id] = (layer.key, idx)
 
-            edge_tensor = np.zeros((layer.num_edges(), 2), dtype=np.int64)
-            for idx, edge in enumerate(layer.edges):
-                edge_tensor[idx, 0] = self._lookup[edge.source][0]
-                edge_tensor[idx, 1] = self._lookup[edge.target][0]
-
-            self._pos[layer.key] = pos
-            self._edges[layer.key] = edge_tensor
-
+        self._interlayer_edges = {}
         for edge in G.interlayer_edges:
             source_idx, source_layer = self._lookup[edge.source]
             target_idx, target_layer = self._lookup[edge.target]
@@ -55,19 +98,10 @@ class FlatGraphView:
             for s, c in self._interlayer_edges.items()
         }
 
-    def pos(self, layer_key: LayerKey, height: float | None = None):
-        if layer_key not in self._pos:
-            return None
-
-        pos = self._pos[layer_key].copy()
-        if height:
-            pos[:, 2] += height
-
-        return pos
-
     @property
     def edges(self):
         return self._interlayer_edges
 
-    def layer_edges(self, layer_key: LayerKey):
-        return self._edges.get(layer_key)
+    def layer(self, layer_key: LayerKey) -> FlatLayerView | None:
+        """Get edges for a particular layer."""
+        return self._layers.get(layer_key)
