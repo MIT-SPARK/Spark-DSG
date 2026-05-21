@@ -964,8 +964,8 @@ std::vector<LayerId> SceneGraph::layer_ids() const {
 }
 
 UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
-  auto to_return = std::make_unique<SceneGraph>(layer_keys(), layer_names_);
-  to_return->metadata = metadata;
+  auto graph = std::make_unique<SceneGraph>(layer_keys(), layer_names_);
+  graph->metadata = metadata;
 
   for (const auto& node_id : nodes) {
     const auto node = findNode(node_id);

@@ -937,7 +937,7 @@ TEST(SceneGraph, cloneCorrect) {
 TEST(SceneGraph, subgraphCorrect) {
   SceneGraph graph;
   graph.metadata.add(R"({"foo": 5, "bar": {"hello": 5, "world": 10}})"_json);
-  graph.graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
+  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(), 'a');
   graph.emplaceNode(2, "a1"_id, std::make_unique<NodeAttributes>(), 'a');
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
   graph.emplaceNode(3, "x1"_id, std::make_unique<NodeAttributes>());
@@ -956,15 +956,15 @@ TEST(SceneGraph, subgraphCorrect) {
 
   EXPECT_LT(subgraph->numNodes(), graph.numNodes());
   EXPECT_LT(subgraph->numEdges(), graph.numEdges());
-  EXPECT_TRUE(subraph->hasNode("a0"_id));
-  EXPECT_TRUE(subraph->hasNode("a1"_id));
-  EXPECT_TRUE(subraph->hasNode("x0"_id));
-  EXPECT_FALSE(subraph->hasNode("x1"_id));
-  EXPECT_TRUE(subraph->hasNode("y1"_id));
-  EXPECT_FALSE(subraph->hasEdge("x0"_id, "x1"_id));
-  EXPECT_TRUE(subraph->hasEdge("x0"_id, "y1"_id));
-  EXPECT_TRUE(subraph->hasEdge("a1"_id, "x0"_id));
-  EXPECT_TRUE(subraph->hasEdge("a0"_id, "a1"_id));
+  EXPECT_TRUE(subgraph->hasNode("a0"_id));
+  EXPECT_TRUE(subgraph->hasNode("a1"_id));
+  EXPECT_TRUE(subgraph->hasNode("x0"_id));
+  EXPECT_FALSE(subgraph->hasNode("x1"_id));
+  EXPECT_TRUE(subgraph->hasNode("y1"_id));
+  EXPECT_FALSE(subgraph->hasEdge("x0"_id, "x1"_id));
+  EXPECT_TRUE(subgraph->hasEdge("x0"_id, "y1"_id));
+  EXPECT_TRUE(subgraph->hasEdge("a1"_id, "x0"_id));
+  EXPECT_TRUE(subgraph->hasEdge("a0"_id, "a1"_id));
 }
 
 }  // namespace spark_dsg
