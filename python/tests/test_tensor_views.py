@@ -34,9 +34,9 @@
 #
 """Test that tensor views work as expected."""
 
-import spark_dsg as dsg
 import numpy as np
 import pytest
+import spark_dsg as dsg
 
 
 def test_layer_tensor(resource_dir):

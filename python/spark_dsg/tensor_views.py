@@ -3,13 +3,13 @@ import itertools
 import numpy as np
 
 from spark_dsg._dsg_bindings import (
-    SceneGraph,
+    EdgeAttributes,
     LayerKey,
     LayerView,
-    SceneGraphLayer,
-    NodeSymbol,
-    EdgeAttributes,
     NodeAttributes,
+    NodeSymbol,
+    SceneGraph,
+    SceneGraphLayer,
 )
 
 

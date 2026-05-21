@@ -12,8 +12,8 @@ import numpy as np
 import spark_dsg as dsg
 
 try:
-    import viser
     import trimesh
+    import viser
 except ImportError as e:
     warnings.warn("Missing [viz] deps! Reinstall with spark_dsg[viz]")
     raise e
