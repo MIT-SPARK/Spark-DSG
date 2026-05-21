@@ -5,11 +5,22 @@ import functools
 import itertools
 import warnings
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
-import spark_dsg as dsg
+from spark_dsg.tensor_views import GraphTensorView, LayerTensorView
+from spark_dsg._dsg_bindings import (
+    SceneGraph,
+    Mesh,
+    LayerKey,
+    Color,
+    colorbrewer_color,
+    distinct_150_color,
+    rainbow_color,
+    SceneGraphNode,
+    SemanticNodeAttributes,
+)
 
 try:
     import trimesh
@@ -25,45 +36,44 @@ BOUNDING_BOX_EDGE_INDICES = np.array(
 ).T
 
 
-ColormapFunc = Callable[[dsg.SceneGraph, dsg.SceneGraphNode], dsg.Color]
-
-
-def _layer_name(layer_key: dsg.LayerKey):
+def _layer_name(layer_key: LayerKey):
     return f"layer_{layer_key.layer}p{layer_key.partition}"
 
 
-def color_from_label(
-    G: dsg.SceneGraph, node: dsg.SceneGraphNode, default: dsg.Color | None = None
-) -> dsg.Color:
-    """Assign a color based on the category label of the node."""
-    if not isinstance(node.attributes, dsg.SemanticNodeAttributes):
-        return default or dsg.Color()
-
-    return dsg.distinct_150_color(node.attributes.semantic_label)
+ColormapFunc = Callable[[SceneGraphNode], Color]
 
 
-def color_from_id(G: dsg.SceneGraph, node: dsg.SceneGraphNode) -> dsg.Color:
+def color_from_layer(node: SceneGraphNode) -> Color:
+    """Assign a color based on the node layer."""
+    return rainbow_color(node.layer.layer)
+
+
+def color_from_id(node: SceneGraphNode) -> Color:
     """Assign a color from a circular color palette based on the node ID."""
-    return dsg.colorbrewer_color(node.id.category_id)
+    return colorbrewer_color(node.id.category_id)
+
+
+def color_from_label(node: SceneGraphNode, default: Color | None = None) -> Color:
+    """Assign a color based on the category label of the node."""
+    if not isinstance(node.attributes, SemanticNodeAttributes):
+        return default or Color()
+
+    return distinct_150_color(node.attributes.semantic_label)
 
 
 def color_from_parent(
-    G: dsg.SceneGraph,
-    node: dsg.SceneGraphNode,
+    G: GraphTensorView,
+    key: LayerKey,
+    index: int,
     parent_func: ColormapFunc,
-    default: dsg.Color | None = None,
-) -> dsg.Color:
+    default: Color | None = None,
+) -> Color:
     """Lookup color using parent node if it exists."""
-    parent = node.get_parent()
+    parent = G[key].get_node(index).get_parent()
     if not parent:
-        return default or dsg.Color()
+        return default or Color()
 
     return parent_func(G, G.get_node(parent))
-
-
-def color_from_layer(G: dsg.SceneGraph, node: dsg.SceneGraphNode) -> dsg.Color:
-    """Assign a color based on the node layer."""
-    return dsg.rainbow_color(node.layer.layer)
 
 
 class ColorMode(enum.Enum):
@@ -74,9 +84,9 @@ class ColorMode(enum.Enum):
 
 
 def colormap_from_modes(
-    key_to_mode: Mapping[dsg.LayerKey, ColorMode],
-    default_colors: Mapping[dsg.LayerKey, dsg.Color] | None = None,
-) -> Mapping[dsg.LayerKey, ColormapFunc]:
+    key_to_mode: Mapping[LayerKey, ColorMode],
+    default_colors: Mapping[LayerKey, Color] | None = None,
+) -> Mapping[LayerKey, ColormapFunc]:
     colormap = {}
     for layer_key, mode in key_to_mode.items():
         default = default_colors.get(layer_key) if default_colors is not None else None
@@ -111,23 +121,35 @@ class LayerConfig:
 
 
 DEFAULT_CONFIG = {
-    dsg.LayerKey(2): LayerConfig(node_scale=0.25, draw_labels=True, draw_bboxes=True),
-    dsg.LayerKey(3): LayerConfig(node_scale=0.1),
-    dsg.LayerKey(3, 1): LayerConfig(node_scale=0.1),
-    dsg.LayerKey(3, 2): LayerConfig(node_scale=0.1),
-    dsg.LayerKey(4): LayerConfig(node_scale=0.4, draw_labels=True),
-    dsg.LayerKey(5): LayerConfig(draw_nodes=False),
-    dsg.LayerKey(2, 97): LayerConfig(node_scale=0.1, draw_interlayer=False),
+    LayerKey(2): LayerConfig(node_scale=0.25, draw_labels=True, draw_bboxes=True),
+    LayerKey(3): LayerConfig(node_scale=0.1),
+    LayerKey(3, 1): LayerConfig(node_scale=0.1),
+    LayerKey(3, 2): LayerConfig(node_scale=0.1),
+    LayerKey(4): LayerConfig(node_scale=0.4, draw_labels=True),
+    LayerKey(5): LayerConfig(draw_nodes=False),
+    LayerKey(2, 97): LayerConfig(node_scale=0.1, draw_interlayer=False),
 }
 
 DEFAULT_COLORMODES = {
-    dsg.LayerKey(2): ColorMode.LABEL,
-    dsg.LayerKey(3): ColorMode.PARENT,
-    dsg.LayerKey(3, 1): ColorMode.LABEL,
-    dsg.LayerKey(3, 2): ColorMode.LAYER,
-    dsg.LayerKey(4): ColorMode.ID,
-    dsg.LayerKey(5): ColorMode.ID,
+    LayerKey(2): ColorMode.LABEL,
+    LayerKey(3): ColorMode.PARENT,
+    LayerKey(3, 1): ColorMode.LABEL,
+    LayerKey(3, 2): ColorMode.LAYER,
+    LayerKey(4): ColorMode.ID,
+    LayerKey(5): ColorMode.ID,
 }
+
+
+@dataclass
+class GraphConfig:
+    """Visualizer config for layers in the graph."""
+
+    height_scale: float = 5.0
+    layers: dict[LayerKey, LayerConfig] = field(default_factory=dict)
+
+    @classmethod
+    def default(cls):
+        return cls(layers=DEFAULT_CONFIG)
 
 
 @dataclass
@@ -135,58 +157,6 @@ class LabelInfo:
     name: str
     text: str
     pos: np.ndarray
-
-
-def _layer_to_labels(
-    G: dsg.SceneGraph, layer: dsg.LayerView, pos: np.ndarray
-) -> list[LabelInfo]:
-    label_info = []
-    labelspace = G.get_labelspace(layer.key.layer, layer.key.partition)
-    for idx, node in enumerate(layer.nodes):
-        text = node.id.str(literal=False)
-        if labelspace:
-            text += ": " + labelspace.get_node_category(node)
-
-        name = f"label_{node.id.str()}"
-        label_info.append(LabelInfo(name=name, text=text, pos=pos[idx]))
-
-    return label_info
-
-
-def _layer_to_colors(
-    G: dsg.SceneGraph, layer: dsg.LayerView, colormap: ColormapFunc
-) -> np.ndarray:
-    colors = np.zeros((layer.num_nodes(), 3))
-    for idx, node in enumerate(layer.nodes):
-        colors[idx] = colormap(G, node).to_float_array()
-
-    return colors
-
-
-def _layer_to_boxes(layer, pos, colors):
-    N_EDGES = 13
-    num_valid = 0
-    bb_pos = np.zeros((N_EDGES * layer.num_nodes(), 2, 3))
-    bb_color = np.zeros((N_EDGES * layer.num_nodes(), 2, 3))
-    for idx, node in enumerate(layer.nodes):
-        attrs = node.attributes
-        if not isinstance(attrs, dsg.SemanticNodeAttributes):
-            continue
-
-        if not attrs.bounding_box.is_valid():
-            continue
-
-        start_idx = N_EDGES * num_valid
-        end_idx = start_idx + N_EDGES
-        corners = np.array(attrs.bounding_box.corners())
-        bb_pos[start_idx : end_idx - 1] = corners[BOUNDING_BOX_EDGE_INDICES]
-        bb_pos[end_idx - 1, 0, :] = pos[idx]
-        bb_pos[end_idx - 1, 1, :] = attrs.bounding_box.world_P_center
-        bb_color[start_idx:end_idx, :] = colors[idx, :]
-        num_valid += 1
-
-    final_idx = N_EDGES * num_valid
-    return bb_pos[:final_idx], bb_color[:final_idx]
 
 
 class LayerConfigWrapper:
@@ -259,6 +229,47 @@ class LayerConfigWrapper:
         return self._box_width.value
 
 
+def _layer_to_colors(layer: LayerTensorView, colormap: ColormapFunc):
+    return np.array([colormap(x).to_float_array() for x in layer])
+
+
+def _layer_to_labels(layer: LayerTensorView, offset: np.ndarray) -> list[LabelInfo]:
+    label_info = []
+    for node_id, attrs in zip(layer.node_symbols, layer.attributes):
+        text = node_id.str(literal=False)
+        if layer.labelspace:
+            text += ": " + layer.labelspace.get_node_category(attrs)
+
+        name = f"label_{node_id.str()}"
+        label_info.append(LabelInfo(name=name, text=text, pos=attrs.position + offset))
+
+    return label_info
+
+
+def _layer_to_boxes(layer: LayerTensorView, colors: np.ndarray, offset: np.ndarray):
+    N_EDGES = 13
+    valid = np.zeros(layer.num_nodes, dtype=bool)
+    bb_pos = np.zeros((N_EDGES * layer.num_nodes, 2, 3))
+    bb_color = np.zeros((N_EDGES * layer.num_nodes, 2, 3))
+    for idx, attrs in enumerate(layer.attributes):
+        if not isinstance(attrs, SemanticNodeAttributes):
+            continue
+
+        if not attrs.bounding_box.is_valid():
+            continue
+
+        valid[idx] = True
+        start_idx = N_EDGES * idx
+        end_idx = start_idx + N_EDGES
+        corners = np.array(attrs.bounding_box.corners())
+        bb_pos[start_idx : end_idx - 1] = corners[BOUNDING_BOX_EDGE_INDICES]
+        bb_pos[end_idx - 1, 0, :] = attrs.position + offset
+        bb_pos[end_idx - 1, 1, :] = attrs.bounding_box.world_P_center
+        bb_color[start_idx:end_idx, :] = colors[idx, :]
+
+    return bb_pos[valid], bb_color[valid]
+
+
 class LayerHandle:
     """Viser handles to layer elements and gui settings."""
 
@@ -267,45 +278,40 @@ class LayerHandle:
         server: viser.ViserServer,
         config: LayerConfig,
         colormap,
-        height: float,
-        G: dsg.SceneGraph,
-        layer: dsg.LayerView,
-        view: dsg.FlatGraphView,
+        offset: np.ndarray,
+        view: GraphTensorView,
+        key: LayerKey,
         parent_callback,
     ):
         """Add options for layer to viser."""
-        self.key = layer.key
-        self.name = _layer_name(layer.key)
-
+        name = _layer_name(key)
+        self.key = key
+        self.name = name
         self._parent_callback = parent_callback
         self._server = server
         self._folder = server.add_folder(self.name, expand_by_default=False)
-
-        with self._folder:
-            self.config = LayerConfigWrapper(self._server, config)
-
         self._nodes = None
         self._edges = None
         self._boxes = None
         self._labels = []
         self._label_handles = []
 
-        pos = view.pos(layer.key, height)
-        edges = view.layer_edges(layer.key)
-        if pos is None:
+        with self._folder:
+            self.config = LayerConfigWrapper(self._server, config)
+
+        layer = view.layer(key)
+        if layer is None:
             return
 
-        name = self.name
-        colors = _layer_to_colors(G, layer, colormap)
-        bb_info = _layer_to_boxes(layer, pos, colors)
-
-        self._labels = _layer_to_labels(G, layer, pos)
+        pos = layer.positions.copy() + offset
+        colors = _layer_to_colors(layer, colormap)
+        bb_pos, bb_color = _layer_to_boxes(layer, colors, offset)
+        self._labels = _layer_to_labels(layer, offset)
         self._nodes = server.scene.add_point_cloud(f"{name}_nodes", pos, colors=colors)
-        self._boxes = server.add_line_segments(f"{name}_boxes", bb_info[0], bb_info[1])
-
-        if edges is not None:
+        self._boxes = server.add_line_segments(f"{name}_boxes", bb_pos, bb_color)
+        if len(layer.edges) > 0:
             self._edges = server.scene.add_line_segments(
-                f"{name}_edges", pos[edges], (0.0, 0.0, 0.0)
+                f"{name}_edges", pos[layer.edges], (0.0, 0.0, 0.0)
             )
 
         self._update()
@@ -315,10 +321,11 @@ class LayerHandle:
     def draw_nodes(self) -> bool:
         return self.config.draw_nodes
 
+    def _add_label(self, label: LabelInfo):
+        return self._server.add_label(label.name, label.text, position=label.pos)
+
     def _draw_labels(self) -> None:
-        self._label_handles = [
-            self._server.add_label(x.name, x.text, position=x.pos) for x in self._labels
-        ]
+        self._label_handles = [self._add_label(x) for x in self._labels]
 
     def _remove_labels(self) -> None:
         for x in self._label_handles:
@@ -367,12 +374,17 @@ class GraphHandle:
     """Visualization handles for a scene graph."""
 
     def __init__(
-        self, server: viser.ViserServer, G: dsg.SceneGraph, height_scale: float = 5.0
+        self,
+        server: viser.ViserServer,
+        G: SceneGraph,
+        config: GraphConfig | None = None,
     ):
         """Draw a scene graph in the visualizer."""
+        config = config or GraphConfig()
+
         self._handles = {}
         self._edge_handles = {}
-        self._height_scale = height_scale
+        self._height_scale = config.height_scale
         self._edge_scale = server.gui.add_number(
             "Interlayer Edge Scale", initial_value=0.3
         )
@@ -381,18 +393,16 @@ class GraphHandle:
         for layer in itertools.chain(G.layers, G.layer_partitions):
             color_modes[layer.key] = DEFAULT_COLORMODES.get(layer.key, ColorMode.LAYER)
 
+        view = GraphTensorView(G)
         colormaps = colormap_from_modes(color_modes)
-
-        view = dsg.FlatGraphView(G)
         for layer in itertools.chain(G.layers, G.layer_partitions):
             self._handles[layer.key] = LayerHandle(
                 server,
-                DEFAULT_CONFIG.get(layer.key, LayerConfig()),
+                config.layers.get(layer.key, LayerConfig()),
                 colormaps[layer.key],
-                self._layer_height(layer.key),
-                G,
-                layer,
+                self._layer_offset(layer.key),
                 view,
+                layer.key,
                 self._update,
             )
 
@@ -435,8 +445,9 @@ class GraphHandle:
 
         self._edge_handles = {}
 
-    def _layer_height(self, layer_key) -> float:
-        return self._height_scale * layer_key.layer
+    def _layer_offset(self, layer_key) -> np.ndarray:
+        height = self._height_scale * layer_key.layer
+        return np.array([0.0, 0.0, height])
 
     def _update(self) -> None:
         for source_key, targets in self._edge_handles.items():
@@ -451,7 +462,7 @@ class GraphHandle:
 class MeshHandle:
     """Visualizer handle for mesh elements."""
 
-    def __init__(self, server: viser.ViserServer, mesh: dsg.Mesh):
+    def __init__(self, server: viser.ViserServer, mesh: Mesh):
         """Send a mesh to the visualizer."""
         points = mesh.get_vertices().T
         faces = mesh.get_faces().T
@@ -495,7 +506,7 @@ class ViserRenderer:
         if self._clear_at_exit:
             self.clear()
 
-    def draw(self, G: dsg.SceneGraph, height_scale: float = 2.0):
+    def draw(self, G: SceneGraph, config: GraphConfig | None = None):
         """
         Render a scene graph to viser (requires [viz] extra).
 
@@ -504,11 +515,11 @@ class ViserRenderer:
             height_scale: z-separation between layers
         """
         self._clear_graph()
-        self._graph_handle = GraphHandle(self._server, G, height_scale=height_scale)
+        self._graph_handle = GraphHandle(self._server, G, config=config)
         if G.has_mesh():
             self.draw_mesh(G.mesh)
 
-    def draw_mesh(self, mesh: dsg.Mesh) -> None:
+    def draw_mesh(self, mesh: Mesh) -> None:
         """
         Render a mesh to viser (requires [viz] extra).
 

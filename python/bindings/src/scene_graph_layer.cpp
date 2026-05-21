@@ -96,6 +96,7 @@ void init_scene_graph_layer(py::module_& m) {
           [](const SceneGraphLayer& view) { return py::make_iterator(EdgeIter(view.edges()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
+      .def_readonly("key", &SceneGraphLayer::id)
       .def_readonly("id", &SceneGraphLayer::id)
       .def("to_binary",
            [](const SceneGraphLayer& layer) -> py::bytes {

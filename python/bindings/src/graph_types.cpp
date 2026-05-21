@@ -92,6 +92,14 @@ void init_graph_types(py::module_& m) {
            [](const Labelspace& labelspace, SemanticLabel label) { return labelspace.getCategory(label); })
       .def(
           "get_node_category",
+          [](const Labelspace& labelspace, const NodeAttributes& attrs, const std::string& unknown_name) {
+            const auto derived = dynamic_cast<const SemanticNodeAttributes*>(&attrs);
+            return derived ? labelspace.getCategory(*derived, unknown_name) : unknown_name;
+          },
+          "node"_a,
+          "unknown_name"_a = "UNKNOWN")
+      .def(
+          "get_node_category",
           [](const Labelspace& labelspace, const SceneGraphNode& node, const std::string& unknown_name) {
             const auto attrs = node.tryAttributes<SemanticNodeAttributes>();
             return attrs ? labelspace.getCategory(*attrs, unknown_name) : unknown_name;

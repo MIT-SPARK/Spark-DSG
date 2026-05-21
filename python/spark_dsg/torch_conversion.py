@@ -45,6 +45,7 @@ from typing import Callable, Dict, Optional
 
 import numpy as np
 
+from spark_dsg.tensor_views import LayerTensorView
 from spark_dsg._dsg_bindings import (
     LayerView,
     SceneGraph,
@@ -112,9 +113,9 @@ def _get_directed_edge(G, edge, id_map):
 
 
 def scene_graph_layer_to_torch(
-    G: SceneGraphLayer | LayerView,
+    layer: SceneGraphLayer | LayerView,
     node_converter: NodeConversionFunc,
-    edge_converter: Optional[EdgeConversionFunc] = None,
+    edge_converter: EdgeConversionFunc | None = None,
     double_precision: bool = False,
 ):
     """
@@ -130,53 +131,30 @@ def scene_graph_layer_to_torch(
         ValueError: If pytorch geometric can't be found for the conversion
 
     Returns:
-        pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
-            scene graph layer.
+        pytorch_geometric.Data: homogeneous graph representing the scene graph layer.
     """
     torch, torch_geometric = _get_torch()
-    # output torch tensor data types
     dtype_float = torch.float64 if double_precision else torch.float32
 
-    N = G.num_nodes()
+    view = LayerTensorView(layer)
+    x_node = [node_converter(layer, x) for x in view.attributes]
+    x_node = torch.tensor(x_node, dtype=dtype_float)
 
-    node_features: list[np.ndarray] = []
-    node_positions = torch.zeros((N, 3), dtype=dtype_float)
-    id_map = {}
-
-    for node in G.nodes:
-        idx = len(node_features)
-        node_positions[idx, :] = torch.tensor(
-            np.squeeze(node.attributes.position), dtype=dtype_float
-        )
-        node_features.append(node_converter(G, node))
-        id_map[node.id.value] = idx
-
-    node_features = torch.tensor(np.array(node_features), dtype=dtype_float)
-
-    edge_index = torch.zeros((2, G.num_edges()))
-    edge_features = []
-    for idx, edge in enumerate(G.edges):
-        edge_index[:, idx] = torch.tensor(_get_directed_edge(G, edge, id_map))
-
-        if edge_converter is not None:
-            edge_features.append(edge_converter(G, edge))
-
+    x_edge = None
     if edge_converter is not None:
-        edge_features = torch.tensor(np.array(edge_features), dtype=dtype_float)
+        x_edge = [edge_converter(view, x) for x in view.edge_attributes]
+        x_edge = torch.tensor(x_edge, dtype=dtype_float)
 
-    if edge_index.size(dim=1) > 0:
-        if edge_converter is None:
-            edge_index = torch_geometric.utils.to_undirected(edge_index)
-        else:
-            edge_index, edge_features = torch_geometric.utils.to_undirected(
-                edge_index, edge_features
-            )
+    edges = torch.from_numpy(view.edges)
+    if edges.size(dim=1) > 0:
+        edges, x_edge = torch_geometric.utils.to_undirected(edges, x_edge)
 
     return torch_geometric.data.Data(
-        x=node_features,
-        edge_index=edge_index,
-        edge_attr=None if edge_converter is None else edge_features,
-        pos=node_positions,
+        x=x_node,
+        edge_index=edges,
+        edge_attr=x_edge,
+        pos=torch.from_numpy(view.positions).to(dtype_float),
+        node_ids=torch.from_numpy(view.ids),
     )
 
 

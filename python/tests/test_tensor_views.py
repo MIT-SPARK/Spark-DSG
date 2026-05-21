@@ -47,6 +47,8 @@ def test_layer_tensor(resource_dir):
     assert places.num_edges() > 0
 
     view = dsg.LayerTensorView(places)
+    assert view.num_nodes == places.num_nodes()
+    assert view.num_edges == places.num_edges()
     assert view.ids.shape == (places.num_nodes(),)
     assert len(view.node_symbols) == places.num_nodes()
     assert view.node_symbols == view.ids.tolist()

@@ -4,19 +4,26 @@ import numpy as np
 
 from spark_dsg._dsg_bindings import (
     EdgeAttributes,
+    Labelspace,
     LayerKey,
     LayerView,
     NodeAttributes,
     NodeSymbol,
     SceneGraph,
     SceneGraphLayer,
+    SceneGraphNode,
 )
 
 
 class LayerTensorView:
     """Build a tensor representation of a scene layer."""
 
-    def __init__(self, layer: LayerView | SceneGraphLayer):
+    def __init__(
+        self, layer: LayerView | SceneGraphLayer, labelspace: Labelspace | None = None
+    ):
+        self._underlying = layer
+        self.key = layer.key
+        self._labelspace = labelspace
         self._lookup = {}
 
         ids = []
@@ -43,6 +50,18 @@ class LayerTensorView:
         self._edge_attributes = edge_attributes
 
     @property
+    def labelspace(self) -> Labelspace | None:
+        return self._labelspace
+
+    @property
+    def num_nodes(self) -> int:
+        return len(self._node_ids)
+
+    @property
+    def num_edges(self) -> int:
+        return len(self._edges)
+
+    @property
     def ids(self) -> np.ndarray:
         return self._node_ids
 
@@ -66,6 +85,13 @@ class LayerTensorView:
     def edge_attributes(self) -> list[EdgeAttributes]:
         return self._edge_attributes
 
+    def __getitem__(self, index: int) -> SceneGraphNode:
+        return self._underlying.get_node(int(self._node_ids[index]))
+
+    def __iter__(self):
+        for node_id in self._node_ids:
+            yield self._underlying.get_node(int(node_id))
+
 
 class GraphTensorView:
     """Build a tensor representation of the scene graph."""
@@ -77,7 +103,9 @@ class GraphTensorView:
             if layer.num_nodes() == 0:
                 continue
 
-            view = LayerTensorView(layer)
+            view = LayerTensorView(
+                layer, labelspace=G.get_labelspace(layer.key.layer, layer.key.partition)
+            )
             self._layers[layer.key] = view
             for idx, node_id in enumerate(view.ids):
                 self._lookup[node_id] = (layer.key, idx)
@@ -106,6 +134,9 @@ class GraphTensorView:
             s: {t: np.array(edges, dtype=np.int64) for t, edges in c.items()}
             for s, c in self._interlayer_edges.items()
         }
+
+    def __getitem__(self, key: LayerKey) -> LayerTensorView:
+        return self._layers[key]
 
     @property
     def edges(self):
