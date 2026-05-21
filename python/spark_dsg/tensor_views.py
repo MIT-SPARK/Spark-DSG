@@ -8,11 +8,12 @@ from spark_dsg._dsg_bindings import (
     LayerView,
     SceneGraphLayer,
     NodeSymbol,
+    EdgeAttributes,
     NodeAttributes,
 )
 
 
-class FlatLayerView:
+class LayerTensorView:
     """Build a tensor representation of a scene layer."""
 
     def __init__(self, layer: LayerView | SceneGraphLayer):
@@ -27,15 +28,19 @@ class FlatLayerView:
             attrs.append(node.attributes)
             self._lookup[node.id.value] = idx
 
+        self._node_ids = np.array(ids)
+        self._pos = pos
+        self._attributes = attrs
+
+        edge_attributes = []
         edge_tensor = np.zeros((layer.num_edges(), 2), dtype=np.int64)
         for idx, edge in enumerate(layer.edges):
             edge_tensor[idx, 0] = self._lookup[edge.source]
             edge_tensor[idx, 1] = self._lookup[edge.target]
+            edge_attributes.append(edge.info)
 
-        self._node_ids = np.array(ids)
-        self._pos = pos
-        self._attributes = attrs
         self._edges = edge_tensor
+        self._edge_attributes = edge_attributes
 
     @property
     def ids(self) -> np.ndarray:
@@ -57,8 +62,12 @@ class FlatLayerView:
     def edges(self) -> np.ndarray:
         return self._edges
 
+    @property
+    def edge_attributes(self) -> list[EdgeAttributes]:
+        return self._edge_attributes
 
-class FlatGraphView:
+
+class GraphTensorView:
     """Build a tensor representation of the scene graph."""
 
     def __init__(self, G: SceneGraph):
@@ -68,7 +77,7 @@ class FlatGraphView:
             if layer.num_nodes() == 0:
                 continue
 
-            view = FlatLayerView(layer)
+            view = LayerTensorView(layer)
             self._layers[layer.key] = view
             for idx, node_id in enumerate(view.ids):
                 self._lookup[node_id] = (layer.key, idx)
@@ -102,6 +111,6 @@ class FlatGraphView:
     def edges(self):
         return self._interlayer_edges
 
-    def layer(self, layer_key: LayerKey) -> FlatLayerView | None:
+    def layer(self, layer_key: LayerKey) -> LayerTensorView | None:
         """Get edges for a particular layer."""
         return self._layers.get(layer_key)
