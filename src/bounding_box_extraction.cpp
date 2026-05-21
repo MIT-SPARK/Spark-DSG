@@ -175,7 +175,6 @@ BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hul
     result.dims << max_x - min_x, max_y;
     result.yaw = std::atan2(n_x.y(), n_x.x());
 
-    Eigen::IOFormat fmt(3, Eigen::DontAlignCols, ", ", "; ", "", "", "[", "]");
     // transform center point to global coordinates
     Eigen::Matrix2f R;
     R.col(0) = n_x;

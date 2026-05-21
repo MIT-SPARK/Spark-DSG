@@ -40,6 +40,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 #include <spark_dsg/edge_attributes.h>
+#include <spark_dsg/graph_utilities.h>
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
 #include <spark_dsg/scene_graph_layer.h>
@@ -124,7 +125,15 @@ void init_scene_graph_layer(py::module_& m) {
           "edges",
           [](const LayerView& view) { return py::make_iterator(view.edges(), IterSentinel()); },
           nullptr,
-          py::return_value_policy::reference_internal);
+          py::return_value_policy::reference_internal)
+      .def("connected_components", [](const LayerView& view) {
+        std::unordered_set<NodeId> nodes;
+        for (const auto& [node_id, _] : view.layer_ref.nodes()) {
+          nodes.insert(node_id);
+        }
+
+        return graph_utilities::getConnectedComponents(view.layer_ref, nodes);
+      });
 }
 
 }  // namespace spark_dsg::python

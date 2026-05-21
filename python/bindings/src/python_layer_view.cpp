@@ -41,28 +41,28 @@
 
 namespace spark_dsg::python {
 
-LayerView::LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref_(layer) {}
+LayerView::LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref(layer) {}
 
-NodeIter LayerView::nodes() const { return NodeIter(layer_ref_.nodes()); }
+NodeIter LayerView::nodes() const { return NodeIter(layer_ref.nodes()); }
 
-EdgeIter LayerView::edges() const { return EdgeIter(layer_ref_.edges()); }
+EdgeIter LayerView::edges() const { return EdgeIter(layer_ref.edges()); }
 
-size_t LayerView::numNodes() const { return layer_ref_.numNodes(); }
+size_t LayerView::numNodes() const { return layer_ref.numNodes(); }
 
-size_t LayerView::numEdges() const { return layer_ref_.numEdges(); }
+size_t LayerView::numEdges() const { return layer_ref.numEdges(); }
 
-bool LayerView::hasNode(NodeSymbol node_id) const { return layer_ref_.hasNode(node_id); }
+bool LayerView::hasNode(NodeSymbol node_id) const { return layer_ref.hasNode(node_id); }
 
-bool LayerView::hasEdge(NodeSymbol source, NodeSymbol target) const { return layer_ref_.hasEdge(source, target); }
+bool LayerView::hasEdge(NodeSymbol source, NodeSymbol target) const { return layer_ref.hasEdge(source, target); }
 
-const SceneGraphNode& LayerView::getNode(NodeSymbol node_id) const { return layer_ref_.getNode(node_id); }
+const SceneGraphNode& LayerView::getNode(NodeSymbol node_id) const { return layer_ref.getNode(node_id); }
 
 const SceneGraphEdge& LayerView::getEdge(NodeSymbol source, NodeSymbol target) const {
-  return layer_ref_.getEdge(source, target);
+  return layer_ref.getEdge(source, target);
 }
 
 Eigen::Vector3d LayerView::getPosition(NodeSymbol node_id) const {
-  return layer_ref_.getNode(node_id).attributes().position;
+  return layer_ref.getNode(node_id).attributes().position;
 }
 
 LayerIter::LayerIter(const SceneGraph::Layers& container) : curr_iter_(container.begin()), end_iter_(container.end()) {}
