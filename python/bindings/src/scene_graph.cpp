@@ -248,6 +248,8 @@ void init_scene_graph(py::module_& m) {
           [](SceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
       .def("get_layer_key", &SceneGraph::getLayerKey, "name"_a)
       .def("clone", &SceneGraph::clone_unique)
+      .def("empty_like", &SceneGraph::empty_like)
+      .def("update_from", &SceneGraph::updateFrom)
       .def("transform",
            [](SceneGraph& G, const Eigen::Matrix4d& mat) {
              Eigen::Isometry3d iso(mat);
