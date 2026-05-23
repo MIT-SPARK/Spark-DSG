@@ -22,6 +22,7 @@ cli.add_command(zmq.cli)
 @click.argument("filepaths", nargs=-1, type=click.Path(exists=True))
 def update(filepaths):
     """Update a collection of files."""
+    dsg.enable_short_serialization_message()
     for filepath in filepaths:
         filepath = pathlib.Path(filepath).expanduser().absolute()
         try:
