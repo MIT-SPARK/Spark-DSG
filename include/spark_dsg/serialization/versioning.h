@@ -140,9 +140,7 @@ void checkProjectCompatibility(const FileHeader& loaded,
  */
 struct GlobalInfo {
  public:
-  /**
-   * @brief Get the current header used for de-serialization.
-   */
+  //! @brief Get the current header used for de-serialization.
   static const FileHeader& loadedHeader() { return loaded_header_; };
 
   /**
@@ -151,9 +149,10 @@ struct GlobalInfo {
    */
   static bool warnedLegacy();
 
-  /**
-   * @brief Set the current header used for de-serialization.
-   */
+  //! @brief Setting for legacy warning message
+  inline static bool use_short_message = false;
+
+  //! @brief Set the current header used for de-serialization.
   struct ScopedInfo {
     explicit ScopedInfo(const FileHeader& header) {
       loaded_header_ = header;

@@ -43,9 +43,10 @@
 #include "spark_dsg/python/metadata.h"
 #include "spark_dsg/python/python_types.h"
 #include "spark_dsg/python/scene_graph.h"
-#include "spark_dsg/python/scene_graph_iterators.h"
 #include "spark_dsg/python/scene_graph_layer.h"
 #include "spark_dsg/python/spark_types.h"
+
+using namespace pybind11::literals;
 
 PYBIND11_MODULE(_dsg_bindings, m) {
   pybind11::options options;
@@ -63,4 +64,8 @@ PYBIND11_MODULE(_dsg_bindings, m) {
   spark_dsg::python::init_scene_graph(m);
 
   m.def("version", []() { return spark_dsg::io::FileHeader::current().version.toString(); });
+  m.def(
+      "enable_short_serialization_message",
+      [](bool enable) { spark_dsg::io::GlobalInfo::use_short_message = enable; },
+      "enable"_a = true);
 }
