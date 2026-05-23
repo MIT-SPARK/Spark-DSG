@@ -1,7 +1,8 @@
 """Entry points for spark_dsg."""
 
-import click
 import pathlib
+
+import click
 
 import spark_dsg as dsg
 import spark_dsg.commands.visualize as visualize
