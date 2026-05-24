@@ -479,20 +479,6 @@ void TraversabilityNodeAttributes::serialization_info() {
       boundary.states[i].push_back(static_cast<TraversabilityState>(state));
     }
   }
-
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 4)) {
-    io::warnOutdatedHeader(header);
-    if (header.version == io::Version(1, 1, 3)) {
-      // Backwards compatibility for cognition labels.
-      std::map<int, float> temp;
-      serialization::field("cognition_labels", temp);
-      label_weights.clear();
-      for (const auto& [label, weight] : temp) {
-        label_weights[static_cast<Label>(label)] = weight;
-      }
-    }
-  }
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
