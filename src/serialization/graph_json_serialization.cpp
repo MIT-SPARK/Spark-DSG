@@ -88,7 +88,7 @@ void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& 
 
   if (!graph.insertEdge(source, target, std::move(attrs))) {
     std::stringstream ss;
-    ss << "failed to add " << NodeSymbol(source).str() << " →  "
+    ss << "failed to add " << NodeSymbol(source).str() << " ->  "
        << NodeSymbol(target).str();
     throw std::runtime_error(ss.str());
   }
@@ -138,7 +138,6 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
     return record.dump();
   }
 
-  // TODO(nathan) push header serialization to to/from json and reuse
   record["mesh"] = nlohmann::json::parse(mesh->serializeToJson());
   return record.dump();
 }
@@ -175,7 +174,6 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
     return graph;
   }
 
-  // TODO(nathan) push header serialization to to/from json and reuse
   auto mesh = Mesh::deserializeFromJson(record.at("mesh").dump());
   graph->setMesh(mesh);
   return graph;
