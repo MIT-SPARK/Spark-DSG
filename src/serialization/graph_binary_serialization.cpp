@@ -47,8 +47,6 @@ void write_binary(serialization::BinarySerializer& s, const SceneGraphNode& node
   s.startFixedArray(4);
   s.write(node.layer.layer);
   s.write(node.id);
-  // for parsing reasons for old files, this needs to be in roughly the same order as
-  // the timestamp field
   s.write(node.layer.partition);
   s.write(node.attributes());
 }
@@ -100,7 +98,6 @@ void parseEdge(const AttributeFactory<EdgeAttributes>& factory,
   NodeId target;
   deserializer.read(target);
 
-  // last argument always forces parents to rewire
   auto attrs = serialization::Visitor::from(factory, deserializer);
   callback(source, target, std::move(attrs));
 }
