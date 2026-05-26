@@ -30,6 +30,7 @@ __all__: list[str] = [
     "NodeSymbol",
     "ObjectNodeAttributes",
     "PartitionId",
+    "PolygonPlaceNodeAttributes",
     "Place2dNodeAttributes",
     "PlaceNodeAttributes",
     "Quaternion",
@@ -594,6 +595,21 @@ class PartitionId:
     def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None: ...
     @typing.overload
     def __init__(self, arg0: str) -> None: ...
+
+class PolygonPlaceNodeAttributes(SemanticNodeAttributes):
+    max_z: float
+    def __init__(self) -> None: ...
+    @property
+    def boundary(
+        self,
+    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"]]: ...
+    @boundary.setter
+    def boundary(
+        self,
+        arg0: collections.abc.Sequence[
+            typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"]
+        ],
+    ) -> None: ...
 
 class Place2dNodeAttributes(SemanticNodeAttributes):
     has_active_mesh_indices: bool
