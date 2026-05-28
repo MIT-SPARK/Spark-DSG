@@ -90,6 +90,12 @@ void write_binary(BinarySerializer& s, const std::unordered_set<T>& values);
 template <typename T>
 void read_binary(const BinaryDeserializer& s, std::unordered_set<T>& values);
 
+template <typename A, typename B>
+void write_binary(BinarySerializer& s, const std::pair<A, B>& value);
+
+template <typename A, typename B>
+void read_binary(const BinaryDeserializer& s, std::pair<A, B>& value);
+
 template <typename K, typename V>
 void write_binary(BinarySerializer& s, const std::map<K, V>& values);
 
@@ -529,6 +535,20 @@ void read_binary(const BinaryDeserializer& s, std::unordered_set<T>& values) {
     s.read(temp);
     values.insert(temp);
   }
+}
+
+template <typename A, typename B>
+void write_binary(BinarySerializer& s, const std::pair<A, B>& value) {
+  s.startFixedArray(2);
+  s.write(value.first);
+  s.write(value.second);
+}
+
+template <typename A, typename B>
+void read_binary(const BinaryDeserializer& s, std::pair<A, B>& value) {
+  s.checkFixedArrayLength(2);
+  s.read(value.first);
+  s.read(value.second);
 }
 
 template <typename K, typename V>

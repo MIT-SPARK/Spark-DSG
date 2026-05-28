@@ -106,6 +106,11 @@ void to_json(json& record, const Mesh& mesh) {
   if (!mesh.temporal_island_ids.empty()) {
     record["temporal_island_ids"] = mesh.temporal_island_ids;
   }
+  if (!mesh.observation_windows.empty()) {
+    record["observation_windows"] =
+        std::vector<std::pair<size_t, Mesh::ObservationWindowList>>(
+            mesh.observation_windows.begin(), mesh.observation_windows.end());
+  }
   if (!mesh.faces.empty()) {
     record["faces"] = mesh.faces;
   }
@@ -154,6 +159,11 @@ void from_json(const json& record, Mesh& mesh) {
     mesh.temporal_island_ids =
         record.at("temporal_island_ids").get<Mesh::TemporalIslandIds>();
   }
+  if (record.contains("observation_windows")) {
+    const auto ow = record.at("observation_windows")
+                        .get<std::vector<std::pair<size_t, Mesh::ObservationWindowList>>>();
+    mesh.observation_windows = {ow.begin(), ow.end()};
+  }
   if (record.contains("faces")) {
     mesh.faces = record.at("faces").get<Mesh::Faces>();
   }
@@ -181,6 +191,7 @@ void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh)
   serializer.write(mesh.first_seen_stamps);
   serializer.write(mesh.fusion_counts);
   serializer.write(mesh.temporal_island_ids);
+  serializer.write(mesh.observation_windows);
 
   // Write faces
   serializer.write(mesh.faces);
@@ -211,6 +222,9 @@ void read_binary(const serialization::BinaryDeserializer& deserializer, Mesh& me
   deserializer.read(mesh.first_seen_stamps);
   deserializer.read(mesh.fusion_counts);
   deserializer.read(mesh.temporal_island_ids);
+  if (io::GlobalInfo::loadedHeader().version >= io::Version(1, 1, 5)) {
+    deserializer.read(mesh.observation_windows);
+  }
 
   // Faces.
   deserializer.read(mesh.faces);

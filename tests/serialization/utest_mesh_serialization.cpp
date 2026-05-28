@@ -97,4 +97,32 @@ TEST(MeshSerialization, MeshBinary) {
   EXPECT_EQ(result->faces.size(), 1u);
 }
 
+TEST(MeshSerialization, ObservationWindows) {
+  Mesh mesh(/*colors=*/false, /*timestamps=*/true, /*labels=*/false,
+            /*first_seen=*/true);
+  for (int i = 0; i < 3; ++i) {
+    mesh.points.push_back(Eigen::Vector3f::Zero());
+    mesh.stamps.push_back(10 * (i + 1));
+    mesh.first_seen_stamps.push_back(i + 1);
+  }
+  mesh.observation_windows[1] = {{1, 5}, {20, 25}};
+  mesh.observation_windows[2] = {{3, 8}};
+
+  auto from_json = Mesh::deserializeFromJson(mesh.serializeToJson());
+  ASSERT_TRUE(from_json);
+  EXPECT_EQ(from_json->observation_windows, mesh.observation_windows);
+
+  std::vector<uint8_t> buffer;
+  mesh.serializeToBinary(buffer);
+  auto from_binary = Mesh::deserializeFromBinary(buffer.data(), buffer.size());
+  ASSERT_TRUE(from_binary);
+  EXPECT_EQ(from_binary->observation_windows, mesh.observation_windows);
+
+  // eraseVertices remaps window keys (drop vertex 0; 1->0, 2->1).
+  mesh.eraseVertices({0});
+  EXPECT_EQ(mesh.observation_windows.size(), 2u);
+  EXPECT_EQ(mesh.observation_windows.at(0), (Mesh::ObservationWindowList{{1, 5}, {20, 25}}));
+  EXPECT_EQ(mesh.observation_windows.at(1), (Mesh::ObservationWindowList{{3, 8}}));
+}
+
 }  // namespace spark_dsg

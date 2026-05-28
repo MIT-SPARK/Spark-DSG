@@ -63,6 +63,7 @@ class Mesh {
   using FusionCounts = std::vector<FusionCount>;
   using TemporalIslandId = uint32_t;
   using TemporalIslandIds = std::vector<TemporalIslandId>;
+  using ObservationWindowList = std::vector<std::pair<Timestamp, Timestamp>>;
 
   Mesh(bool has_colors = true,
        bool has_timestamps = true,
@@ -164,6 +165,12 @@ class Mesh {
    * @brief Set last seen timestamp.
    */
   void setFirstSeenTimestamp(size_t index, Timestamp timestamp);
+
+  /**
+   * @brief Observation windows for a vertex: its stored discrete windows if it has
+   * any (fused reps), else a single [first_seen, last_seen] from its timestamps.
+   */
+  ObservationWindowList observationWindowsOf(size_t index) const;
 
   /**
    * @brief Get current label
@@ -316,6 +323,7 @@ class Mesh {
   FusionCounts fusion_counts;
   TemporalIslandIds temporal_island_ids;
   Faces faces;
+  std::unordered_map<size_t, ObservationWindowList> observation_windows;
 };
 
 bool operator==(const Mesh& lhs, const Mesh& rhs);

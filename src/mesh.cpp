@@ -66,6 +66,7 @@ Mesh& Mesh::operator=(const Mesh& other) {
   faces = other.faces;
   fusion_counts = other.fusion_counts;
   temporal_island_ids = other.temporal_island_ids;
+  observation_windows = other.observation_windows;
   return *this;
 }
 
@@ -84,6 +85,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
   faces = std::move(other.faces);
   fusion_counts = std::move(other.fusion_counts);
   temporal_island_ids = std::move(other.temporal_island_ids);
+  observation_windows = std::move(other.observation_windows);
   return *this;
 }
 
@@ -98,6 +100,7 @@ void Mesh::clear() {
   faces.clear();
   fusion_counts.clear();
   temporal_island_ids.clear();
+  observation_windows.clear();
 }
 
 size_t Mesh::numVertices() const { return points.size(); }
@@ -168,6 +171,19 @@ void Mesh::setTimestamp(size_t index, Mesh::Timestamp timestamp) {
 
 Mesh::Timestamp Mesh::firstSeenTimestamp(size_t index) const {
   return first_seen_stamps.at(index);
+}
+
+Mesh::ObservationWindowList Mesh::observationWindowsOf(size_t index) const {
+  const auto it = observation_windows.find(index);
+  if (it != observation_windows.end() && !it->second.empty()) {
+    return it->second;
+  }
+  const Timestamp last = (has_timestamps && index < stamps.size()) ? stamps[index] : 0;
+  Timestamp first = (has_first_seen_stamps && index < first_seen_stamps.size())
+                        ? first_seen_stamps[index]
+                        : last;
+  if (first > last) first = last;
+  return {{first, last}};
 }
 
 void Mesh::setFirstSeenTimestamp(size_t index, Mesh::Timestamp timestamp) {
@@ -246,6 +262,13 @@ void Mesh::eraseVertices(const std::unordered_set<size_t>& indices) {
 
     if (has_temporal_island_ids) {
       other.temporal_island_ids.push_back(temporal_island_ids[old_index]);
+    }
+  }
+
+  for (const auto& [old_index, windows] : observation_windows) {
+    const auto iter = old_to_new.find(old_index);
+    if (iter != old_to_new.end()) {
+      other.observation_windows.emplace(iter->second, windows);
     }
   }
 
@@ -331,6 +354,9 @@ bool Mesh::append(const Mesh& other) {
   temporal_island_ids.insert(temporal_island_ids.end(),
                              other.temporal_island_ids.begin(),
                              other.temporal_island_ids.end());
+  for (const auto& [idx, windows] : other.observation_windows) {
+    observation_windows.emplace(idx + offset, windows);
+  }
 
   for (const auto& face : other.faces) {
     faces.push_back({face[0] + offset, face[1] + offset, face[2] + offset});
@@ -358,6 +384,10 @@ size_t Mesh::memoryUsage() const {
   total_bytes += sizeof(Face) * faces.size();
   total_bytes += sizeof(FusionCount) * fusion_counts.size();
   total_bytes += sizeof(TemporalIslandId) * temporal_island_ids.size();
+  for (const auto& [idx, windows] : observation_windows) {
+    total_bytes += sizeof(size_t) +
+                   sizeof(std::pair<Timestamp, Timestamp>) * windows.size();
+  }
   return total_bytes;
 }
 
@@ -370,7 +400,8 @@ bool operator==(const Mesh& lhs, const Mesh& rhs) {
          lhs.points == rhs.points && lhs.colors == rhs.colors && lhs.stamps == rhs.stamps &&
          lhs.first_seen_stamps == rhs.first_seen_stamps && lhs.labels == rhs.labels &&
          lhs.faces == rhs.faces && lhs.fusion_counts == rhs.fusion_counts &&
-         lhs.temporal_island_ids == rhs.temporal_island_ids; 
+         lhs.temporal_island_ids == rhs.temporal_island_ids &&
+         lhs.observation_windows == rhs.observation_windows;
 }
 
 }  // namespace spark_dsg
