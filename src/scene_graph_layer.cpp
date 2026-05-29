@@ -34,7 +34,6 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/scene_graph_layer.h"
 
-#include <queue>
 #include <sstream>
 
 #include "spark_dsg/edge_attributes.h"
@@ -404,43 +403,4 @@ size_t SceneGraphLayer::memoryUsage() const {
   return total_memory;
 }
 
-namespace graph_utilities {
-
-using LayerGraphTraits = graph_traits<SceneGraphLayer>;
-
-std::set<NodeId> LayerGraphTraits::neighbors(const SceneGraphLayer& graph,
-                                             NodeId node) {
-  return get_node(graph, node).siblings();
-}
-
-bool LayerGraphTraits::contains(const SceneGraphLayer& graph, NodeId node) {
-  return graph.hasNode(node);
-}
-
-const SceneGraphLayer::Nodes& LayerGraphTraits::nodes(const SceneGraphLayer& graph) {
-  return graph.nodes();
-}
-
-const SceneGraphNode& LayerGraphTraits::unwrap_node(
-    const SceneGraphLayer::Nodes::value_type& container) {
-  return *container.second;
-}
-
-NodeId LayerGraphTraits::unwrap_node_id(
-    const SceneGraphLayer::Nodes::value_type& container) {
-  return container.first;
-}
-
-const SceneGraphNode& LayerGraphTraits::get_node(const SceneGraphLayer& graph,
-                                                 NodeId node_id) {
-  return graph.getNode(node_id);
-}
-
-const SceneGraphEdge& LayerGraphTraits::get_edge(const SceneGraphLayer& graph,
-                                                 NodeId source,
-                                                 NodeId target) {
-  return graph.getEdge(source, target);
-}
-
-}  // namespace graph_utilities
 }  // namespace spark_dsg

@@ -248,7 +248,7 @@ struct FilteredCCFixture : public testing::TestWithParam<FilteredCCTestConfig> {
 TEST_P(FilteredCCFixture, ResultCorrect) {
   FilteredCCTestConfig info = GetParam();
 
-  Components result = getConnectedComponents<SceneGraphLayer>(
+  const auto result = getConnectedComponents(
       layer,
       [&](const SceneGraphNode& node) { return !info.disallowed_nodes.count(node.id); },
       [&](const SceneGraphEdge& edge) {
@@ -277,7 +277,7 @@ TEST(ConnectedComponentTests, NormalEmptyCorrect) {
   SceneGraphLayer layer(1);
 
   NodeSet query;
-  Components result = getConnectedComponents(layer, query, false);
+  auto result = getConnectedComponents(layer, query, false);
   EXPECT_TRUE(result.empty());
 
   query.insert(0);
@@ -290,7 +290,7 @@ TEST(ConnectedComponentTests, FilteredEmptyCorrect) {
   SceneGraphLayer layer(1);
 
   NodeSet query;
-  Components result = getConnectedComponents<SceneGraphLayer>(
+  const auto result = getConnectedComponents(
       layer, [](const auto&) { return true; }, [](const auto&) { return true; });
   EXPECT_TRUE(result.empty());
 }
