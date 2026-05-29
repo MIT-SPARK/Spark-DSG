@@ -33,7 +33,6 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
 #include "spark_dsg/graph_utilities.h"
 
 #include <functional>
@@ -50,7 +49,7 @@ struct NodeEntry {
   double cost;
   std::optional<NodeId> parent;
 
-  bool operator<(const NodeEntry& other) { return cost < other.cost; };
+  bool operator>(const NodeEntry& other) const { return cost > other.cost; };
 };
 
 // priority_queue is greatest first, so we flip comparison
