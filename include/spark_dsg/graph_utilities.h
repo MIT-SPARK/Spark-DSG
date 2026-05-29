@@ -39,6 +39,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "scene_graph_layer.h"
 #include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
@@ -358,6 +359,88 @@ std::vector<std::vector<NodeId>> getConnectedComponents(
     const typename graph_traits<Graph>::node_valid_func& node_valid,
     const typename graph_traits<Graph>::edge_valid_func& edge_valid) {
   std::vector<std::vector<NodeId>> components;
+
+  NodeSet visited;
+  for (const auto& node_container : graph_traits<Graph>::nodes(graph)) {
+    const auto& node = graph_traits<Graph>::unwrap_node(node_container);
+    const NodeId node_id = graph_traits<Graph>::unwrap_node_id(node_container);
+    if (!node_valid(node)) {
+      continue;
+    }
+
+    if (visited.count(node_id)) {
+      continue;
+    }
+
+    std::vector<NodeId> component;
+    std::deque<NodeId> frontier{node_id};
+    visited.insert(node_id);
+    breadthFirstSearch(
+        graph,
+        frontier,
+        visited,
+        node_valid,
+        edge_valid,
+        [&](const Graph&, NodeId visited) { component.push_back(visited); });
+    components.push_back(component);
+  }
+
+  return components;
+}
+
+template <typename Graph, typename NodeSet>
+void breadthFirstSearch(
+    const Graph& graph,
+    std::deque<NodeId>& frontier,
+    NodeSet& seen,
+    const typename graph_traits<Graph>::node_valid_func& node_valid,
+    const typename graph_traits<Graph>::edge_valid_func& edge_valid,
+    const typename graph_traits<Graph>::visitor& callback_function) {
+  while (!frontier.empty()) {
+    NodeId curr_id = frontier.front();
+    frontier.pop_front();
+
+    callback_function(graph, curr_id);
+
+    auto neighbors = graph_traits<Graph>::neighbors(graph, curr_id);
+    for (const auto& neighbor : neighbors) {
+      if (seen.count(neighbor)) {
+        continue;
+      }
+
+      const auto& neighbor_node = graph_traits<Graph>::get_node(graph, neighbor);
+      if (!node_valid(neighbor_node)) {
+        seen.insert(neighbor);  // save some computation
+        continue;
+      }
+
+      const auto& edge = graph_traits<Graph>::get_edge(graph, curr_id, neighbor);
+      if (!edge_valid(edge)) {
+        continue;
+      }
+
+      frontier.push_back(neighbor);
+      seen.insert(neighbor);
+    }
+  }
+}
+
+template <typename Graph, typename NodeSet = std::unordered_set<NodeId>>
+std::vector<NodeId> shortestPath(
+    const Graph& graph,
+    const NodeId source,
+    const NodeId target,
+    const typename graph_traits<Graph>::node_valid_func& node_valid,
+    const typename graph_traits<Graph>::edge_valid_func& edge_valid) {
+  std::vector<NodeId> path;
+  if (source == target) {
+    return path;
+  }
+
+  if (!graph_traits<Graph>::contains(source) ||
+      !graph_traits<Graph>::contains(target)) {
+    return path;
+  }
 
   NodeSet visited;
   for (const auto& node_container : graph_traits<Graph>::nodes(graph)) {
