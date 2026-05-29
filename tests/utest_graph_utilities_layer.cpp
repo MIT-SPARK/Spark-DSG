@@ -108,8 +108,7 @@ TEST_P(ConnectedComponentFixture, ResultCorrect) {
     layer.insertEdge(2, 3);
   }
 
-  Components result = getConnectedComponents<SceneGraphLayer>(
-      layer, info.query, info.restrict_to_query);
+  Components result = getConnectedComponents(layer, info.query, info.restrict_to_query);
   EXPECT_EQ(info.expected.size(), result.size());
   for (const auto& expected : info.expected) {
     EXPECT_TRUE(matchesExpectedSet(expected, result))
@@ -167,8 +166,7 @@ struct DepthLimitedCCFixture : public testing::TestWithParam<DepthLimitedCCTestC
 TEST_P(DepthLimitedCCFixture, ResultCorrect) {
   DepthLimitedCCTestConfig info = GetParam();
 
-  Components result =
-      getConnectedComponents<SceneGraphLayer>(layer, info.depth, info.query);
+  Components result = getConnectedComponents(layer, info.depth, info.query);
 
   EXPECT_EQ(info.expected.size(), result.size());
   for (const auto& expected : info.expected) {
@@ -279,12 +277,12 @@ TEST(ConnectedComponentTests, NormalEmptyCorrect) {
   SceneGraphLayer layer(1);
 
   NodeSet query;
-  Components result = getConnectedComponents<SceneGraphLayer>(layer, query, false);
+  Components result = getConnectedComponents(layer, query, false);
   EXPECT_TRUE(result.empty());
 
   query.insert(0);
   query.insert(1);
-  result = getConnectedComponents<SceneGraphLayer>(layer, query, false);
+  result = getConnectedComponents(layer, query, false);
   EXPECT_TRUE(result.empty());
 }
 
