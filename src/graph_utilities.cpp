@@ -92,10 +92,6 @@ std::vector<NodeId> shortestPath(const SceneGraphLayer& graph,
   while (!frontier.empty()) {
     const auto [curr_id, curr_cost, parent] = frontier.top();
     frontier.pop();
-    if (curr_id == target) {
-      return pathFromParents(parents, source, target);
-    }
-
     if (parent) {
       const auto entry = std::make_pair(*parent, curr_cost);
       auto iter = parents.find(curr_id);
@@ -108,6 +104,10 @@ std::vector<NodeId> shortestPath(const SceneGraphLayer& graph,
       }
 
       iter->second = entry;
+    }
+
+    if (curr_id == target) {
+      return pathFromParents(parents, source, target);
     }
 
     const auto& curr_node = graph.getNode(curr_id);

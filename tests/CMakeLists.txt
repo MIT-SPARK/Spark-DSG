@@ -9,7 +9,7 @@ add_executable(
   utest_bounding_box.cpp
   utest_color.cpp
   utest_edge_container.cpp
-  utest_graph_utilities_layer.cpp
+  utest_graph_utilities.cpp
   utest_labelspace.cpp
   utest_memory_usage.cpp
   utest_mesh.cpp

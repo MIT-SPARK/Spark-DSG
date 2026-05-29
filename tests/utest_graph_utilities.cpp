@@ -242,11 +242,50 @@ TEST(GraphUtilities, FilteredEmptyCorrect) {
 TEST(GraphUtilities, ShortestPathCorrect) {
   SceneGraphLayer layer(1);
 
-  const auto result = graph_utilities::shortestPath(layer, 0, 1);
-  EXPECT_TRUE(result.empty());
+  {  // empty graph means no result
+    const auto result = graph_utilities::shortestPath(layer, 0, 1);
+    EXPECT_TRUE(result.empty());
+  }
+
+  for (int y = 0; y < 5; ++y) {
+    for (int x = 0; x < 5; ++x) {
+      const auto idx = 5 * y + x;
+      auto attrs = std::make_unique<NodeAttributes>();
+      // force non-uniform cost
+      attrs->position << x * x, 1.5 * y * y, 1.0;
+      layer.emplaceNode(idx, std::move(attrs));
+      if (x % 5) {
+        // add edge to previous node as long as not first node in row
+        layer.insertEdge(idx, 5 * y + x - 1);
+      }
+
+      if (y > 0) {
+        // add edge to previous row as long as not first row
+        layer.insertEdge(idx, 5 * (y - 1) + x);
+      }
+    }
+  }
+
+  {  // planning to the same node means no result
+    const auto result = graph_utilities::shortestPath(layer, 5, 5);
+    EXPECT_TRUE(result.empty());
+  }
+
+  {  // planning along edge is straightforward
+    const auto result = graph_utilities::shortestPath(layer, 0, 4);
+    const std::vector<NodeId> expected = {0, 1, 2, 3, 4};
+    EXPECT_EQ(result, expected);
+  }
+
+  {  // planning corner to corner works as expected
+    // non-uniform positions means that y is preferred over x
+    const auto result = graph_utilities::shortestPath(layer, 0, 24);
+    const std::vector<NodeId> expected = {0, 5, 10, 15, 20, 21, 22, 23, 24};
+    EXPECT_EQ(result, expected);
+  }
 }
 
-TEST_P(ConnectedComponentFixture, ConnectedComponentCorrect) {
+TEST_P(ConnectedComponentFixture, ConnectedComponentsCorrect) {
   ConnectedComponentTestConfig info = GetParam();
   if (info.connected_graph) {
     layer.insertEdge(2, 3);
@@ -260,7 +299,7 @@ TEST_P(ConnectedComponentFixture, ConnectedComponentCorrect) {
   }
 }
 
-TEST_P(DepthLimitedCCFixture, DepthLimitedConnectedComponentCorrect) {
+TEST_P(DepthLimitedCCFixture, ConnectedComponentsCorrect) {
   DepthLimitedCCTestConfig info = GetParam();
 
   Components result = getConnectedComponents(layer, info.depth, info.query);
@@ -272,7 +311,7 @@ TEST_P(DepthLimitedCCFixture, DepthLimitedConnectedComponentCorrect) {
   }
 }
 
-TEST_P(FilteredCCFixture, FilteredConnectedComponentCorrect) {
+TEST_P(FilteredCCFixture, ConnectedComponentsCorrect) {
   FilteredCCTestConfig info = GetParam();
 
   const auto result = getConnectedComponents(
