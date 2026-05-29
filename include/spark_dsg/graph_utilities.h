@@ -145,33 +145,19 @@ void breadthFirstSearch(const SceneGraphLayer& graph,
   }
 }
 
-// TODO(nathan) condense with earlier
 template <typename NodeSet>
 void breadthFirstSearch(const SceneGraphLayer& graph,
                         std::deque<NodeId>& frontier,
                         NodeSet& seen,
                         const NodeSet& valid_nodes,
                         const NodeCallback& callback_function) {
-  while (!frontier.empty()) {
-    NodeId curr_node = frontier.front();
-    frontier.pop_front();
-
-    callback_function(graph, curr_node);
-
-    const auto& neighbors = graph.getNode(curr_node).siblings();
-    for (const auto& neighbor : neighbors) {
-      if (seen.count(neighbor)) {
-        continue;
-      }
-
-      if (!valid_nodes.count(neighbor)) {
-        continue;
-      }
-
-      frontier.push_back(neighbor);
-      seen.insert(neighbor);
-    }
-  }
+  breadthFirstSearch(
+      graph,
+      frontier,
+      seen,
+      [&](const auto& node) { return valid_nodes.count(node.id); },
+      {},
+      callback_function);
 }
 
 template <typename CostMap, bool AllowEqual = false>
@@ -351,8 +337,8 @@ Components getConnectedComponents(const SceneGraphLayer& graph,
 
 template <typename NodeSet = std::unordered_set<NodeId>>
 Components getConnectedComponents(const SceneGraphLayer& graph,
-                                  const NodeValidFilter& node_valid,
-                                  const EdgeValidFilter& edge_valid) {
+                                  const NodeValidFilter& node_valid = {},
+                                  const EdgeValidFilter& edge_valid = {}) {
   Components components;
 
   NodeSet visited;

@@ -69,18 +69,23 @@ void init_scene_graph_layer(py::module_& m) {
            [](SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target, const EdgeAttributes& info) {
              return layer.insertEdge(source, target, info.clone());
            })
+      .def("remove_edge", &SceneGraphLayer::removeEdge)
       .def("has_node", &SceneGraphLayer::hasNode)
       .def("has_edge", &SceneGraphLayer::hasEdge)
       .def("get_node", &SceneGraphLayer::getNode, py::return_value_policy::reference_internal)
       .def("find_node", &SceneGraphLayer::findNode, py::return_value_policy::reference_internal)
       .def("get_edge", &SceneGraphLayer::getEdge, py::return_value_policy::reference_internal)
       .def("find_edge", &SceneGraphLayer::findEdge, py::return_value_policy::reference_internal)
-      .def("remove_edge", &SceneGraphLayer::removeEdge)
       .def("num_nodes", &SceneGraphLayer::numNodes)
       .def("num_edges", &SceneGraphLayer::numEdges)
       .def("get_position",
            [](const SceneGraphLayer& layer, NodeSymbol node) { return layer.getNode(node).attributes().position; })
-      .def_readonly("id", &SceneGraphLayer::id)
+      .def("connected_components",
+           [](const SceneGraphLayer& layer) { return graph_utilities::getConnectedComponents(layer); })
+      .def("shortest_path",
+           [](const SceneGraphLayer& layer, NodeId source, NodeId target) {
+             return graph_utilities::shortestPath(layer, source, target);
+           })
       .def_property(
           "nodes",
           [](const SceneGraphLayer& view) { return py::make_iterator(NodeIter(view.nodes()), IterSentinel()); },
@@ -91,6 +96,7 @@ void init_scene_graph_layer(py::module_& m) {
           [](const SceneGraphLayer& view) { return py::make_iterator(EdgeIter(view.edges()), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
+      .def_readonly("id", &SceneGraphLayer::id)
       .def("to_binary",
            [](const SceneGraphLayer& layer) -> py::bytes {
              std::vector<uint8_t> buffer;
@@ -106,16 +112,18 @@ void init_scene_graph_layer(py::module_& m) {
       .def("has_node", &LayerView::hasNode)
       .def("has_edge", &LayerView::hasEdge)
       .def("get_node", &LayerView::getNode, py::return_value_policy::reference_internal)
+      .def("find_node", &LayerView::findNode, py::return_value_policy::reference_internal)
       .def("get_edge", &LayerView::getEdge, py::return_value_policy::reference_internal)
+      .def("find_edge", &LayerView::findEdge, py::return_value_policy::reference_internal)
       .def("num_nodes", &LayerView::numNodes)
       .def("num_edges", &LayerView::numEdges)
       .def("get_position", &LayerView::getPosition)
-      .def_property(
-          "key", [](const LayerView& view) { return view.id; }, nullptr)
-      .def_property(
-          "id", [](const LayerView& view) { return view.id.layer; }, nullptr)
-      .def_property(
-          "partition", [](const LayerView& view) { return view.id.partition; }, nullptr)
+      .def("connected_components",
+           [](const LayerView& view) { return graph_utilities::getConnectedComponents(view.layer_ref); })
+      .def("shortest_path",
+           [](const LayerView& view, NodeId source, NodeId target) {
+             return graph_utilities::shortestPath(view.layer_ref, source, target);
+           })
       .def_property(
           "nodes",
           [](const LayerView& view) { return py::make_iterator(view.nodes(), IterSentinel()); },
@@ -126,14 +134,11 @@ void init_scene_graph_layer(py::module_& m) {
           [](const LayerView& view) { return py::make_iterator(view.edges(), IterSentinel()); },
           nullptr,
           py::return_value_policy::reference_internal)
-      .def("connected_components", [](const LayerView& view) {
-        std::unordered_set<NodeId> nodes;
-        for (const auto& [node_id, _] : view.layer_ref.nodes()) {
-          nodes.insert(node_id);
-        }
-
-        return graph_utilities::getConnectedComponents(view.layer_ref, nodes);
-      });
+      .def_property(
+          "key", [](const LayerView& view) { return view.id; }, nullptr)
+      .def_property(
+          "id", [](const LayerView& view) { return view.id.layer; }, nullptr)
+      .def_property("partition", [](const LayerView& view) { return view.id.partition; }, nullptr);
 }
 
 }  // namespace spark_dsg::python
