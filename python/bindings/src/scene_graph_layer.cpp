@@ -83,7 +83,7 @@ void init_scene_graph_layer(py::module_& m) {
       .def("connected_components",
            [](const SceneGraphLayer& layer) { return graph_utilities::getConnectedComponents(layer); })
       .def("shortest_path",
-           [](const SceneGraphLayer& layer, NodeId source, NodeId target) {
+           [](const SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) {
              return graph_utilities::shortestPath(layer, source, target);
            })
       .def_property(
@@ -121,7 +121,7 @@ void init_scene_graph_layer(py::module_& m) {
       .def("connected_components",
            [](const LayerView& view) { return graph_utilities::getConnectedComponents(view.layer_ref); })
       .def("shortest_path",
-           [](const LayerView& view, NodeId source, NodeId target) {
+           [](const LayerView& view, NodeSymbol source, NodeSymbol target) {
              return graph_utilities::shortestPath(view.layer_ref, source, target);
            })
       .def_property(
