@@ -37,8 +37,6 @@
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/printing.h>
 
-#include <iostream>
-
 namespace spark_dsg::python {
 
 LayerView::LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref(layer) {}
@@ -57,8 +55,14 @@ bool LayerView::hasEdge(NodeSymbol source, NodeSymbol target) const { return lay
 
 const SceneGraphNode& LayerView::getNode(NodeSymbol node_id) const { return layer_ref.getNode(node_id); }
 
+const SceneGraphNode* LayerView::findNode(NodeSymbol node_id) const { return layer_ref.findNode(node_id); }
+
 const SceneGraphEdge& LayerView::getEdge(NodeSymbol source, NodeSymbol target) const {
   return layer_ref.getEdge(source, target);
+}
+
+const SceneGraphEdge* LayerView::findEdge(NodeSymbol source, NodeSymbol target) const {
+  return layer_ref.findEdge(source, target);
 }
 
 Eigen::Vector3d LayerView::getPosition(NodeSymbol node_id) const {

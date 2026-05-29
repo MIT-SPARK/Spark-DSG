@@ -328,26 +328,4 @@ class SceneGraphLayer {
   inline size_t numEdges() const { return edges_.size(); }
 };
 
-namespace graph_utilities {
-
-template <>
-struct graph_traits<SceneGraphLayer> {
-  using visitor = const std::function<void(const SceneGraphLayer&, NodeId)>&;
-  using node_valid_func = const std::function<bool(const SceneGraphNode&)>&;
-  using edge_valid_func = const std::function<bool(const SceneGraphEdge&)>&;
-
-  static std::set<NodeId> neighbors(const SceneGraphLayer& graph, NodeId node);
-  static bool contains(const SceneGraphLayer& graph, NodeId node);
-  static const SceneGraphLayer::Nodes& nodes(const SceneGraphLayer& graph);
-  static const SceneGraphNode& unwrap_node(
-      const SceneGraphLayer::Nodes::value_type& container);
-  static NodeId unwrap_node_id(const SceneGraphLayer::Nodes::value_type& container);
-  static const SceneGraphNode& get_node(const SceneGraphLayer& graph, NodeId node_id);
-  static const SceneGraphEdge& get_edge(const SceneGraphLayer& graph,
-                                        NodeId source,
-                                        NodeId target);
-};
-
-}  // namespace graph_utilities
-
 }  // namespace spark_dsg

@@ -412,6 +412,13 @@ class SceneGraph {
                   const Eigen::Isometry3d* transform = nullptr);
 
   /**
+   * @brief Update graph from another graph
+   * @param other Other graph to update from
+   * @param nodes Nodes to copy over
+   */
+  void updateFrom(const SceneGraph& other, const std::vector<NodeId>& nodes);
+
+  /**
    * @brief Get all removed nodes from the graph
    * @param clear_removed Reset removed node tracking
    * @returns List of all removed nodes
@@ -457,6 +464,9 @@ class SceneGraph {
 
   //! @brief Make a copy of the scene graph (for bindings)
   std::unique_ptr<SceneGraph> clone_unique() const;
+
+  //! @brief Make a scene graph with the same layers and metadata
+  std::unique_ptr<SceneGraph> empty_like() const;
 
   //! @brief Rigidly transform graph
   void transform(const Eigen::Isometry3d& transform);

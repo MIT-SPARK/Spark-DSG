@@ -609,6 +609,22 @@ bool SceneGraph::mergeGraph(const SceneGraph& other,
   return true;
 }
 
+void SceneGraph::updateFrom(const SceneGraph& other, const std::vector<NodeId>& nodes) {
+  for (const auto& node_id : nodes) {
+    const auto node = other.findNode(node_id);
+    if (!node) {
+      continue;
+    }
+
+    const auto key = node->layer;
+    addOrUpdateNode(key.layer, node_id, node->attributes().clone(), key.partition);
+    for (const auto neighbor : node->connections()) {
+      const auto& edge = other.getEdge(node_id, neighbor);
+      insertEdge(node_id, neighbor, edge.attributes().clone());
+    }
+  }
+}
+
 std::vector<NodeId> SceneGraph::getRemovedNodes(bool clear_removed) {
   std::vector<NodeId> to_return;
   visitLayers(
@@ -674,9 +690,7 @@ void SceneGraph::removeAllStaleEdges() {
 SceneGraph::Ptr SceneGraph::clone() const { return clone_unique(); }
 
 UniqueGraph SceneGraph::clone_unique() const {
-  auto to_return = std::make_unique<SceneGraph>(layer_keys(), layer_names_);
-  to_return->metadata = metadata;
-
+  auto to_return = empty_like();
   for (const auto [node_id, key] : node_lookup_) {
     auto node = getNodePtr(node_id, key);
     to_return->addOrUpdateNode(
@@ -705,6 +719,12 @@ UniqueGraph SceneGraph::clone_unique() const {
     to_return->mesh_ = mesh_->clone();
   }
 
+  return to_return;
+}
+
+UniqueGraph SceneGraph::empty_like() const {
+  auto to_return = std::make_unique<SceneGraph>(layer_keys(), layer_names_);
+  to_return->metadata = metadata;
   return to_return;
 }
 
@@ -964,23 +984,8 @@ std::vector<LayerId> SceneGraph::layer_ids() const {
 }
 
 UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
-  auto graph = std::make_unique<SceneGraph>(layer_keys(), layer_names_);
-  graph->metadata = metadata;
-
-  for (const auto& node_id : nodes) {
-    const auto node = findNode(node_id);
-    if (!node) {
-      continue;
-    }
-
-    graph->addOrUpdateNode(
-        node->layer.layer, node_id, node->attributes().clone(), node->layer.partition);
-    for (const auto neighbor : node->connections()) {
-      graph->insertEdge(
-          node_id, neighbor, getEdge(node_id, neighbor).attributes().clone());
-    }
-  }
-
+  auto graph = empty_like();
+  graph->updateFrom(*this, nodes);
   return graph;
 }
 

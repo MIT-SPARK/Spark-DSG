@@ -73,6 +73,11 @@ bool matchesExpectedSet(const Expected& expected,
   return false;
 }
 
+struct GraphConfig {
+  size_t num_nodes;
+  std::vector<std::pair<NodeId, NodeId>> edges;
+};
+
 struct ConnectedComponentTestConfig {
   NodeSet query;
   ResultSet expected;
@@ -102,42 +107,6 @@ struct ConnectedComponentFixture
   SceneGraphLayer layer;
 };
 
-TEST_P(ConnectedComponentFixture, ResultCorrect) {
-  ConnectedComponentTestConfig info = GetParam();
-  if (info.connected_graph) {
-    layer.insertEdge(2, 3);
-  }
-
-  Components result = getConnectedComponents<SceneGraphLayer>(
-      layer, info.query, info.restrict_to_query);
-  EXPECT_EQ(info.expected.size(), result.size());
-  for (const auto& expected : info.expected) {
-    EXPECT_TRUE(matchesExpectedSet(expected, result))
-        << displayNodeSymbolContainer(expected);
-  }
-}
-
-const ConnectedComponentTestConfig cc_test_cases[] = {
-    {NodeSet{0}, ResultSet{{0, 1, 2}}, false, false},
-    {NodeSet{0, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, false, false},
-    {NodeSet{0, 3}, ResultSet{{0, 1, 2, 3, 4, 5}}, false, true},
-    {NodeSet{0}, ResultSet{{0}}, true, false},
-    {NodeSet{0, 3}, ResultSet{{0}, {3}}, true, false},
-    {NodeSet{0, 1, 2, 3, 4, 5}, ResultSet{{0, 1, 2}, {3, 4, 5}}, true, false},
-    {NodeSet{0, 2, 3, 5}, ResultSet{{0, 2, 3, 5}}, true, true},
-    {NodeSet{0, 1, 4, 5}, ResultSet{{0, 1}, {4, 5}}, true, true},
-    {NodeSet{0, 1, 2, 3, 4, 5}, ResultSet{{0, 1, 2, 3, 4, 5}}, true, true},
-};
-
-INSTANTIATE_TEST_SUITE_P(GetConnectedComponent,
-                         ConnectedComponentFixture,
-                         testing::ValuesIn(cc_test_cases));
-
-struct GraphConfig {
-  size_t num_nodes;
-  std::vector<std::pair<NodeId, NodeId>> edges;
-};
-
 struct DepthLimitedCCTestConfig {
   NodeSet query;
   ResultSet expected;
@@ -163,63 +132,6 @@ struct DepthLimitedCCFixture : public testing::TestWithParam<DepthLimitedCCTestC
 
   SceneGraphLayer layer;
 };
-
-TEST_P(DepthLimitedCCFixture, ResultCorrect) {
-  DepthLimitedCCTestConfig info = GetParam();
-
-  Components result =
-      getConnectedComponents<SceneGraphLayer>(layer, info.depth, info.query);
-
-  EXPECT_EQ(info.expected.size(), result.size());
-  for (const auto& expected : info.expected) {
-    EXPECT_TRUE(matchesExpectedSet(expected, result))
-        << displayNodeSymbolContainer(expected);
-  }
-}
-
-const GraphConfig dl_graphs[] = {
-    {6, {{0, 1}, {1, 2}, {3, 4}, {3, 5}, {4, 5}}},
-    {7, {{0, 1}, {1, 2}, {3, 4}, {3, 5}, {4, 5}}},
-    {15,
-     {{0, 7},
-      {0, 2},
-      {0, 5},
-      {0, 14},
-      {2, 14},
-      {3, 13},
-      {3, 8},
-      {4, 10},
-      {4, 13},
-      {5, 9},
-      {6, 9},
-      {9, 12},
-      {11, 14},
-      {12, 13}}},
-};
-
-const DepthLimitedCCTestConfig dl_test_cases[] = {
-    {NodeSet{0}, ResultSet{{0, 1}}, 1, dl_graphs[0]},
-    {NodeSet{0, 3}, ResultSet{{0, 1}, {3, 4, 5}}, 1, dl_graphs[0]},
-    {NodeSet{0, 3}, ResultSet{{0, 1}, {3, 4, 5}}, 1, dl_graphs[0]},
-    {NodeSet{1, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[0]},
-    {NodeSet{0, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 2, dl_graphs[0]},
-    {NodeSet{0, 1, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[0]},
-    {NodeSet{0, 2, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[0]},
-    {NodeSet{6}, ResultSet{{6}}, 1, dl_graphs[1]},
-    {NodeSet{0, 2, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[1]},
-    {NodeSet{0, 1, 2, 3, 4, 5, 6},
-     ResultSet{{0, 1, 2}, {3, 4, 5}, {6}},
-     1,
-     dl_graphs[1]},
-    {NodeSet{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
-     ResultSet{{0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {1}},
-     3,
-     dl_graphs[2]},
-};
-
-INSTANTIATE_TEST_SUITE_P(GetDepthLimitedConnectedComponent,
-                         DepthLimitedCCFixture,
-                         testing::ValuesIn(dl_test_cases));
 
 struct FilteredCCTestConfig {
   ResultSet expected;
@@ -247,10 +159,162 @@ struct FilteredCCFixture : public testing::TestWithParam<FilteredCCTestConfig> {
   SceneGraphLayer layer;
 };
 
-TEST_P(FilteredCCFixture, ResultCorrect) {
+const GraphConfig dl_graphs[] = {
+    {6, {{0, 1}, {1, 2}, {3, 4}, {3, 5}, {4, 5}}},
+    {7, {{0, 1}, {1, 2}, {3, 4}, {3, 5}, {4, 5}}},
+    {15,
+     {{0, 7},
+      {0, 2},
+      {0, 5},
+      {0, 14},
+      {2, 14},
+      {3, 13},
+      {3, 8},
+      {4, 10},
+      {4, 13},
+      {5, 9},
+      {6, 9},
+      {9, 12},
+      {11, 14},
+      {12, 13}}},
+};
+
+const ConnectedComponentTestConfig cc_test_cases[] = {
+    {NodeSet{0}, ResultSet{{0, 1, 2}}, false, false},
+    {NodeSet{0, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, false, false},
+    {NodeSet{0, 3}, ResultSet{{0, 1, 2, 3, 4, 5}}, false, true},
+    {NodeSet{0}, ResultSet{{0}}, true, false},
+    {NodeSet{0, 3}, ResultSet{{0}, {3}}, true, false},
+    {NodeSet{0, 1, 2, 3, 4, 5}, ResultSet{{0, 1, 2}, {3, 4, 5}}, true, false},
+    {NodeSet{0, 2, 3, 5}, ResultSet{{0, 2, 3, 5}}, true, true},
+    {NodeSet{0, 1, 4, 5}, ResultSet{{0, 1}, {4, 5}}, true, true},
+    {NodeSet{0, 1, 2, 3, 4, 5}, ResultSet{{0, 1, 2, 3, 4, 5}}, true, true},
+};
+
+const DepthLimitedCCTestConfig dl_test_cases[] = {
+    {NodeSet{0}, ResultSet{{0, 1}}, 1, dl_graphs[0]},
+    {NodeSet{0, 3}, ResultSet{{0, 1}, {3, 4, 5}}, 1, dl_graphs[0]},
+    {NodeSet{0, 3}, ResultSet{{0, 1}, {3, 4, 5}}, 1, dl_graphs[0]},
+    {NodeSet{1, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[0]},
+    {NodeSet{0, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 2, dl_graphs[0]},
+    {NodeSet{0, 1, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[0]},
+    {NodeSet{0, 2, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[0]},
+    {NodeSet{6}, ResultSet{{6}}, 1, dl_graphs[1]},
+    {NodeSet{0, 2, 3}, ResultSet{{0, 1, 2}, {3, 4, 5}}, 1, dl_graphs[1]},
+    {NodeSet{0, 1, 2, 3, 4, 5, 6},
+     ResultSet{{0, 1, 2}, {3, 4, 5}, {6}},
+     1,
+     dl_graphs[1]},
+    {NodeSet{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+     ResultSet{{0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {1}},
+     3,
+     dl_graphs[2]},
+};
+
+const FilteredCCTestConfig filtered_cc_test_cases[] = {
+    {ResultSet{{0, 1, 2}, {3, 4, 5}}, {}, {}, dl_graphs[0]},
+    {ResultSet{{0, 1}, {3}, {4, 5}}, {2}, {3}, dl_graphs[0]},
+    {ResultSet{{0}, {1}, {2}, {3}, {4}, {5}}, {}, {0, 1, 2, 3, 4, 5}, dl_graphs[0]},
+};
+
+TEST(GraphUtilities, NormalEmptyCorrect) {
+  SceneGraphLayer layer(1);
+
+  NodeSet query;
+  auto result = getConnectedComponents(layer, query, false);
+  EXPECT_TRUE(result.empty());
+
+  query.insert(0);
+  query.insert(1);
+  result = getConnectedComponents(layer, query, false);
+  EXPECT_TRUE(result.empty());
+}
+
+TEST(GraphUtilities, FilteredEmptyCorrect) {
+  SceneGraphLayer layer(1);
+
+  NodeSet query;
+  const auto result = getConnectedComponents(
+      layer, [](const auto&) { return true; }, [](const auto&) { return true; });
+  EXPECT_TRUE(result.empty());
+}
+
+TEST(GraphUtilities, ShortestPathCorrect) {
+  SceneGraphLayer layer(1);
+
+  {  // empty graph means no result
+    const auto result = graph_utilities::shortestPath(layer, 0, 1);
+    EXPECT_TRUE(result.empty());
+  }
+
+  for (int y = 0; y < 5; ++y) {
+    for (int x = 0; x < 5; ++x) {
+      const auto idx = 5 * y + x;
+      auto attrs = std::make_unique<NodeAttributes>();
+      // force non-uniform cost
+      attrs->position << x * x, 1.5 * y * y, 1.0;
+      layer.emplaceNode(idx, std::move(attrs));
+      if (x % 5) {
+        // add edge to previous node as long as not first node in row
+        layer.insertEdge(idx, 5 * y + x - 1);
+      }
+
+      if (y > 0) {
+        // add edge to previous row as long as not first row
+        layer.insertEdge(idx, 5 * (y - 1) + x);
+      }
+    }
+  }
+
+  {  // planning to the same node means no result
+    const auto result = graph_utilities::shortestPath(layer, 5, 5);
+    EXPECT_TRUE(result.empty());
+  }
+
+  {  // planning along edge is straightforward
+    const auto result = graph_utilities::shortestPath(layer, 0, 4);
+    const std::vector<NodeId> expected = {0, 1, 2, 3, 4};
+    EXPECT_EQ(result, expected);
+  }
+
+  {  // planning corner to corner works as expected
+    // non-uniform positions means that y is preferred over x
+    const auto result = graph_utilities::shortestPath(layer, 0, 24);
+    const std::vector<NodeId> expected = {0, 5, 10, 15, 20, 21, 22, 23, 24};
+    EXPECT_EQ(result, expected);
+  }
+}
+
+TEST_P(ConnectedComponentFixture, ConnectedComponentsCorrect) {
+  ConnectedComponentTestConfig info = GetParam();
+  if (info.connected_graph) {
+    layer.insertEdge(2, 3);
+  }
+
+  Components result = getConnectedComponents(layer, info.query, info.restrict_to_query);
+  EXPECT_EQ(info.expected.size(), result.size());
+  for (const auto& expected : info.expected) {
+    EXPECT_TRUE(matchesExpectedSet(expected, result))
+        << displayNodeSymbolContainer(expected);
+  }
+}
+
+TEST_P(DepthLimitedCCFixture, ConnectedComponentsCorrect) {
+  DepthLimitedCCTestConfig info = GetParam();
+
+  Components result = getConnectedComponents(layer, info.depth, info.query);
+
+  EXPECT_EQ(info.expected.size(), result.size());
+  for (const auto& expected : info.expected) {
+    EXPECT_TRUE(matchesExpectedSet(expected, result))
+        << displayNodeSymbolContainer(expected);
+  }
+}
+
+TEST_P(FilteredCCFixture, ConnectedComponentsCorrect) {
   FilteredCCTestConfig info = GetParam();
 
-  Components result = getConnectedComponents<SceneGraphLayer>(
+  const auto result = getConnectedComponents(
       layer,
       [&](const SceneGraphNode& node) { return !info.disallowed_nodes.count(node.id); },
       [&](const SceneGraphEdge& edge) {
@@ -265,36 +329,16 @@ TEST_P(FilteredCCFixture, ResultCorrect) {
   }
 }
 
-const FilteredCCTestConfig filtered_cc_test_cases[] = {
-    {ResultSet{{0, 1, 2}, {3, 4, 5}}, {}, {}, dl_graphs[0]},
-    {ResultSet{{0, 1}, {3}, {4, 5}}, {2}, {3}, dl_graphs[0]},
-    {ResultSet{{0}, {1}, {2}, {3}, {4}, {5}}, {}, {0, 1, 2, 3, 4, 5}, dl_graphs[0]},
-};
+INSTANTIATE_TEST_SUITE_P(GraphUtilities,
+                         ConnectedComponentFixture,
+                         testing::ValuesIn(cc_test_cases));
 
-INSTANTIATE_TEST_SUITE_P(GetConnectedComponentWithFilters,
+INSTANTIATE_TEST_SUITE_P(GraphUtilities,
+                         DepthLimitedCCFixture,
+                         testing::ValuesIn(dl_test_cases));
+
+INSTANTIATE_TEST_SUITE_P(GraphUtilities,
                          FilteredCCFixture,
                          testing::ValuesIn(filtered_cc_test_cases));
-
-TEST(ConnectedComponentTests, NormalEmptyCorrect) {
-  SceneGraphLayer layer(1);
-
-  NodeSet query;
-  Components result = getConnectedComponents<SceneGraphLayer>(layer, query, false);
-  EXPECT_TRUE(result.empty());
-
-  query.insert(0);
-  query.insert(1);
-  result = getConnectedComponents<SceneGraphLayer>(layer, query, false);
-  EXPECT_TRUE(result.empty());
-}
-
-TEST(ConnectedComponentTests, FilteredEmptyCorrect) {
-  SceneGraphLayer layer(1);
-
-  NodeSet query;
-  Components result = getConnectedComponents<SceneGraphLayer>(
-      layer, [](const auto&) { return true; }, [](const auto&) { return true; });
-  EXPECT_TRUE(result.empty());
-}
 
 }  // namespace spark_dsg

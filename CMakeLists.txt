@@ -96,6 +96,7 @@ add_library(
   src/colormaps.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
+  src/graph_utilities.cpp
   src/labelspace.cpp
   src/layer_view.cpp
   src/mesh.cpp

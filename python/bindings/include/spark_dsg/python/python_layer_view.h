@@ -50,7 +50,9 @@ class LayerView {
   bool hasNode(NodeSymbol node_id) const;
   bool hasEdge(NodeSymbol source, NodeSymbol target) const;
   const SceneGraphNode& getNode(NodeSymbol node_id) const;
+  const SceneGraphNode* findNode(NodeSymbol node_id) const;
   const SceneGraphEdge& getEdge(NodeSymbol source, NodeSymbol target) const;
+  const SceneGraphEdge* findEdge(NodeSymbol source, NodeSymbol target) const;
   Eigen::Vector3d getPosition(NodeSymbol node_id) const;
 
   const LayerKey id;

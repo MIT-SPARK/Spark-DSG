@@ -49,6 +49,7 @@ from spark_dsg._dsg_bindings import (
     NodeAttributes,
     SceneGraph,
     SceneGraphLayer,
+    _Metadata,
     compute_ancestor_bounding_box,
 )
 from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_to_torch
@@ -77,24 +78,21 @@ def add_bounding_boxes_to_layer(
         node.attributes.bounding_box = bbox
 
 
-def _add_metadata_interface(obj):
-    class Metadata:
-        def __init__(self, metadata):
-            self._metadata = metadata
+class Metadata:
+    def __init__(self, metadata: _Metadata):
+        self._metadata = metadata
 
-        def get(self):
-            data_str = self._metadata._get()
-            metadata = json.loads(data_str)
-            metadata = dict() if metadata is None else metadata
-            return types.MappingProxyType(metadata)
+    def get(self) -> types.MappingProxyType:
+        data_str = self._metadata._get()
+        metadata = json.loads(data_str)
+        metadata = dict() if metadata is None else metadata
+        return types.MappingProxyType(metadata)
 
-        def set(self, obj):
-            self._metadata._set(json.dumps(obj))
+    def set(self, obj: typing.Any) -> None:
+        self._metadata._set(json.dumps(obj))
 
-        def add(self, obj):
-            self._metadata._add(json.dumps(obj))
-
-    obj.metadata = property(lambda x: Metadata(x._metadata))
+    def add(self, obj: typing.Any) -> None:
+        self._metadata._add(json.dumps(obj))
 
 
 def _hash_layerkey(key):
@@ -112,9 +110,9 @@ def _get_layer_id(graph, name):
 
 LayerKey.__hash__ = _hash_layerkey  # type: ignore[method-assign,assignment]
 
-_add_metadata_interface(SceneGraph)
-_add_metadata_interface(NodeAttributes)
-_add_metadata_interface(EdgeAttributes)
+SceneGraph.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
+NodeAttributes.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
+EdgeAttributes.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
 
 SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign]
 SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign]
