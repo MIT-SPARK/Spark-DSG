@@ -30,9 +30,9 @@ __all__: list[str] = [
     "NodeSymbol",
     "ObjectNodeAttributes",
     "PartitionId",
-    "PolygonPlaceNodeAttributes",
     "Place2dNodeAttributes",
     "PlaceNodeAttributes",
+    "PolygonPlaceNodeAttributes",
     "Quaternion",
     "RoomNodeAttributes",
     "SceneGraph",
@@ -596,21 +596,6 @@ class PartitionId:
     @typing.overload
     def __init__(self, arg0: str) -> None: ...
 
-class PolygonPlaceNodeAttributes(SemanticNodeAttributes):
-    max_z: float
-    def __init__(self) -> None: ...
-    @property
-    def boundary(
-        self,
-    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.float64], "[2, 1]"]]: ...
-    @boundary.setter
-    def boundary(
-        self,
-        arg0: collections.abc.Sequence[
-            typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[2, 1]"]
-        ],
-    ) -> None: ...
-
 class Place2dNodeAttributes(SemanticNodeAttributes):
     has_active_mesh_indices: bool
     need_finish_merge: bool
@@ -730,6 +715,24 @@ class PlaceNodeAttributes(SemanticNodeAttributes):
     def voxblox_mesh_connections(
         self, arg0: collections.abc.Sequence[NearestVertexInfo]
     ) -> None: ...
+
+class PolygonPlaceNodeAttributes(SemanticNodeAttributes):
+    def __init__(self) -> None: ...
+    @property
+    def boundary(
+        self,
+    ) -> list[typing.Annotated[numpy.typing.NDArray[numpy.float32], "[2, 1]"]]: ...
+    @boundary.setter
+    def boundary(
+        self,
+        arg0: collections.abc.Sequence[
+            typing.Annotated[numpy.typing.ArrayLike, numpy.float32, "[2, 1]"]
+        ],
+    ) -> None: ...
+    @property
+    def max_z(self) -> float: ...
+    @max_z.setter
+    def max_z(self, arg0: typing.SupportsFloat | typing.SupportsIndex) -> None: ...
 
 class Quaternion:
     @typing.overload
