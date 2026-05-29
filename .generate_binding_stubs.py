@@ -3,7 +3,6 @@ import pathlib
 import re
 import subprocess
 
-
 QUIRKS = [
     (r"spark_dsg\._dsg_bindings\.", "", 0),
     (r"__eq__\(self, arg0: .+\)", "__eq__(self, arg0: typing.Any)", 0),
