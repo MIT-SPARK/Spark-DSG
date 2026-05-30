@@ -52,7 +52,6 @@ from spark_dsg._dsg_bindings import (
     _Metadata,
     compute_ancestor_bounding_box,
 )
-from spark_dsg.tensor_views import *
 from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_to_torch
 
 
