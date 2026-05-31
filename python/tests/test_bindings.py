@@ -348,3 +348,15 @@ def test_labelspace():
     G.set_labelspace(labelspace, 0, 1)
     assert not G.get_labelspace(0, 0)
     assert G.get_labelspace(0, 1).labels_to_names == labelspace.labels_to_names
+
+
+def test_connected_component():
+    """Test that connected components works as expected."""
+    G = dsg.SceneGraph()
+    G.add_node(dsg.DsgLayers.PLACES, 0, dsg.NodeAttributes())
+    G.add_node(dsg.DsgLayers.PLACES, 1, dsg.NodeAttributes())
+    G.add_node(dsg.DsgLayers.PLACES, 2, dsg.NodeAttributes())
+    G.insert_edge(0, 1)
+
+    components = G.get_layer(dsg.DsgLayers.PLACES).connected_components()
+    assert components == [[0, 1], [2]]

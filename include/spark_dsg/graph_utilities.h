@@ -343,7 +343,7 @@ Components getConnectedComponents(const SceneGraphLayer& graph,
 
   NodeSet visited;
   for (const auto& [node_id, node] : graph.nodes()) {
-    if (!node_valid(*node)) {
+    if (node_valid && !node_valid(*node)) {
       continue;
     }
 
