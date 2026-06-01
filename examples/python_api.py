@@ -68,7 +68,7 @@ G = dsg.SceneGraph.load(str(path_to_dsg))
 
 
 # %%
-def print_node_if_exists(node_id):
+def print_node_if_exists(node_id: dsg.NodeSymbol) -> None:
     """Grab node attributes and display if the graph contains the node."""
     test_str = "yes" if G.has_node(node_id.value) else "no"
     print(f"Graph contains node {node_id}: {test_str}")
@@ -123,7 +123,7 @@ print("")
 # ## Interlayer Edge Access
 
 # %%
-layer_edge_counts = {}
+layer_edge_counts: dict[dsg.LayerKey, dict[dsg.LayerKey, int]] = {}
 for edge in G.interlayer_edges:
     source_layer = G.get_node(edge.source).layer
     target_layer = G.get_node(edge.target).layer
@@ -157,7 +157,7 @@ for category, count in node_type_counts.items():
     print(f"  - {category}: {count}")
 
 
-edge_counts = {}
+edge_counts: dict[dsg.LayerKey, dict[dsg.LayerKey, int]] = {}
 for edge in G.edges:
     source_layer = G.get_node(edge.source).layer
     target_layer = G.get_node(edge.target).layer

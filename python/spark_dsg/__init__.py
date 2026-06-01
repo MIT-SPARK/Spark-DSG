@@ -56,8 +56,11 @@ from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_t
 
 
 def add_bounding_boxes_to_layer(
-    graph, layer_id, child_layer=DsgLayers.PLACES, bbox_type=BoundingBoxType.AABB
-):
+    graph: SceneGraph,
+    layer_id: str | LayerKey,
+    child_layer: str | LayerKey = DsgLayers.PLACES,
+    bbox_type: BoundingBoxType = BoundingBoxType.AABB,
+) -> None:
     """
     Add computed bounding boxes to the node attributes in the graph.
 
