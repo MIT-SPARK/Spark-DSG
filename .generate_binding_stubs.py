@@ -14,6 +14,8 @@ QUIRKS = [
     (r"(\n    def str\(self,.*?:\n.*?\.\.\.)(.*?)(\nclass )", r"\2\1\3", re.DOTALL),
     (r"(def find_node\(.*-> )SceneGraphNode:", r"\1SceneGraphNode | None:", 0),
     (r"(def find_edge\(.*-> )SceneGraphEdge:", r"\1SceneGraphEdge | None:", 0),
+    (r"@staticmethod\n    def to_torch\(G: .*?,(.*)\):", r"def to_torch(self, \1): ...", 0),
+    (r"\"\"\".*?\"\"\"", "", re.DOTALL),
 ]
 
 

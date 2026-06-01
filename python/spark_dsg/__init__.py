@@ -126,7 +126,7 @@ NodeAttributes.metadata = property(_metadata)  # type: ignore[assignment]
 EdgeAttributes.metadata = property(_metadata)  # type: ignore[assignment]
 
 SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign,assignment]
-SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign]
+SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign,assignment]
 SceneGraphLayer.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
 LayerView.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
 

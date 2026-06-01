@@ -39,11 +39,11 @@ import pytest
 import spark_dsg as dsg
 
 
-def _fake_node_embedding(G, x):
+def _fake_node_embedding(x: dsg.SceneGraphNode) -> np.ndarray:
     return np.zeros(20)
 
 
-def _fake_edge_embedding(G, e):
+def _fake_edge_embedding(e: dsg.SceneGraphEdge) -> np.ndarray:
     return np.zeros(20)
 
 
