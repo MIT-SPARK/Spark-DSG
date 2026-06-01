@@ -108,11 +108,15 @@ def _get_layer_id(graph, name):
     return graph.get_layer_key(name)
 
 
+def _metadata(x) -> Metadata:
+    return x._metadata
+
+
 LayerKey.__hash__ = _hash_layerkey  # type: ignore[method-assign,assignment]
 
-SceneGraph.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
-NodeAttributes.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
-EdgeAttributes.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
+SceneGraph.metadata = property(_metadata)  # type: ignore[assignment]
+NodeAttributes.metadata = property(_metadata)  # type: ignore[method-assign,assignment]
+EdgeAttributes.metadata = property(_metadata)  # type: ignore[method-assign,assignment]
 
 SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign]
 SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign]
