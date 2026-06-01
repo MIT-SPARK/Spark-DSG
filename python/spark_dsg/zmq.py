@@ -1,6 +1,7 @@
 """Module containing python equivalent of c++ zmq interface."""
 
 import threading
+import typing
 import warnings
 
 import zmq
@@ -8,7 +9,7 @@ import zmq
 from spark_dsg._dsg_bindings import SceneGraph
 
 
-def _get_context(context: zmq.Context | None, num_threads: int | None):
+def _get_context(context: zmq.Context | None, num_threads: int | None) -> zmq.Context:
     to_return = zmq.Context.instance() if context is None else context
     if num_threads:
         to_return.set(zmq.IO_THREADS, num_threads)
@@ -24,13 +25,13 @@ class DsgSender:
         url: str,
         num_threads: int | None = None,
         context: zmq.Context | None = None,
-    ):
+    ) -> None:
         """Initialize the ZMQ socket."""
         self._context = _get_context(context, num_threads)
         self._socket = self._context.socket(zmq.PUB)
         self._socket.bind(url)
 
-    def send(self, graph: SceneGraph, include_mesh=False):
+    def send(self, graph: SceneGraph, include_mesh: bool = False) -> None:
         """Publish the scene graph over ZMQ."""
         self._socket.send(graph.to_binary(include_mesh=include_mesh))
 
@@ -44,7 +45,7 @@ class DsgReceiver:
         num_threads: int | None = None,
         conflate: bool = True,
         context: zmq.Context | None = None,
-    ):
+    ) -> None:
         """Initialize the ZMQ socket."""
         self._context = _get_context(context, num_threads)
         self._graph: SceneGraph | None = None
@@ -94,7 +95,7 @@ class ZmqGraph:
         num_threads: int | None = None,
         poll_time_ms: int = 100,
         context: zmq.Context | None = None,
-    ):
+    ) -> None:
         """Initialize a ZMQ-backed scene graph."""
         self._receiver = DsgReceiver(
             url, num_threads=num_threads, conflate=True, context=context
@@ -105,14 +106,14 @@ class ZmqGraph:
 
         self._mutex = threading.Lock()
         self._should_shutdown = threading.Event()
-        self._thread = None
+        self._thread: threading.Thread | None = None
 
-    def start(self):
+    def start(self) -> None:
         """Start the background thread."""
         self._thread = threading.Thread(target=self._poll_thread)
         self._thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the background thread."""
         if self._thread is None:
             return
@@ -121,12 +122,12 @@ class ZmqGraph:
         self._thread.join()
         self._thread = None
 
-    def __enter__(self):
+    def __enter__(self) -> typing.Self:
         """Start the background thread."""
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_msg, tb):
+    def __exit__(self, *exc_args) -> None:
         """Stop the background thread."""
         self.stop()
 
@@ -143,7 +144,7 @@ class ZmqGraph:
             self._has_change = False
             return self._graph
 
-    def _poll_thread(self):
+    def _poll_thread(self) -> None:
         while not self._should_shutdown.is_set():
             if not self._receiver.recv(self._poll_time_ms):
                 continue
