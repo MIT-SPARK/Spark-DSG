@@ -16,6 +16,7 @@ QUIRKS = [
     (r"(def find_edge\(.*-> )SceneGraphEdge:", r"\1SceneGraphEdge | None:", 0),
     (r"@staticmethod\n    def to_torch\(G: .*?,(.*)\):", r"def to_torch(self, \1): ...", 0),
     (r"\"\"\".*?\"\"\"", "", re.DOTALL),
+    (r"os\.PathLike", "os.PathLike[str]", 0),
 ]
 
 
