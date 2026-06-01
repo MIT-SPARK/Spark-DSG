@@ -49,6 +49,7 @@ from spark_dsg._dsg_bindings import (
     NodeAttributes,
     SceneGraph,
     SceneGraphLayer,
+    SemanticNodeAttributes,
     _Metadata,
     compute_ancestor_bounding_box,
 )
@@ -57,8 +58,8 @@ from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_t
 
 def add_bounding_boxes_to_layer(
     graph: SceneGraph,
-    layer_id: str | LayerKey,
-    child_layer: str | LayerKey = DsgLayers.PLACES,
+    layer_id: str | int,
+    child_layer: str | int = DsgLayers.PLACES,
     bbox_type: BoundingBoxType = BoundingBoxType.AABB,
 ) -> None:
     """
@@ -72,9 +73,12 @@ def add_bounding_boxes_to_layer(
         layer_id (int): layer to add bindings to
     """
     layer = graph.get_layer(layer_id)
-    depth = graph.get_layer_key(layer_id).layer - graph.get_layer_key(child_layer).layer
+    depth = layer.key.layer - graph.get_layer(child_layer).key.layer
     assert depth > 0
     for node in layer.nodes:
+        if not isinstance(node.attributes, SemanticNodeAttributes):
+            continue
+
         bbox = compute_ancestor_bounding_box(
             graph, node.id.value, depth=depth, bbox_type=bbox_type
         )
