@@ -337,10 +337,6 @@ class LayerHandle:
     def draw_nodes(self):
         return self.config.should_draw_nodes
 
-    @property
-    def color_mode(self):
-        return self._colormode
-
     def _draw_labels(self):
         self._label_handles = [
             self._server.add_label(x.name, x.text, position=x.pos) for x in self._labels

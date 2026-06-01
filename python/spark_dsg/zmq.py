@@ -2,15 +2,14 @@
 
 import threading
 import warnings
-from typing import Optional
 
 import zmq
 
 from spark_dsg._dsg_bindings import SceneGraph
 
 
-def _get_context(context: Optional[zmq.Context], num_threads: Optional[int]):
-    to_return = context or zmq.Context.instance()
+def _get_context(context: zmq.Context | None, num_threads: int | None):
+    to_return = zmq.Context.instance() if context is None else context
     if num_threads:
         to_return.set(zmq.IO_THREADS, num_threads)
 
@@ -23,8 +22,8 @@ class DsgSender:
     def __init__(
         self,
         url: str,
-        num_threads: Optional[int] = None,
-        context: Optional[zmq.Context] = None,
+        num_threads: int | None = None,
+        context: zmq.Context | None = None,
     ):
         """Initialize the ZMQ socket."""
         self._context = _get_context(context, num_threads)
@@ -42,9 +41,9 @@ class DsgReceiver:
     def __init__(
         self,
         url: str,
-        num_threads: Optional[int] = None,
+        num_threads: int | None = None,
         conflate: bool = True,
-        context: Optional[zmq.Context] = None,
+        context: zmq.Context | None = None,
     ):
         """Initialize the ZMQ socket."""
         self._context = _get_context(context, num_threads)
@@ -57,7 +56,7 @@ class DsgReceiver:
         if conflate:
             self._socket.setsockopt(zmq.CONFLATE, True)
 
-    def recv(self, timeout_ms: int, recv_all: Optional[bool] = None) -> bool:
+    def recv(self, timeout_ms: int, recv_all: bool | None = None) -> bool:
         """Receive a scene graph."""
         if recv_all is not None:
             warnings.warn(
@@ -92,9 +91,9 @@ class ZmqGraph:
     def __init__(
         self,
         url: str,
-        num_threads: Optional[int] = None,
+        num_threads: int | None = None,
         poll_time_ms: int = 100,
-        context: Optional[zmq.Context] = None,
+        context: zmq.Context | None = None,
     ):
         """Initialize a ZMQ-backed scene graph."""
         self._receiver = DsgReceiver(

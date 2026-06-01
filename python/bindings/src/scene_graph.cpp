@@ -246,7 +246,17 @@ void init_scene_graph(py::module_& m) {
           "mesh",
           [](const SceneGraph& graph) { return graph.mesh(); },
           [](SceneGraph& graph, const Mesh::Ptr& mesh) { graph.setMesh(mesh); })
-      .def("get_layer_key", &SceneGraph::getLayerKey, "name"_a)
+      .def(
+          "get_layer_key",
+          [](const SceneGraph& graph, const std::string& name) {
+            const auto key = graph.getLayerKey(name);
+            if (!key) {
+              throw std::out_of_range("Layer '" + name + "' does not exist");
+            }
+
+            return key.value();
+          },
+          "name"_a)
       .def("clone", &SceneGraph::clone_unique)
       .def("empty_like", &SceneGraph::empty_like)
       .def("update_from", &SceneGraph::updateFrom)
