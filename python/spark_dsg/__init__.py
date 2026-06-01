@@ -102,8 +102,8 @@ class Metadata:
         self._metadata._add(json.dumps(obj))
 
 
-def _hash_layerkey(key: LayerKey) -> int:
-    return hash((key.layer, key.partition))
+def _hash_layerkey(self) -> int:
+    return hash((self.layer, self.partition))
 
 
 def _get_layer_id(graph: SceneGraph, name: str) -> LayerKey:
