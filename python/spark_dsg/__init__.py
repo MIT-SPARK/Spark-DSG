@@ -86,7 +86,7 @@ def add_bounding_boxes_to_layer(
 
 
 class Metadata:
-    def __init__(self, metadata: _Metadata):
+    def __init__(self, metadata: _Metadata) -> None:
         self._metadata = metadata
 
     def get(self) -> types.MappingProxyType:
@@ -102,11 +102,11 @@ class Metadata:
         self._metadata._add(json.dumps(obj))
 
 
-def _hash_layerkey(key):
+def _hash_layerkey(key: LayerKey) -> int:
     return hash((key.layer, key.partition))
 
 
-def _get_layer_id(graph, name):
+def _get_layer_id(graph: SceneGraph, name: str) -> LayerKey:
     warnings.warn(
         "'get_layer_id' is deprecated. Please use 'get_layer_key'",
         DeprecationWarning,
@@ -115,17 +115,17 @@ def _get_layer_id(graph, name):
     return graph.get_layer_key(name)
 
 
-def _metadata(x) -> Metadata:
-    return x._metadata
+def _metadata(x: SceneGraph | NodeAttributes | EdgeAttributes) -> Metadata:
+    return Metadata(x._metadata)
 
 
 LayerKey.__hash__ = _hash_layerkey  # type: ignore[method-assign,assignment]
 
 SceneGraph.metadata = property(_metadata)  # type: ignore[assignment]
-NodeAttributes.metadata = property(_metadata)  # type: ignore[method-assign,assignment]
-EdgeAttributes.metadata = property(_metadata)  # type: ignore[method-assign,assignment]
+NodeAttributes.metadata = property(_metadata)  # type: ignore[assignment]
+EdgeAttributes.metadata = property(_metadata)  # type: ignore[assignment]
 
-SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign]
+SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign,assignment]
 SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign]
 SceneGraphLayer.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
 LayerView.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
