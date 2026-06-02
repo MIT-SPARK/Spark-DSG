@@ -7,6 +7,7 @@ import typing
 
 import numpy
 import numpy.typing
+import torch_geometric
 
 import spark_dsg
 
@@ -367,7 +368,7 @@ class LayerView:
             typing.Callable[[SceneGraphEdge], numpy.ndarray]
         ] = None,
         double_precision: bool = False,
-    ): ...
+    ) -> torch_geometric.data.Data: ...
     def connected_components(self) -> list[list[int]]: ...
     def find_edge(
         self, arg0: NodeSymbol | int, arg1: NodeSymbol | int
@@ -776,7 +777,7 @@ class SceneGraph:
         is_undirected: bool = True,
         double_precision: bool = False,
         layer_name_map: collections.abc.Mapping[int, str] | None = None,
-    ): ...
+    ) -> torch_geometric.data.Data: ...
     def __deepcopy__(self, arg0: typing.Any) -> SceneGraph: ...
     @typing.overload
     def __init__(self, empty: bool = False) -> None: ...
@@ -951,7 +952,7 @@ class SceneGraphLayer:
             typing.Callable[[SceneGraphEdge], numpy.ndarray]
         ] = None,
         double_precision: bool = False,
-    ): ...
+    ) -> torch_geometric.data.Data: ...
     @typing.overload
     def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None: ...
     @typing.overload

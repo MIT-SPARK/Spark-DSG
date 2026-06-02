@@ -42,7 +42,6 @@ homogeneous or heterogeneous conversion function.
 
 import importlib
 import types
-import warnings
 from collections.abc import Mapping
 from typing import Callable
 
@@ -69,7 +68,6 @@ torch = _optional_import("torch")
 torch_geometric = _optional_import("torch_geometric")
 
 
-GraphView = SceneGraph | SceneGraphLayer | LayerView
 NodeConversionFunc = Callable[[SceneGraphNode], np.ndarray]
 EdgeConversionFunc = Callable[[SceneGraphEdge], np.ndarray]
 
@@ -128,8 +126,7 @@ def scene_graph_layer_to_torch(
         Homogeneous pytorch_geometric graph representing the scene graph layer.
     """
     if not torch or not torch_geometric:
-        warnings.warn("torch and torch_geometric required for conversion")
-        return None
+        raise RuntimeError("torch and torch_geometric required for conversion")
 
     # output torch tensor data types
     dtype_float = torch.float64 if double_precision else torch.float32
@@ -197,8 +194,7 @@ def scene_graph_to_torch_homogeneous(
         Homogeneous pytorch_geometric graph representing the scene graph.
     """
     if not torch or not torch_geometric:
-        warnings.warn("torch and torch_geometric required for conversion")
-        return None
+        raise RuntimeError("torch and torch_geometric required for conversion")
 
     # output torch tensor data types
     if double_precision:
@@ -290,8 +286,7 @@ def scene_graph_to_torch_heterogeneous(
         Homogeneous pytorch_geometric graph representing the scene graph.
     """
     if not torch or not torch_geometric:
-        warnings.warn("torch and torch_geometric required for conversion")
-        return None
+        raise RuntimeError("torch and torch_geometric required for conversion")
 
     # output torch tensor data types
     if double_precision:

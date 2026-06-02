@@ -486,14 +486,14 @@ class MeshHandle:
             import trimesh
 
             vertices = mesh.get_vertices()
-            mesh = trimesh.Trimesh(
+            to_draw = trimesh.Trimesh(
                 vertices=vertices[:3, :].T,
                 faces=mesh.get_faces().T,
                 visual=trimesh.visual.ColorVisuals(vertex_colors=vertices[3:, :].T),
             )
 
             self._mesh_handle = server.scene.add_mesh_trimesh(
-                name="/mesh", mesh=mesh, cast_shadow=False, receive_shadow=False
+                name="/mesh", mesh=to_draw, cast_shadow=False, receive_shadow=False
             )
         except ImportError:
             warnings.warn("Missing [viz] deps (trimesh)! Reinstall with spark_dsg[viz]")
