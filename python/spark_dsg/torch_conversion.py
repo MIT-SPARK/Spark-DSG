@@ -42,6 +42,7 @@ homogeneous or heterogeneous conversion function.
 
 import importlib
 import types
+import warnings
 from collections.abc import Mapping
 from typing import Callable
 
@@ -127,6 +128,7 @@ def scene_graph_layer_to_torch(
         Homogeneous pytorch_geometric graph representing the scene graph layer.
     """
     if not torch or not torch_geometric:
+        warnings.warn("torch and torch_geometric required for conversion")
         return None
 
     # output torch tensor data types
@@ -195,6 +197,7 @@ def scene_graph_to_torch_homogeneous(
         Homogeneous pytorch_geometric graph representing the scene graph.
     """
     if not torch or not torch_geometric:
+        warnings.warn("torch and torch_geometric required for conversion")
         return None
 
     # output torch tensor data types
@@ -287,6 +290,7 @@ def scene_graph_to_torch_heterogeneous(
         Homogeneous pytorch_geometric graph representing the scene graph.
     """
     if not torch or not torch_geometric:
+        warnings.warn("torch and torch_geometric required for conversion")
         return None
 
     # output torch tensor data types
