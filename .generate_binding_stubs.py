@@ -10,11 +10,6 @@ QUIRKS = [
     (r"import datetime\n", "import datetime\nimport os\nimport torch_geometric\n", 0),
     (r": PartitionId", ": PartitionId | int", 0),
     (r": NodeSymbol", ": NodeSymbol | int", 0),
-    (
-        r"(@attributes\.setter\n.*?)\) -> NodeAttributes",
-        r"\1, attrs: NodeAttributes) -> None",
-        0,
-    ),
     (r"(\n    def str\(self,.*?:\n.*?\.\.\.)(.*?)(\nclass )", r"\2\1\3", re.DOTALL),
     (r"(def find_node\(.*-> )SceneGraphNode:", r"\1SceneGraphNode | None:", 0),
     (r"(def find_edge\(.*-> )SceneGraphEdge:", r"\1SceneGraphEdge | None:", 0),

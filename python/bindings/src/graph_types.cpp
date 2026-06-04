@@ -59,10 +59,11 @@ void init_graph_types(py::module_& m) {
       .def("parents", &SceneGraphNode::parents)
       .def("connections", &SceneGraphNode::connections)
       .def("children", &SceneGraphNode::children)
-      .def_property("attributes",
-                    &SceneGraphNode::tryAttributes<NodeAttributes>,
-                    &SceneGraphNode::tryAttributes<NodeAttributes>,
-                    py::return_value_policy::reference_internal)
+      .def_property(
+          "attributes",
+          &SceneGraphNode::tryAttributes<NodeAttributes>,
+          [](SceneGraphNode& node, const NodeAttributes& attrs) { node.setAttributes(attrs.clone()); },
+          py::return_value_policy::reference_internal)
       .def_property_readonly("id", [](const SceneGraphNode& node) { return NodeSymbol(node.id); })
       .def_readonly("layer", &SceneGraphNode::layer)
       .def("__repr__", [](const SceneGraphNode& node) {
