@@ -149,6 +149,8 @@ class SceneGraphNode {
     return dynamic_cast<Derived*>(attributes_.get());
   }
 
+  void setAttributes(std::unique_ptr<NodeAttributes>&& attrs);
+
   /**
    * @brief Estimate the memory usage of the node in bytes.
    */

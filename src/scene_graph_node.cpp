@@ -74,6 +74,10 @@ std::vector<NodeId> SceneGraphNode::connections() const {
   return to_return;
 }
 
+void SceneGraphNode::setAttributes(std::unique_ptr<NodeAttributes>&& attrs) {
+  attributes_ = std::move(attrs);
+}
+
 size_t SceneGraphNode::memoryUsage() const {
   size_t total_size = sizeof(SceneGraphNode);
   // Attributes size.
