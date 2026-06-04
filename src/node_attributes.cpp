@@ -867,6 +867,18 @@ NodeAttributes::Ptr PolygonPlaceNodeAttributes::clone() const {
   return std::make_unique<PolygonPlaceNodeAttributes>(*this);
 }
 
+void PolygonPlaceNodeAttributes::transform(const Eigen::Isometry3d& transform) {
+  // boundary transformation happens before the position transformation to get true z
+  for (size_t i = 0; i < boundary.size(); ++i) {
+    const auto point = boundary[i];
+    const Eigen::Vector3d to_transform(point.x(), point.y(), position.z());
+    const Eigen::Vector3d transformed = transform * to_transform;
+    boundary[i] = transformed.cast<float>().head<2>();
+  }
+
+  SemanticNodeAttributes::transform(transform);
+}
+
 std::ostream& PolygonPlaceNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
   out << "\n  - max_z: " << max_z;

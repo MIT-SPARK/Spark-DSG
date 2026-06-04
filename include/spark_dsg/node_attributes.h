@@ -582,6 +582,7 @@ struct PolygonPlaceNodeAttributes : public SemanticNodeAttributes {
   PolygonPlaceNodeAttributes();
   virtual ~PolygonPlaceNodeAttributes() = default;
   NodeAttributes::Ptr clone() const override;
+  void transform(const Eigen::Isometry3d& transform) override;
 
   //! Points forming polygonal boundary
   std::vector<Eigen::Vector2f> boundary;
