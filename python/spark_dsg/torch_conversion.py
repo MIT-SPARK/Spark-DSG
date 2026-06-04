@@ -41,7 +41,9 @@ homogeneous or heterogeneous conversion function.
 """
 
 import importlib
-from typing import Callable, Dict, Optional
+import types
+from collections.abc import Mapping
+from typing import Callable
 
 import numpy as np
 
@@ -54,24 +56,34 @@ from spark_dsg._dsg_bindings import (
     SemanticNodeAttributes,
 )
 
-GraphView = SceneGraph | SceneGraphLayer | LayerView
-NodeConversionFunc = Callable[[GraphView, SceneGraphNode], np.ndarray]
-EdgeConversionFunc = Callable[[GraphView, SceneGraphEdge], np.ndarray]
+
+def _optional_import(name: str) -> types.ModuleType | None:
+    try:
+        return importlib.import_module(name)
+    except ImportError:
+        return None
+
+
+torch = _optional_import("torch")
+torch_geometric = _optional_import("torch_geometric")
+
+
+NodeConversionFunc = Callable[[SceneGraphNode], np.ndarray]
+EdgeConversionFunc = Callable[[SceneGraphEdge], np.ndarray]
 
 
 DEFAULT_LAYER_MAP = {2: "objects", 3: "places", 4: "rooms", 5: "buildings"}
 
 
-def _centroid_bbx_embedding(G, x) -> np.ndarray:
-    return np.hstack(
-        (
-            x.attributes.position,
-            x.attributes.bounding_box.dimensions,
-        )
-    )
+def _centroid_bbx_embedding(node: SceneGraphNode) -> np.ndarray:
+    attrs = node.attributes
+    if isinstance(attrs, SemanticNodeAttributes):
+        return np.hstack((attrs.position, attrs.bounding_box.dimensions))
+
+    return np.hstack((attrs.position, np.zeros(3)))
 
 
-def _get_edge_name_map(layer_name_map: Dict[int, str], force_hierarchy: bool = True):
+def _get_edge_name_map(layer_name_map: Mapping[int, str], force_hierarchy: bool = True):
     edge_name_map = {}
 
     def _get_edge_name(l1, l2, n1, n2):
@@ -88,22 +100,6 @@ def _get_edge_name_map(layer_name_map: Dict[int, str], force_hierarchy: bool = T
     return edge_name_map
 
 
-def _get_torch():
-    torch = None
-    torch_geometric = None
-    try:
-        torch = importlib.import_module("torch")
-    except ImportError:
-        raise ValueError("pytorch not found. conversion disabled")
-
-    try:
-        torch_geometric = importlib.import_module("torch_geometric")
-    except ImportError:
-        raise ValueError("pytorch geometric not found. conversion disabled")
-
-    return torch, torch_geometric
-
-
 def _get_directed_edge(G, edge, id_map):
     if G.get_node(edge.source).layer < G.get_node(edge.target).layer:
         return id_map[edge.target], id_map[edge.source]
@@ -114,26 +110,24 @@ def _get_directed_edge(G, edge, id_map):
 def scene_graph_layer_to_torch(
     G: SceneGraphLayer | LayerView,
     node_converter: NodeConversionFunc,
-    edge_converter: Optional[EdgeConversionFunc] = None,
+    edge_converter: EdgeConversionFunc | None = None,
     double_precision: bool = False,
 ):
     """
     Convert a scene graph layer to a homogeneous pytorch geometric data structure.
 
     Args:
-        G: scene graph layer to convert
-        node_converter: function to generate input node features
-        edge_converter: optional function to generate input edge features
-        double_precision: whether or not output data attributes have double precision.
-
-    Raises:
-        ValueError: If pytorch geometric can't be found for the conversion
+        G: Scene graph layer to convert
+        node_converter: Function to generate input node features
+        edge_converter: Optional function to generate input edge features
+        double_precision: Whether or not output data attributes have double precision.
 
     Returns:
-        pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
-            scene graph layer.
+        Homogeneous pytorch_geometric graph representing the scene graph layer.
     """
-    torch, torch_geometric = _get_torch()
+    if not torch or not torch_geometric:
+        raise RuntimeError("torch and torch_geometric required for conversion")
+
     # output torch tensor data types
     dtype_float = torch.float64 if double_precision else torch.float32
 
@@ -148,7 +142,7 @@ def scene_graph_layer_to_torch(
         node_positions[idx, :] = torch.tensor(
             np.squeeze(node.attributes.position), dtype=dtype_float
         )
-        node_features.append(node_converter(G, node))
+        node_features.append(node_converter(node))
         id_map[node.id.value] = idx
 
     node_features = torch.tensor(np.array(node_features), dtype=dtype_float)
@@ -157,9 +151,8 @@ def scene_graph_layer_to_torch(
     edge_features = []
     for idx, edge in enumerate(G.edges):
         edge_index[:, idx] = torch.tensor(_get_directed_edge(G, edge, id_map))
-
         if edge_converter is not None:
-            edge_features.append(edge_converter(G, edge))
+            edge_features.append(edge_converter(edge))
 
     if edge_converter is not None:
         edge_features = torch.tensor(np.array(edge_features), dtype=dtype_float)
@@ -182,31 +175,26 @@ def scene_graph_layer_to_torch(
 
 def scene_graph_to_torch_homogeneous(
     G: SceneGraph,
-    node_converter: NodeConversionFunc = _centroid_bbx_embedding,
-    edge_converter: Optional[EdgeConversionFunc] = None,
+    node_converter: NodeConversionFunc,
+    edge_converter: EdgeConversionFunc | None = None,
     is_undirected: bool = True,
     double_precision: bool = False,
-    **kwargs,
 ):
     """
     Convert a scene graph to a homogeneous pytorch geometric data structure.
 
     Args:
-        G: scene graph to convert
-        node_converter: function to generate input node features
-        edge_converter: optional function to generate input edge features
-        is_undirected: whether or not the graph should be treated as undirected
-        double_precision: whether or not output data attributes have double precision.
-        **kargs: absorbing keyword arguments for heterogeneous conversion arguments
-
-    Raises:
-        ValueError: If pytorch geometric can't be found for the conversion
+        G: Scene graph to convert
+        node_converter: Function to generate input node features
+        edge_converter: Optional function to generate input edge features
+        is_undirected: Whether or not the graph should be treated as undirected
+        double_precision: Whether or not output data attributes have double precision.
 
     Returns:
-        pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
-            scene graph.
+        Homogeneous pytorch_geometric graph representing the scene graph.
     """
-    torch, torch_geometric = _get_torch()
+    if not torch or not torch_geometric:
+        raise RuntimeError("torch and torch_geometric required for conversion")
 
     # output torch tensor data types
     if double_precision:
@@ -232,7 +220,7 @@ def scene_graph_to_torch_homogeneous(
         node_positions[idx, :] = torch.tensor(
             np.squeeze(node.attributes.position), dtype=dtype_float
         )
-        node_features.append(node_converter(G, node))
+        node_features.append(node_converter(node))
         id_map[node.id.value] = idx
         node_ids.append(node.id.value)
         if isinstance(node.attributes, SemanticNodeAttributes):
@@ -248,9 +236,8 @@ def scene_graph_to_torch_homogeneous(
     edge_features = []
     for idx, edge in enumerate(G.unpartitioned_edges):
         edge_index[:, idx] = torch.tensor(_get_directed_edge(G, edge, id_map))
-
         if edge_converter is not None:
-            edge_features.append(edge_converter(G, edge))
+            edge_features.append(edge_converter(edge))
 
     if edge_converter is not None:
         edge_features = torch.tensor(np.array(edge_features), dtype=dtype_float)
@@ -278,33 +265,28 @@ def scene_graph_to_torch_homogeneous(
 
 def scene_graph_to_torch_heterogeneous(
     G: SceneGraph,
-    node_converter: NodeConversionFunc = _centroid_bbx_embedding,
-    edge_converter: Optional[EdgeConversionFunc] = None,
-    layer_name_map: Optional[Dict[int, str]] = None,
+    node_converter: NodeConversionFunc,
+    edge_converter: EdgeConversionFunc | None = None,
+    layer_name_map: Mapping[int, str] | None = None,
     is_undirected: bool = True,
     double_precision: bool = False,
-    **kwargs,
 ):
     """
     Convert a scene graph to a homogeneous pytorch geometric data structure.
 
     Args:
-        G: scene graph to convert
-        node_converter: function to generate input node features
-        edge_converter: optional function to generate input edge features
-        layer_name_map: optional map between layer ids and names.
-        is_undirected: whether or not the graph is undirected.
-        double_precision: whether or not output data attributes have double precision.
-        **kwargs: absorbing keyword arguments for homogeneous conversion arguments
-
-    Raises:
-        ValueError: If pytorch geometric can't be found for the conversion
+        G: Scene graph to convert
+        node_converter: Function to generate input node features
+        edge_converter: Optional function to generate input edge features
+        layer_name_map: Optional map between layer ids and names.
+        is_undirected: Whether or not the graph is undirected.
+        double_precision: Whether or not output data attributes have double precision.
 
     Returns:
-        pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
-            scene graph.
+        Homogeneous pytorch_geometric graph representing the scene graph.
     """
-    torch, torch_geometric = _get_torch()
+    if not torch or not torch_geometric:
+        raise RuntimeError("torch and torch_geometric required for conversion")
 
     # output torch tensor data types
     if double_precision:
@@ -339,7 +321,7 @@ def scene_graph_to_torch_heterogeneous(
 
         idx = len(node_features[layer_id])
         node_positions[layer_id].append(np.squeeze(node.attributes.position))
-        node_features[layer_id].append(node_converter(G, node))
+        node_features[layer_id].append(node_converter(node))
         if isinstance(node.attributes, SemanticNodeAttributes):
             node_labels[layer_id].append(node.attributes.semantic_label)
         else:
@@ -373,7 +355,7 @@ def scene_graph_to_torch_heterogeneous(
 
         edge_indices[edge_type].append(_get_directed_edge(G, edge, id_map))
         if edge_converter is not None:
-            edge_features[edge_type].append(edge_converter(G, edge))
+            edge_features[edge_type].append(edge_converter(edge))
 
     for edge_type in edge_indices:
         source_type, target_type = edge_type_map[edge_type]
@@ -400,28 +382,43 @@ def scene_graph_to_torch_heterogeneous(
 
 
 def scene_graph_to_torch(
-    G: SceneGraph, *args, use_heterogeneous: bool = True, **kwargs
+    G: SceneGraph,
+    node_converter: NodeConversionFunc | None = None,
+    use_heterogeneous: bool = True,
+    edge_converter: EdgeConversionFunc | None = None,
+    is_undirected: bool = True,
+    double_precision: bool = False,
+    layer_name_map: Mapping[int, str] | None = None,
 ):
     """
     Convert a scene graph to a pytorch geometric graph.
 
     Args:
-        G: scene graph to convert
-        *args: All positional arguments for scene_graph_to_torch_homogeneous or
-               scene_graph_to_torch_heterogeneous
-        use_heterogeneous: Whether or not to use a heterogeneous pytorch geometric graph
-            structure
-        **kwargs: All arguments for scene_graph_to_torch_homogeneous or
-                  scene_graph_to_torch_heterogeneous
-
-    Raises:
-        ValueError: If pytorch geometric can't be found for the conversion
+        G: Scene graph to convert
+        node_converter: Conversion function that constructs node features
+        use_heterogeneous: Whether or not to use a heterogeneous structure
+        edge_converter: Optional conversion function that constructs edge features
+        is_undirected: Whether or not edges should be treated as undirected
+        double_precision: Whether or not to use single or double precision
+        layer_name_map: Optional map between layer ids and names for heterogeneous data
 
     Returns:
-        Union[pytorch_geometric.HeteroData, pytorch_geometric.Data]: pytorch geometric
-            data representing the scene graph depending on use_heterogeneous.
+        Data representing the scene graph.
     """
     if use_heterogeneous:
-        return scene_graph_to_torch_heterogeneous(G, *args, **kwargs)
+        return scene_graph_to_torch_heterogeneous(
+            G,
+            node_converter=node_converter or _centroid_bbx_embedding,
+            edge_converter=edge_converter,
+            is_undirected=is_undirected,
+            double_precision=double_precision,
+            layer_name_map=layer_name_map,
+        )
     else:
-        return scene_graph_to_torch_homogeneous(G, *args, **kwargs)
+        return scene_graph_to_torch_homogeneous(
+            G,
+            node_converter=node_converter or _centroid_bbx_embedding,
+            edge_converter=edge_converter,
+            is_undirected=is_undirected,
+            double_precision=double_precision,
+        )

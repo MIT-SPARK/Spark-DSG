@@ -49,6 +49,7 @@ from spark_dsg._dsg_bindings import (
     NodeAttributes,
     SceneGraph,
     SceneGraphLayer,
+    SemanticNodeAttributes,
     _Metadata,
     compute_ancestor_bounding_box,
 )
@@ -56,8 +57,11 @@ from spark_dsg.torch_conversion import scene_graph_layer_to_torch, scene_graph_t
 
 
 def add_bounding_boxes_to_layer(
-    graph, layer_id, child_layer=DsgLayers.PLACES, bbox_type=BoundingBoxType.AABB
-):
+    graph: SceneGraph,
+    layer_id: str | int,
+    child_layer: str | int = DsgLayers.PLACES,
+    bbox_type: BoundingBoxType = BoundingBoxType.AABB,
+) -> None:
     """
     Add computed bounding boxes to the node attributes in the graph.
 
@@ -69,9 +73,12 @@ def add_bounding_boxes_to_layer(
         layer_id (int): layer to add bindings to
     """
     layer = graph.get_layer(layer_id)
-    depth = graph.get_layer_key(layer_id).layer - graph.get_layer_key(child_layer).layer
+    depth = layer.key.layer - graph.get_layer(child_layer).key.layer
     assert depth > 0
     for node in layer.nodes:
+        if not isinstance(node.attributes, SemanticNodeAttributes):
+            continue
+
         bbox = compute_ancestor_bounding_box(
             graph, node.id.value, depth=depth, bbox_type=bbox_type
         )
@@ -79,7 +86,7 @@ def add_bounding_boxes_to_layer(
 
 
 class Metadata:
-    def __init__(self, metadata: _Metadata):
+    def __init__(self, metadata: _Metadata) -> None:
         self._metadata = metadata
 
     def get(self) -> types.MappingProxyType:
@@ -95,11 +102,11 @@ class Metadata:
         self._metadata._add(json.dumps(obj))
 
 
-def _hash_layerkey(key):
-    return hash((key.layer, key.partition))
+def _hash_layerkey(self) -> int:
+    return hash((self.layer, self.partition))
 
 
-def _get_layer_id(graph, name):
+def _get_layer_id(graph: SceneGraph, name: str) -> LayerKey:
     warnings.warn(
         "'get_layer_id' is deprecated. Please use 'get_layer_key'",
         DeprecationWarning,
@@ -108,14 +115,18 @@ def _get_layer_id(graph, name):
     return graph.get_layer_key(name)
 
 
+def _metadata(x: SceneGraph | NodeAttributes | EdgeAttributes) -> Metadata:
+    return Metadata(x._metadata)
+
+
 LayerKey.__hash__ = _hash_layerkey  # type: ignore[method-assign,assignment]
 
-SceneGraph.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
-NodeAttributes.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
-EdgeAttributes.metadata = property(lambda x: Metadata(x._metadata))  # type: ignore[method-assign,assignment]
+SceneGraph.metadata = property(_metadata)  # type: ignore[assignment]
+NodeAttributes.metadata = property(_metadata)  # type: ignore[assignment]
+EdgeAttributes.metadata = property(_metadata)  # type: ignore[assignment]
 
-SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign]
-SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign]
+SceneGraph.get_layer_id = _get_layer_id  # type: ignore[method-assign,assignment]
+SceneGraph.to_torch = scene_graph_to_torch  # type: ignore[method-assign,assignment]
 SceneGraphLayer.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
 LayerView.to_torch = scene_graph_layer_to_torch  # type: ignore[method-assign,assignment]
 

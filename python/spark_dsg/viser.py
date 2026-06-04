@@ -3,6 +3,7 @@
 import enum
 import functools
 import itertools
+import typing
 import warnings
 from dataclasses import dataclass
 
@@ -23,29 +24,37 @@ class ColorMode(enum.Enum):
     PARENT = "parent"
 
 
-def _layer_name(layer_key):
+def _layer_name(layer_key: dsg.LayerKey) -> str:
     return f"layer_{layer_key.layer}p{layer_key.partition}"
 
 
-def color_from_label(G, node, default=None):
+def color_from_label(
+    G: dsg.SceneGraph, node: dsg.SceneGraphNode, default: dsg.Color | None = None
+) -> dsg.Color:
     if not isinstance(node.attributes, dsg.SemanticNodeAttributes):
         return default or dsg.Color()
 
     return dsg.distinct_150_color(node.attributes.semantic_label)
 
 
-def color_from_id(G, node):
+def color_from_id(G: dsg.SceneGraph, node: dsg.SceneGraphNode) -> dsg.Color:
     return dsg.colorbrewer_color(node.id.category_id)
 
 
-def color_from_parent(G, node, parent_func, default=None):
-    if not node.has_parent():
+def color_from_parent(
+    G: dsg.SceneGraph,
+    node: dsg.SceneGraphNode,
+    parent_func: typing.Callable[[dsg.SceneGraph, dsg.SceneGraphNode], dsg.Color],
+    default: dsg.Color | None = None,
+) -> dsg.Color:
+    parent = node.get_parent()
+    if parent is None:
         return default or dsg.Color()
 
-    return parent_func(G, G.get_node(node.get_parent()))
+    return parent_func(G, G.get_node(parent))
 
 
-def color_from_layer(G, node):
+def color_from_layer(G: dsg.SceneGraph, node: dsg.SceneGraphNode) -> dsg.Color:
     return dsg.rainbow_color(node.layer.layer)
 
 
@@ -70,7 +79,7 @@ def colormap_from_modes(key_to_mode, default_colors=None):
 
 
 class FlatGraphView:
-    def __init__(self, G):
+    def __init__(self, G: dsg.SceneGraph) -> None:
         self._pos = {}
         self._lookup = {}
         self._edges = {}
@@ -148,7 +157,7 @@ class LayerConfig:
     draw_edges: bool = True
     draw_interlayer: bool = True
 
-    def init(self, server):
+    def init(self, server) -> None:
         """Set up config with viser server."""
         self._node_scale = server.add_number("Node Scale", self.node_scale)
         self._edge_scale = server.add_number("Edge Scale", self.edge_scale)
@@ -161,7 +170,7 @@ class LayerConfig:
             "Interlayer Edges", self.draw_interlayer
         )
 
-    def set_callback(self, callback):
+    def set_callback(self, callback: typing.Callable) -> None:
         self._node_scale.on_update(lambda _: callback())
         self._edge_scale.on_update(lambda _: callback())
         self._box_width.on_update(lambda _: callback())
@@ -171,7 +180,7 @@ class LayerConfig:
         self._draw_edges.on_update(lambda _: callback())
         self._draw_interlayer.on_update(lambda _: callback())
 
-    def remove(self):
+    def remove(self) -> None:
         self._draw_nodes.remove()
         self._draw_boxes.remove()
         self._draw_labels.remove()
@@ -181,35 +190,35 @@ class LayerConfig:
         self._draw_interlayer.remove()
 
     @property
-    def should_draw_nodes(self):
+    def should_draw_nodes(self) -> bool:
         return self._draw_nodes.value
 
     @property
-    def should_draw_edges(self):
+    def should_draw_edges(self) -> bool:
         return self._draw_nodes.value and self._draw_edges.value
 
     @property
-    def should_draw_interlayer(self):
+    def should_draw_interlayer(self) -> bool:
         return self._draw_nodes.value and self._draw_interlayer.value
 
     @property
-    def should_draw_labels(self):
+    def should_draw_labels(self) -> bool:
         return self._draw_nodes.value and self._draw_labels.value
 
     @property
-    def should_draw_boxes(self):
+    def should_draw_boxes(self) -> bool:
         return self._draw_nodes.value and self._draw_boxes.value
 
     @property
-    def current_node_scale(self):
+    def current_node_scale(self) -> float:
         return self._node_scale.value
 
     @property
-    def current_edge_scale(self):
+    def current_edge_scale(self) -> float:
         return self._edge_scale.value
 
     @property
-    def current_box_width(self):
+    def current_box_width(self) -> float:
         return self._box_width.value
 
 
@@ -293,7 +302,7 @@ class LayerHandle:
 
     def __init__(
         self, server, config, colormap, height, G, layer, view, parent_callback
-    ):
+    ) -> None:
         """Add options for layer to viser."""
         self.key = layer.key
         self.name = _layer_name(layer.key)
@@ -334,25 +343,21 @@ class LayerHandle:
         self.config.set_callback(self._update)
 
     @property
-    def draw_nodes(self):
+    def draw_nodes(self) -> bool:
         return self.config.should_draw_nodes
 
-    @property
-    def color_mode(self):
-        return self._colormode
-
-    def _draw_labels(self):
+    def _draw_labels(self) -> None:
         self._label_handles = [
             self._server.add_label(x.name, x.text, position=x.pos) for x in self._labels
         ]
 
-    def _remove_labels(self):
+    def _remove_labels(self) -> None:
         for x in self._label_handles:
             x.remove()
 
         self._label_handles = []
 
-    def _update(self):
+    def _update(self) -> None:
         if self._nodes:
             self._nodes.visible = self.config.should_draw_nodes
             self._nodes.point_size = self.config.current_node_scale
@@ -374,7 +379,7 @@ class LayerHandle:
 
         self._parent_callback()
 
-    def remove(self):
+    def remove(self) -> None:
         if self._nodes:
             self._nodes.remove()
 
@@ -392,7 +397,7 @@ class LayerHandle:
 class GraphHandle:
     """Visualization handles for a scene graph."""
 
-    def __init__(self, server, G, height_scale=5.0):
+    def __init__(self, server, G: dsg.SceneGraph, height_scale: float = 5.0) -> None:
         """Draw a scene graph in the visualizer."""
         self._handles = {}
         self._edge_handles = {}
@@ -445,7 +450,7 @@ class GraphHandle:
         self._update()
         self._edge_scale.on_update(lambda _: self._update())
 
-    def remove(self):
+    def remove(self) -> None:
         """Remove graph elements from the visualizer."""
         self._edge_scale.remove()
         for _, handle in self._handles.items():
@@ -459,10 +464,10 @@ class GraphHandle:
 
         self._edge_handles = {}
 
-    def _layer_height(self, layer_key):
+    def _layer_height(self, layer_key: dsg.LayerKey) -> float:
         return self._height_scale * layer_key.layer
 
-    def _update(self):
+    def _update(self) -> None:
         for source_key, targets in self._edge_handles.items():
             for target_key, handle in targets.items():
                 handle.visible = (
@@ -475,26 +480,26 @@ class GraphHandle:
 class MeshHandle:
     """Visualizer handle for mesh elements."""
 
-    def __init__(self, server, mesh):
+    def __init__(self, server, mesh: dsg.Mesh) -> None:
         """Send a mesh to the visualizer."""
         try:
             import trimesh
 
             vertices = mesh.get_vertices()
-            mesh = trimesh.Trimesh(
+            to_draw = trimesh.Trimesh(
                 vertices=vertices[:3, :].T,
                 faces=mesh.get_faces().T,
                 visual=trimesh.visual.ColorVisuals(vertex_colors=vertices[3:, :].T),
             )
 
             self._mesh_handle = server.scene.add_mesh_trimesh(
-                name="/mesh", mesh=mesh, cast_shadow=False, receive_shadow=False
+                name="/mesh", mesh=to_draw, cast_shadow=False, receive_shadow=False
             )
         except ImportError:
             warnings.warn("Missing [viz] deps (trimesh)! Reinstall with spark_dsg[viz]")
             self._mesh_handle = None
 
-    def remove(self):
+    def remove(self) -> None:
         """Remove mesh elements from the visualizer."""
         if self._mesh_handle is not None:
             self._mesh_handle.remove()
@@ -505,7 +510,7 @@ class ViserRenderer:
 
     def __init__(
         self, ip: str = "localhost", port: int = 8080, clear_at_exit: bool = True
-    ):
+    ) -> None:
         """
         Construct a handle to a viser server used for drawing a scene graph.
 
@@ -528,7 +533,7 @@ class ViserRenderer:
             warnings.warn("Missing [viz] deps (viser)! Reinstall with spark_dsg[viz]")
             self._server = None
 
-    def __enter__(self):
+    def __enter__(self) -> typing.Self:
         """Enable context manager for clearing viser client on exit from renderer scope."""
         return self
 
@@ -540,7 +545,7 @@ class ViserRenderer:
 
         return True
 
-    def draw(self, G: dsg.SceneGraph, height_scale: float = 2.0):
+    def draw(self, G: dsg.SceneGraph, height_scale: float = 2.0) -> None:
         """
         Render a scene graph to viser (requires [viz] extra).
 
@@ -557,7 +562,7 @@ class ViserRenderer:
         if G.has_mesh():
             self.draw_mesh(G.mesh)
 
-    def draw_mesh(self, mesh):
+    def draw_mesh(self, mesh: dsg.Mesh) -> None:
         """
         Render a mesh to viser (requires [viz] extra).
 
@@ -571,7 +576,7 @@ class ViserRenderer:
         self._clear_mesh()
         self._mesh_handle = MeshHandle(self._server, mesh)
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove all graph and mesh elements from the visualizer."""
         if self._server is None:
             warnings.warn("Visualization disabled because of missing deps!")
@@ -580,12 +585,12 @@ class ViserRenderer:
         self._clear_mesh()
         self._clear_graph()
 
-    def _clear_mesh(self):
+    def _clear_mesh(self) -> None:
         if self._mesh_handle:
             self._mesh_handle.remove()
             self._mesh_handle = None
 
-    def _clear_graph(self):
+    def _clear_graph(self) -> None:
         if self._graph_handle:
             self._graph_handle.remove()
             self._graph_handle = None

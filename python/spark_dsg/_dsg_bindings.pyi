@@ -7,6 +7,9 @@ import typing
 
 import numpy
 import numpy.typing
+import torch_geometric
+
+import spark_dsg
 
 __all__: list[str] = [
     "AgentNodeAttributes",
@@ -198,18 +201,6 @@ class BoundingBox:
     ) -> None: ...
 
 class BoundingBoxType:
-    """
-    Members:
-
-      INVALID
-
-      AABB
-
-      OBB
-
-      RAABB
-    """
-
     AABB: typing.ClassVar[BoundingBoxType]  # value = <BoundingBoxType.AABB: 1>
     INVALID: typing.ClassVar[BoundingBoxType]  # value = <BoundingBoxType.INVALID: 0>
     OBB: typing.ClassVar[BoundingBoxType]  # value = <BoundingBoxType.OBB: 2>
@@ -298,7 +289,7 @@ class EdgeAttributes:
     def __deepcopy__(self, memo: dict) -> EdgeAttributes: ...
     def __init__(self) -> None: ...
     @property
-    def metadata(self): ...
+    def metadata(self) -> spark_dsg.Metadata: ...
     @property
     def weight(self) -> float: ...
     @weight.setter
@@ -348,10 +339,9 @@ class Labelspace:
     def names_to_labels(self) -> dict[str, int]: ...
 
 class LayerKey:
-    @staticmethod
-    def __hash__(key): ...
     def __eq__(self, arg0: typing.Any) -> bool: ...
     def __gt__(self, arg0: LayerKey) -> bool: ...
+    def __hash__(self) -> int: ...
     @typing.overload
     def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None: ...
     @typing.overload
@@ -371,35 +361,12 @@ class LayerKey:
     def partition(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None: ...
 
 class LayerView:
-    @staticmethod
     def to_torch(
-        G: SceneGraphLayer | LayerView,
-        node_converter: typing.Callable[
-            [SceneGraph | SceneGraphLayer | LayerView, SceneGraphNode], numpy.ndarray
-        ],
-        edge_converter: typing.Callable[
-            [SceneGraph | SceneGraphLayer | LayerView, SceneGraphEdge], numpy.ndarray
-        ]
-        | None = None,
+        self,
+        node_converter: typing.Callable[[SceneGraphNode], numpy.ndarray],
+        edge_converter: typing.Callable[[SceneGraphEdge], numpy.ndarray] | None = None,
         double_precision: bool = False,
-    ):
-        """
-
-        Convert a scene graph layer to a homogeneous pytorch geometric data structure.
-
-        Args:
-            G: scene graph layer to convert
-            node_converter: function to generate input node features
-            edge_converter: optional function to generate input edge features
-            double_precision: whether or not output data attributes have double precision.
-
-        Raises:
-            ValueError: If pytorch geometric can't be found for the conversion
-
-        Returns:
-            pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
-                scene graph layer.
-        """
+    ) -> torch_geometric.data.Data: ...
     def connected_components(self) -> list[list[int]]: ...
     def find_edge(
         self, arg0: NodeSymbol | int, arg1: NodeSymbol | int
@@ -436,7 +403,7 @@ class Mesh:
     @staticmethod
     def from_json(arg0: str) -> Mesh: ...
     @staticmethod
-    def load(arg0: os.PathLike | str | bytes) -> Mesh: ...
+    def load(arg0: os.PathLike[str] | str | bytes) -> Mesh: ...
     def __iadd__(self, arg0: Mesh) -> Mesh: ...
     def __init__(
         self,
@@ -485,7 +452,7 @@ class Mesh:
     def resize_vertices(
         self, arg0: typing.SupportsInt | typing.SupportsIndex
     ) -> None: ...
-    def save(self, arg0: os.PathLike | str | bytes) -> None: ...
+    def save(self, arg0: os.PathLike[str] | str | bytes) -> None: ...
     def set_color(
         self, arg0: typing.SupportsInt | typing.SupportsIndex, arg1: Color
     ) -> None: ...
@@ -582,7 +549,7 @@ class NodeAttributes:
         self, arg0: typing.SupportsInt | typing.SupportsIndex
     ) -> None: ...
     @property
-    def metadata(self): ...
+    def metadata(self) -> spark_dsg.Metadata: ...
     @property
     def position(
         self,
@@ -793,31 +760,18 @@ class SceneGraph:
     @staticmethod
     def from_binary(arg0: bytes) -> SceneGraph: ...
     @staticmethod
-    def get_layer_id(graph, name): ...
+    def get_layer_id(graph: SceneGraph, name: str) -> LayerKey: ...
     @staticmethod
-    def load(arg0: os.PathLike | str | bytes) -> SceneGraph: ...
-    @staticmethod
-    def to_torch(G: SceneGraph, *args, use_heterogeneous: bool = True, **kwargs):
-        """
-
-        Convert a scene graph to a pytorch geometric graph.
-
-        Args:
-            G: scene graph to convert
-            *args: All positional arguments for scene_graph_to_torch_homogeneous or
-                   scene_graph_to_torch_heterogeneous
-            use_heterogeneous: Whether or not to use a heterogeneous pytorch geometric graph
-                structure
-            **kwargs: All arguments for scene_graph_to_torch_homogeneous or
-                      scene_graph_to_torch_heterogeneous
-
-        Raises:
-            ValueError: If pytorch geometric can't be found for the conversion
-
-        Returns:
-            Union[pytorch_geometric.HeteroData, pytorch_geometric.Data]: pytorch geometric
-                data representing the scene graph depending on use_heterogeneous.
-        """
+    def load(arg0: os.PathLike[str] | str | bytes) -> SceneGraph: ...
+    def to_torch(
+        self,
+        node_converter: typing.Callable[[SceneGraphNode], numpy.ndarray] | None = None,
+        use_heterogeneous: bool = True,
+        edge_converter: typing.Callable[[SceneGraphEdge], numpy.ndarray] | None = None,
+        is_undirected: bool = True,
+        double_precision: bool = False,
+        layer_name_map: collections.abc.Mapping[int, str] | None = None,
+    ) -> torch_geometric.data.Data: ...
     def __deepcopy__(self, arg0: typing.Any) -> SceneGraph: ...
     @typing.overload
     def __init__(self, empty: bool = False) -> None: ...
@@ -879,7 +833,7 @@ class SceneGraph:
     ) -> LayerView: ...
     @typing.overload
     def get_layer(self, layer: str) -> LayerView: ...
-    def get_layer_key(self, name: str) -> LayerKey | None: ...
+    def get_layer_key(self, name: str) -> LayerKey: ...
     def get_node(self, arg0: NodeSymbol | int) -> SceneGraphNode: ...
     def get_position(
         self, arg0: typing.SupportsInt | typing.SupportsIndex
@@ -926,7 +880,7 @@ class SceneGraph:
         arg1: collections.abc.Mapping[str, LayerKey],
     ) -> None: ...
     def save(
-        self, filepath: os.PathLike | str | bytes, include_mesh: bool = True
+        self, filepath: os.PathLike[str] | str | bytes, include_mesh: bool = True
     ) -> None: ...
     @typing.overload
     def set_labelspace(
@@ -964,7 +918,7 @@ class SceneGraph:
     @property
     def layers(self) -> collections.abc.Iterator[LayerView]: ...
     @property
-    def metadata(self): ...
+    def metadata(self) -> spark_dsg.Metadata: ...
     @property
     def node_lookup(self) -> dict[int, LayerKey]: ...
     @property
@@ -985,35 +939,12 @@ class SceneGraphEdge:
 class SceneGraphLayer:
     @staticmethod
     def from_binary(arg0: bytes) -> SceneGraphLayer: ...
-    @staticmethod
     def to_torch(
-        G: SceneGraphLayer | LayerView,
-        node_converter: typing.Callable[
-            [SceneGraph | SceneGraphLayer | LayerView, SceneGraphNode], numpy.ndarray
-        ],
-        edge_converter: typing.Callable[
-            [SceneGraph | SceneGraphLayer | LayerView, SceneGraphEdge], numpy.ndarray
-        ]
-        | None = None,
+        self,
+        node_converter: typing.Callable[[SceneGraphNode], numpy.ndarray],
+        edge_converter: typing.Callable[[SceneGraphEdge], numpy.ndarray] | None = None,
         double_precision: bool = False,
-    ):
-        """
-
-        Convert a scene graph layer to a homogeneous pytorch geometric data structure.
-
-        Args:
-            G: scene graph layer to convert
-            node_converter: function to generate input node features
-            edge_converter: optional function to generate input edge features
-            double_precision: whether or not output data attributes have double precision.
-
-        Raises:
-            ValueError: If pytorch geometric can't be found for the conversion
-
-        Returns:
-            pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
-                scene graph layer.
-        """
+    ) -> torch_geometric.data.Data: ...
     @typing.overload
     def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None: ...
     @typing.overload
@@ -1082,7 +1013,7 @@ class SceneGraphNode:
     @property
     def attributes(self) -> NodeAttributes: ...
     @attributes.setter
-    def attributes(self, NodeAttributes): ...
+    def attributes(self, attrs: NodeAttributes) -> None: ...
     @property
     def id(self) -> NodeSymbol: ...
     @property
@@ -1181,18 +1112,6 @@ class TraversabilityNodeAttributes(NodeAttributes):
     ) -> None: ...
 
 class TraversabilityState:
-    """
-    Members:
-
-      UNKNOWN
-
-      TRAVERSABLE
-
-      INTRAVERSABLE
-
-      TRAVERSED
-    """
-
     INTRAVERSABLE: typing.ClassVar[
         TraversabilityState
     ]  # value = <TraversabilityState.INTRAVERSABLE: 2>

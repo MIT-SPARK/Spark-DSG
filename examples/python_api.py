@@ -63,18 +63,12 @@ path_to_dsg = pathlib.Path(path_to_dsg).expanduser().absolute()
 G = dsg.SceneGraph.load(str(path_to_dsg))
 
 
-# %%
-fig = dsg.plot_scene_graph(G)
-if fig is not None:
-    fig.show(renderer="notebook")
-
-
 # %% [markdown]
 # ## Node Access and Node Attributes
 
 
 # %%
-def print_node_if_exists(node_id):
+def print_node_if_exists(node_id: dsg.NodeSymbol) -> None:
     """Grab node attributes and display if the graph contains the node."""
     test_str = "yes" if G.has_node(node_id.value) else "no"
     print(f"Graph contains node {node_id}: {test_str}")
@@ -111,6 +105,7 @@ print_node_if_exists(dsg.NodeSymbol("a", 5))
 print("Layers:")
 for layer in G.layers:
     print(f"  - {layer.id}")
+
 print("")
 
 # %%
@@ -128,7 +123,7 @@ print("")
 # ## Interlayer Edge Access
 
 # %%
-layer_edge_counts = {}
+layer_edge_counts: dict[dsg.LayerKey, dict[dsg.LayerKey, int]] = {}
 for edge in G.interlayer_edges:
     source_layer = G.get_node(edge.source).layer
     target_layer = G.get_node(edge.target).layer
@@ -142,6 +137,7 @@ for edge in G.interlayer_edges:
 print("Interlayer Edges:")
 for source_layer in layer_edge_counts:
     print(f"  - {source_layer} -> {layer_edge_counts[source_layer]}")
+
 print("")
 
 
@@ -161,7 +157,7 @@ for category, count in node_type_counts.items():
     print(f"  - {category}: {count}")
 
 
-edge_counts = {}
+edge_counts: dict[dsg.LayerKey, dict[dsg.LayerKey, int]] = {}
 for edge in G.edges:
     source_layer = G.get_node(edge.source).layer
     target_layer = G.get_node(edge.target).layer
@@ -175,6 +171,7 @@ for edge in G.edges:
 print("All Edges:")
 for source_layer in edge_counts:
     print(f"  - {source_layer} -> {edge_counts[source_layer]}")
+
 print("")
 
 
@@ -185,6 +182,10 @@ print("")
 dsg.add_bounding_boxes_to_layer(G, dsg.DsgLayers.ROOMS)
 print("Room bounding boxes:")
 for node in G.get_layer(dsg.DsgLayers.ROOMS).nodes:
-    print(f"  - {node.id}: {node.attributes.bounding_box}")
+    attrs = node.attributes
+    if isinstance(attrs, dsg.SemanticNodeAttributes):
+        print(f"  - {node.id}: {attrs.bounding_box}")
+    else:
+        print(f"  - {node.id}: N/A")
 
 # %%

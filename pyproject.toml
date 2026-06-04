@@ -54,9 +54,6 @@ BUILD_SHARED_LIBS = "OFF"
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
 
-[tool.mypy]
-exclude = []
-
 [tool.coverage]
 run.omit = ["__main__.py", "*/commands/*"]
 
