@@ -95,10 +95,18 @@ void init_attributes(py::module_& m) {
       .def_readwrite("is_active", &NodeAttributes::is_active)
       .def_readwrite("is_predicted", &NodeAttributes::is_predicted)
       .def_readwrite("_metadata", &NodeAttributes::metadata)
-      .def("__repr__", [](const NodeAttributes& attrs) {
-        std::stringstream ss;
-        ss << attrs;
-        return ss.str();
+      .def("__repr__",
+           [](const NodeAttributes& attrs) {
+             std::stringstream ss;
+             ss << attrs;
+             return ss.str();
+           })
+      .def("__copy__", [](const NodeAttributes& attrs) { return attrs.clone(); })
+      .def(
+          "__deepcopy__", [](const NodeAttributes& attrs, py::dict) { return attrs.clone(); }, "memo"_a)
+      .def("transform", [](NodeAttributes& attrs, const Eigen::Matrix4d& transform) {
+        attrs.transform(Eigen::Isometry3d(transform));
+        return attrs;
       });
 
   py::class_<SemanticNodeAttributes, NodeAttributes>(m, "SemanticNodeAttributes")
@@ -224,7 +232,9 @@ void init_attributes(py::module_& m) {
       .def(py::init<>())
       .def_readwrite("weighted", &EdgeAttributes::weighted)
       .def_readwrite("weight", &EdgeAttributes::weight)
-      .def_readwrite("_metadata", &EdgeAttributes::metadata);
+      .def_readwrite("_metadata", &EdgeAttributes::metadata)
+      .def("__copy__", [](const EdgeAttributes& attrs) { return attrs.clone(); })
+      .def("__deepcopy__", [](const EdgeAttributes& attrs, py::dict) { return attrs.clone(); }, "memo"_a);
 }
 
 }  // namespace spark_dsg::python
