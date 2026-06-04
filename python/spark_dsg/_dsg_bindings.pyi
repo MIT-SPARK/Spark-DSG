@@ -294,6 +294,8 @@ class DsgLayers:
 class EdgeAttributes:
     _metadata: _Metadata
     weighted: bool
+    def __copy__(self) -> EdgeAttributes: ...
+    def __deepcopy__(self, memo: dict) -> EdgeAttributes: ...
     def __init__(self) -> None: ...
     @property
     def metadata(self): ...
@@ -375,12 +377,10 @@ class LayerView:
         node_converter: typing.Callable[
             [SceneGraph | SceneGraphLayer | LayerView, SceneGraphNode], numpy.ndarray
         ],
-        edge_converter: typing.Optional[
-            typing.Callable[
-                [SceneGraph | SceneGraphLayer | LayerView, SceneGraphEdge],
-                numpy.ndarray,
-            ]
-        ] = None,
+        edge_converter: typing.Callable[
+            [SceneGraph | SceneGraphLayer | LayerView, SceneGraphEdge], numpy.ndarray
+        ]
+        | None = None,
         double_precision: bool = False,
     ):
         """
@@ -399,7 +399,6 @@ class LayerView:
         Returns:
             pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
                 scene graph layer.
-
         """
     def connected_components(self) -> list[list[int]]: ...
     def find_edge(
@@ -569,8 +568,13 @@ class NodeAttributes:
     _metadata: _Metadata
     is_active: bool
     is_predicted: bool
+    def __copy__(self) -> NodeAttributes: ...
+    def __deepcopy__(self, memo: dict) -> NodeAttributes: ...
     def __init__(self) -> None: ...
     def __repr__(self) -> str: ...
+    def transform(
+        self, arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[4, 4]"]
+    ) -> NodeAttributes: ...
     @property
     def last_update_time_ns(self) -> int: ...
     @last_update_time_ns.setter
@@ -813,7 +817,6 @@ class SceneGraph:
         Returns:
             Union[pytorch_geometric.HeteroData, pytorch_geometric.Data]: pytorch geometric
                 data representing the scene graph depending on use_heterogeneous.
-
         """
     def __deepcopy__(self, arg0: typing.Any) -> SceneGraph: ...
     @typing.overload
@@ -988,12 +991,10 @@ class SceneGraphLayer:
         node_converter: typing.Callable[
             [SceneGraph | SceneGraphLayer | LayerView, SceneGraphNode], numpy.ndarray
         ],
-        edge_converter: typing.Optional[
-            typing.Callable[
-                [SceneGraph | SceneGraphLayer | LayerView, SceneGraphEdge],
-                numpy.ndarray,
-            ]
-        ] = None,
+        edge_converter: typing.Callable[
+            [SceneGraph | SceneGraphLayer | LayerView, SceneGraphEdge], numpy.ndarray
+        ]
+        | None = None,
         double_precision: bool = False,
     ):
         """
@@ -1012,7 +1013,6 @@ class SceneGraphLayer:
         Returns:
             pytorch_geometric.Data: homogeneous pytorch_geometric graph representing the
                 scene graph layer.
-
         """
     @typing.overload
     def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None: ...
