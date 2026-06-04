@@ -364,9 +364,7 @@ class LayerView:
     def to_torch(
         self,
         node_converter: typing.Callable[[SceneGraphNode], numpy.ndarray],
-        edge_converter: typing.Optional[
-            typing.Callable[[SceneGraphEdge], numpy.ndarray]
-        ] = None,
+        edge_converter: typing.Callable[[SceneGraphEdge], numpy.ndarray] | None = None,
         double_precision: bool = False,
     ) -> torch_geometric.data.Data: ...
     def connected_components(self) -> list[list[int]]: ...
@@ -767,13 +765,9 @@ class SceneGraph:
     def load(arg0: os.PathLike[str] | str | bytes) -> SceneGraph: ...
     def to_torch(
         self,
-        node_converter: typing.Optional[
-            typing.Callable[[SceneGraphNode], numpy.ndarray]
-        ] = None,
+        node_converter: typing.Callable[[SceneGraphNode], numpy.ndarray] | None = None,
         use_heterogeneous: bool = True,
-        edge_converter: typing.Optional[
-            typing.Callable[[SceneGraphEdge], numpy.ndarray]
-        ] = None,
+        edge_converter: typing.Callable[[SceneGraphEdge], numpy.ndarray] | None = None,
         is_undirected: bool = True,
         double_precision: bool = False,
         layer_name_map: collections.abc.Mapping[int, str] | None = None,
@@ -948,9 +942,7 @@ class SceneGraphLayer:
     def to_torch(
         self,
         node_converter: typing.Callable[[SceneGraphNode], numpy.ndarray],
-        edge_converter: typing.Optional[
-            typing.Callable[[SceneGraphEdge], numpy.ndarray]
-        ] = None,
+        edge_converter: typing.Callable[[SceneGraphEdge], numpy.ndarray] | None = None,
         double_precision: bool = False,
     ) -> torch_geometric.data.Data: ...
     @typing.overload
