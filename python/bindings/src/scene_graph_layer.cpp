@@ -86,6 +86,13 @@ void init_scene_graph_layer(py::module_& m) {
            [](const SceneGraphLayer& layer, NodeSymbol source, NodeSymbol target) {
              return graph_utilities::shortestPath(layer, source, target);
            })
+      .def(
+          "neighborhood",
+          [](const SceneGraphLayer& layer, NodeSymbol node, size_t num_hops) {
+            return layer.getNeighborhood(node, num_hops);
+          },
+          "node"_a,
+          "num_hops"_a = 1)
       .def_property(
           "nodes",
           [](const SceneGraphLayer& view) { return py::make_iterator(NodeIter(view.nodes()), IterSentinel()); },
@@ -124,6 +131,13 @@ void init_scene_graph_layer(py::module_& m) {
            [](const LayerView& view, NodeSymbol source, NodeSymbol target) {
              return graph_utilities::shortestPath(view.layer_ref, source, target);
            })
+      .def(
+          "neighborhood",
+          [](const LayerView& view, NodeSymbol node, size_t num_hops) {
+            return view.layer_ref.getNeighborhood(node, num_hops);
+          },
+          "node"_a,
+          "num_hops"_a = 1)
       .def_property(
           "nodes",
           [](const LayerView& view) { return py::make_iterator(view.nodes(), IterSentinel()); },
