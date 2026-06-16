@@ -89,6 +89,22 @@ static const std::vector<Color> custom_150_palette{
     {71, 9, 82},     {224, 187, 57},  {253, 20, 130},  {127, 127, 0},   {113, 132, 132},
 };
 
+static const std::vector<Color> chesapeake_palette{
+    {255, 255, 255},  // void
+    {0, 97, 255},     // water
+    {0, 168, 132},    // emergent wetlands
+    {38, 115, 0},     // tree canopy
+    {76, 230, 0},     // scrub/shrub
+    {165, 245, 122},  // low vegetation
+    {255, 170, 0},    // barren
+    {255, 0, 0},      // impervious structures
+    {178, 178, 178},  // other impervious
+    {0, 0, 0},        // impervious roads
+    {115, 115, 0},    // tree canopy over structures
+    {205, 205, 102},  // tree canopy over other impervious
+    {255, 255, 115},  // tree canopy over impervious roads
+};
+
 Color gray(float value) {
   const auto char_value = fromUnitRange(std::clamp(value, 0.0f, 1.0f));
   return Color(char_value, char_value, char_value);
@@ -174,8 +190,15 @@ Color distinct150Id(size_t id) {
   return cmap.at(id % cmap.size());
 }
 
+Color chesapeakeId(size_t id) {
+  const auto& cmap = chesapeake_palette;
+  return cmap.at(id % cmap.size());
+}
+
 const std::vector<Color>& colorbrewerPalette() { return colorbrewer_palette; }
 
 const std::vector<Color>& distinct150Palette() { return custom_150_palette; }
+
+const std::vector<Color>& chesapeakePalette() { return chesapeake_palette; }
 
 }  // namespace spark_dsg::colormaps
