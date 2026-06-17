@@ -137,7 +137,13 @@ Color colorbrewerId(size_t id);
 Color distinct150Id(size_t id);
 
 /**
- * @brief Get the underlying color palette for the distinct150 colormap
+ * @brief Pick a color from a custom Chesapeake color palette
+ * @param id The id to pick from the sequence
+ */
+Color chesapeakeId(size_t id);
+
+/**
+ * @brief Get the underlying color palette for the colorbrewer colormap
  */
 const std::vector<Color>& colorbrewerPalette();
 
@@ -145,5 +151,13 @@ const std::vector<Color>& colorbrewerPalette();
  * @brief Get the underlying color palette for the distinct150 colormap
  */
 const std::vector<Color>& distinct150Palette();
+
+/**
+ * @brief Get the underlying color palette for the Chesapeake colormap.
+ *
+ * @note This colormap is based on the Chesapeake Land Cover labels defined in
+ * https://www.usgs.gov/data/chesapeake-bay-land-use-and-land-cover-lulc-database-2022-edition
+ */
+const std::vector<Color>& chesapeakePalette();
 
 }  // namespace spark_dsg::colormaps
