@@ -60,6 +60,7 @@ struct BoundingBox {
    * Interface to lookup points to allow fitting a bounding box to a set of points.
    */
   struct PointAdaptor {
+    virtual ~PointAdaptor() = default;
     virtual size_t size() const = 0;
     virtual Eigen::Vector3f get(size_t index) const = 0;
     Eigen::Vector3f operator[](size_t index) const { return get(index); }
