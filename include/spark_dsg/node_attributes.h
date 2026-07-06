@@ -92,7 +92,6 @@ struct NearestVertexInfo {
  */
 struct NodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   friend class serialization::Visitor;
 
   //! desired node pointer type
@@ -158,7 +157,6 @@ struct NodeAttributes {
  */
 struct SemanticNodeAttributes : public NodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! Pointer type for node
   using Ptr = std::unique_ptr<SemanticNodeAttributes>;
 
@@ -205,7 +203,6 @@ struct SemanticNodeAttributes : public NodeAttributes {
  */
 struct ObjectNodeAttributes : public SemanticNodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of node
   using Ptr = std::unique_ptr<ObjectNodeAttributes>;
 
@@ -237,7 +234,6 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
  */
 struct RoomNodeAttributes : public SemanticNodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of node
   using Ptr = std::unique_ptr<RoomNodeAttributes>;
 
@@ -263,7 +259,6 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
  */
 struct PlaceNodeAttributes : public SemanticNodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of node
   using Ptr = std::unique_ptr<PlaceNodeAttributes>;
 
@@ -314,7 +309,6 @@ using FrontierNodeAttributes = PlaceNodeAttributes;
  */
 struct Place2dNodeAttributes : public SemanticNodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of node
   using Ptr = std::unique_ptr<Place2dNodeAttributes>;
 
@@ -353,7 +347,6 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
 
 struct AgentNodeAttributes : public NodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::unique_ptr<AgentNodeAttributes>;
   using BowIdVector = Eigen::Matrix<uint32_t, Eigen::Dynamic, 1>;
 
@@ -386,7 +379,6 @@ struct AgentNodeAttributes : public NodeAttributes {
  */
 struct KhronosObjectAttributes : public ObjectNodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   //! desired pointer type of node
   using Ptr = std::unique_ptr<KhronosObjectAttributes>;
 
@@ -457,7 +449,6 @@ struct BoundaryInfo {
  */
 struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
  public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::unique_ptr<TraversabilityNodeAttributes>;
 
   TraversabilityNodeAttributes() = default;
