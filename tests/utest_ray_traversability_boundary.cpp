@@ -39,10 +39,6 @@
 using State = spark_dsg::TraversabilityState;
 using States = spark_dsg::TraversabilityStates;
 using Vec = Eigen::Vector3d;
-constexpr auto TRAV = State::TRAVERSABLE;
-constexpr auto INTRAV = State::INTRAVERSABLE;
-constexpr auto TRAVERSED = State::TRAVERSED;
-constexpr auto UNKNOWN = State::UNKNOWN;
 
 const std::vector<Eigen::Vector3d> offsets{
     {1.0, 0.0, 0.0},   // 0 deg
