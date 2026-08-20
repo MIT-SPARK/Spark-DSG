@@ -610,7 +610,7 @@ NodeAttributes::Ptr TravNodeAttributes::clone() const {
 }
 
 std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
-  NodeAttributes::fill_ostream(out);
+  SemanticNodeAttributes::fill_ostream(out);
   out << "  - first_observed_ns: " << first_observed_ns << "\n"
       << "  - last_observed_ns: " << last_observed_ns << "\n"
       << "  - num states: " << states.size() << "\n"
@@ -621,7 +621,7 @@ std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
 }
 
 void TravNodeAttributes::serialization_info() {
-  NodeAttributes::serialization_info();
+  SemanticNodeAttributes::serialization_info();
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
   serialization::field("radii", radii);
@@ -648,7 +648,7 @@ bool TravNodeAttributes::is_equal(const NodeAttributes& other) const {
     return false;
   }
 
-  if (!NodeAttributes::is_equal(other)) {
+  if (!SemanticNodeAttributes::is_equal(other)) {
     return false;
   }
 

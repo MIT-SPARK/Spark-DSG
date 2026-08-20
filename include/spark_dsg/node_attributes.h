@@ -401,7 +401,7 @@ struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
  * discussed w/ Nathan.
  * @todo Find better names for this...
  */
-struct TravNodeAttributes : public NodeAttributes {
+struct TravNodeAttributes : public SemanticNodeAttributes {
  public:
   using Ptr = std::unique_ptr<TravNodeAttributes>;
 
