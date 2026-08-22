@@ -36,11 +36,10 @@
 #include "spark_dsg/graph_utilities.h"
 
 #include <functional>
+#include <list>
 #include <queue>
 #include <unordered_map>
 #include <vector>
-
-#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg::graph_utilities {
 

@@ -35,10 +35,8 @@
 #include "spark_dsg/python/graph_types.h"
 
 #include <pybind11/stl.h>
-#include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/edge_container.h>
 #include <spark_dsg/labelspace.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
 #include <spark_dsg/printing.h>
 #include <spark_dsg/scene_graph_node.h>

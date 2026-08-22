@@ -1,3 +1,4 @@
+#pragma once
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/node_attributes.h"
 
