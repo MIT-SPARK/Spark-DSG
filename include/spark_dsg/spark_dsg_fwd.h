@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 
 namespace spark_dsg {
 

@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "spark_dsg/spark_dsg_fwd.h"

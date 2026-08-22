@@ -36,13 +36,13 @@
 #include <Eigen/Core>
 #include <filesystem>
 #include <nlohmann/json.hpp>
-#include <type_traits>
 
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"
-#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
+
+class Mesh;
 
 struct EdgeLayerInfo {
   LayerKey source;

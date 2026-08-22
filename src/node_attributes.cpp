@@ -34,12 +34,10 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/node_attributes.h"
 
-#include "spark_dsg/printing.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg/serialization/versioning.h"
-#include "spark_dsg/traversability_boundary.h"
 
 namespace spark_dsg {
 
@@ -73,86 +71,12 @@ std::string quatToString(const Eigen::Quaternion<Scalar>& q) {
   return ss.str();
 }
 
-template <typename Derived>
-bool matricesEqual(const Eigen::DenseBase<Derived>& lhs,
-                   const Eigen::DenseBase<Derived>& rhs) {
-  if (lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols()) {
-    return false;
-  }
-
-  bool same = true;
-  for (int r = 0; r < lhs.rows(); ++r) {
-    for (int c = 0; c < lhs.cols(); ++c) {
-      const auto lhs_nan = std::isnan(lhs(r, c));
-      const auto rhs_nan = std::isnan(rhs(r, c));
-      // if one value is nan, this still works
-      same &= (lhs_nan && rhs_nan) || lhs(r, c) == rhs(r, c);
-    }
-  }
-
-  return same;
-}
-
 bool operator==(const NearestVertexInfo& lhs, const NearestVertexInfo& rhs) {
   const auto block_equal = Eigen::Map<const Eigen::Vector3i>(lhs.block) ==
                            Eigen::Map<const Eigen::Vector3i>(rhs.block);
   const auto pos_equal = Eigen::Map<const Eigen::Vector3d>(lhs.voxel_pos) ==
                          Eigen::Map<const Eigen::Vector3d>(rhs.voxel_pos);
   return block_equal && pos_equal && lhs.vertex == rhs.vertex && lhs.label == rhs.label;
-}
-
-std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs) {
-  return attrs.fill_ostream(out);
-}
-
-NodeAttributes::NodeAttributes() : NodeAttributes(Eigen::Vector3d::Zero()) {}
-
-NodeAttributes::NodeAttributes(const Eigen::Vector3d& pos)
-    : position(pos), last_update_time_ns(0), is_active(false), is_predicted(false) {}
-
-NodeAttributes::Ptr NodeAttributes::clone() const {
-  return std::make_unique<NodeAttributes>(*this);
-}
-
-void NodeAttributes::transform(const Eigen::Isometry3d& transform) {
-  position = transform * position;
-}
-
-bool NodeAttributes::operator==(const NodeAttributes& other) const {
-  return is_equal(other);
-}
-
-std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
-  auto format = getDefaultVectorFormat();
-  out << "  - position: " << position.transpose().format(format) << "\n";
-  out << "  - last update time: "
-      << (last_update_time_ns == 0 ? "n/a" : std::to_string(last_update_time_ns))
-      << "\n";
-  out << std::boolalpha << "  - is_active: " << is_active << "\n";
-  out << std::boolalpha << "  - is_predicted: " << is_predicted;
-  return out;
-}
-
-void NodeAttributes::serialization_info() {
-  serialization::field("position", position);
-  serialization::field("last_update_time_ns", last_update_time_ns);
-  serialization::field("is_active", is_active);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 0, 4)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    serialization::field("is_predicted", is_predicted);
-  }
-}
-
-void NodeAttributes::serialization_info() const {
-  const_cast<NodeAttributes*>(this)->serialization_info();
-}
-
-bool NodeAttributes::is_equal(const NodeAttributes& other) const {
-  return matricesEqual(position, other.position) &&
-         last_update_time_ns == other.last_update_time_ns &&
-         is_active == other.is_active && is_predicted == other.is_predicted;
 }
 
 SemanticNodeAttributes::SemanticNodeAttributes()
@@ -163,15 +87,6 @@ SemanticNodeAttributes::SemanticNodeAttributes()
 
 NodeAttributes::Ptr SemanticNodeAttributes::clone() const {
   return std::make_unique<SemanticNodeAttributes>(*this);
-}
-
-size_t NodeAttributes::memoryUsage() const {
-  // By default simply dispatch serialization to estimate the attributes size. Not
-  // perfect but should be ok.
-  std::vector<uint8_t> buffer;
-  serialization::BinarySerializer serializer(&buffer);
-  serializer.write(*this);
-  return buffer.size();
 }
 
 void SemanticNodeAttributes::transform(const Eigen::Isometry3d& transform) {
