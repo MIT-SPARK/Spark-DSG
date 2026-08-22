@@ -34,10 +34,11 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <map>
+#include <memory>
 #include <vector>
 
+#include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/scene_graph_types.h"
-#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
 

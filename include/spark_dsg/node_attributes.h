@@ -45,20 +45,9 @@
 #include "spark_dsg/bounding_box.h"
 #include "spark_dsg/color.h"
 #include "spark_dsg/mesh.h"
-#include "spark_dsg/metadata.h"
-#include "spark_dsg/scene_graph_types.h"
-#include "spark_dsg/serialization/attribute_registry.h"
+#include "spark_dsg/scene_graph_node.h"
 
 namespace spark_dsg {
-namespace serialization {
-class Visitor;
-}
-
-struct NodeAttributes;
-
-template <typename T>
-using NodeAttributeRegistration =
-    serialization::AttributeRegistration<NodeAttributes, T>;
 
 #define REGISTER_NODE_ATTRIBUTES(attr_type)                                  \
   inline static const auto attr_type##registration_ =                        \
@@ -81,75 +70,6 @@ struct NearestVertexInfo {
   double voxel_pos[3];
   size_t vertex;
   std::optional<uint32_t> label;
-};
-
-/**
- * @brief Base node attributes.
- *
- * All nodes have a pointer to node attributes (that contain most of the useful
- * information about the node). As every node has to be spatially consistent
- * with the quantity it represents, every node must have a position.
- */
-struct NodeAttributes {
- public:
-  friend class serialization::Visitor;
-
-  //! desired node pointer type
-  using Ptr = std::unique_ptr<NodeAttributes>;
-
-  //! Make a default set of attributes
-  NodeAttributes();
-  //! Set the node position
-  explicit NodeAttributes(const Eigen::Vector3d& position);
-  virtual ~NodeAttributes() = default;
-  virtual NodeAttributes::Ptr clone() const;
-
-  virtual void transform(const Eigen::Isometry3d& transform);
-
-  //! Position of the node
-  Eigen::Vector3d position;
-  //! Last time the place was updated (while active)
-  uint64_t last_update_time_ns;
-  //! Whether or not the node is in the active window
-  bool is_active;
-  //! Whether the node was observed by Hydra, or added as a prediction
-  bool is_predicted;
-  //! Arbitrary node metadata
-  Metadata metadata;
-
-  /**
-   * @brief output attribute information
-   * @param out output stream
-   * @param attrs attributes to print
-   * @returns original output stream
-   */
-  friend std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs);
-
-  bool operator==(const NodeAttributes& other) const;
-
-  const serialization::RegistrationInfo& registration() const {
-    return registrationImpl();
-  }
-
-  /**
-   * @brief Estimate the memory usage of the node attributes in bytes.
-   */
-  virtual size_t memoryUsage() const;
-
- protected:
-  virtual std::ostream& fill_ostream(std::ostream& out) const;
-  virtual void serialization_info();
-  void serialization_info() const;
-  virtual bool is_equal(const NodeAttributes& other) const;
-
- private:
-  inline static const auto registration_ =
-      NodeAttributeRegistration<NodeAttributes>("NodeAttributes");
-
- protected:
-  virtual const serialization::RegistrationInfo& registrationImpl() const {
-    return registration_.info;
-  }
 };
 
 /**

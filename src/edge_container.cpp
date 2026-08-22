@@ -34,9 +34,6 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/edge_container.h"
 
-#include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/node_symbol.h"
-
 namespace spark_dsg {
 
 using Edge = EdgeContainer::Edge;

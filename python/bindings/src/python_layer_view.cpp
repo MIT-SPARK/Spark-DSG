@@ -34,7 +34,6 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/python/python_layer_view.h"
 
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/printing.h>
 
 namespace spark_dsg::python {

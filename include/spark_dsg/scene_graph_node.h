@@ -33,15 +33,87 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <Eigen/Dense>
 #include <memory>
 #include <optional>
 #include <set>
 #include <vector>
 
+#include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_types.h"
-#include "spark_dsg/spark_dsg_fwd.h"
+#include "spark_dsg/serialization/attribute_registry.h"
 
 namespace spark_dsg {
+namespace serialization {
+class Visitor;
+}
+
+struct NodeAttributes;
+
+template <typename T>
+using NodeAttributeRegistration =
+    serialization::AttributeRegistration<NodeAttributes, T>;
+
+/**
+ * @brief Base node attributes.
+ *
+ * All nodes have a pointer to node attributes (that contain most of the useful
+ * information about the node). As every node has to be spatially consistent
+ * with the quantity it represents, every node must have a position.
+ */
+struct NodeAttributes {
+ public:
+  friend class serialization::Visitor;
+
+  //! desired node pointer type
+  using Ptr = std::unique_ptr<NodeAttributes>;
+
+  //! Make a default set of attributes
+  NodeAttributes();
+
+  //! Set the node position
+  explicit NodeAttributes(const Eigen::Vector3d& position);
+
+  virtual ~NodeAttributes() = default;
+
+  virtual NodeAttributes::Ptr clone() const;
+
+  //! Estimate the memory usage of the node attributes in bytes.
+  virtual size_t memoryUsage() const;
+
+  virtual void transform(const Eigen::Isometry3d& transform);
+
+  //! Position of the node
+  Eigen::Vector3d position;
+  //! Last time the place was updated (while active)
+  uint64_t last_update_time_ns;
+  //! Whether or not the node is in the active window
+  bool is_active;
+  //! Whether the node was observed by Hydra, or added as a prediction
+  bool is_predicted;
+  //! Arbitrary node metadata
+  Metadata metadata;
+
+  friend std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs);
+
+  bool operator==(const NodeAttributes& other) const;
+
+  const serialization::RegistrationInfo& registration() const;
+
+ protected:
+  virtual std::ostream& fill_ostream(std::ostream& out) const;
+
+  virtual void serialization_info();
+
+  void serialization_info() const;
+
+  virtual bool is_equal(const NodeAttributes& other) const;
+
+  virtual const serialization::RegistrationInfo& registrationImpl() const;
+
+ private:
+  static const NodeAttributeRegistration<NodeAttributes> registration_;
+};
 
 /**
  * @brief Node in the scene graph

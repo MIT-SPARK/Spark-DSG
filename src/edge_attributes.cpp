@@ -34,11 +34,12 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/edge_attributes.h"
 
-#include <iomanip>
-
 #include "spark_dsg/serialization/attribute_serialization.h"
 
 namespace spark_dsg {
+
+decltype(EdgeAttributes::registration_) EdgeAttributes::registration_ =
+    EdgeAttributeRegistration<EdgeAttributes>("EdgeAttributes");
 
 EdgeAttributes::EdgeAttributes() : weighted(false), weight(1.0) {}
 
@@ -48,6 +49,17 @@ EdgeAttributes::~EdgeAttributes() = default;
 
 EdgeAttributes::Ptr EdgeAttributes::clone() const {
   return std::make_unique<EdgeAttributes>(*this);
+}
+
+size_t EdgeAttributes::memoryUsage() const {
+  size_t total_size = sizeof(EdgeAttributes);
+  // Metadata size (avoid double counting the Metadata struct itself).
+  total_size += metadata.memoryUsage() - sizeof(Metadata);
+  return total_size;
+}
+
+const serialization::RegistrationInfo& EdgeAttributes::registration() const {
+  return registrationImpl();
 }
 
 std::ostream& operator<<(std::ostream& out, const EdgeAttributes& attrs) {
@@ -78,11 +90,8 @@ bool EdgeAttributes::is_equal(const EdgeAttributes& other) const {
   return weighted == other.weighted && weight == other.weight;
 }
 
-size_t EdgeAttributes::memoryUsage() const {
-  size_t total_size = sizeof(EdgeAttributes);
-  // Metadata size (avoid double counting the Metadata struct itself).
-  total_size += metadata.memoryUsage() - sizeof(Metadata);
-  return total_size;
+const serialization::RegistrationInfo& EdgeAttributes::registrationImpl() const {
+  return registration_.info;
 }
 
 }  // namespace spark_dsg

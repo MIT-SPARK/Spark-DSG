@@ -32,26 +32,10 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <pybind11/chrono.h>
-#include <pybind11/eigen.h>
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
-#include <spark_dsg/bounding_box.h>
-#include <spark_dsg/mesh.h>
-#include <spark_dsg/node_attributes.h>
-#include <spark_dsg/node_symbol.h>
-#include <spark_dsg/printing.h>
-#include <spark_dsg/scene_graph_layer.h>
-#include <spark_dsg/scene_graph_node.h>
-#include <spark_dsg/scene_graph_types.h>
-#include <spark_dsg/scene_graph_utilities.h>
-#include <spark_dsg/serialization/graph_binary_serialization.h>
-#include <spark_dsg/serialization/versioning.h>
-#include <spark_dsg/zmq_interface.h>
+#include "spark_dsg/python/metadata.h"
 
-#include "spark_dsg/python/spark_types.h"
+#include <pybind11/pybind11.h>
+#include <spark_dsg/metadata.h>
 
 namespace spark_dsg::python {
 

@@ -33,7 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph_node.h>
 
 using namespace spark_dsg;

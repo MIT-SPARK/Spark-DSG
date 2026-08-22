@@ -50,28 +50,25 @@ template <typename T>
 using EdgeAttributeRegistration =
     serialization::AttributeRegistration<EdgeAttributes, T>;
 
-#define REGISTER_EDGE_ATTRIBUTES(attr_type)                                  \
-  inline static const auto registration_ =                                   \
-      EdgeAttributeRegistration<attr_type>(#attr_type);                      \
-  const serialization::RegistrationInfo& registrationImpl() const override { \
-    return registration_.info;                                               \
-  }                                                                          \
-  static_assert(true, "")
-
-/**
- * @brief Collection of information for an edge
- */
+//! Collection of information for an edge
 struct EdgeAttributes {
   friend class serialization::Visitor;
   //! desired pointer type for the edge attributes
   using Ptr = std::unique_ptr<EdgeAttributes>;
+
   //! Default constructor resulting in an unweight edge
   EdgeAttributes();
+
   //! Constructor that make a weighted edge
   explicit EdgeAttributes(double weight);
+
   virtual ~EdgeAttributes();
+
   //! brief Get derived copy of edge attributes
   virtual EdgeAttributes::Ptr clone() const;
+
+  //! Estimate the memory usage of the edge attributes in bytes.
+  virtual size_t memoryUsage() const;
 
   //! whether or not the edge weight is valid
   bool weighted;
@@ -90,31 +87,20 @@ struct EdgeAttributes {
 
   bool operator==(const EdgeAttributes& other) const;
 
-  const serialization::RegistrationInfo& registration() const {
-    return registrationImpl();
-  }
-
-  /**
-   * @brief Estimate the memory usage of the edge attributes in bytes.
-   */
-  virtual size_t memoryUsage() const;
+  const serialization::RegistrationInfo& registration() const;
 
  protected:
-  //! actually output information to the std::ostream
   virtual void fill_ostream(std::ostream& out) const;
-  //! register serialization information about the attributes
+
   virtual void serialization_info();
+
   virtual void serialization_info() const;
-  //! compute equality
+
   virtual bool is_equal(const EdgeAttributes& other) const;
 
-  inline static const auto registration_ =
-      EdgeAttributeRegistration<EdgeAttributes>("EdgeAttributes");
+  static const EdgeAttributeRegistration<EdgeAttributes> registration_;
 
-  //! get registration
-  virtual const serialization::RegistrationInfo& registrationImpl() const {
-    return registration_.info;
-  }
+  virtual const serialization::RegistrationInfo& registrationImpl() const;
 };
 
 }  // namespace spark_dsg

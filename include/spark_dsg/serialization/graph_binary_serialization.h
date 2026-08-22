@@ -33,8 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <memory>
+#include <vector>
 
-#include "spark_dsg/serialization/versioning.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::io::binary {

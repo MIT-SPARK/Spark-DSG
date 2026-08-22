@@ -39,9 +39,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-#include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/graph_utilities.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/node_symbol.h>
 #include <spark_dsg/scene_graph_layer.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
