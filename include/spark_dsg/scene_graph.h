@@ -39,6 +39,7 @@
 
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/node_storage.h"
 
 namespace spark_dsg {
 
@@ -545,11 +546,11 @@ class SceneGraph {
  protected:
   std::set<LayerKey> layer_keys_;
   LayerNames layer_names_;
-  std::map<NodeId, LayerKey> node_lookup_;
 
   Layers layers_;
   std::map<LayerId, Partitions> layer_partitions_;
 
+  std::shared_ptr<NodeStorage> nodes_;
   EdgeContainer interlayer_edges_;
 
   std::shared_ptr<Mesh> mesh_;
@@ -570,8 +571,6 @@ class SceneGraph {
   const LayerNames layer_names() const { return layer_names_; }
   //! @brief Constant reference to the layers
   const Layers& layers() const { return layers_; };
-  //! @brief Constant reference to the mapping between nodes and layers
-  const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
   //! @brief Const reference to the interlayer edges
   const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
   //! @brief Constant reference to partitions for a particular layer

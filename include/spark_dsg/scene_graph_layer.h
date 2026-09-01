@@ -39,7 +39,7 @@
 #include <unordered_set>
 
 #include "spark_dsg/edge_container.h"
-#include "spark_dsg/scene_graph_node.h"
+#include "spark_dsg/node_storage.h"
 
 namespace spark_dsg {
 
@@ -284,9 +284,7 @@ class SceneGraphLayer {
   //! ID of the layer
   const LayerKey id;
 
-  /**
-   * @brief Get memory usage of the layer in bytes.
-   */
+  //! @brief Get memory usage of the layer in bytes.
   size_t memoryUsage() const;
 
  protected:
@@ -299,33 +297,20 @@ class SceneGraphLayer {
 
   void cloneImpl(SceneGraphLayer& other, const NodeChecker& is_valid) const;
 
-  //! internal node container
-  Nodes nodes_;
+  std::shared_ptr<NodeStorage> nodes_;
   //! internal node status tracking
   mutable NodeCheckup nodes_status_;
   //! internal edge container
   EdgeContainer edges_;
 
  public:
-  /**
-   * @brief constant node container
-   */
-  inline const Nodes& nodes() const { return nodes_; };
+  const Nodes& nodes() const;
 
-  /**
-   * @brief constant edge container
-   */
-  inline const Edges& edges() const { return edges_.edges; };
+  const Edges& edges() const { return edges_.edges; };
 
-  /**
-   * @brief Number of nodes in the layer
-   */
-  inline size_t numNodes() const { return nodes_.size(); }
+  size_t numNodes() const;
 
-  /**
-   * @brief Number of edges in the layer
-   */
-  inline size_t numEdges() const { return edges_.size(); }
+  size_t numEdges() const { return edges_.size(); }
 };
 
 }  // namespace spark_dsg

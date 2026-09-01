@@ -102,6 +102,7 @@ add_library(
   src/mesh.cpp
   src/metadata.cpp
   src/node_attributes.cpp
+  src/node_storage.cpp
   src/node_symbol.cpp
   src/printing.cpp
   src/scene_graph.cpp
