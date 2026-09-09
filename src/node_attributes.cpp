@@ -621,7 +621,14 @@ std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
 }
 
 void TravNodeAttributes::serialization_info() {
-  SemanticNodeAttributes::serialization_info();
+  const auto& header = io::GlobalInfo::loadedHeader();
+  if (header.version <= io::Version(1, 1, 5)) {
+    io::warnOutdatedHeader(header);
+    NodeAttributes::serialization_info();
+  } else {
+    SemanticNodeAttributes::serialization_info();
+  }
+
   serialization::field("first_observed_ns", first_observed_ns);
   serialization::field("last_observed_ns", last_observed_ns);
   serialization::field("radii", radii);
