@@ -200,14 +200,14 @@ void init_attributes(py::module_& m) {
       .def_readwrite("max", &BoundaryInfo::max)
       .def_readwrite("states", &BoundaryInfo::states);
 
-  py::class_<TraversabilityNodeAttributes, NodeAttributes>(m, "TraversabilityNodeAttributes")
+  py::class_<TraversabilityNodeAttributes, SemanticNodeAttributes>(m, "TraversabilityNodeAttributes")
       .def(py::init<>())
       .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
       .def_readwrite("first_observed_ns", &TraversabilityNodeAttributes::first_observed_ns)
       .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
       .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
 
-  py::class_<TravNodeAttributes, NodeAttributes>(m, "TravNodeAttributes")
+  py::class_<TravNodeAttributes, SemanticNodeAttributes>(m, "TravNodeAttributes")
       .def(py::init<>())
       .def_readwrite("radii", &TravNodeAttributes::radii)
       .def_readwrite("states", &TravNodeAttributes::states)
