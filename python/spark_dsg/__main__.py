@@ -5,14 +5,12 @@ import pathlib
 import click
 
 import spark_dsg as dsg
-import spark_dsg.commands.visualize as visualize
-import spark_dsg.commands.zmq as zmq
+from spark_dsg.commands import visualize, zmq
 
 
 @click.group()
 def cli():
     """Entry point target for subcommands."""
-    pass
 
 
 cli.add_command(visualize.cli)
@@ -29,7 +27,7 @@ def update(filepaths):
         try:
             G = dsg.SceneGraph.load(filepath)
             G.save(filepath, include_mesh=True)
-        except Exception as e:
+        except RuntimeError as e:
             click.secho(f"Warning: failed to convert '{filepath}': {e}")
 
 
