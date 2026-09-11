@@ -34,88 +34,79 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/bounding_box_extraction.h"
 
+#include <algorithm>
+#include <functional>
+#include <iterator>
+#include <limits>
+#include <numeric>
 #include <optional>
 
-namespace spark_dsg {
-namespace bounding_box {
+namespace spark_dsg::bounding_box {
+namespace {
 
-float getAngle(const Eigen::Vector3f& curr, const Eigen::Vector3f& root) {
-  const Eigen::Vector2f vec = (curr.head<2>() - root.head<2>()).normalized();
-  // range of x should be between 1 and -1 (with y >= 0)
-  // we want function mapping [1, -1] to [0, c]
-  return 1.0f - vec.x();
+bool comparePoints(const PointAdaptor& points, size_t i, size_t j) {
+  const auto p_i = points[i];
+  const auto p_j = points[j];
+  return p_i.x() < p_j.x() || (p_i.x() == p_j.x() && p_i.y() < p_j.y());
 }
 
-float getDist(const Eigen::Vector3f& curr, const Eigen::Vector3f& root) {
-  return (curr.head<2>() - root.head<2>()).array().abs().sum();
+bool equalPointsXY(const PointAdaptor& points, size_t i, size_t j) {
+  return points[i].head<2>() == points[j].head<2>();
 }
 
-float getJointDirection(const Eigen::Vector3f& prev,
-                        const Eigen::Vector3f& curr,
-                        const Eigen::Vector3f& next) {
-  const Eigen::Vector2f v1 = curr.head<2>() - prev.head<2>();
-  const Eigen::Vector2f v2 = next.head<2>() - prev.head<2>();
+double getJointDirection(const Eigen::Vector3f& prev,
+                         const Eigen::Vector3f& curr,
+                         const Eigen::Vector3f& next) {
+  const Eigen::Vector2d root = prev.head<2>().cast<double>();
+  const Eigen::Vector2d v1 = curr.head<2>().cast<double>() - root;
+  const Eigen::Vector2d v2 = next.head<2>().cast<double>() - root;
   return v1.x() * v2.y() - v1.y() * v2.x();
 }
 
+void appendHullPoint(const PointAdaptor& points,
+                     size_t index,
+                     size_t begin,
+                     std::vector<size_t>& hull) {
+  while (hull.size() >= begin + 2) {
+    const auto prev = hull[hull.size() - 2];
+    const auto curr = hull.back();
+    const auto direction = getJointDirection(points[prev], points[curr], points[index]);
+    if (direction > 0.0) {
+      break;
+    }
+
+    hull.pop_back();
+  }
+
+  hull.push_back(index);
+}
+
+}  // namespace
+
 std::list<size_t> get2dConvexHull(const PointAdaptor& points) {
-  size_t root = 0;
-  Eigen::Vector3f root_pos = points[0];
-  for (size_t i = 0; i < points.size(); ++i) {
-    const auto curr_pos = points[i];
-    if (curr_pos.y() > root_pos.y()) {
-      continue;
-    }
-
-    if (curr_pos.y() == root_pos.y() && curr_pos.x() > root_pos.x()) {
-      continue;
-    }
-
-    root_pos = curr_pos;
-    root = i;
-  }
-
-  const auto compare = [&](size_t i, size_t j) -> bool {
-    const auto p_i = points[i];
-    const auto p_j = points[j];
-    const auto a_i = getAngle(p_i, root_pos);
-    const auto a_j = getAngle(p_j, root_pos);
-    if (std::abs(a_i - a_j) < 1.0e-9f) {
-      const auto d_i = getDist(p_i, root_pos);
-      const auto d_j = getDist(p_j, root_pos);
-      return d_i < d_j;
-    } else {
-      return a_i < a_j;
-    }
-  };
-
-  std::vector<size_t> indices;
-  for (size_t i = 0; i < points.size(); ++i) {
-    if (i != root) {
-      indices.push_back(i);
-    }
-  }
-
+  using namespace std::placeholders;
+  std::vector<size_t> indices(points.size());
+  std::iota(indices.begin(), indices.end(), size_t{0});
+  const auto compare = std::bind(comparePoints, std::cref(points), _1, _2);
   std::sort(indices.begin(), indices.end(), compare);
-
-  std::list<size_t> hull{root};
-  for (const auto& idx : indices) {
-    while (hull.size() > 1) {
-      auto prev = --hull.cend();
-      auto curr = prev;
-      --curr;
-      const auto angle = getJointDirection(points[*prev], points[*curr], points[idx]);
-      if (angle < 0.0f) {
-        break;
-      }
-
-      hull.pop_back();
-    }
-
-    hull.push_back(idx);
+  const auto equal = std::bind(equalPointsXY, std::cref(points), _1, _2);
+  indices.erase(std::unique(indices.begin(), indices.end(), equal), indices.end());
+  if (indices.size() <= 1) {
+    return {indices.begin(), indices.end()};
   }
 
-  return hull;
+  std::vector<size_t> hull;
+  for (const auto index : indices) {
+    appendHullPoint(points, index, 0, hull);
+  }
+
+  const auto upper_begin = hull.size() - 1;
+  for (auto iter = std::next(indices.rbegin()); iter != indices.rend(); ++iter) {
+    appendHullPoint(points, *iter, upper_begin, hull);
+  }
+
+  hull.pop_back();  // The first point closes both chains.
+  return {hull.begin(), hull.end()};
 }
 
 BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull) {
@@ -132,54 +123,50 @@ BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hul
     return result;
   }
 
-  // technically this can be implemented in O(n) instead via rotation calipers,
-  // but this is easier to understand and n << points.size() due to 2d projection
+  if (indices.size() == 2) {
+    const Eigen::Vector2d a = points[indices.front()].head<2>().cast<double>();
+    const Eigen::Vector2d b = points[indices.back()].head<2>().cast<double>();
+    const Eigen::Vector2d edge = b - a;
+    result.min_area = 0.0f;
+    result.dims << edge.norm(), 0.0f;
+    result.center = (a + 0.5 * edge).cast<float>();
+    result.yaw = std::atan2(edge.y(), edge.x());
+    return result;
+  }
+
+  // Evaluate each hull edge; the hull is small compared to the input cloud.
+  double min_area = std::numeric_limits<double>::infinity();
   for (size_t i = 0; i < indices.size(); ++i) {
-    const auto curr_idx = indices[i];
-    const auto next_idx = indices[(i + 1) % indices.size()];
-    const Eigen::Vector2f p_c = points[curr_idx].head<2>();
-    const Eigen::Vector2f p_n = points[next_idx].head<2>();
-    // normals and offsets for height / width hyperplanes and local coordinates
-    const Eigen::Vector2f n_x = (p_n - p_c).normalized();
-    const Eigen::Vector2f n_y(-n_x.y(), n_x.x());  // equivalent to a 90 degree rotation
-    const auto b_x = -n_x.dot(p_c);
-    const auto b_y = -n_y.dot(p_c);
-    // distances from hyperplanes (all points will be above 0 for y hyperplane)
-    float max_y = 0.0f;
-    float min_x = 0.0f;  // only points with negative distance will override this
-    float max_x = 0.0f;
-    for (size_t j = 1; j < indices.size(); ++j) {
-      const Eigen::Vector2f p_j = points[indices[(i + j) % indices.size()]].head<2>();
-      const auto x_dist = n_x.dot(p_j) + b_x;
-      if (x_dist <= min_x) {
-        min_x = x_dist;
-      }
-
-      if (x_dist >= max_x) {
-        max_x = x_dist;
-      }
-
-      const auto y_dist = n_y.dot(p_j) + b_y;
-      if (y_dist >= max_y) {
-        max_y = y_dist;
-      }
-    }
-
-    // technically (max_y - min_x) * (max_y - min_x) but min_y is 0
-    const auto area = max_y * (max_x - min_x);
-    if (result.min_area && area >= *result.min_area) {
+    const Eigen::Vector2d origin = points[indices[i]].head<2>().cast<double>();
+    const Eigen::Vector2d edge =
+        points[indices[(i + 1) % indices.size()]].head<2>().cast<double>() - origin;
+    if (edge.squaredNorm() == 0.0) {
       continue;
     }
 
-    result.min_area = area;
-    result.dims << max_x - min_x, max_y;
-    result.yaw = std::atan2(n_x.y(), n_x.x());
+    Eigen::Matrix2d rotation;
+    rotation.col(0) = edge.normalized();
+    rotation.col(1) = Eigen::Vector2d(-rotation(1, 0), rotation(0, 0));
+    Eigen::Vector2d min = Eigen::Vector2d::Zero();
+    Eigen::Vector2d max = Eigen::Vector2d::Zero();
+    for (const auto index : indices) {
+      const Eigen::Vector2d offset = points[index].head<2>().cast<double>() - origin;
+      const Eigen::Vector2d local = rotation.transpose() * offset;
+      min = min.cwiseMin(local);
+      max = max.cwiseMax(local);
+    }
 
-    // transform center point to global coordinates
-    Eigen::Matrix2f R;
-    R.col(0) = n_x;
-    R.col(1) = n_y;
-    result.center = R * (0.5 * result.dims + Eigen::Vector2f(min_x, 0.0f)) + p_c;
+    const Eigen::Vector2d dims = max - min;
+    const auto area = dims.prod();
+    if (area >= min_area) {
+      continue;
+    }
+
+    min_area = area;
+    result.min_area = static_cast<float>(area);
+    result.dims = dims.cast<float>();
+    result.yaw = std::atan2(rotation(1, 0), rotation(0, 0));
+    result.center = (origin + rotation * (0.5 * (min + max))).cast<float>();
   }
 
   return result;
@@ -236,6 +223,4 @@ BoundingBox extract(const PointAdaptor& points, BoundingBox::Type type) {
   }
 }
 
-}  // namespace bounding_box
-
-}  // namespace spark_dsg
+}  // namespace spark_dsg::bounding_box
