@@ -33,8 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <list>
 #include <optional>
+#include <vector>
 
 #include "spark_dsg/bounding_box.h"
 
@@ -53,23 +53,20 @@ struct BoxResult2D {
 /**
  * @brief compute 2D convex hull in x-y plane
  *
- * Exposed primarily for testing
- *
  * @param points Point adaptor to use
  * @returns indices of hull points in ccw order
  */
-std::list<size_t> get2dConvexHull(const PointAdaptor& points);
+std::vector<size_t> get2dConvexHull(const PointAdaptor& points);
 
 /**
  * @brief compute the minimum area bounding box in the x-y plane
- *
- * Exposed primarily for testing
  *
  * @param points Point adapter to use
  * @param hull Optional convex hull
  * @returns resulting bounding box if one exists
  */
-BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull = {});
+BoxResult2D getMin2DBox(const PointAdaptor& points,
+                        const std::vector<size_t>& hull = {});
 
 /**
  * @brief construct a bounding box directly from a pointcloud

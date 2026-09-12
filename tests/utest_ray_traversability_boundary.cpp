@@ -36,6 +36,8 @@
 #include <spark_dsg/node_attributes.h>
 #include <spark_dsg/traversability_boundary.h>
 
+#include <numbers>
+
 using State = spark_dsg::TraversabilityState;
 using States = spark_dsg::TraversabilityStates;
 using Vec = Eigen::Vector3d;
@@ -94,7 +96,7 @@ TEST(RayBoundary, Area) {
   EXPECT_NEAR(boundary.area(), 2 * std::sqrt(2.0), 1e-6);
 
   boundary.radii.resize(10000, 1.0);
-  EXPECT_NEAR(boundary.area(), M_PI, 1e-6);
+  EXPECT_NEAR(boundary.area(), std::numbers::pi, 1e-6);
 }
 
 TEST(RayBoundary, Contains) {

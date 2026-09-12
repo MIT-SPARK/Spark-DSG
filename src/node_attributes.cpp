@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/node_attributes.h"
 
+#include <numbers>
+
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
@@ -710,7 +712,7 @@ void TravNodeAttributes::clear() {
 }
 
 double TravNodeAttributes::getBinPercentage(const Eigen::Vector3d& point_L) const {
-  const double angle = std::atan2(point_L.y(), point_L.x()) / (2.0 * M_PI);
+  const double angle = std::atan2(point_L.y(), point_L.x()) / (2.0 * std::numbers::pi);
   return angle >= 0.0 ? angle : angle + 1.0;
 }
 
@@ -740,8 +742,8 @@ bool TravNodeAttributes::contains(const Eigen::Vector3d& point_W) const {
 
 Eigen::Vector3d TravNodeAttributes::getBoundaryPoint(size_t bin,
                                                      bool in_world_frame) const {
-  const double angle =
-      (static_cast<double>(bin) / static_cast<double>(radii.size())) * 2.0 * M_PI;
+  const double angle = (static_cast<double>(bin) / static_cast<double>(radii.size())) *
+                       2.0 * std::numbers::pi;
   const Eigen::Vector3d point_L(
       radii[bin] * std::cos(angle), radii[bin] * std::sin(angle), 0.0);
   if (in_world_frame) {
@@ -773,7 +775,8 @@ bool TravNodeAttributes::intersects(const TravNodeAttributes& other) const {
 double TravNodeAttributes::area() const {
   double area = 0.0;
   const size_t N = radii.size();
-  const double angle_increment = std::sin((2.0 * M_PI) / static_cast<double>(N));
+  const double angle_increment =
+      std::sin((2.0 * std::numbers::pi) / static_cast<double>(N));
   for (size_t i = 0; i < N; ++i) {
     const double r1 = radii[i];
     const double r2 = radii[(i + 1) % N];
