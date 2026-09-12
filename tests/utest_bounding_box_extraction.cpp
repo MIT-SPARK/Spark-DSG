@@ -136,7 +136,7 @@ TEST(BoundingBoxExtraction, ConvexHull) {
   };
 
   const auto hull = bounding_box::get2dConvexHull(adaptor);
-  std::list<size_t> expected{8, 0, 6, 4};
+  std::vector<size_t> expected{8, 0, 6, 4};
   EXPECT_EQ(hull, expected);
 }
 
@@ -362,10 +362,19 @@ TEST(BoundingBoxExtraction, AngularTieEnclosure) {
 TEST(BoundingBoxExtraction, ThinRectangleFromSuppliedHull) {
   const auto points = angularTiePoints();
   const BoundingBox::PointVectorAdaptor adaptor(points);
-  for (const auto& hull : {std::list<size_t>{3, 2, 0}, std::list<size_t>{0, 2, 3}}) {
+  const auto expected_area = 0.00034844631772374903;
+  {  // check ordering
+    std::vector<size_t> hull{3, 2, 0};
     const auto result = bounding_box::getMin2DBox(adaptor, hull);
     ASSERT_TRUE(result.min_area);
-    EXPECT_NEAR(*result.min_area, 0.00034844631772374903, 1.0e-10);
+    EXPECT_NEAR(*result.min_area, expected_area, 1.0e-10);
+  }
+
+  {  // check ordering
+    std::vector<size_t> hull{0, 2, 3};
+    const auto result = bounding_box::getMin2DBox(adaptor, hull);
+    ASSERT_TRUE(result.min_area);
+    EXPECT_NEAR(*result.min_area, expected_area, 1.0e-10);
   }
 }
 

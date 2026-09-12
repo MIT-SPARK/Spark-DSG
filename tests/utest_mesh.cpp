@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
+#include <numbers>
 #include <unordered_set>
 
 #include "spark_dsg/mesh.h"
@@ -113,7 +114,7 @@ TEST(MeshTests, transform) {
 
   // Rotation.
   transform = Eigen::Isometry3f::Identity();
-  transform.rotate(Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitZ()));
+  transform.rotate(Eigen::AngleAxisf(std::numbers::pi / 2.0, Eigen::Vector3f::UnitZ()));
   mesh.transform(transform);
   for (size_t i = 0; i < mesh.numVertices(); ++i) {
     EXPECT_NEAR(

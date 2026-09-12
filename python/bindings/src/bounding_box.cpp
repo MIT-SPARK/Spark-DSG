@@ -101,7 +101,7 @@ void init_bounding_box(py::module_& m) {
 
   m.def(
       "get_min_2d_box",
-      [](const std::vector<Eigen::Vector3f>& points, const std::list<size_t>& hull) -> std::optional<BoxResult2D> {
+      [](const std::vector<Eigen::Vector3f>& points, const std::vector<size_t>& hull) -> std::optional<BoxResult2D> {
         BoundingBox::PointVectorAdaptor adaptor(points);
         const auto result = bounding_box::getMin2DBox(adaptor, hull);
         return !result.min_area ? std::nullopt : std::optional<BoxResult2D>(result);

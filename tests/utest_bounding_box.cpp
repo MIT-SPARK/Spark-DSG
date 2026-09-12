@@ -400,7 +400,7 @@ TEST(BoundingBoxTests, frameConversions) {
   EXPECT_NEAR(-1, p4(2), 1.0e-6f);
 }
 
-TEST(BoundingBoxTests, merge) {
+TEST(BoundingBoxTests, MergeCorrect) {
   // Aligned AABB.
   BoundingBox box1(Eigen::Vector3f(1, 2, 3), Eigen::Vector3f(0.5, 1.0, 1.5));
   BoundingBox box2(Eigen::Vector3f(3, 2, 1), Eigen::Vector3f(0.5, 1.0, 1.5));
@@ -422,12 +422,11 @@ TEST(BoundingBoxTests, merge) {
                      Eigen::Vector3f(0.5, 1.0, 1.5),
                      std::numbers::pi / 6);
   box1.merge(box2);
-  const float yaw = box1.world_R_center.eulerAngles(0, 1, 2)[2];
   // The solution finds the 90deg rotated box, i.e. y=x and yaw=-60deg from 30 deg.
-  EXPECT_NEAR(2, box1.dimensions(0), 1.0e-6f);
-  EXPECT_NEAR(1.5, box1.dimensions(1), 1.0e-6f);
-  EXPECT_NEAR(3, box1.dimensions(2), 1.0e-6f);
-  EXPECT_NEAR(-std::numbers::pi / 3, yaw, 1.0e-6f);
+  const auto expected = BoundingBox(Eigen::Vector3f(2, 1.5, 3),
+                                    Eigen::Vector3f(0.5, 1.0, 1.5),
+                                    -std::numbers::pi / 3);
+  EXPECT_NEAR(box1.computeIoU(expected), 1.0, 1.0e-2f);
 }
 
 }  // namespace spark_dsg

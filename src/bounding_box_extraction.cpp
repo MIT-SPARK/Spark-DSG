@@ -109,13 +109,12 @@ std::vector<size_t> get2dConvexHull(const PointAdaptor& points) {
   return hull;
 }
 
-BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull) {
+BoxResult2D getMin2DBox(const PointAdaptor& points, const std::vector<size_t>& hull) {
   std::vector<size_t> indices;
   if (hull.empty()) {
-    const auto new_hull = get2dConvexHull(points);
-    indices.insert(indices.end(), new_hull.begin(), new_hull.end());
+    indices = get2dConvexHull(points);
   } else {
-    indices.insert(indices.end(), hull.begin(), hull.end());
+    indices = hull;
   }
 
   BoxResult2D result;
