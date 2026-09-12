@@ -37,7 +37,6 @@
 #include <algorithm>
 #include <functional>
 #include <iterator>
-#include <limits>
 #include <numeric>
 #include <optional>
 
@@ -83,7 +82,7 @@ void appendHullPoint(const PointAdaptor& points,
 
 }  // namespace
 
-std::list<size_t> get2dConvexHull(const PointAdaptor& points) {
+std::vector<size_t> get2dConvexHull(const PointAdaptor& points) {
   using namespace std::placeholders;
   std::vector<size_t> indices(points.size());
   std::iota(indices.begin(), indices.end(), size_t{0});
@@ -96,6 +95,7 @@ std::list<size_t> get2dConvexHull(const PointAdaptor& points) {
   }
 
   std::vector<size_t> hull;
+  hull.reserve(points.size());
   for (const auto index : indices) {
     appendHullPoint(points, index, 0, hull);
   }
@@ -106,7 +106,7 @@ std::list<size_t> get2dConvexHull(const PointAdaptor& points) {
   }
 
   hull.pop_back();  // The first point closes both chains.
-  return {hull.begin(), hull.end()};
+  return hull;
 }
 
 BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hull) {
@@ -134,39 +134,41 @@ BoxResult2D getMin2DBox(const PointAdaptor& points, const std::list<size_t>& hul
     return result;
   }
 
-  // Evaluate each hull edge; the hull is small compared to the input cloud.
-  double min_area = std::numeric_limits<double>::infinity();
+  // technically this can be implemented in O(n) instead via rotation calipers,
+  // but this is easier to understand and n << points.size() due to 2d projection
   for (size_t i = 0; i < indices.size(); ++i) {
-    const Eigen::Vector2d origin = points[indices[i]].head<2>().cast<double>();
-    const Eigen::Vector2d edge =
-        points[indices[(i + 1) % indices.size()]].head<2>().cast<double>() - origin;
+    const auto curr_idx = indices[i];
+    const auto next_idx = indices[(i + 1) % indices.size()];
+    const Eigen::Vector2d p_c = points[curr_idx].head<2>().cast<double>();
+    const Eigen::Vector2d p_n = points[next_idx].head<2>().cast<double>();
+    const Eigen::Vector2d edge = p_n - p_c;
     if (edge.squaredNorm() == 0.0) {
       continue;
     }
 
-    Eigen::Matrix2d rotation;
-    rotation.col(0) = edge.normalized();
-    rotation.col(1) = Eigen::Vector2d(-rotation(1, 0), rotation(0, 0));
+    Eigen::Matrix2d R;
+    R.col(0) = edge.normalized();
+    R.col(1) = Eigen::Vector2d(-R(1, 0), R(0, 0));
     Eigen::Vector2d min = Eigen::Vector2d::Zero();
     Eigen::Vector2d max = Eigen::Vector2d::Zero();
     for (const auto index : indices) {
-      const Eigen::Vector2d offset = points[index].head<2>().cast<double>() - origin;
-      const Eigen::Vector2d local = rotation.transpose() * offset;
+      const Eigen::Vector2d offset = points[index].head<2>().cast<double>() - p_c;
+      const Eigen::Vector2d local = R.transpose() * offset;
       min = min.cwiseMin(local);
       max = max.cwiseMax(local);
     }
 
     const Eigen::Vector2d dims = max - min;
     const auto area = dims.prod();
-    if (area >= min_area) {
+    if (result.min_area && area >= *result.min_area) {
       continue;
     }
 
-    min_area = area;
-    result.min_area = static_cast<float>(area);
+    result.min_area = area;
     result.dims = dims.cast<float>();
-    result.yaw = std::atan2(rotation(1, 0), rotation(0, 0));
-    result.center = (origin + rotation * (0.5 * (min + max))).cast<float>();
+    result.yaw = std::atan2(R(1, 0), R(0, 0));
+    // transform center point to global coordinates
+    result.center = (R * (0.5 * (min + max)) + p_c).cast<float>();
   }
 
   return result;

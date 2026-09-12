@@ -53,12 +53,10 @@ struct BoxResult2D {
 /**
  * @brief compute 2D convex hull in x-y plane
  *
- * Exposed primarily for testing
- *
  * @param points Point adaptor to use
  * @returns indices of hull points in ccw order
  */
-std::list<size_t> get2dConvexHull(const PointAdaptor& points);
+std::vector<size_t> get2dConvexHull(const PointAdaptor& points);
 
 /**
  * @brief compute the minimum area bounding box in the x-y plane
