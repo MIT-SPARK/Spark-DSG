@@ -633,7 +633,9 @@ std::ostream& TraversabilityNodeAttributes::fill_ostream(std::ostream& out) cons
       << "  - max: " << boundary.max.transpose() << "\n"
       << "  - first_observed_ns: " << first_observed_ns << "\n"
       << "  - last_observed_ns: " << last_observed_ns << "\n"
-      << "  - distance: " << distance << "\n";
+      << "  - distance: " << distance << "\n"
+      << "  - vmf_observation_count: " << vmf_observation_count << "\n"
+      << "  - vmf_feature_dim: " << vmf_feature_sum.size() << "\n";
   return out;
 }
 
@@ -674,6 +676,11 @@ void TraversabilityNodeAttributes::serialization_info() {
       label_weights[static_cast<Label>(label)] = weight;
     }
   }
+
+  if (header.version >= io::Version(1, 1, 5)) {
+    serialization::field("vmf_feature_sum", vmf_feature_sum);
+    serialization::field("vmf_observation_count", vmf_observation_count);
+  }
 }
 
 bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
@@ -688,7 +695,9 @@ bool TraversabilityNodeAttributes::is_equal(const NodeAttributes& other) const {
 
   return boundary == derived->boundary && distance == derived->distance &&
          first_observed_ns == derived->first_observed_ns &&
-         last_observed_ns == derived->last_observed_ns;
+         last_observed_ns == derived->last_observed_ns &&
+         vmf_observation_count == derived->vmf_observation_count &&
+         matricesEqual(vmf_feature_sum, derived->vmf_feature_sum);
 }
 
 NodeAttributes::Ptr TravNodeAttributes::clone() const {

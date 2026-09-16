@@ -475,6 +475,12 @@ struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
   //! Distance to the nearest intraversable obstacle.
   double distance = 0.0;
 
+  //! Sum of unit-norm per-frame CLIP features (vMF sufficient statistic).
+  //! Size D when populated, 0 otherwise. mu = sum / ||sum||, r_bar = ||sum|| / n.
+  Eigen::VectorXf vmf_feature_sum;
+  //! Number of CLIP observations contributing to vmf_feature_sum.
+  uint32_t vmf_observation_count = 0u;
+
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;

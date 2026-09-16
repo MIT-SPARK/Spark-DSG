@@ -197,7 +197,9 @@ void init_attributes(py::module_& m) {
       .def_readwrite("boundary", &TraversabilityNodeAttributes::boundary)
       .def_readwrite("first_observed_ns", &TraversabilityNodeAttributes::first_observed_ns)
       .def_readwrite("last_observed_ns", &TraversabilityNodeAttributes::last_observed_ns)
-      .def_readwrite("distance", &TraversabilityNodeAttributes::distance);
+      .def_readwrite("distance", &TraversabilityNodeAttributes::distance)
+      .def_readwrite("vmf_feature_sum", &TraversabilityNodeAttributes::vmf_feature_sum)
+      .def_readwrite("vmf_observation_count", &TraversabilityNodeAttributes::vmf_observation_count);
 
   py::class_<AgentNodeAttributes, NodeAttributes>(m, "AgentNodeAttributes")
       .def(py::init<>())
