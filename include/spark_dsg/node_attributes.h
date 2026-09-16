@@ -99,18 +99,20 @@ struct SemanticNodeAttributes : public NodeAttributes {
   Color color;
   //! Extents of the node (if they exists)
   BoundingBox bounding_box;
-  //! semantic label of object
+  //! Semantic label of node
   Label semantic_label;
-  //! semantic feature of object
-  Eigen::MatrixXf semantic_feature;
   //! Optional set of weights for each label <label_id, weight>
   std::map<Label, float> label_weights;
+  //! Semantic feature of node
+  Eigen::VectorXf semantic_feature;
+  //! Parameterization of distribution around feature
+  Eigen::MatrixXf feature_concentration;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
-  // registers derived attributes
+
   REGISTER_NODE_ATTRIBUTES(SemanticNodeAttributes);
 };
 
@@ -143,7 +145,7 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
-  // registers derived attributes
+
   REGISTER_NODE_ATTRIBUTES(ObjectNodeAttributes);
 };
 
@@ -168,7 +170,7 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
-  // registers derived attributes
+
   REGISTER_NODE_ATTRIBUTES(RoomNodeAttributes);
 };
 
@@ -218,7 +220,7 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
-  // registers derived attributes
+
   REGISTER_NODE_ATTRIBUTES(PlaceNodeAttributes);
 };
 using FrontierNodeAttributes = PlaceNodeAttributes;
@@ -261,7 +263,7 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
-  // registers derived attributes
+
   REGISTER_NODE_ATTRIBUTES(Place2dNodeAttributes);
 };
 
@@ -290,7 +292,7 @@ struct AgentNodeAttributes : public NodeAttributes {
   std::ostream& fill_ostream(std::ostream& out) const override;
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
-  // registers derived attributes
+
   REGISTER_NODE_ATTRIBUTES(AgentNodeAttributes);
 };
 
