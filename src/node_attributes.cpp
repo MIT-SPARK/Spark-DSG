@@ -82,10 +82,7 @@ bool operator==(const NearestVertexInfo& lhs, const NearestVertexInfo& rhs) {
 }
 
 SemanticNodeAttributes::SemanticNodeAttributes()
-    : NodeAttributes(),
-      name(""),
-      semantic_label(NO_SEMANTIC_LABEL),
-      semantic_feature(0, 0) {}
+    : NodeAttributes(), name(""), semantic_label(NO_SEMANTIC_LABEL) {}
 
 NodeAttributes::Ptr SemanticNodeAttributes::clone() const {
   return std::make_unique<SemanticNodeAttributes>(*this);
