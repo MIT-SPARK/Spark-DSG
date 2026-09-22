@@ -108,7 +108,9 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
       << "  - bounding box: " << bounding_box << "\n"
       << "  - label: " << std::to_string(semantic_label) << "\n"
       << "  - feature: [" << semantic_feature.rows() << " x " << semantic_feature.cols()
-      << "]";
+      << "]\n"
+      << "  - concentration: [" << feature_concentration.rows() << " x "
+      << feature_concentration.cols() << "]";
   return out;
 }
 
@@ -137,6 +139,7 @@ void SemanticNodeAttributes::serialization_info() {
   } else {
     serialization::field("semantic_feature", semantic_feature);
   }
+  serialization::field("feature_concentration", feature_concentration);
 
   if (header.version >= io::Version(1, 1, 4)) {
     serialization::field("label_weights", label_weights);
@@ -156,7 +159,8 @@ bool SemanticNodeAttributes::is_equal(const NodeAttributes& other) const {
   return name == derived->name && color == derived->color &&
          bounding_box == derived->bounding_box &&
          semantic_label == derived->semantic_label &&
-         semantic_feature == derived->semantic_feature;
+         semantic_feature == derived->semantic_feature &&
+         feature_concentration == derived->feature_concentration;
 }
 
 ObjectNodeAttributes::ObjectNodeAttributes()
