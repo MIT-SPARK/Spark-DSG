@@ -135,8 +135,13 @@ void SemanticNodeAttributes::serialization_info() {
 
     Eigen::MatrixXd feature;
     serialization::field("semantic_feature", feature);
-    semantic_feature = feature.cast<float>();
-  } else if (header.version <= io::Version(1, 1, 7)) {
+    if (feature.size()) {
+      // this will lose information technically
+      semantic_feature = feature.cast<float>().col(0);
+    }
+  } else if (header.version <= io::Version(1, 1, 6)) {
+    io::warnOutdatedHeader(header);
+
     Eigen::MatrixXf feature;
     serialization::field("semantic_feature", feature);
     if (feature.size()) {
