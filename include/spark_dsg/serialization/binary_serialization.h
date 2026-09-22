@@ -41,17 +41,11 @@
 #include <map>
 #include <optional>
 #include <set>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#define THROW_SERIALIZATION_ERROR(msg)                     \
-  std::stringstream ss;                                    \
-  ss << "[" << __FILE__ << ":" << __LINE__ << "] " << msg; \
-  throw std::domain_error(ss.str())
 
 namespace spark_dsg::serialization {
 
@@ -574,5 +568,4 @@ void read_binary(const BinaryDeserializer& s, std::unordered_map<K, V>& values) 
 }
 
 }  // namespace detail
-
 }  // namespace spark_dsg::serialization

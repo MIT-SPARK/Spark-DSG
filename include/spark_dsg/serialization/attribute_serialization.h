@@ -36,7 +36,6 @@
 
 #include <map>
 #include <nlohmann/json.hpp>
-#include <sstream>
 
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/binary_serialization.h"
@@ -45,10 +44,13 @@
 
 namespace spark_dsg::serialization {
 
-struct SerializationImpl {};
+struct SerializationImpl {
+  virtual ~SerializationImpl() = default;
+};
 
 struct BinaryWriter : SerializationImpl {
   BinaryWriter(BinarySerializer* serializer) : serializer_(serializer) {}
+  virtual ~BinaryWriter() = default;
 
   template <typename T>
   void write(const T& value) {
@@ -60,6 +62,7 @@ struct BinaryWriter : SerializationImpl {
 
 struct BinaryReader : SerializationImpl {
   BinaryReader(const BinaryDeserializer* deserializer) : deserializer_(deserializer) {}
+  virtual ~BinaryReader() = default;
 
   template <typename T>
   void read(T& value) {
@@ -72,7 +75,7 @@ struct BinaryReader : SerializationImpl {
 // for visitor set context
 struct JsonWriter : SerializationImpl {
   explicit JsonWriter(nlohmann::json* record) : ref(record) {}
-  ~JsonWriter() = default;
+  virtual ~JsonWriter() = default;
 
   template <typename T>
   void write(const std::string& name, const T& value) {
@@ -85,7 +88,7 @@ struct JsonWriter : SerializationImpl {
 // for visitor set context
 struct JsonReader : SerializationImpl {
   explicit JsonReader(const nlohmann::json* rec) : cref(rec) {}
-  ~JsonReader() = default;
+  virtual ~JsonReader() = default;
 
   template <typename T>
   void read(const std::string& name, T& value) const {

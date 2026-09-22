@@ -35,8 +35,14 @@
 #include "spark_dsg/serialization/binary_serialization.h"
 
 #include <iomanip>
+#include <stdexcept>
 
 namespace spark_dsg::serialization {
+
+#define THROW_SERIALIZATION_ERROR(msg)                     \
+  std::stringstream ss;                                    \
+  ss << "[" << __FILE__ << ":" << __LINE__ << "] " << msg; \
+  throw std::domain_error(ss.str())
 
 #define SHOW_CASE(os, enum_value) \
   case enum_value:                \

@@ -82,10 +82,7 @@ bool operator==(const NearestVertexInfo& lhs, const NearestVertexInfo& rhs) {
 }
 
 SemanticNodeAttributes::SemanticNodeAttributes()
-    : NodeAttributes(),
-      name(""),
-      semantic_label(NO_SEMANTIC_LABEL),
-      semantic_feature(0, 0) {}
+    : NodeAttributes(), name(""), semantic_label(NO_SEMANTIC_LABEL) {}
 
 NodeAttributes::Ptr SemanticNodeAttributes::clone() const {
   return std::make_unique<SemanticNodeAttributes>(*this);
@@ -111,7 +108,9 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
       << "  - bounding box: " << bounding_box << "\n"
       << "  - label: " << std::to_string(semantic_label) << "\n"
       << "  - feature: [" << semantic_feature.rows() << " x " << semantic_feature.cols()
-      << "]";
+      << "]\n"
+      << "  - concentration: [" << feature_concentration.rows() << " x "
+      << feature_concentration.cols() << "]";
   return out;
 }
 
@@ -136,9 +135,25 @@ void SemanticNodeAttributes::serialization_info() {
 
     Eigen::MatrixXd feature;
     serialization::field("semantic_feature", feature);
-    semantic_feature = feature.cast<float>();
+    if (feature.size()) {
+      // this will lose information technically
+      semantic_feature = feature.cast<float>().col(0);
+    }
+  } else if (header.version <= io::Version(1, 1, 6)) {
+    io::warnOutdatedHeader(header);
+
+    Eigen::MatrixXf feature;
+    serialization::field("semantic_feature", feature);
+    if (feature.size()) {
+      // this will lose information technically
+      semantic_feature = feature.col(0);
+    }
   } else {
     serialization::field("semantic_feature", semantic_feature);
+  }
+
+  if (header.version >= io::Version(1, 1, 7)) {
+    serialization::field("feature_concentration", feature_concentration);
   }
 
   if (header.version >= io::Version(1, 1, 4)) {
@@ -159,7 +174,8 @@ bool SemanticNodeAttributes::is_equal(const NodeAttributes& other) const {
   return name == derived->name && color == derived->color &&
          bounding_box == derived->bounding_box &&
          semantic_label == derived->semantic_label &&
-         semantic_feature == derived->semantic_feature;
+         semantic_feature == derived->semantic_feature &&
+         feature_concentration == derived->feature_concentration;
 }
 
 ObjectNodeAttributes::ObjectNodeAttributes()

@@ -127,6 +127,7 @@ void init_attributes(py::module_& m) {
       .def_readwrite("bounding_box", &SemanticNodeAttributes::bounding_box)
       .def_readwrite("semantic_label", &SemanticNodeAttributes::semantic_label)
       .def_readwrite("semantic_feature", &SemanticNodeAttributes::semantic_feature)
+      .def_readwrite("feature_concentration", &SemanticNodeAttributes::feature_concentration)
       .def_readonly_static("NO_SEMANTIC_LABEL", &SemanticNodeAttributes::NO_SEMANTIC_LABEL)
       .def_readwrite("label_weights", &SemanticNodeAttributes::label_weights);
 
