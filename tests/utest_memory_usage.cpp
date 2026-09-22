@@ -124,7 +124,7 @@ TEST(MemoryUsage, NodeAttributes) {
 
   sem_attrs.name = "Test Semantic Node";
   sem_attrs.feature_concentration.resize(128, 64);
-  expected_size = 41202;
+  expected_size += 40978;
   EXPECT_EQ(sem_attrs.memoryUsage(), expected_size);
 
   // Object noed attributes.

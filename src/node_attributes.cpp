@@ -148,6 +148,8 @@ void SemanticNodeAttributes::serialization_info() {
       // this will lose information technically
       semantic_feature = feature.col(0);
     }
+  } else {
+    serialization::field("semantic_feature", semantic_feature);
   }
 
   if (header.version >= io::Version(1, 1, 7)) {
