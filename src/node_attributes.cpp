@@ -136,10 +136,18 @@ void SemanticNodeAttributes::serialization_info() {
     Eigen::MatrixXd feature;
     serialization::field("semantic_feature", feature);
     semantic_feature = feature.cast<float>();
-  } else {
-    serialization::field("semantic_feature", semantic_feature);
+  } else if (header.version <= io::Version(1, 1, 7)) {
+    Eigen::MatrixXf feature;
+    serialization::field("semantic_feature", feature);
+    if (feature.size()) {
+      // this will lose information technically
+      semantic_feature = feature.col(0);
+    }
   }
-  serialization::field("feature_concentration", feature_concentration);
+
+  if (header.version >= io::Version(1, 1, 7)) {
+    serialization::field("feature_concentration", feature_concentration);
+  }
 
   if (header.version >= io::Version(1, 1, 4)) {
     serialization::field("label_weights", label_weights);
