@@ -119,17 +119,17 @@ TEST(MemoryUsage, NodeAttributes) {
 
   // Semantic node attributes.
   SemanticNodeAttributes sem_attrs;
-  expected_size = 201;
+  expected_size = 224;
   EXPECT_EQ(sem_attrs.memoryUsage(), expected_size);
 
   sem_attrs.name = "Test Semantic Node";
-  sem_attrs.semantic_feature.resize(128, 64);
-  expected_size = 41179;
+  sem_attrs.feature_concentration.resize(128, 64);
+  expected_size = 41202;
   EXPECT_EQ(sem_attrs.memoryUsage(), expected_size);
 
   // Object noed attributes.
   ObjectNodeAttributes obj_attrs;
-  expected_size = 248;
+  expected_size = 271;
   EXPECT_EQ(obj_attrs.memoryUsage(), expected_size);
   obj_attrs.mesh_connections.resize(500);
 
@@ -146,8 +146,8 @@ TEST(MemoryUsage, SceneGraphNode) {
 
   // Add attributes
   SceneGraphNode node2(2, {0, 0}, std::make_unique<SemanticNodeAttributes>());
-  node2.attributes<SemanticNodeAttributes>().semantic_feature.resize(128, 64);
-  expected_size = 41345;
+  node2.attributes<SemanticNodeAttributes>().feature_concentration.resize(128, 64);
+  expected_size = 41368;
   EXPECT_EQ(node2.memoryUsage(), expected_size);
 }
 
@@ -231,7 +231,7 @@ SceneGraph::Ptr populateSceneGraph(size_t size) {
   graph->addLayer(1, 0, "test_layer");
   graph->addLayer(2, 1, "test_layer_partition");
   auto attrs = std::make_unique<SemanticNodeAttributes>();
-  attrs->semantic_feature.resize(128, 64);
+  attrs->feature_concentration.resize(128, 64);
   for (size_t i = 0; i < size; ++i) {
     graph->emplaceNode(1, i, attrs->clone(), 0);
     graph->emplaceNode(2, size + i, attrs->clone(), 1);
