@@ -45,7 +45,7 @@ namespace spark_dsg {
 enum class _NodeStatus { NEW, PRESENT, MERGED, DELETED, NONEXISTENT };
 
 //! Current state of an edge
-enum class EdgeStatus { NEW, PRESENT, MERGED, DELETED, NONEXISTENT };
+enum class EdgeStatus { NEW, PRESENT, DELETED, NONEXISTENT };
 
 //! General graph representation
 class GraphImpl {
@@ -79,7 +79,7 @@ class GraphImpl {
   bool remove(NodeId node_id);
   bool remove(NodeId source, NodeId target);
 
-  // bool contract(NodeId node_from, NodeId node_to);
+  bool contract(NodeId node_from, NodeId node_to);
 
   GraphImpl::Ptr clone() const;
 
