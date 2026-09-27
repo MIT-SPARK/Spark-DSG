@@ -123,6 +123,7 @@ class SceneGraphNode {
   using Ptr = std::unique_ptr<SceneGraphNode>;
   friend class SceneGraph;
   friend class SceneGraphLayer;
+  friend class GraphImpl;
 
   /**
    * @brief Make a scene graph node (usually not necessary)
@@ -135,34 +136,20 @@ class SceneGraphNode {
    * @param attrs attributes for the node
    */
   SceneGraphNode(NodeId id, LayerKey layer, std::unique_ptr<NodeAttributes>&& attrs);
+  virtual ~SceneGraphNode();
 
   SceneGraphNode(const SceneGraphNode& other) = delete;
   SceneGraphNode& operator=(const SceneGraphNode& other) = delete;
   SceneGraphNode(SceneGraphNode&& other) = default;
   SceneGraphNode& operator=(SceneGraphNode&& other) = delete;
 
-  virtual ~SceneGraphNode();
-
-  /**
-   * @brief get whether a node has a parent
-   * @returns whether or not the node has a parent
-   */
+  //! Get whether a node has a parent
   bool hasParent() const;
 
-  /**
-   * @brief get whether a node has any siblings
-   * @note this is equivalents to siblings.empty() but has more semantically
-   * meaning
-   * @returns whether or not the node has any siblings
-   */
+  //! Get whether a node has any siblings
   bool hasSiblings() const;
 
-  /**
-   * @brief get whether a node has any children
-   * @note this is equivalents to children.empty() but has more semantically
-   * meaning
-   * @returns whether or not the node has any children
-   */
+  //! Get whether a node has any children
   bool hasChildren() const;
 
   /**
@@ -171,24 +158,16 @@ class SceneGraphNode {
    */
   std::optional<NodeId> getParent() const;
 
-  /**
-   * @brief constant iterable over the node's sibilings
-   */
+  //! Constant iterable over the node's sibilings
   const std::set<NodeId>& siblings() const;
 
-  /**
-   * @brief constant iterable over the node's children
-   */
+  //! Constant iterable over the node's children
   const std::set<NodeId>& children() const;
 
-  /**
-   * @brief constant iterable over the node's parents
-   */
+  //! Constant iterable over the node's parents
   const std::set<NodeId>& parents() const;
 
-  /**
-   * @brief get list of all node ids the node is connected to
-   */
+  //! Get list of all node ids the node is connected to
   std::vector<NodeId> connections() const;
 
   /**
@@ -216,9 +195,7 @@ class SceneGraphNode {
 
   void setAttributes(std::unique_ptr<NodeAttributes>&& attrs);
 
-  /**
-   * @brief Estimate the memory usage of the node in bytes.
-   */
+  //! Estimate the memory usage of the node in bytes.
   size_t memoryUsage() const;
 
   //! ID of the node
@@ -227,6 +204,9 @@ class SceneGraphNode {
   const LayerKey layer;
 
  protected:
+  void addConnection(SceneGraphNode& other);
+  void removeConnection(SceneGraphNode& other);
+
   //! pointer to attributes
   std::unique_ptr<NodeAttributes> attributes_;
 

@@ -38,15 +38,6 @@ namespace spark_dsg {
 
 using Edge = EdgeContainer::Edge;
 
-SceneGraphEdge::SceneGraphEdge(NodeId source,
-                               NodeId target,
-                               std::unique_ptr<EdgeAttributes>&& info)
-    : source(source), target(target), info(std::move(info)) {}
-
-SceneGraphEdge::~SceneGraphEdge() = default;
-
-EdgeKey SceneGraphEdge::key() const { return {source, target}; }
-
 void EdgeContainer::insert(NodeId source,
                            NodeId target,
                            std::unique_ptr<EdgeAttributes>&& edge_info) {
@@ -56,12 +47,12 @@ void EdgeContainer::insert(NodeId source,
   edges.emplace(std::piecewise_construct,
                 std::forward_as_tuple(source, target),
                 std::forward_as_tuple(source, target, std::move(attrs)));
-  edge_status[EdgeKey(source, target)] = EdgeStatus::NEW;
+  new_.push_back(EdgeKey(source, target));
 }
 
 void EdgeContainer::remove(NodeId source, NodeId target) {
   const EdgeKey key(source, target);
-  edge_status.at(key) = EdgeStatus::DELETED;
+  removed_.push_back(key);
   edges.erase(key);
 }
 
@@ -76,7 +67,6 @@ void EdgeContainer::rewire(NodeId source,
   }
 
   auto attrs = prev->info->clone();
-  edge_status.at(key) = EdgeStatus::MERGED;
   remove(source, target);
   insert(new_source, new_target, std::move(attrs));
 }
@@ -89,12 +79,8 @@ size_t EdgeContainer::size() const { return edges.size(); }
 
 void EdgeContainer::reset() {
   edges.clear();
-  edge_status.clear();
-}
-
-EdgeStatus EdgeContainer::getStatus(NodeId source, NodeId target) const {
-  const auto iter = edge_status.find(EdgeKey(source, target));
-  return (iter == edge_status.end()) ? EdgeStatus::NONEXISTENT : iter->second;
+  new_.clear();
+  removed_.clear();
 }
 
 const Edge* EdgeContainer::find(NodeId source, NodeId target) const {
@@ -108,34 +94,17 @@ Edge* EdgeContainer::find(NodeId source, NodeId target) {
 }
 
 void EdgeContainer::getNew(std::vector<EdgeKey>& new_edges, bool clear_new) const {
-  auto iter = edge_status.begin();
-  while (iter != edge_status.end()) {
-    if (iter->second == EdgeStatus::NEW) {
-      new_edges.push_back(iter->first);
-      if (clear_new) {
-        iter->second = EdgeStatus::VISIBLE;
-      }
-    }
-
-    ++iter;
+  new_edges.insert(new_edges.end(), new_.begin(), new_.end());
+  if (clear_new) {
+    new_.clear();
   }
 }
 
 void EdgeContainer::getRemoved(std::vector<EdgeKey>& removed_edges,
                                bool clear_removed) const {
-  auto iter = edge_status.begin();
-  while (iter != edge_status.end()) {
-    if (iter->second != EdgeStatus::DELETED) {
-      ++iter;
-      continue;
-    }
-
-    removed_edges.push_back(iter->first);
-    if (clear_removed) {
-      iter = edge_status.erase(iter);
-    } else {
-      ++iter;
-    }
+  removed_edges.insert(removed_edges.end(), removed_.begin(), removed_.end());
+  if (clear_removed) {
+    removed_.clear();
   }
 }
 
@@ -166,9 +135,7 @@ size_t EdgeContainer::memoryUsage() const {
       total_size += key_edge_pair.second.info->memoryUsage();
     }
   }
-  // Status and stale maps.
-  total_size += edge_status.size() * (sizeof(EdgeKey) + sizeof(EdgeStatus));
-  total_size += stale_edges.size() * (sizeof(EdgeKey) + sizeof(bool));
+
   return total_size;
 }
 

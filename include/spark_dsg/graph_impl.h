@@ -33,57 +33,75 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <Eigen/Geometry>
 #include <map>
-#include <memory>
-#include <vector>
 
 #include "spark_dsg/scene_graph_edge.h"
-#include "spark_dsg/scene_graph_types.h"
+#include "spark_dsg/scene_graph_node.h"
 
 namespace spark_dsg {
 
-struct EdgeContainer {
-  using Edge = SceneGraphEdge;
-  using Edges = std::map<EdgeKey, Edge>;
+//! Current state of a node
+enum class _NodeStatus { NEW, PRESENT, MERGED, DELETED, NONEXISTENT };
 
-  void insert(NodeId source,
-              NodeId target,
-              std::unique_ptr<EdgeAttributes>&& edge_info);
+//! Current state of an edge
+enum class EdgeStatus { NEW, PRESENT, MERGED, DELETED, NONEXISTENT };
 
-  void remove(NodeId source, NodeId target);
+//! General graph representation
+class GraphImpl {
+ public:
+  //! desired pointer type for the layer
+  using Ptr = std::shared_ptr<GraphImpl>;
 
-  void rewire(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
+  GraphImpl();
+  virtual ~GraphImpl();
 
-  bool contains(NodeId source, NodeId target) const;
+  size_t num_nodes() const;
+  size_t num_edges() const;
 
-  size_t size() const;
+  bool has(NodeId node_id) const;
+  bool has(NodeId source, NodeId target) const;
 
-  void reset();
+  _NodeStatus status(NodeId node_id) const;
+  EdgeStatus status(NodeId source, NodeId target) const;
 
-  Edge* find(NodeId source, NodeId target);
+  const SceneGraphNode* find(NodeId node_id) const;
+  const SceneGraphEdge* find(NodeId source, NodeId target) const;
 
-  const Edge* find(NodeId source, NodeId target) const;
+  const SceneGraphNode& get(NodeId node_id) const;
+  const SceneGraphEdge& get(NodeId source, NodeId target) const;
 
-  void getRemoved(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
+  bool emplace(LayerKey layer, NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
+  bool connect(NodeId source,
+               NodeId target,
+               std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr);
 
-  void getNew(std::vector<EdgeKey>& new_edges, bool clear_new) const;
+  bool remove(NodeId node_id);
+  bool remove(NodeId source, NodeId target);
 
-  void setStale();
+  // bool contract(NodeId node_from, NodeId node_to);
 
-  Edges edges;
+  GraphImpl::Ptr clone() const;
 
-  mutable std::map<EdgeKey, bool> stale_edges;
+  void transform(const Eigen::Isometry3d& transform);
 
-  /**
-   * @brief Get memory usage of the edge container in bytes.
-   */
   size_t memoryUsage() const;
 
- protected:
-  Edge* find(const EdgeKey& key) const;
+  const std::map<NodeId, std::unique_ptr<SceneGraphNode>>& nodes() const {
+    return nodes_;
+  }
 
-  mutable std::vector<EdgeKey> new_;
-  mutable std::vector<EdgeKey> removed_;
+  const std::map<EdgeKey, SceneGraphEdge>& edges() const { return edges_; }
+
+ protected:
+  void reset();
+
+  std::map<NodeId, std::unique_ptr<SceneGraphNode>> nodes_;
+  std::map<EdgeKey, SceneGraphEdge> edges_;
+
+  mutable std::map<NodeId, _NodeStatus> node_status_;
+  mutable std::map<EdgeKey, EdgeStatus> edge_status_;
+  mutable std::map<EdgeKey, bool> stale_edges_;
 };
 
 }  // namespace spark_dsg

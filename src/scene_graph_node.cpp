@@ -190,4 +190,30 @@ size_t SceneGraphNode::memoryUsage() const {
   return total_size;
 }
 
+void SceneGraphNode::addConnection(SceneGraphNode& other) {
+  if (layer.isParentOf(other.layer)) {
+    children_.insert(other.id);
+    other.parents_.insert(id);
+  } else if (other.layer.isParentOf(layer)) {
+    other.children_.insert(id);
+    parents_.insert(other.id);
+  } else {
+    siblings_.insert(other.id);
+    other.siblings_.insert(id);
+  }
+}
+
+void SceneGraphNode::removeConnection(SceneGraphNode& other) {
+  if (layer.isParentOf(other.layer)) {
+    children_.erase(other.id);
+    other.parents_.erase(id);
+  } else if (other.layer.isParentOf(layer)) {
+    other.children_.erase(id);
+    parents_.erase(other.id);
+  } else {
+    siblings_.erase(other.id);
+    other.siblings_.erase(id);
+  }
+}
+
 }  // namespace spark_dsg
