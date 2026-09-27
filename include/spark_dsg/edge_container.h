@@ -37,52 +37,14 @@
 #include <memory>
 #include <vector>
 
-#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/scene_graph_edge.h"
 #include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
 
-/**
- * @brief edge status
- *
- * Mostly for keeping history of edges in a graph
- */
-enum class EdgeStatus { NEW, VISIBLE, DELETED, MERGED, NONEXISTENT };
-
-/**
- * @brief Edge representation
- */
-struct SceneGraphEdge {
-  //! construct and edge from some info
-  SceneGraphEdge(NodeId source, NodeId target, std::unique_ptr<EdgeAttributes>&& info);
-
-  ~SceneGraphEdge();
-
-  //! start of edge (by convention the parent)
-  const NodeId source;
-  //! end of edge (by convention the child)
-  const NodeId target;
-  //! attributes about the edge
-  std::unique_ptr<EdgeAttributes> info;
-
-  EdgeKey key() const;
-
-  /**
-   * @brief get a reference to the attributes of the node (with an optional
-   * template argument to perform a cast to the desired attribute type
-   */
-  template <typename Derived = EdgeAttributes>
-  Derived& attributes() const {
-    static_assert(std::is_base_of<EdgeAttributes, Derived>::value,
-                  "info can only be downcast to a derived EdgeAttributes class");
-    return dynamic_cast<Derived&>(*info);
-  }
-};
-
 struct EdgeContainer {
   using Edge = SceneGraphEdge;
   using Edges = std::map<EdgeKey, Edge>;
-  using EdgeStatusMap = std::map<EdgeKey, EdgeStatus>;
 
   void insert(NodeId source,
               NodeId target,
@@ -102,8 +64,6 @@ struct EdgeContainer {
 
   const Edge* find(NodeId source, NodeId target) const;
 
-  EdgeStatus getStatus(NodeId source, NodeId target) const;
-
   void getRemoved(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
 
   void getNew(std::vector<EdgeKey>& new_edges, bool clear_new) const;
@@ -111,7 +71,7 @@ struct EdgeContainer {
   void setStale();
 
   Edges edges;
-  mutable EdgeStatusMap edge_status;
+
   mutable std::map<EdgeKey, bool> stale_edges;
 
   /**
@@ -121,6 +81,9 @@ struct EdgeContainer {
 
  protected:
   Edge* find(const EdgeKey& key) const;
+
+  mutable std::vector<EdgeKey> new_;
+  mutable std::vector<EdgeKey> removed_;
 };
 
 }  // namespace spark_dsg
