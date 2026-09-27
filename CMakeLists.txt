@@ -96,6 +96,7 @@ add_library(
   src/colormaps.cpp
   src/edge_attributes.cpp
   src/edge_container.cpp
+  src/graph_impl.cpp
   src/graph_utilities.cpp
   src/labelspace.cpp
   src/layer_view.cpp
@@ -105,6 +106,7 @@ add_library(
   src/node_symbol.cpp
   src/printing.cpp
   src/scene_graph.cpp
+  src/scene_graph_edge.cpp
   src/scene_graph_layer.cpp
   src/scene_graph_logger.cpp
   src/scene_graph_node.cpp

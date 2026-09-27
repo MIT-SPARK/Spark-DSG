@@ -1,3 +1,4 @@
+
 /* -----------------------------------------------------------------------------
  * Copyright 2022 Massachusetts Institute of Technology.
  * All Rights Reserved
@@ -32,58 +33,19 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include <map>
-#include <memory>
-#include <vector>
-
 #include "spark_dsg/scene_graph_edge.h"
-#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
 
-struct EdgeContainer {
-  using Edge = SceneGraphEdge;
-  using Edges = std::map<EdgeKey, Edge>;
+SceneGraphEdge::SceneGraphEdge(NodeId source,
+                               NodeId target,
+                               std::unique_ptr<EdgeAttributes>&& _info)
+    : source(source),
+      target(target),
+      info(_info ? std::move(_info) : std::make_unique<EdgeAttributes>()) {}
 
-  void insert(NodeId source,
-              NodeId target,
-              std::unique_ptr<EdgeAttributes>&& edge_info);
+SceneGraphEdge::~SceneGraphEdge() = default;
 
-  void remove(NodeId source, NodeId target);
-
-  void rewire(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
-
-  bool contains(NodeId source, NodeId target) const;
-
-  size_t size() const;
-
-  void reset();
-
-  Edge* find(NodeId source, NodeId target);
-
-  const Edge* find(NodeId source, NodeId target) const;
-
-  void getRemoved(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
-
-  void getNew(std::vector<EdgeKey>& new_edges, bool clear_new) const;
-
-  void setStale();
-
-  Edges edges;
-
-  mutable std::map<EdgeKey, bool> stale_edges;
-
-  /**
-   * @brief Get memory usage of the edge container in bytes.
-   */
-  size_t memoryUsage() const;
-
- protected:
-  Edge* find(const EdgeKey& key) const;
-
-  mutable std::vector<EdgeKey> new_;
-  mutable std::vector<EdgeKey> removed_;
-};
+EdgeKey SceneGraphEdge::key() const { return {source, target}; }
 
 }  // namespace spark_dsg
