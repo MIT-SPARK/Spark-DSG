@@ -211,7 +211,6 @@ TEST(GraphImpl, RemoveNodeSound) {
   EXPECT_EQ(_NodeStatus::DELETED, graph.status(0));
 }
 
-/*
 // Test that merging two nodes meets the invariants that we expect
 //   - we don't do anything if either nodes doesn't exist
 //   - we rewire all edges to the merged nodes if we do
@@ -219,35 +218,38 @@ TEST(GraphImpl, ContractCorrect) {
   GraphImpl graph;
 
   // we can't remove a node that doesn't exist
-  EXPECT_FALSE(graph.mergeNodes(0, 1));
+  EXPECT_FALSE(graph.contract(0, 1));
 
   size_t num_nodes = 5;
   for (size_t i = 0; i < num_nodes; ++i) {
     EXPECT_TRUE(graph.emplace(1, i, std::make_unique<NodeAttributes>()));
   }
-  EXPECT_FALSE(graph.mergeNodes(0, 5));
+
+  EXPECT_FALSE(graph.contract(0, 5));
+
   graph.remove(4);
-  EXPECT_FALSE(graph.mergeNodes(4, 0));
+  EXPECT_FALSE(graph.contract(4, 0));
 
   for (size_t i = 1; i < 4; ++i) {
     EXPECT_TRUE(graph.connect(0, i));
   }
 
-  const auto& node0 = graph.get(0);
-  const auto& node1 = graph.get(1);
-
+  ASSERT_TRUE(graph.has(0));
+  ASSERT_TRUE(graph.has(1));
   EXPECT_EQ(4u, graph.num_nodes());
   EXPECT_EQ(3u, graph.num_edges());
-  EXPECT_EQ(3u, node0.siblings().size());
-  EXPECT_EQ(1u, node1.siblings().size());
-  graph.mergeNodes(0, 1);
+  EXPECT_EQ(3u, graph.get(0).siblings().size());
+  EXPECT_EQ(1u, graph.get(1).siblings().size());
+
+  EXPECT_TRUE(graph.contract(0, 1));
+  EXPECT_FALSE(graph.has(0));
+  ASSERT_TRUE(graph.has(1));
   EXPECT_EQ(3u, graph.num_nodes());
   EXPECT_EQ(2u, graph.num_edges());
-  EXPECT_EQ(2u, node1.siblings().size());
+  EXPECT_EQ(2u, graph.get(1).siblings().size());
   EXPECT_EQ(_NodeStatus::MERGED, graph.status(0));
   EXPECT_EQ(_NodeStatus::DELETED, graph.status(4));
 }
-*/
 
 // Test that removing a edge does what it should
 TEST(GraphImpl, RemoveEdgeCorrect) {
@@ -268,41 +270,6 @@ TEST(GraphImpl, RemoveEdgeCorrect) {
   }
 }
 
-/*
-// Test that rewiring an edge does what it should
-TEST(GraphImpl, RewireEdgeCorrect) {
-  GraphImpl graph;
-
-  size_t num_nodes = 5;
-  for (size_t i = 0; i < num_nodes; ++i) {
-    EXPECT_TRUE(graph.emplace(1, i, std::make_unique<NodeAttributes>()));
-  }
-
-  for (size_t i = 1; i < num_nodes; ++i) {
-    EXPECT_TRUE(graph.connect(i - 1, i));
-  }
-  EXPECT_EQ(4u, graph.num_edges());
-
-  // we can't rewire an edge that doesn't exist
-  EXPECT_FALSE(graph.rewireEdge(4, 5, 0, 1));
-  // we can't rewire an edge to itself
-  EXPECT_FALSE(graph.rewireEdge(0, 1, 0, 1));
-  // if the new edge to be rewired is the same, simply remove
-  graph.rewireEdge(2, 3, 2, 2);
-  EXPECT_EQ(3u, graph.num_edges());
-  // if the new edge to be rewired already exists, simply remove
-  graph.rewireEdge(1, 2, 1, 0);
-  EXPECT_EQ(2u, graph.num_edges());
-  // try rewiring edge
-  graph.rewireEdge(3, 4, 3, 0);
-  EXPECT_EQ(2u, graph.num_edges());
-
-  EXPECT_TRUE(graph.has(0, 3));
-  EXPECT_TRUE(graph.has(0, 1));
-  EXPECT_FALSE(graph.has(3, 4));
-}
-*/
-
 TEST(GraphImpl, CloneCorrect) {
   GraphImpl graph;
 
@@ -316,7 +283,6 @@ TEST(GraphImpl, CloneCorrect) {
   ASSERT_TRUE(result != nullptr);
   for (const auto& [node_id, node] : graph.nodes()) {
     EXPECT_TRUE(result->has(node_id));
-    // TODO(nathan) consider testing attribute equality
   }
 
   for (const auto& [edge_key, edge] : graph.edges()) {
