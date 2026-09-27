@@ -175,28 +175,51 @@ bool GraphImpl::remove(NodeId source, NodeId target) {
   return true;
 }
 
-/*
 bool GraphImpl::contract(NodeId node_from, NodeId node_to) {
   if (node_from == node_to) {
     return false;
   }
 
-  if (!hasNode(node_from) || !hasNode(node_to)) {
+  auto from = nodes_.find(node_from);
+  auto to = nodes_.find(node_to);
+  if (from == nodes_.end() || to == nodes_.end()) {
     return false;
   }
 
   // rewire all edges connecting to merged node
-  std::set<NodeId> targets_to_rewire = nodes_.at(node_from)->siblings_;
-  for (const auto& target : targets_to_rewire) {
-    rewireEdge(node_from, target, node_to, target);
+  const auto targets_to_rewire = from->second->connections();
+  for (const auto target : targets_to_rewire) {
+    if (target == node_to) {
+      const EdgeKey key{node_from, node_to};
+      edges_.erase(key);
+      edge_status_[key] = EdgeStatus::DELETED;
+      to->second->removeConnection(*from->second);
+      continue;  // no self edges from contraction
+    }
+
+    // update ancestry for new connection
+    auto& target_node = *nodes_.at(target);
+    from->second->removeConnection(target_node);
+    to->second->addConnection(target_node);
+
+    const EdgeKey prev_key{node_from, target};
+    auto prev = edges_.find(prev_key);
+    auto attrs = prev->second.info->clone();
+    edges_.erase(prev);
+
+    const EdgeKey new_key{node_to, target};
+    edges_.emplace(std::piecewise_construct,
+                   std::forward_as_tuple(new_key),
+                   std::forward_as_tuple(node_to, target, std::move(attrs)));
+    edge_status_[new_key] = edge_status_.at(prev_key);
+    edge_status_[prev_key] = EdgeStatus::DELETED;
   }
 
-  // remove the actual node
-  nodes_.erase(node_from);
+  // TODO(nathan) push this to extra storage
+  nodes_.erase(from);
   node_status_[node_from] = _NodeStatus::MERGED;
   return true;
 }
-*/
 
 void GraphImpl::reset() {
   nodes_.clear();
