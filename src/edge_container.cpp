@@ -45,6 +45,8 @@ SceneGraphEdge::SceneGraphEdge(NodeId source,
 
 SceneGraphEdge::~SceneGraphEdge() = default;
 
+EdgeKey SceneGraphEdge::key() const { return {source, target}; }
+
 void EdgeContainer::insert(NodeId source,
                            NodeId target,
                            std::unique_ptr<EdgeAttributes>&& edge_info) {

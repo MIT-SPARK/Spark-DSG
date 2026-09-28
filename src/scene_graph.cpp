@@ -696,14 +696,14 @@ UniqueGraph SceneGraph::clone_unique() const {
   }
 
   for (const auto& [layer_id, layer] : layers_) {
-    for (const auto& [edge_id, edge] : layer->edges()) {
+    for (const auto& edge : layer->edges()) {
       to_return->insertEdge(edge.source, edge.target, edge.info->clone());
     }
   }
 
   for (const auto& [layer_id, partitions] : layer_partitions_) {
     for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [edge_id, edge] : partition->edges()) {
+      for (const auto& edge : partition->edges()) {
         to_return->insertEdge(edge.source, edge.target, edge.info->clone());
       }
     }

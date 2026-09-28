@@ -65,6 +65,8 @@ struct SceneGraphEdge {
   //! attributes about the edge
   std::unique_ptr<EdgeAttributes> info;
 
+  EdgeKey key() const;
+
   /**
    * @brief get a reference to the attributes of the node (with an optional
    * template argument to perform a cast to the desired attribute type

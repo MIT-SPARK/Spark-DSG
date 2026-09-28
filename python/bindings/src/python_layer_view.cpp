@@ -42,7 +42,7 @@ LayerView::LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref(lay
 
 NodeIter LayerView::nodes() const { return NodeIter(layer_ref.nodes_); }
 
-EdgeIter LayerView::edges() const { return EdgeIter(layer_ref.edges()); }
+EdgeIter LayerView::edges() const { return EdgeIter(layer_ref.edges_.edges); }
 
 size_t LayerView::numNodes() const { return layer_ref.numNodes(); }
 
