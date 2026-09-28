@@ -132,8 +132,8 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   record["metadata"] = graph.metadata();
 
   for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& [node_id, node] : layer->nodes()) {
-      record["nodes"].push_back(*node);
+    for (const auto& node : layer->nodes()) {
+      record["nodes"].push_back(node);
     }
 
     for (const auto& [edge_id, edge] : layer->edges()) {
@@ -147,8 +147,8 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
 
   for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
     for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [node_id, node] : partition->nodes()) {
-        record["nodes"].push_back(*node);
+      for (const auto& node : partition->nodes()) {
+        record["nodes"].push_back(node);
       }
 
       for (const auto& [edge_id, edge] : partition->edges()) {

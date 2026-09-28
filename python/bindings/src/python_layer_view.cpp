@@ -40,7 +40,7 @@ namespace spark_dsg::python {
 
 LayerView::LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref(layer) {}
 
-NodeIter LayerView::nodes() const { return NodeIter(layer_ref.nodes()); }
+NodeIter LayerView::nodes() const { return NodeIter(layer_ref.nodes_); }
 
 EdgeIter LayerView::edges() const { return EdgeIter(layer_ref.edges()); }
 

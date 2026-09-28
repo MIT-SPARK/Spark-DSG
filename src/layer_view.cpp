@@ -40,7 +40,7 @@ using ViewIter = LayerView::Iter;
 
 ViewIter::Iter(const SceneGraphLayer* layer, const Filter& filter, bool is_end)
     : layer_(layer),
-      iter_(is_end ? layer->nodes().end() : layer->nodes().begin()),
+      iter_(is_end ? layer->nodes_.end() : layer->nodes_.begin()),
       filter_(filter) {
   if (!valid()) {
     next();  // noop if at end already
@@ -58,7 +58,7 @@ ViewIter& ViewIter::operator=(const ViewIter& other) {
 }
 
 bool ViewIter::valid() const {
-  if (iter_ == layer_->nodes().end()) {
+  if (iter_ == layer_->nodes_.end()) {
     return false;
   }
 
@@ -70,14 +70,14 @@ bool ViewIter::valid() const {
 }
 
 void ViewIter::next() {
-  if (iter_ == layer_->nodes().end()) {
+  if (iter_ == layer_->nodes_.end()) {
     return;
   }
 
   // increment to next available active node
   do {
     ++iter_;
-    if (iter_ == layer_->nodes().end()) {
+    if (iter_ == layer_->nodes_.end()) {
       break;
     }
   } while (!valid());

@@ -86,7 +86,7 @@ void init_scene_graph_layer(py::module_& m) {
            })
       .def_property(
           "nodes",
-          [](const SceneGraphLayer& view) { return py::make_iterator(NodeIter(view.nodes()), IterSentinel()); },
+          [](const SceneGraphLayer& view) { view.nodes(); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(

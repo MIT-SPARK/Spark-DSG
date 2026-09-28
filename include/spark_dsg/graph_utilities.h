@@ -341,18 +341,18 @@ Components getConnectedComponents(const SceneGraphLayer& graph,
   Components components;
 
   NodeSet visited;
-  for (const auto& [node_id, node] : graph.nodes()) {
-    if (node_valid && !node_valid(*node)) {
+  for (const auto& node : graph.nodes()) {
+    if (node_valid && !node_valid(node)) {
       continue;
     }
 
-    if (visited.count(node_id)) {
+    if (visited.count(node.id)) {
       continue;
     }
 
     std::vector<NodeId> component;
-    std::deque<NodeId> frontier{node_id};
-    visited.insert(node_id);
+    std::deque<NodeId> frontier{node.id};
+    visited.insert(node.id);
     breadthFirstSearch(
         graph,
         frontier,

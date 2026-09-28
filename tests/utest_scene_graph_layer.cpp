@@ -151,10 +151,8 @@ TEST(SceneGraphLayerTests, BasicNodeIterationCorrect) {
 
   // nodes may be stored unordered in the future
   std::set<int64_t> actual_ids;
-  for (const auto& id_node_pair : layer.nodes()) {
-    ASSERT_TRUE(id_node_pair.second != nullptr);
-    EXPECT_EQ(id_node_pair.first, id_node_pair.second->id);
-    actual_ids.insert(id_node_pair.second->id);
+  for (const auto& node : layer.nodes()) {
+    actual_ids.insert(node.id);
   }
 
   EXPECT_EQ(expected_ids, actual_ids);
@@ -262,8 +260,8 @@ TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
   EXPECT_TRUE(layer.removeEdge(0, 1));
   EXPECT_EQ(0u, layer.numEdges());
 
-  for (const auto& node_id_pair : layer.nodes()) {
-    EXPECT_FALSE(node_id_pair.second->hasSiblings());
+  for (const auto& node : layer.nodes()) {
+    EXPECT_FALSE(node.hasSiblings());
   }
 }
 
@@ -585,8 +583,8 @@ TEST(SceneGraphLayerTests, CloneCorrect) {
 
   auto result = layer.clone();
   ASSERT_TRUE(result != nullptr);
-  for (const auto& id_node_pair : layer.nodes()) {
-    EXPECT_TRUE(result->hasNode(id_node_pair.first));
+  for (const auto& node : layer.nodes()) {
+    EXPECT_TRUE(result->hasNode(node.id));
     // TODO(nathan) consider testing attribute equality
   }
 
