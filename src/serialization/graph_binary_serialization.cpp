@@ -127,8 +127,8 @@ void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer) {
   serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
 
   serializer.startDynamicArray();
-  for (const auto& id_node_pair : graph.nodes()) {
-    serializer.write(*id_node_pair.second);
+  for (const auto& node : graph.nodes()) {
+    serializer.write(node);
   }
   serializer.endDynamicArray();
 
@@ -156,15 +156,15 @@ void writeGraph(const SceneGraph& graph,
 
   serializer.startDynamicArray();
   for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& [node_id, node] : layer->nodes()) {
-      serializer.write(*node);
+    for (const auto& node : layer->nodes()) {
+      serializer.write(node);
     }
   }
 
   for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
     for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [node_id, node] : partition->nodes()) {
-        serializer.write(*node);
+      for (const auto& node : partition->nodes()) {
+        serializer.write(node);
       }
     }
   }

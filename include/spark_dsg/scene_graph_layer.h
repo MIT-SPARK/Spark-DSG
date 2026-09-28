@@ -36,12 +36,16 @@
 #include <Eigen/Geometry>
 #include <functional>
 #include <map>
+#include <ranges>
 #include <unordered_set>
 
 #include "spark_dsg/edge_container.h"
 #include "spark_dsg/scene_graph_node.h"
 
 namespace spark_dsg {
+namespace python {
+class LayerView;
+}
 
 //! Brief Configuration controlling graph merges
 struct GraphMergeConfig {
@@ -87,6 +91,8 @@ class SceneGraphLayer {
 
   friend class SceneGraph;
   friend class SceneGraphLogger;
+  friend struct LayerView;
+  friend class python::LayerView;
 
   /**
    * @brief Makes an empty layer with the specified layer id
@@ -307,25 +313,20 @@ class SceneGraphLayer {
   EdgeContainer edges_;
 
  public:
-  /**
-   * @brief constant node container
-   */
-  inline const Nodes& nodes() const { return nodes_; };
+  //! Node iterator
+  auto nodes() const {
+    const auto deref = [](const auto& node) -> const SceneGraphNode& { return *node; };
+    return nodes_ | std::views::values | std::views::transform(deref);
+  };
 
-  /**
-   * @brief constant edge container
-   */
-  inline const Edges& edges() const { return edges_.edges; };
+  //! Edge iterator
+  const EdgeContainer::Edges& edges() const { return edges_.edges; };
 
-  /**
-   * @brief Number of nodes in the layer
-   */
-  inline size_t numNodes() const { return nodes_.size(); }
+  //! Number of nodes in the layer
+  size_t numNodes() const { return nodes_.size(); }
 
-  /**
-   * @brief Number of edges in the layer
-   */
-  inline size_t numEdges() const { return edges_.size(); }
+  //! Number of edges in the layer
+  size_t numEdges() const { return edges_.size(); }
 };
 
 }  // namespace spark_dsg

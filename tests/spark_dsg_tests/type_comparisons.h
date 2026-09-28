@@ -85,13 +85,13 @@ inline bool isSubset(const std::map<EdgeKey, SceneGraphEdge>& lhs,
 }
 
 inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
-  for (const auto& [node_id, node] : lhs.nodes()) {
-    const auto rhs_node = rhs.findNode(node_id);
+  for (const auto& node : lhs.nodes()) {
+    const auto rhs_node = rhs.findNode(node.id);
     if (!rhs_node) {
       return false;
     }
 
-    if (*rhs_node != *node) {
+    if (*rhs_node != node) {
       return false;
     }
   }

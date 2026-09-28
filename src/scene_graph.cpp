@@ -191,8 +191,8 @@ void SceneGraph::removeLayer(LayerId layer_id, PartitionId partition) {
   }
 
   std::vector<NodeId> to_remove;
-  for (const auto& [node_id, node] : layer->nodes()) {
-    to_remove.push_back(node_id);
+  for (const auto& node : layer->nodes()) {
+    to_remove.push_back(node.id);
   }
 
   for (const auto& node_id : to_remove) {
