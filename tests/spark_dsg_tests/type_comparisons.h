@@ -110,6 +110,21 @@ inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
   return true;
 }
 
+inline bool interlayerEdgesSubset(const SceneGraph& lhs, const SceneGraph& rhs) {
+  for (const auto& edge : lhs.interlayer_edges()) {
+    auto other = rhs.findEdge(edge.source, edge.target);
+    if (!other) {
+      return false;
+    }
+
+    if (*other != edge) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
   for (const auto& [layer_id, layer] : lhs.layers()) {
     if (!rhs.hasLayer(layer_id)) {
@@ -141,8 +156,7 @@ inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
     }
   }
 
-  if (!(isSubset(lhs.interlayer_edges(), rhs.interlayer_edges()) &&
-        isSubset(rhs.interlayer_edges(), lhs.interlayer_edges()))) {
+  if (!(interlayerEdgesSubset(lhs, rhs) && interlayerEdgesSubset(rhs, lhs))) {
     return false;
   }
 

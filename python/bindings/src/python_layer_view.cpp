@@ -202,7 +202,7 @@ GlobalEdgeIter::GlobalEdgeIter(const SceneGraph& dsg, bool include_partitions)
       started_interlayer_(false),
       dsg_(dsg),
       layers_(dsg, include_partitions),
-      interlayer_edge_iter_(dsg.interlayer_edges()) {
+      interlayer_edge_iter_(dsg.interlayer_edges_.edges) {
   setEdgeIter();
 }
 

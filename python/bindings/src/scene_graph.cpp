@@ -237,7 +237,7 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def_property(
           "interlayer_edges",
-          [](const SceneGraph& graph) { return py::make_iterator(EdgeIter(graph.interlayer_edges()), IterSentinel()); },
+          [](const SceneGraph& graph) { return graph.interlayer_edges(); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
