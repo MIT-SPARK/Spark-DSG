@@ -174,8 +174,7 @@ TEST(SceneGraphLayerTests, BasicEdgeIterationCorrect) {
 
   // nodes may be stored unordered in the future
   std::set<NodeId> actual_targets;
-  for (const auto& id_edge_pair : layer.edges()) {
-    const auto& edge = id_edge_pair.second;
+  for (const auto& edge : layer.edges()) {
     ASSERT_TRUE(edge.info != nullptr);
     EXPECT_EQ(edge.source + 1, edge.target);
     actual_targets.insert(edge.target);
@@ -588,8 +587,7 @@ TEST(SceneGraphLayerTests, CloneCorrect) {
     // TODO(nathan) consider testing attribute equality
   }
 
-  for (const auto& id_edge_pair : layer.edges()) {
-    const auto& edge = id_edge_pair.second;
+  for (const auto& edge : layer.edges()) {
     EXPECT_TRUE(result->hasEdge(edge.source, edge.target));
   }
 }

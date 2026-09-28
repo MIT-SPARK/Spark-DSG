@@ -96,7 +96,18 @@ inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
     }
   }
 
-  return isSubset(lhs.edges(), rhs.edges());
+  for (const auto& edge : lhs.edges()) {
+    auto other = rhs.findEdge(edge.source, edge.target);
+    if (!other) {
+      return false;
+    }
+
+    if (*other != edge) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {

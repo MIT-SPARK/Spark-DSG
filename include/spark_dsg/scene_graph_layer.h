@@ -320,7 +320,7 @@ class SceneGraphLayer {
   };
 
   //! Edge iterator
-  const EdgeContainer::Edges& edges() const { return edges_.edges; };
+  auto edges() const { return edges_.edges | std::views::values; };
 
   //! Number of nodes in the layer
   size_t numNodes() const { return nodes_.size(); }
