@@ -593,7 +593,7 @@ bool SceneGraph::mergeGraph(const SceneGraph& other,
     }
   });
 
-  for (const auto& [edge_id, edge] : other.interlayer_edges()) {
+  for (const auto& edge : other.interlayer_edges()) {
     NodeId source = config.getMergedId(edge.source);
     NodeId target = config.getMergedId(edge.target);
     if (source == target) {
@@ -709,7 +709,7 @@ UniqueGraph SceneGraph::clone_unique() const {
     }
   }
 
-  for (const auto& [edge_id, edge] : interlayer_edges()) {
+  for (const auto& edge : interlayer_edges()) {
     to_return->insertEdge(edge.source, edge.target, edge.info->clone());
   }
 

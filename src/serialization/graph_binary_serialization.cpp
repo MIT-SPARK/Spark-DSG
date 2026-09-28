@@ -185,7 +185,7 @@ void writeGraph(const SceneGraph& graph,
     }
   }
 
-  for (const auto& [edge_id, edge] : graph.interlayer_edges()) {
+  for (const auto& edge : graph.interlayer_edges()) {
     serializer.write(edge);
   }
   serializer.endDynamicArray();

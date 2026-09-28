@@ -41,6 +41,9 @@
 #include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg {
+namespace python {
+class GlobalEdgeIter;
+}
 
 class Mesh;
 
@@ -78,6 +81,7 @@ struct EdgeLayerInfo {
 class SceneGraph {
  public:
   friend class SceneGraphLogger;
+  friend class python::GlobalEdgeIter;
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<SceneGraph>;
   //! Container type for the layer keys
@@ -562,6 +566,11 @@ class SceneGraph {
                                       : std::optional<LayerKey>(iter->second);
   }
 
+  //! Iterator over the interlayer edges
+  auto interlayer_edges() const {
+    return interlayer_edges_.edges | std::views::values;
+  };
+
   //! @brief Current static layer ids in the graph
   std::vector<LayerId> layer_ids() const;
   //! @brief Current layer keys of all layers in the graph
@@ -572,8 +581,6 @@ class SceneGraph {
   const Layers& layers() const { return layers_; };
   //! @brief Constant reference to the mapping between nodes and layers
   const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
-  //! @brief Const reference to the interlayer edges
-  const Edges& interlayer_edges() const { return interlayer_edges_.edges; };
   //! @brief Constant reference to partitions for a particular layer
   const Partitions& layer_partition(LayerId layer_id) const;
   //! @brief Constant reference to all layer partitions

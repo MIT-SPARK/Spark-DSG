@@ -128,7 +128,7 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
     }
   }
 
-  for (const auto& [edge_id, edge] : graph.interlayer_edges()) {
+  for (const auto& edge : graph.interlayer_edges()) {
     record["edges"].push_back(edge);
   }
 
