@@ -50,12 +50,12 @@ TEST(GraphImpl, EmplaceNodeInvariants) {
   GraphImpl graph;
   EXPECT_EQ(0u, graph.num_nodes());
   EXPECT_FALSE(graph.has(0));
-  EXPECT_EQ(_NodeStatus::NONEXISTENT, graph.status(0));
+  EXPECT_EQ(NodeStatus::NONEXISTENT, graph.status(0));
 
   EXPECT_TRUE(graph.emplace(1, 0, std::make_unique<NodeAttributes>()));
   EXPECT_EQ(1u, graph.num_nodes());
   EXPECT_TRUE(graph.has(0));
-  EXPECT_EQ(_NodeStatus::NEW, graph.status(0));
+  EXPECT_EQ(NodeStatus::NEW, graph.status(0));
 
   auto node_opt = graph.find(0);
   ASSERT_TRUE(node_opt);
@@ -150,10 +150,8 @@ TEST(GraphImpl, BasicNodeIterationCorrect) {
 
   // nodes may be stored unordered in the future
   std::set<int64_t> actual_ids;
-  for (const auto& id_node_pair : graph.nodes()) {
-    ASSERT_TRUE(id_node_pair.second != nullptr);
-    EXPECT_EQ(id_node_pair.first, id_node_pair.second->id);
-    actual_ids.insert(id_node_pair.second->id);
+  for (const auto& node : graph.nodes()) {
+    actual_ids.insert(node.id);
   }
 
   EXPECT_EQ(expected_ids, actual_ids);
@@ -175,8 +173,7 @@ TEST(GraphImpl, BasicEdgeIterationCorrect) {
 
   // nodes may be stored unordered in the future
   std::set<NodeId> actual_targets;
-  for (const auto& id_edge_pair : graph.edges()) {
-    const auto& edge = id_edge_pair.second;
+  for (const auto& edge : graph.edges()) {
     ASSERT_TRUE(edge.info != nullptr);
     EXPECT_EQ(edge.source + 1, edge.target);
     actual_targets.insert(edge.target);
@@ -208,7 +205,7 @@ TEST(GraphImpl, RemoveNodeSound) {
   graph.remove(0);
   EXPECT_EQ(num_nodes - 1, graph.num_nodes());
   EXPECT_EQ(0u, graph.num_edges());
-  EXPECT_EQ(_NodeStatus::DELETED, graph.status(0));
+  EXPECT_EQ(NodeStatus::DELETED, graph.status(0));
 }
 
 // Test that merging two nodes meets the invariants that we expect
@@ -247,8 +244,8 @@ TEST(GraphImpl, ContractCorrect) {
   EXPECT_EQ(3u, graph.num_nodes());
   EXPECT_EQ(2u, graph.num_edges());
   EXPECT_EQ(2u, graph.get(1).siblings().size());
-  EXPECT_EQ(_NodeStatus::MERGED, graph.status(0));
-  EXPECT_EQ(_NodeStatus::DELETED, graph.status(4));
+  EXPECT_EQ(NodeStatus::MERGED, graph.status(0));
+  EXPECT_EQ(NodeStatus::DELETED, graph.status(4));
 }
 
 // Test that removing a edge does what it should
@@ -265,8 +262,8 @@ TEST(GraphImpl, RemoveEdgeCorrect) {
   EXPECT_TRUE(graph.remove(0, 1));
   EXPECT_EQ(0u, graph.num_edges());
 
-  for (const auto& node_id_pair : graph.nodes()) {
-    EXPECT_FALSE(node_id_pair.second->hasSiblings());
+  for (const auto& node : graph.nodes()) {
+    EXPECT_FALSE(node.hasSiblings());
   }
 }
 
@@ -281,11 +278,11 @@ TEST(GraphImpl, CloneCorrect) {
 
   auto result = graph.clone();
   ASSERT_TRUE(result != nullptr);
-  for (const auto& [node_id, node] : graph.nodes()) {
-    EXPECT_TRUE(result->has(node_id));
+  for (const auto& node : graph.nodes()) {
+    EXPECT_TRUE(result->has(node.id));
   }
 
-  for (const auto& [edge_key, edge] : graph.edges()) {
+  for (const auto& edge : graph.edges()) {
     EXPECT_TRUE(result->has(edge.source, edge.target));
   }
 }
