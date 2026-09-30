@@ -508,17 +508,6 @@ size_t SceneGraph::numUnpartitionedEdges() const {
 
 bool SceneGraph::empty() const { return numNodes() == 0; }
 
-Eigen::Vector3d SceneGraph::getPosition(NodeId node_id) const {
-  auto iter = node_lookup_.find(node_id);
-  if (iter == node_lookup_.end()) {
-    throw std::out_of_range("node " + NodeSymbol(node_id).str() +
-                            " is not in the graph");
-  }
-
-  const auto node = getNodePtr(node_id, iter->second);
-  return node->attributes().position;
-}
-
 bool SceneGraph::mergeNodes(NodeId from_id, NodeId to_id) {
   if (from_id == to_id) {
     return false;

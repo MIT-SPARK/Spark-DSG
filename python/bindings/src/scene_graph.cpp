@@ -188,7 +188,10 @@ void init_scene_graph(py::module_& m) {
           },
           "include_partitions"_a = true)
       .def("empty", &SceneGraph::empty)
-      .def("get_position", &SceneGraph::getPosition)
+      .def("get_position",
+           [](const SceneGraph& graph, NodeSymbol node) -> Eigen::Vector3d {
+             return graph.getNode(node).attributes().position;
+           })
       .def(
           "save",
           [](const SceneGraph& graph, const std::filesystem::path& filepath, bool include_mesh) {

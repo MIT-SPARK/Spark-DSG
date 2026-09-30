@@ -651,22 +651,17 @@ TEST(SceneGraph, mergeGraphCorrect) {
   EXPECT_EQ(9u, G_2.numNodes());
   EXPECT_EQ(4u, G_2.numEdges());
 
-  // 0 and 1 have no change; they existed already
-  EXPECT_LT((G_1.getPosition(0) - pos_2).norm(), 1.0e-6);
-  EXPECT_LT((G_1.getPosition(1) - pos_2).norm(), 1.0e-6);
-  // 2 has a position of 0 and delta of -1
-  EXPECT_LT((G_1.getPosition(2) - pos_2).norm(), 1.0e-6);
-  // 3 has a position of 2 and delta of -1
-  EXPECT_LT((G_1.getPosition(3) - pos_2).norm(), 1.0e-6);
-  // 4 and 5 have a position of 0 and delta of 0
-  EXPECT_LT(G_1.getPosition(4).norm(), 1.0e-6);
-  EXPECT_LT(G_1.getPosition(5).norm(), 1.0e-6);
-  // 6 and 7 have a position of 2 and delta of -1
-  EXPECT_LT((G_1.getPosition(6) - pos_2).norm(), 1.0e-6);
-  EXPECT_LT((G_1.getPosition(7) - pos_2).norm(), 1.0e-6);
-  // 8 and a(0) have no change; they existed already
-  EXPECT_LT((G_1.getPosition(8) - pos_1).norm(), 1.0e-6);
-  EXPECT_LT(G_1.getPosition("a0"_id).norm(), 1.0e-6);
+  Eigen::Vector3d origin = Eigen::Vector3d::Zero();
+  EXPECT_TRUE(G_1.getNode(0).attributes().position.isApprox(pos_2));
+  EXPECT_TRUE(G_1.getNode(1).attributes().position.isApprox(pos_2));
+  EXPECT_TRUE(G_1.getNode(2).attributes().position.isApprox(pos_2));
+  EXPECT_TRUE(G_1.getNode(3).attributes().position.isApprox(pos_2));
+  EXPECT_TRUE(G_1.getNode(4).attributes().position.isApprox(origin));
+  EXPECT_TRUE(G_1.getNode(5).attributes().position.isApprox(origin));
+  EXPECT_TRUE(G_1.getNode(6).attributes().position.isApprox(pos_2));
+  EXPECT_TRUE(G_1.getNode(7).attributes().position.isApprox(pos_2));
+  EXPECT_TRUE(G_1.getNode(8).attributes().position.isApprox(pos_1));
+  EXPECT_TRUE(G_1.getNode("a0"_id).attributes().position.isApprox(origin));
 }
 
 TEST(SceneGraph, mergeGraphWithPartitionsCorrect) {
@@ -732,39 +727,6 @@ TEST(SceneGraph, insertPartitionEdgeCorrect) {
   EXPECT_TRUE(graph.hasEdge("a0"_id, "a1"_id));
   EXPECT_TRUE(graph.hasEdge("a1"_id, "a2"_id));
   EXPECT_TRUE(graph.hasEdge("a2"_id, "a3"_id));
-}
-
-TEST(SceneGraph, getPositionCorrect) {
-  Eigen::Vector3d expected1(1.0, 2.0, 3.0);
-  Eigen::Vector3d expected2(2.0, 3.0, 4.0);
-
-  SceneGraph graph;
-  graph.emplaceNode(2, "a0"_id, std::make_unique<NodeAttributes>(expected1), 'a');
-  graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>(expected2));
-
-  // valid partition node matches expected
-  Eigen::Vector3d result1 = graph.getPosition("a0"_id);
-  EXPECT_EQ(expected1, result1);
-
-  // valid static nodes still also work
-  Eigen::Vector3d result2 = graph.getPosition("x0"_id);
-  EXPECT_EQ(expected2, result2);
-
-  // invalid static nodes still cause an exception
-  try {
-    graph.getPosition("x5"_id);
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
-  }
-
-  // invalid partition nodes cause an exception
-  try {
-    graph.getPosition("a3"_id);
-    FAIL();
-  } catch (const std::out_of_range&) {
-    SUCCEED();
-  }
 }
 
 TEST(SceneGraph, insertMixedEdgeCorrect) {
