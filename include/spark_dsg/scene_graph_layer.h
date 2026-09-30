@@ -34,9 +34,6 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <Eigen/Geometry>
-#include <functional>
-#include <map>
-#include <ranges>
 
 #include "spark_dsg/graph_impl.h"
 
@@ -44,19 +41,6 @@ namespace spark_dsg {
 namespace python {
 class LayerView;
 }
-
-//! Brief Configuration controlling graph merges
-struct GraphMergeConfig {
-  const std::map<NodeId, NodeId>* previous_merges = nullptr;
-  const std::map<LayerId, bool>* update_layer_attributes = nullptr;
-  bool update_dynamic_attributes = true;
-  bool update_archived_attributes = false;
-  bool clear_removed = false;
-  bool enforce_parent_constraints = true;
-
-  NodeId getMergedId(NodeId original) const;
-  bool shouldUpdateAttributes(LayerKey layer) const;
-};
 
 /**
  * @brief A layer in the scene graph (which is a graph itself)
@@ -241,6 +225,12 @@ class SceneGraphLayer {
   //! Get memory usage of the layer in bytes.
   size_t memoryUsage() const;
 
+  //  //! Node iterator
+  auto nodes() const { return impl_->nodes(); };
+
+  //! Edge iterator
+  auto edges() const { return impl_->edges(); };
+
   //! ID of the layer
   const LayerKey id;
 
@@ -251,16 +241,6 @@ class SceneGraphLayer {
 
   //! Actual graph memory
   GraphImpl::Ptr impl_;
-
- public:
-  //! Node iterator
-  auto nodes() const {
-    const auto deref = [](const auto& node) -> const SceneGraphNode& { return *node; };
-    return nodes_ | std::views::values | std::views::transform(deref);
-  };
-
-  //! Edge iterator
-  auto edges() const { return edges_.edges | std::views::values; };
 };
 
 }  // namespace spark_dsg

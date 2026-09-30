@@ -35,6 +35,7 @@
 #pragma once
 #include <Eigen/Geometry>
 #include <map>
+#include <ranges>
 
 #include "spark_dsg/scene_graph_edge.h"
 #include "spark_dsg/scene_graph_node.h"
@@ -47,6 +48,16 @@ enum class NodeStatus { NEW, PRESENT, MERGED, DELETED, NONEXISTENT };
 //! Current state of an edge
 enum class EdgeStatus { NEW, PRESENT, DELETED, NONEXISTENT };
 
+//! Configuration controlling graph merges
+struct GraphMergeConfig {
+  const std::map<NodeId, NodeId>* previous_merges = nullptr;
+  bool update_archived_attributes = false;
+  bool clear_removed = false;
+  bool enforce_parent_constraints = true;
+
+  NodeId getMergedId(NodeId original) const;
+};
+
 //! General graph representation
 class GraphImpl {
  public:
@@ -56,8 +67,16 @@ class GraphImpl {
   GraphImpl();
   virtual ~GraphImpl();
 
+  void clear();
+  GraphImpl::Ptr clone() const;
+  void transform(const Eigen::Isometry3d& transform);
+  void merge(const GraphImpl& other,
+             const GraphMergeConfig& config = {},
+             const Eigen::Isometry3d* new_node_transform = nullptr);
+
   size_t num_nodes() const;
   size_t num_edges() const;
+  size_t memory_usage() const;
 
   bool has(NodeId node_id) const;
   bool has(NodeId source, NodeId target) const;
@@ -75,27 +94,21 @@ class GraphImpl {
   bool connect(NodeId source,
                NodeId target,
                std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr);
+  bool contract(NodeId node_from, NodeId node_to);
 
   bool remove(NodeId node_id);
   bool remove(NodeId source, NodeId target);
 
-  bool contract(NodeId node_from, NodeId node_to);
-
-  GraphImpl::Ptr clone() const;
-
-  void transform(const Eigen::Isometry3d& transform);
-
-  size_t memoryUsage() const;
-
-  const std::map<NodeId, std::unique_ptr<SceneGraphNode>>& nodes() const {
-    return nodes_;
+  //! Node iterator
+  auto nodes() const {
+    const auto deref = [](const auto& node) -> const SceneGraphNode& { return *node; };
+    return nodes_ | std::views::values | std::views::transform(deref);
   }
 
-  const std::map<EdgeKey, SceneGraphEdge>& edges() const { return edges_; }
+  //! Edge iterator
+  auto edges() const { return edges_ | std::views::values; };
 
  protected:
-  void reset();
-
   std::map<NodeId, std::unique_ptr<SceneGraphNode>> nodes_;
   std::map<EdgeKey, SceneGraphEdge> edges_;
 
