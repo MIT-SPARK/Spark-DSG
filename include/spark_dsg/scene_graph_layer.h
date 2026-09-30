@@ -272,21 +272,6 @@ class SceneGraphLayer {
    */
   void transform(const Eigen::Isometry3d& transform);
 
-  /**
-   * @brief Get the immediate neighborhood of a node via BFS
-   * @param node Node to get the neighborhood of
-   * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
-   */
-  std::unordered_set<NodeId> getNeighborhood(NodeId node, size_t num_hops = 1) const;
-
-  /**
-   * @brief Get the immediate neighborhood of a set of nodes via BFS
-   * @param nodes Nodes to get the neighborhood of
-   * @param num_hops Number of hops (1 = siblings and neighbors of siblings)
-   */
-  std::unordered_set<NodeId> getNeighborhood(const std::unordered_set<NodeId>& nodes,
-                                             size_t num_hops = 1) const;
-
   //! ID of the layer
   const LayerKey id;
 
@@ -297,11 +282,6 @@ class SceneGraphLayer {
 
  protected:
   void reset();
-
-  void fillNeighborhoodForNode(NodeId node,
-                               size_t num_hops,
-                               std::unordered_set<NodeId>& result,
-                               std::map<NodeId, size_t>& costs) const;
 
   void cloneImpl(SceneGraphLayer& other, const NodeChecker& is_valid) const;
 
