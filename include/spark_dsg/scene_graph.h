@@ -80,7 +80,6 @@ struct EdgeLayerInfo {
  */
 class SceneGraph {
  public:
-  friend class SceneGraphLogger;
   friend class python::GlobalEdgeIter;
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<SceneGraph>;
