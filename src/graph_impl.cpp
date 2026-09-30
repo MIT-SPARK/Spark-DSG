@@ -58,9 +58,9 @@ bool GraphImpl::has(NodeId source, NodeId target) const {
   return edges_.count(EdgeKey{source, target});
 }
 
-_NodeStatus GraphImpl::status(NodeId node_id) const {
+NodeStatus GraphImpl::status(NodeId node_id) const {
   auto iter = node_status_.find(node_id);
-  return iter == node_status_.end() ? _NodeStatus::NONEXISTENT : iter->second;
+  return iter == node_status_.end() ? NodeStatus::NONEXISTENT : iter->second;
 }
 
 EdgeStatus GraphImpl::status(NodeId source, NodeId target) const {
@@ -104,7 +104,7 @@ bool GraphImpl::emplace(LayerKey layer,
   auto node = std::make_unique<Node>(node_id, layer, std::move(attrs));
   auto emplaced = nodes_.emplace(node_id, std::move(node)).second;
   if (emplaced) {
-    node_status_[node_id] = _NodeStatus::NEW;
+    node_status_[node_id] = NodeStatus::NEW;
   }
 
   return emplaced;
@@ -155,7 +155,7 @@ bool GraphImpl::remove(NodeId node_id) {
 
   // remove the actual node
   nodes_.erase(node_id);
-  node_status_[node_id] = _NodeStatus::DELETED;
+  node_status_[node_id] = NodeStatus::DELETED;
   return true;
 }
 
@@ -217,7 +217,7 @@ bool GraphImpl::contract(NodeId node_from, NodeId node_to) {
 
   // TODO(nathan) push this to extra storage
   nodes_.erase(from);
-  node_status_[node_from] = _NodeStatus::MERGED;
+  node_status_[node_from] = NodeStatus::MERGED;
   return true;
 }
 
@@ -269,7 +269,7 @@ size_t GraphImpl::memoryUsage() const {
   }
 
   // Estimate memory usage of status maps.
-  total_memory += node_status_.size() * (sizeof(NodeId) + sizeof(_NodeStatus));
+  total_memory += node_status_.size() * (sizeof(NodeId) + sizeof(NodeStatus));
   total_memory += edge_status_.size() * (sizeof(EdgeKey) + sizeof(EdgeStatus));
   return total_memory;
 }

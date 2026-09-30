@@ -37,10 +37,8 @@
 #include <functional>
 #include <map>
 #include <ranges>
-#include <unordered_set>
 
-#include "spark_dsg/edge_container.h"
-#include "spark_dsg/scene_graph_node.h"
+#include "spark_dsg/graph_impl.h"
 
 namespace spark_dsg {
 namespace python {
@@ -61,13 +59,6 @@ struct GraphMergeConfig {
 };
 
 /**
- * @brief Base node status.
- *
- * Mostly for keeping history and status of nodes in a graph
- */
-enum class NodeStatus { NEW, VISIBLE, MERGED, DELETED, NONEXISTENT };
-
-/**
  * @brief A layer in the scene graph (which is a graph itself)
  *
  * This class handles book-keeping for adding to and removing nodes from a layer
@@ -80,17 +71,8 @@ class SceneGraphLayer {
  public:
   //! desired pointer type for the layer
   using Ptr = std::unique_ptr<SceneGraphLayer>;
-  //! node container for the layer
-  using Nodes = std::map<NodeId, std::unique_ptr<SceneGraphNode>>;
-  //! type tracking the status of nodes
-  using NodeCheckup = std::map<NodeId, NodeStatus>;
-  //! edge container type for the layer
-  using Edges = EdgeContainer::Edges;
-  //! callback function for filtering nodes
-  using NodeChecker = std::function<bool(const SceneGraphNode&)>;
 
   friend class SceneGraph;
-  friend class SceneGraphLogger;
   friend struct LayerView;
   friend class python::LayerView;
 
@@ -222,16 +204,6 @@ class SceneGraphLayer {
   bool removeEdge(NodeId source, NodeId target);
 
   /**
-   * @brief remove an edge if it exists
-   * @param source source of edge to rewire
-   * @param target target of edge to rewire
-   * @param new_source source of edge after rewiring
-   * @param new_target target of edge after rewiring
-   * @returns true if operation successful
-   */
-  bool rewireEdge(NodeId source, NodeId target, NodeId new_source, NodeId new_target);
-
-  /**
    * @brief Add the other layer into this one
    * @param other Layer to merge into this layer
    * @param config Merge configuration controlling contraction and attributes
@@ -242,55 +214,43 @@ class SceneGraphLayer {
                   std::vector<NodeId>* new_nodes = nullptr,
                   const Eigen::Isometry3d* transform_new_nodes = nullptr);
 
-  /**
-   * @brief Get node ids of newly inserted nodes
-   */
+  //! Get node ids of newly inserted nodes
   void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) const;
 
-  /**
-   * @brief Get node id of deleted nodes
-   */
+  //! Get node id of deleted nodes
   void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed) const;
 
-  /**
-   * @brief Get the source and target of newly inserted edges
-   */
+  //! Get the source and target of newly inserted edges
   void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) const;
 
-  /**
-   * @brief Get the source and target of deleted edges
-   */
+  //! Get the source and target of deleted edges
   void getRemovedEdges(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
 
-  /**
-   * @brief Get copy of the layer
-   */
-  virtual SceneGraphLayer::Ptr clone(const NodeChecker& is_valid = {}) const;
+  //! Get copy of the layer
+  virtual SceneGraphLayer::Ptr clone() const;
 
-  /**
-   * @brief Rigidly transform layer
-   */
+  //! Rigidly transform layer
   void transform(const Eigen::Isometry3d& transform);
+
+  //! Number of nodes in the layer
+  size_t numNodes() const;
+
+  //! Number of edges in the layer
+  size_t numEdges() const;
+
+  //! Get memory usage of the layer in bytes.
+  size_t memoryUsage() const;
 
   //! ID of the layer
   const LayerKey id;
 
-  /**
-   * @brief Get memory usage of the layer in bytes.
-   */
-  size_t memoryUsage() const;
-
  protected:
+  SceneGraphLayer(LayerKey layer_id, GraphImpl::Ptr impl);
+
   void reset();
 
-  void cloneImpl(SceneGraphLayer& other, const NodeChecker& is_valid) const;
-
-  //! internal node container
-  Nodes nodes_;
-  //! internal node status tracking
-  mutable NodeCheckup nodes_status_;
-  //! internal edge container
-  EdgeContainer edges_;
+  //! Actual graph memory
+  GraphImpl::Ptr impl_;
 
  public:
   //! Node iterator
@@ -301,12 +261,6 @@ class SceneGraphLayer {
 
   //! Edge iterator
   auto edges() const { return edges_.edges | std::views::values; };
-
-  //! Number of nodes in the layer
-  size_t numNodes() const { return nodes_.size(); }
-
-  //! Number of edges in the layer
-  size_t numEdges() const { return edges_.size(); }
 };
 
 }  // namespace spark_dsg
