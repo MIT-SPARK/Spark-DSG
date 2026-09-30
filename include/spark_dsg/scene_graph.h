@@ -376,13 +376,6 @@ class SceneGraph {
   bool empty() const;
 
   /**
-   * @brief Get the 3D position of a node
-   * @param node Node ID to retrieve position for
-   * @return Position of node
-   */
-  Eigen::Vector3d getPosition(NodeId node) const;
-
-  /**
    * @brief Merge two nodes
    * @param node_from Node to remove
    * @param node_to Node to merge to

@@ -76,7 +76,7 @@ struct NodeAdaptor : public bounding_box::PointAdaptor {
       throw std::runtime_error("invalid graph!");
     }
 
-    return graph->getPosition(nodes.at(index)).cast<float>();
+    return graph->getNode(nodes.at(index)).attributes().position.cast<float>();
   }
 
   void add(NodeId node) { nodes.push_back(node); }
