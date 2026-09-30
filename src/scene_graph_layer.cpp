@@ -336,24 +336,6 @@ void SceneGraphLayer::reset() {
 
 using NodeSet = std::unordered_set<NodeId>;
 
-NodeSet SceneGraphLayer::getNeighborhood(NodeId node, size_t num_hops) const {
-  NodeSet result;
-  graph_utilities::breadthFirstSearch(
-      *this, node, num_hops, [&](const SceneGraphLayer&, NodeId visited) {
-        result.insert(visited);
-      });
-  return result;
-}
-
-NodeSet SceneGraphLayer::getNeighborhood(const NodeSet& nodes, size_t num_hops) const {
-  NodeSet result;
-  graph_utilities::breadthFirstSearch(
-      *this, nodes, num_hops, [&](const SceneGraphLayer&, NodeId visited) {
-        result.insert(visited);
-      });
-  return result;
-}
-
 void SceneGraphLayer::cloneImpl(SceneGraphLayer& other,
                                 const NodeChecker& is_valid) const {
   for (auto&& [id, node] : nodes_) {
