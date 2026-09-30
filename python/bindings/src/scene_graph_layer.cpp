@@ -45,7 +45,6 @@
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include "spark_dsg/python/python_layer_view.h"
-#include "spark_dsg/python/scene_graph_iterators.h"
 
 namespace spark_dsg::python {
 
@@ -124,12 +123,12 @@ void init_scene_graph_layer(py::module_& m) {
            })
       .def_property(
           "nodes",
-          [](const LayerView& view) { return py::make_iterator(view.nodes(), IterSentinel()); },
+          [](const LayerView& view) { return view.layer_ref.nodes(); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const LayerView& view) { return py::make_iterator(view.edges(), IterSentinel()); },
+          [](const LayerView& view) { return view.layer_ref.edges(); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(

@@ -43,8 +43,6 @@ namespace spark_dsg::python {
 class LayerView {
  public:
   LayerView(const SceneGraphLayer& layer);
-  NodeIter nodes() const;
-  EdgeIter edges() const;
   size_t numNodes() const;
   size_t numEdges() const;
   bool hasNode(NodeSymbol node_id) const;

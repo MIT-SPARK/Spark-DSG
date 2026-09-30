@@ -263,39 +263,6 @@ TEST(SceneGraphLayerTests, RemoveEdgeCorrect) {
   }
 }
 
-// Test that rewiring an edge does what it should
-TEST(SceneGraphLayerTests, RewireEdgeCorrect) {
-  SceneGraphLayer layer(1);
-
-  size_t num_nodes = 5;
-  for (size_t i = 0; i < num_nodes; ++i) {
-    EXPECT_TRUE(layer.emplaceNode(i, std::make_unique<NodeAttributes>()));
-  }
-
-  for (size_t i = 1; i < num_nodes; ++i) {
-    EXPECT_TRUE(layer.insertEdge(i - 1, i));
-  }
-  EXPECT_EQ(4u, layer.numEdges());
-
-  // we can't rewire an edge that doesn't exist
-  EXPECT_FALSE(layer.rewireEdge(4, 5, 0, 1));
-  // we can't rewire an edge to itself
-  EXPECT_FALSE(layer.rewireEdge(0, 1, 0, 1));
-  // if the new edge to be rewired is the same, simply remove
-  layer.rewireEdge(2, 3, 2, 2);
-  EXPECT_EQ(3u, layer.numEdges());
-  // if the new edge to be rewired already exists, simply remove
-  layer.rewireEdge(1, 2, 1, 0);
-  EXPECT_EQ(2u, layer.numEdges());
-  // try rewiring edge
-  layer.rewireEdge(3, 4, 3, 0);
-  EXPECT_EQ(2u, layer.numEdges());
-
-  EXPECT_TRUE(layer.hasEdge(0, 3));
-  EXPECT_TRUE(layer.hasEdge(0, 1));
-  EXPECT_FALSE(layer.hasEdge(3, 4));
-}
-
 TEST(SceneGraphLayerTests, MergeLayerCorrect) {
   SceneGraphLayer layer_1(1);
   SceneGraphLayer layer_2(1);

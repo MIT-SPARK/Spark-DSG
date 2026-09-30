@@ -37,6 +37,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 
+#include "spark_dsg/edge_container.h"
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"
 
@@ -386,14 +387,6 @@ class SceneGraph {
    * @returns True if operation succeeded
    */
   bool mergeNodes(NodeId node_from, NodeId node_to);
-
-  /**
-   * @brief Update graph from separate layer
-   * @param other_layer Layer to update from
-   * @param edges Optional edges to add to graph
-   * @return Whether the update was successful or not
-   */
-  bool updateFromLayer(const SceneGraphLayer& other_layer, const Edges& edges = {});
 
   /**
    * @brief Update graph from another graph

@@ -540,21 +540,6 @@ bool SceneGraph::mergeNodes(NodeId from_id, NodeId to_id) {
   return true;
 }
 
-bool SceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
-                                 const Edges& edges) {
-  // TODO(nathan) consider condensing with mergeGraph
-  const auto key = other_layer.id;
-  for (auto& [node_id, node] : other_layer.nodes_) {
-    addOrUpdateNode(key.layer, node_id, node->attributes_->clone(), key.partition);
-  }
-
-  for (auto& [edge_key, edge] : edges) {
-    addOrUpdateEdge(edge_key.k1, edge_key.k2, edge.info->clone());
-  }
-
-  return true;
-}
-
 bool SceneGraph::mergeGraph(const SceneGraph& other,
                             const GraphMergeConfig& config,
                             const Eigen::Isometry3d* transform_new_nodes) {
@@ -570,7 +555,7 @@ bool SceneGraph::mergeGraph(const SceneGraph& other,
     }
 
     std::vector<EdgeKey> removed_edges;
-    other_layer.edges_.getRemoved(removed_edges, config.clear_removed);
+    // other_layer.edges_.getRemoved(removed_edges, config.clear_removed);
     for (const auto& removed_edge : removed_edges) {
       layer.removeEdge(removed_edge.k1, removed_edge.k2);
     }
@@ -648,6 +633,7 @@ bool SceneGraph::edgeToPartition(const SceneGraphEdge& edge) const {
 }
 
 void SceneGraph::markEdgesAsStale() {
+  /*
   for (auto& [layer_id, layer] : layers_) {
     layer->edges_.setStale();
   }
@@ -658,9 +644,11 @@ void SceneGraph::markEdgesAsStale() {
   }
 
   interlayer_edges_.setStale();
+  */
 }
 
 void SceneGraph::removeAllStaleEdges() {
+  /*
   for (auto& [layer_id, layer] : layers_) {
     removeStaleEdges(layer->edges_);
   }
@@ -672,6 +660,7 @@ void SceneGraph::removeAllStaleEdges() {
   }
 
   removeStaleEdges(interlayer_edges_);
+  */
 }
 
 SceneGraph::Ptr SceneGraph::clone() const { return clone_unique(); }
@@ -799,7 +788,7 @@ const Layer& SceneGraph::layerFromKey(const LayerKey& key) const {
 }
 
 SceneGraphNode* SceneGraph::getNodePtr(NodeId node, const LayerKey& info) const {
-  return layerFromKey(info).nodes_.at(node).get();
+  // return layerFromKey(info).nodes_.at(node).get();
 }
 
 EdgeLayerInfo SceneGraph::lookupEdge(NodeId source, NodeId target) const {

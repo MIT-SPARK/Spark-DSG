@@ -544,67 +544,6 @@ TEST(SceneGraph, emplacePartitionNodeCorrect) {
   EXPECT_FALSE(G.hasLayer(2, 'o'));
 }
 
-TEST(SceneGraph, updateFromEmptyLayerCorrect) {
-  SceneGraph graph({1, 2});
-
-  SceneGraphLayer separate_layer(5);
-  EXPECT_TRUE(graph.updateFromLayer(separate_layer));
-  EXPECT_EQ(0u, graph.numNodes());
-  EXPECT_EQ(0u, graph.numEdges());
-  EXPECT_EQ(0u, separate_layer.numNodes());
-  EXPECT_EQ(0u, separate_layer.numEdges());
-}
-
-TEST(SceneGraph, updateFromLayerCorrect) {
-  SceneGraph graph({1, 2});
-  graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
-  graph.emplaceNode(1, 2, std::make_unique<NodeAttributes>());
-  graph.emplaceNode(2, 3, std::make_unique<NodeAttributes>());
-  graph.insertEdge(1, 2);
-  graph.insertEdge(1, 3);
-
-  SceneGraphLayer separate_layer(1);
-  separate_layer.emplaceNode(1, std::make_unique<NodeAttributes>());
-  separate_layer.emplaceNode(5, std::make_unique<NodeAttributes>());
-  SceneGraph::Edges edges;
-  edges.emplace(std::piecewise_construct,
-                std::forward_as_tuple(5, 2),
-                std::forward_as_tuple(5, 2, std::make_unique<EdgeAttributes>()));
-  edges.emplace(std::piecewise_construct,
-                std::forward_as_tuple(1, 2),
-                std::forward_as_tuple(1, 2, std::make_unique<EdgeAttributes>()));
-
-  EXPECT_TRUE(graph.updateFromLayer(separate_layer, edges));
-  EXPECT_EQ(4u, graph.numNodes());
-  EXPECT_EQ(3u, graph.numEdges());
-  EXPECT_TRUE(graph.hasNode(5));
-  EXPECT_TRUE(graph.hasEdge(5, 2));
-}
-
-TEST(SceneGraph, updateFromLayerWithSiblings) {
-  SceneGraph graph({1}, {});
-  graph.emplaceNode(1, 1, std::make_unique<NodeAttributes>());
-  graph.emplaceNode(1, 2, std::make_unique<NodeAttributes>());
-  graph.insertEdge(1, 2);
-
-  SceneGraphLayer separate_layer(1);
-  separate_layer.emplaceNode(2, std::make_unique<NodeAttributes>());
-
-  EXPECT_TRUE(graph.updateFromLayer(separate_layer));
-  EXPECT_EQ(2u, graph.numNodes());
-  EXPECT_EQ(1u, graph.numEdges());
-  EXPECT_TRUE(graph.hasNode(1));
-  EXPECT_TRUE(graph.hasNode(2));
-  EXPECT_TRUE(graph.hasEdge(1, 2));
-
-  EXPECT_TRUE(graph.removeNode(2));
-  EXPECT_EQ(1u, graph.numNodes());
-  EXPECT_EQ(0u, graph.numEdges());
-  EXPECT_TRUE(graph.hasNode(1));
-  EXPECT_FALSE(graph.hasNode(2));
-  EXPECT_FALSE(graph.hasEdge(1, 2));
-}
-
 TEST(SceneGraph, mergeGraphCorrect) {
   const Eigen::Vector3d pos_1(1.0, 1.0, 1.0);
   const Eigen::Vector3d pos_2(2.0, 2.0, 2.0);

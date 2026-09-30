@@ -48,9 +48,108 @@ GraphImpl::GraphImpl() = default;
 
 GraphImpl::~GraphImpl() = default;
 
+void GraphImpl::clear() {
+  nodes_.clear();
+  node_status_.clear();
+  edges_.clear();
+  edge_status_.clear();
+  stale_edges_.clear();
+}
+
+GraphImpl::Ptr GraphImpl::clone() const {
+  auto other = std::make_shared<GraphImpl>();
+  for (auto&& [id, node] : nodes_) {
+    other->emplace(node->layer, id, node->attributes().clone());
+  }
+
+  other->node_status_ = node_status_;
+
+  for (const auto& [key, edge] : edges_) {
+    other->connect(edge.source, edge.target, edge.info->clone());
+  }
+
+  other->edge_status_ = edge_status_;
+  return other;
+}
+
+void GraphImpl::transform(const Eigen::Isometry3d& transform) {
+  for (auto&& [id, node] : nodes_) {
+    node->attributes().transform(transform);
+  }
+}
+
+void GraphImpl::merge(const GraphImpl& other,
+                      const GraphMergeConfig& config,
+                      const Eigen::Isometry3d* new_node_transform) {
+  for (const auto& [node_id, node] : other.nodes_) {
+    const auto siter = node_status_.find(node_id);
+    if (siter != node_status_.end() && siter->second == NodeStatus::MERGED) {
+      continue;  // don't try to update or add previously merged nodes
+    }
+
+    auto iter = nodes_.find(node_id);
+    if (iter != nodes_.end()) {
+      if (!config.update_archived_attributes && !iter->second->attributes_->is_active) {
+        continue;
+      }
+
+      iter->second->attributes_ = node->attributes_->clone();
+      continue;
+    }
+
+    auto attrs = node->attributes_->clone();
+    if (new_node_transform) {
+      attrs->transform(*new_node_transform);
+    }
+
+    emplace(node->layer, node_id, std::move(attrs));
+  }
+
+  for (const auto& [key, edge] : other.edges_) {
+    const auto prev_edge = edges_.find(key);
+    if (prev_edge != edges_.end()) {
+      // Overwrite existing edge attributes if they already exist.
+      prev_edge->second.info = edge.info->clone();
+      continue;
+    }
+
+    const auto new_source = config.getMergedId(edge.source);
+    const auto new_target = config.getMergedId(edge.target);
+    if (new_source == new_target) {
+      continue;
+    }
+
+    connect(new_source, new_target, edge.info->clone());
+  }
+}
+
 size_t GraphImpl::num_nodes() const { return nodes_.size(); }
 
 size_t GraphImpl::num_edges() const { return edges_.size(); }
+
+size_t GraphImpl::memory_usage() const {
+  size_t total_memory = sizeof(*this);
+
+  // Estimate memory usage of nodes.
+  total_memory += nodes_.size() * (sizeof(NodeId) + sizeof(Node::Ptr));
+  for (const auto& [node_id, node] : nodes_) {
+    total_memory += node->memoryUsage();
+  }
+
+  // Edges and attributes.
+  total_memory += edges_.size() * sizeof(EdgeKey);
+  for (const auto& [key, edge] : edges_) {
+    total_memory += sizeof(SceneGraphEdge);
+    if (edge.info) {
+      total_memory += edge.info->memoryUsage();
+    }
+  }
+
+  // Estimate memory usage of status maps.
+  total_memory += node_status_.size() * (sizeof(NodeId) + sizeof(NodeStatus));
+  total_memory += edge_status_.size() * (sizeof(EdgeKey) + sizeof(EdgeStatus));
+  return total_memory;
+}
 
 bool GraphImpl::has(NodeId node_id) const { return nodes_.count(node_id) != 0; }
 
@@ -221,57 +320,50 @@ bool GraphImpl::contract(NodeId node_from, NodeId node_to) {
   return true;
 }
 
-void GraphImpl::reset() {
-  nodes_.clear();
-  node_status_.clear();
-  edges_.clear();
-  edge_status_.clear();
-  stale_edges_.clear();
-}
+/*
+void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes,
+                                  bool clear_new) const {
+  auto iter = nodes_status_.begin();
+  while (iter != nodes_status_.end()) {
+    if (iter->second == NodeStatus::NEW) {
+      new_nodes.push_back(iter->first);
+      if (clear_new) {
+        iter->second = NodeStatus::VISIBLE;
+      }
+    }
 
-GraphImpl::Ptr GraphImpl::clone() const {
-  auto other = std::make_shared<GraphImpl>();
-  for (auto&& [id, node] : nodes_) {
-    other->emplace(node->layer, id, node->attributes().clone());
-  }
-
-  other->node_status_ = node_status_;
-
-  for (const auto& [key, edge] : edges_) {
-    other->connect(edge.source, edge.target, edge.info->clone());
-  }
-
-  return other;
-}
-
-void GraphImpl::transform(const Eigen::Isometry3d& transform) {
-  for (auto&& [id, node] : nodes_) {
-    node->attributes().transform(transform);
+    ++iter;
   }
 }
 
-size_t GraphImpl::memoryUsage() const {
-  size_t total_memory = sizeof(*this);
+void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
+                                      bool clear_removed) const {
+  auto iter = nodes_status_.begin();
+  while (iter != nodes_status_.end()) {
+    if (iter->second != NodeStatus::DELETED && iter->second != NodeStatus::MERGED) {
+      ++iter;
+      continue;
+    }
 
-  // Estimate memory usage of nodes.
-  total_memory += nodes_.size() * (sizeof(NodeId) + sizeof(Node::Ptr));
-  for (const auto& [node_id, node] : nodes_) {
-    total_memory += node->memoryUsage();
-  }
+    removed_nodes.push_back(iter->first);
 
-  // Edges and attributes.
-  total_memory += edges_.size() * sizeof(EdgeKey);
-  for (const auto& [key, edge] : edges_) {
-    total_memory += sizeof(SceneGraphEdge);
-    if (edge.info) {
-      total_memory += edge.info->memoryUsage();
+    if (clear_removed && iter->second == NodeStatus::DELETED) {
+      iter = nodes_status_.erase(iter);
+    } else {
+      ++iter;
     }
   }
-
-  // Estimate memory usage of status maps.
-  total_memory += node_status_.size() * (sizeof(NodeId) + sizeof(NodeStatus));
-  total_memory += edge_status_.size() * (sizeof(EdgeKey) + sizeof(EdgeStatus));
-  return total_memory;
 }
+
+void SceneGraphLayer::getNewEdges(std::vector<EdgeKey>& new_edges,
+                                  bool clear_new) const {
+  return edges_.getNew(new_edges, clear_new);
+}
+
+void SceneGraphLayer::getRemovedEdges(std::vector<EdgeKey>& removed_edges,
+                                      bool clear_removed) const {
+  return edges_.getRemoved(removed_edges, clear_removed);
+}
+*/
 
 }  // namespace spark_dsg

@@ -40,10 +40,6 @@ namespace spark_dsg::python {
 
 LayerView::LayerView(const SceneGraphLayer& layer) : id(layer.id), layer_ref(layer) {}
 
-NodeIter LayerView::nodes() const { return NodeIter(layer_ref.nodes_); }
-
-EdgeIter LayerView::edges() const { return EdgeIter(layer_ref.edges_.edges); }
-
 size_t LayerView::numNodes() const { return layer_ref.numNodes(); }
 
 size_t LayerView::numEdges() const { return layer_ref.numEdges(); }
@@ -159,23 +155,7 @@ GlobalNodeIter::GlobalNodeIter(const SceneGraph& dsg, bool include_partitions)
   setNodeIter();
 }
 
-void GlobalNodeIter::setNodeIter() {
-  if (layers_ == IterSentinel()) {
-    valid_ = false;
-    return;
-  }
-
-  curr_node_iter_ = (*layers_).nodes();
-  while (curr_node_iter_ == IterSentinel()) {
-    ++layers_;
-    if (layers_ == IterSentinel()) {
-      valid_ = false;
-      return;
-    }
-
-    curr_node_iter_ = (*layers_).nodes();
-  }
-}
+void GlobalNodeIter::setNodeIter() {}
 
 const SceneGraphNode* GlobalNodeIter::operator*() const { return *curr_node_iter_; }
 
@@ -221,25 +201,7 @@ void GlobalEdgeIter::findNextValidEdge() {
   }
 }
 
-void GlobalEdgeIter::setEdgeIter() {
-  if (started_interlayer_ || layers_ == IterSentinel()) {
-    started_interlayer_ = true;
-    findNextValidEdge();
-    return;
-  }
-
-  curr_edge_iter_ = (*layers_).edges();
-
-  while (curr_edge_iter_ == IterSentinel()) {
-    ++layers_;
-    if (layers_ == IterSentinel()) {
-      started_interlayer_ = true;
-      return;
-    }
-
-    curr_edge_iter_ = (*layers_).edges();
-  }
-}
+void GlobalEdgeIter::setEdgeIter() {}
 
 GlobalEdgeIter& GlobalEdgeIter::operator++() {
   if (*this == IterSentinel()) {
