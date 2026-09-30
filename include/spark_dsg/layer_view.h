@@ -50,7 +50,7 @@ struct LayerView {
 
   struct Iter {
     friend struct LayerView;
-    using NodeIter = SceneGraphLayer::Nodes::const_iterator;
+    using NodeIter = std::map<NodeId, SceneGraphNode::Ptr>::const_iterator;
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = const SceneGraphNode*;
@@ -73,7 +73,7 @@ struct LayerView {
 
     // note: pointer mostly for convenience
     const SceneGraphLayer* layer_;
-    SceneGraphLayer::Nodes::const_iterator iter_;
+    NodeIter iter_;
     std::function<bool(const SceneGraphNode&)> filter_;
   };
 

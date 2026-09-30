@@ -42,7 +42,7 @@ struct IterSentinel {};
 class NodeIter {
  public:
   NodeIter();
-  NodeIter(const SceneGraphLayer::Nodes& container);
+  NodeIter(const std::map<NodeId, SceneGraphNode::Ptr>& container);
   const SceneGraphNode* operator*() const;
   NodeIter& operator++();
   bool operator==(const IterSentinel&) const;
@@ -50,14 +50,14 @@ class NodeIter {
 
  private:
   bool valid_;
-  SceneGraphLayer::Nodes::const_iterator curr_iter_;
-  SceneGraphLayer::Nodes::const_iterator end_iter_;
+  std::map<NodeId, SceneGraphNode::Ptr>::const_iterator curr_iter_;
+  std::map<NodeId, SceneGraphNode::Ptr>::const_iterator end_iter_;
 };
 
 class EdgeIter {
  public:
   EdgeIter();
-  EdgeIter(const SceneGraphLayer::Edges& container);
+  EdgeIter(const EdgeContainer::Edges& container);
   const SceneGraphEdge* operator*() const;
   EdgeIter& operator++();
   bool operator==(const IterSentinel&) const;
@@ -65,8 +65,8 @@ class EdgeIter {
 
  private:
   bool valid_;
-  SceneGraphLayer::Edges::const_iterator curr_iter_;
-  SceneGraphLayer::Edges::const_iterator end_iter_;
+  EdgeContainer::Edges::const_iterator curr_iter_;
+  EdgeContainer::Edges::const_iterator end_iter_;
 };
 
 }  // namespace spark_dsg::python

@@ -42,7 +42,7 @@
 namespace spark_dsg {
 
 //! Current state of a node
-enum class _NodeStatus { NEW, PRESENT, MERGED, DELETED, NONEXISTENT };
+enum class NodeStatus { NEW, PRESENT, MERGED, DELETED, NONEXISTENT };
 
 //! Current state of an edge
 enum class EdgeStatus { NEW, PRESENT, DELETED, NONEXISTENT };
@@ -62,7 +62,7 @@ class GraphImpl {
   bool has(NodeId node_id) const;
   bool has(NodeId source, NodeId target) const;
 
-  _NodeStatus status(NodeId node_id) const;
+  NodeStatus status(NodeId node_id) const;
   EdgeStatus status(NodeId source, NodeId target) const;
 
   const SceneGraphNode* find(NodeId node_id) const;
@@ -99,7 +99,7 @@ class GraphImpl {
   std::map<NodeId, std::unique_ptr<SceneGraphNode>> nodes_;
   std::map<EdgeKey, SceneGraphEdge> edges_;
 
-  mutable std::map<NodeId, _NodeStatus> node_status_;
+  mutable std::map<NodeId, NodeStatus> node_status_;
   mutable std::map<EdgeKey, EdgeStatus> edge_status_;
   mutable std::map<EdgeKey, bool> stale_edges_;
 };

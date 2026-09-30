@@ -105,7 +105,6 @@ add_library(
   src/scene_graph.cpp
   src/scene_graph_edge.cpp
   src/scene_graph_layer.cpp
-  src/scene_graph_logger.cpp
   src/scene_graph_node.cpp
   src/scene_graph_types.cpp
   src/scene_graph_utilities.cpp

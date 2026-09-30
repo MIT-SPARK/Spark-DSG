@@ -38,7 +38,7 @@ namespace spark_dsg::python {
 
 NodeIter::NodeIter() : valid_(false) {}
 
-NodeIter::NodeIter(const SceneGraphLayer::Nodes& container)
+NodeIter::NodeIter(const std::map<NodeId, SceneGraphNode::Ptr>& container)
     : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {}
 
 const SceneGraphNode* NodeIter::operator*() const {
@@ -62,7 +62,7 @@ bool NodeIter::operator==(const IterSentinel&) const { return !valid_ || curr_it
 
 EdgeIter::EdgeIter() : valid_(false) {}
 
-EdgeIter::EdgeIter(const SceneGraphLayer::Edges& container)
+EdgeIter::EdgeIter(const EdgeContainer::Edges& container)
     : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {}
 
 const SceneGraphEdge* EdgeIter::operator*() const {
