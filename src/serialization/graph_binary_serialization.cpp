@@ -165,8 +165,8 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
   }
 
   std::unordered_set<NodeId> stale_nodes;
-  for (const auto& id_key_pair : graph.node_lookup()) {
-    stale_nodes.insert(id_key_pair.first);
+  for (const auto& node : graph.nodes()) {
+    stale_nodes.insert(node.id);
   }
 
   deserializer.checkDynamicArray();

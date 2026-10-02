@@ -107,18 +107,6 @@ void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
   impl_->merge(*other_layer.impl_, config, transform_new_nodes);
 }
 
-void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes,
-                                  bool clear_new) const {}
-
-void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
-                                      bool clear_removed) const {}
-
-void SceneGraphLayer::getNewEdges(std::vector<EdgeKey>& new_edges,
-                                  bool clear_new) const {}
-
-void SceneGraphLayer::getRemovedEdges(std::vector<EdgeKey>& removed_edges,
-                                      bool clear_removed) const {}
-
 void SceneGraphLayer::reset() { impl_->clear(); }
 
 SceneGraphLayer::Ptr SceneGraphLayer::clone() const {

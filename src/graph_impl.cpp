@@ -78,6 +78,7 @@ void GraphImpl::transform(const Eigen::Isometry3d& transform) {
   }
 }
 
+// TODO(nathan) drop deleted nodes
 void GraphImpl::merge(const GraphImpl& other,
                       const GraphMergeConfig& config,
                       const Eigen::Isometry3d* new_node_transform) {
@@ -209,6 +210,50 @@ bool GraphImpl::emplace(LayerKey layer,
   return emplaced;
 }
 
+bool GraphImpl::update(LayerKey layer,
+                       NodeId node_id,
+                       std::unique_ptr<NodeAttributes>&& attrs) {
+  auto iter = nodes_.find(node_id);
+  if (iter == nodes_.end()) {
+    emplace(layer, node_id, std::move(attrs));
+    return true;
+  }
+
+  if (iter->second->layer != layer) {
+    return false;
+  }
+
+  iter->second->attributes_ = std::move(attrs);
+  return true;
+}
+
+bool GraphImpl::set(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs) {
+  auto iter = nodes_.find(node_id);
+  if (iter == nodes_.end()) {
+    return false;
+  }
+
+  iter->second->attributes_ = std::move(attrs);
+  return true;
+}
+
+/*
+void SceneGraph::dropAllParents(NodeId source,
+                                NodeId target,
+                                const LayerKey& source_key,
+                                const LayerKey& target_key) {
+  auto* source_node = getNodePtr(source, source_key);
+  auto* target_node = getNodePtr(target, target_key);
+  const auto source_is_parent = source_key.isParentOf(target_key);
+  std::set<NodeId> parents_to_clear =
+      source_is_parent ? target_node->parents_ : source_node->parents_;
+  NodeId child_to_clear = source_is_parent ? target : source;
+  for (const auto parent_to_clear : parents_to_clear) {
+    removeEdge(child_to_clear, parent_to_clear);
+  }
+}
+*/
+
 bool GraphImpl::connect(NodeId source,
                         NodeId target,
                         std::unique_ptr<EdgeAttributes>&& attrs) {
@@ -229,6 +274,13 @@ bool GraphImpl::connect(NodeId source,
   const EdgeKey key{source, target};
   source_iter->second->addConnection(*target_iter->second);
   target_iter->second->addConnection(*source_iter->second);
+
+  /*
+  if (enforce_parent_constraints) {
+    // force single parent to exist
+    dropAllParents(source, target, lookup.source, lookup.target);
+  }
+  */
 
   // TODO(nathan) drop piecewise_construct when edge iterator implemented
   edges_.emplace(std::piecewise_construct,

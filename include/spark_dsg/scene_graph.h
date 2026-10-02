@@ -37,6 +37,7 @@
 #include <filesystem>
 
 #include "spark_dsg/edge_container.h"
+#include "spark_dsg/graph_impl.h"
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"
 
@@ -81,15 +82,12 @@ struct EdgeLayerInfo {
  */
 class SceneGraph {
  public:
-  friend class python::GlobalEdgeIter;
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<SceneGraph>;
   //! Container type for the layer keys
   using LayerKeys = std::vector<LayerKey>;
   //! Container type for the layer name to ID mapping
   using LayerNames = std::map<std::string, LayerKey>;
-  //! Edge container
-  using Edges = EdgeContainer::Edges;
   //! Scene graph layer
   using Layer = SceneGraphLayer;
 
@@ -395,13 +393,6 @@ class SceneGraph {
                   const Eigen::Isometry3d* transform = nullptr);
 
   /**
-   * @brief Update graph from another graph
-   * @param other Other graph to update from
-   * @param nodes Nodes to copy over
-   */
-  void updateFrom(const SceneGraph& other, const std::vector<NodeId>& nodes);
-
-  /**
    * @brief Get all removed nodes from the graph
    * @param clear_removed Reset removed node tracking
    * @returns List of all removed nodes
@@ -428,13 +419,6 @@ class SceneGraph {
    * @returns list of all new edges
    */
   std::vector<EdgeKey> getNewEdges(bool clear_new = false);
-
-  /**
-   * @brief Get whether an edge points to a partition
-   * @param edge Edge to check
-   * @return True if at least one end point is in a partition
-   */
-  bool edgeToPartition(const SceneGraphEdge& edge) const;
 
   //! @brief Set all current edges as stale for serialization update tracking
   void markEdgesAsStale();
@@ -481,14 +465,12 @@ class SceneGraph {
   //! @brief Estimate the memory usage of the scene graph in bytes.
   size_t memoryUsage() const;
 
-  std::unique_ptr<SceneGraph> create_subgraph(const std::vector<NodeId>& nodes);
+  std::unique_ptr<SceneGraph> create_subgraph(const std::vector<NodeId>& nodes) const;
 
   //! Current layer keys of all layers in the graph
   LayerKeys layer_keys() const;
   //! Current name to layer mapping
   LayerNames layer_names() const;
-  //! Constant reference to the mapping between nodes and layers
-  const std::map<NodeId, LayerKey>& node_lookup() const;
   //! Get layer key for a named layer
   std::optional<LayerKey> getLayerKey(const std::string& name) const;
 
@@ -500,56 +482,24 @@ class SceneGraph {
 
   const Layer& layerFromKey(const LayerKey& key) const;
 
-  SceneGraphNode* getNodePtr(NodeId node, const LayerKey& key) const;
-
-  EdgeLayerInfo lookupEdge(NodeId source, NodeId target) const;
-
-  void addAncestry(NodeId source,
-                   NodeId target,
-                   const LayerKey& source_key,
-                   const LayerKey& target_key);
-
-  void removeAncestry(NodeId source,
-                      NodeId target,
-                      const LayerKey& source_key,
-                      const LayerKey& target_key);
-
-  void dropAllParents(NodeId source,
-                      NodeId target,
-                      const LayerKey& source_key,
-                      const LayerKey& target_key);
-
-  void removeInterlayerEdge(NodeId source,
-                            NodeId target,
-                            const LayerKey& source_key,
-                            const LayerKey& target_key);
-
-  void removeInterlayerEdge(NodeId n1, NodeId n2);
-
-  void rewireInterlayerEdge(NodeId source, NodeId new_source, NodeId target);
-
   void removeStaleEdges(EdgeContainer& edges);
-
-  void visitLayers(const std::function<void(LayerKey, Layer&)>& cb);
-
-  void visitLayers(const std::function<void(LayerKey, const Layer&)>& cb) const;
 
  protected:
   std::set<LayerKey> layer_keys_;
   LayerNames layer_names_;
-  std::map<NodeId, LayerKey> node_lookup_;
+
+  GraphImpl::Ptr impl_;
+  std::shared_ptr<Mesh> mesh_;
 
   std::map<LayerKey, Layer::Ptr> layers_;
 
-  EdgeContainer interlayer_edges_;
-
-  std::shared_ptr<Mesh> mesh_;
-
  public:
+  auto nodes() const { return impl_->nodes(); }
+
+  auto edges() const { return impl_->edges(); }
+
   //! Iterator over the interlayer edges
-  auto interlayer_edges() const {
-    return interlayer_edges_.edges | std::views::values;
-  };
+  auto interlayer_edges() const { return impl_->edges(); }
 
   //! Iterator over primary layers
   auto layers() const {

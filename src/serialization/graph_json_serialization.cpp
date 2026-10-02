@@ -119,17 +119,11 @@ void writeGraph(const SceneGraph& graph, nlohmann::json& record, bool include_me
   record["layer_names"] = graph.layer_names();
   record["metadata"] = graph.metadata();
 
-  for (const auto& layer : graph.all_layers()) {
-    for (const auto& node : layer.nodes()) {
-      record["nodes"].push_back(node);
-    }
-
-    for (const auto& edge : layer.edges()) {
-      record["edges"].push_back(edge);
-    }
+  for (const auto& node : graph.nodes()) {
+    record["nodes"].push_back(node);
   }
 
-  for (const auto& edge : graph.interlayer_edges()) {
+  for (const auto& edge : graph.edges()) {
     record["edges"].push_back(edge);
   }
 
