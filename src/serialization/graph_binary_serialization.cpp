@@ -89,9 +89,9 @@ NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
   return node;
 }
 
-void parseEdge(const AttributeFactory<EdgeAttributes>& factory,
-               const BinaryDeserializer& deserializer,
-               const EdgeCallback& callback) {
+EdgeKey parseEdge(const AttributeFactory<EdgeAttributes>& factory,
+                  const BinaryDeserializer& deserializer,
+                  const EdgeCallback& callback) {
   deserializer.checkFixedArrayLength(3);
   NodeId source;
   deserializer.read(source);
@@ -101,6 +101,7 @@ void parseEdge(const AttributeFactory<EdgeAttributes>& factory,
   // last argument always forces parents to rewire
   auto attrs = serialization::Visitor::from(factory, deserializer);
   callback(source, target, std::move(attrs));
+  return {source, target};
 }
 
 void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer) {
@@ -220,16 +221,20 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
     graph.removeNode(node_id);
   }
 
-  graph.markEdgesAsStale();
+  std::unordered_set<EdgeKey, EdgeKey::Hash> stale_edges;
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
-    parseEdge(edge_factory,
-              deserializer,
-              [&graph](const auto& source, const auto& target, auto&& attrs) {
-                graph.addOrUpdateEdge(source, target, std::move(attrs));
-              });
+    stale_edges.erase(
+        parseEdge(edge_factory,
+                  deserializer,
+                  [&graph](const auto& source, const auto& target, auto&& attrs) {
+                    graph.addOrUpdateEdge(source, target, std::move(attrs));
+                  }));
   }
-  graph.removeAllStaleEdges();
+
+  for (const auto& key : stale_edges) {
+    graph.removeEdge(key.k1, key.k2);
+  }
 
   if (!deserializer.checkIfTrue()) {
     return true;

@@ -52,6 +52,13 @@ bool EdgeKey::operator<(const EdgeKey& other) const {
   return k1 < other.k1;
 }
 
+std::size_t EdgeKey::Hash::operator()(const EdgeKey& key) const noexcept {
+  // https://www.boost.org/doc/libs/latest/libs/container_hash/doc/html/hash.html#notes_hash_combine
+  std::size_t value = std::hash<size_t>{}(key.k1);
+  value ^= std::hash<size_t>{}(key.k2) + 0x9e3779b9 + (value << 6) + (value >> 2);
+  return value;
+}
+
 LayerKey::LayerKey(LayerId layer_id) : LayerKey(layer_id, 0) {}
 
 LayerKey::LayerKey(LayerId layer_id, PartitionId partition)

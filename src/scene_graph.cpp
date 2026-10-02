@@ -62,8 +62,6 @@ std::set<LayerKey> layersFromNames(const LayerNames& layer_names,
   return layers;
 }
 
-bool EdgeLayerInfo::isSameLayer() const { return source == target; }
-
 SceneGraph::SceneGraph(bool empty)
     : SceneGraph(empty ? LayerKeys{} : LayerKeys{2, 3, 4, 5},
                  empty ? LayerNames{}
@@ -243,7 +241,7 @@ bool SceneGraph::insertEdge(NodeId source,
                             NodeId target,
                             std::unique_ptr<EdgeAttributes>&& attrs,
                             bool enforce_parent_constraints) {
-  return impl_->connect(source, target, std::move(attrs));
+  return impl_->connect(source, target, std::move(attrs), enforce_parent_constraints);
 }
 
 bool SceneGraph::addOrUpdateEdge(NodeId source,
@@ -296,37 +294,7 @@ size_t SceneGraph::numLayers() const {
 
 size_t SceneGraph::numNodes() const { return impl_->num_nodes(); }
 
-size_t SceneGraph::numUnpartitionedNodes() const {
-  size_t total_nodes = 0u;
-  for (const auto& [layer_id, layer] : layers_) {
-    if (layer_id.partition == 0) {
-      total_nodes += layer->numNodes();
-    }
-  }
-
-  return total_nodes;
-}
-
 size_t SceneGraph::numEdges() const { return impl_->num_edges(); }
-
-size_t SceneGraph::numUnpartitionedEdges() const {
-  size_t total_edges = 0;
-  for (const auto& [layer_id, layer] : layers_) {
-    if (layer_id.partition == 0) {
-      total_edges += layer->numEdges();
-    }
-  }
-
-  /*
-  for (const auto& [edge_key, edge] : interlayer_edges_.edges) {
-    const auto lookup = lookupEdge(edge_key.k1, edge_key.k2);
-    if (!lookup.source.partition && !lookup.target.partition) {
-      ++total_edges;
-    }
-  }*/
-
-  return total_edges;
-}
 
 bool SceneGraph::empty() const { return numNodes() == 0; }
 
@@ -342,62 +310,20 @@ bool SceneGraph::mergeGraph(const SceneGraph& other,
   return true;
 }
 
-std::vector<NodeId> SceneGraph::getRemovedNodes(bool clear_removed) {
-  std::vector<NodeId> to_return;
-  /*
-  visitLayers(
-      [&](LayerKey, Layer& layer) { layer.getRemovedNodes(to_return, clear_removed); });
-      */
-  return to_return;
+std::vector<NodeId> SceneGraph::getRemovedNodes(bool clear) {
+  return impl_->removed_nodes(clear);
 }
 
-std::vector<NodeId> SceneGraph::getNewNodes(bool clear_new) {
-  std::vector<NodeId> to_return;
-  /*
-  visitLayers([&](LayerKey, Layer& layer) { layer.getNewNodes(to_return, clear_new); });
-  */
-  return to_return;
+std::vector<NodeId> SceneGraph::getNewNodes(bool clear) {
+  return impl_->new_nodes(clear);
 }
 
-std::vector<EdgeKey> SceneGraph::getRemovedEdges(bool clear_removed) {
-  std::vector<EdgeKey> to_return;
-  /*
-  visitLayers(
-      [&](LayerKey, Layer& layer) { layer.getRemovedEdges(to_return, clear_removed); });
-
-  interlayer_edges_.getRemoved(to_return, clear_removed);
-  */
-  return to_return;
+std::vector<EdgeKey> SceneGraph::getRemovedEdges(bool clear) {
+  return impl_->removed_edges(clear);
 }
 
-std::vector<EdgeKey> SceneGraph::getNewEdges(bool clear_new) {
-  std::vector<EdgeKey> to_return;
-  /*
-  visitLayers([&](LayerKey, Layer& layer) { layer.getNewEdges(to_return, clear_new); });
-
-  interlayer_edges_.getNew(to_return, clear_new);
-  */
-  return to_return;
-}
-
-void SceneGraph::markEdgesAsStale() {
-  /*
-  for (auto& [layer_id, layer] : layers_) {
-    layer->edges_.setStale();
-  }
-
-  interlayer_edges_.setStale();
-  */
-}
-
-void SceneGraph::removeAllStaleEdges() {
-  /*
-  for (auto& [layer_id, layer] : layers_) {
-    removeStaleEdges(layer->edges_);
-  }
-
-  removeStaleEdges(interlayer_edges_);
-  */
+std::vector<EdgeKey> SceneGraph::getNewEdges(bool clear) {
+  return impl_->new_edges(clear);
 }
 
 SceneGraph::Ptr SceneGraph::clone() const { return clone_unique(); }
@@ -475,14 +401,6 @@ Layer& SceneGraph::layerFromKey(const LayerKey& key) {
 
 const Layer& SceneGraph::layerFromKey(const LayerKey& key) const {
   return const_cast<SceneGraph*>(this)->layerFromKey(key);
-}
-
-void SceneGraph::removeStaleEdges(EdgeContainer& edges) {
-  for (const auto& edge_key_pair : edges.stale_edges) {
-    if (edge_key_pair.second) {
-      removeEdge(edge_key_pair.first.k1, edge_key_pair.first.k2);
-    }
-  }
 }
 
 UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) const {

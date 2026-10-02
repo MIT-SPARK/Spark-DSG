@@ -36,27 +36,13 @@
 #include <Eigen/Core>
 #include <filesystem>
 
-#include "spark_dsg/edge_container.h"
 #include "spark_dsg/graph_impl.h"
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg {
-namespace python {
-class GlobalNodeIter;
-class GlobalEdgeIter;
-}  // namespace python
 
 class Mesh;
-
-struct EdgeLayerInfo {
-  LayerKey source;
-  LayerKey target;
-  bool valid = false;
-  bool exists = false;
-
-  bool isSameLayer() const;
-};
 
 /**
  * @brief 3D Scene Graph class
@@ -354,22 +340,16 @@ class SceneGraph {
    */
   bool removeEdge(NodeId source, NodeId target);
 
-  //! @brief Get the number of layers in the graph
+  //! Get the number of layers in the graph
   size_t numLayers() const;
 
-  //! @brief Get the total number of nodes in the graph
+  //! Get the total number of nodes in the graph
   size_t numNodes() const;
 
-  //! @brief Get the total number of nodes in partition 0 in each layer
-  size_t numUnpartitionedNodes() const;
-
-  //! @brief Get number of edges in the graph
+  //! Get number of edges in the graph
   size_t numEdges() const;
 
-  //! @brief Get the total number of edges between nodes in partition 0
-  size_t numUnpartitionedEdges() const;
-
-  //! @brief Get whether or not the scene graph is empty
+  //! Get whether or not the scene graph is empty
   bool empty() const;
 
   /**
@@ -419,12 +399,6 @@ class SceneGraph {
    * @returns list of all new edges
    */
   std::vector<EdgeKey> getNewEdges(bool clear_new = false);
-
-  //! @brief Set all current edges as stale for serialization update tracking
-  void markEdgesAsStale();
-
-  //! @brief Remove edges that do not appear in serialization update
-  void removeAllStaleEdges();
 
   //! @brief Make a copy of the scene graph
   SceneGraph::Ptr clone() const;
@@ -481,8 +455,6 @@ class SceneGraph {
   Layer& layerFromKey(const LayerKey& key);
 
   const Layer& layerFromKey(const LayerKey& key) const;
-
-  void removeStaleEdges(EdgeContainer& edges);
 
  protected:
   std::set<LayerKey> layer_keys_;
