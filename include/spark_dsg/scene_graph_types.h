@@ -37,9 +37,6 @@
 #include <optional>
 #include <string>
 
-/**
- * @brief spark_dsg namespace
- */
 namespace spark_dsg {
 
 //! Node ID representation
@@ -55,6 +52,9 @@ struct EdgeKey {
   bool operator==(const EdgeKey& other) const;
   bool operator<(const EdgeKey& other) const;
   std::string str() const;
+  struct Hash {
+    std::size_t operator()(const EdgeKey&) const noexcept;
+  };
 
   NodeId k1;
   NodeId k2;
@@ -76,7 +76,7 @@ struct LayerKey {
   std::string str() const;
 };
 
-//! @brief Common layer names
+//! Common layer names
 struct DsgLayers {
   //! Pre-Object node layer (static)
   inline constexpr static const char* SEGMENTS = "SEGMENTS";

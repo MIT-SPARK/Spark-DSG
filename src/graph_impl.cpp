@@ -53,7 +53,6 @@ void GraphImpl::clear() {
   node_status_.clear();
   edges_.clear();
   edge_status_.clear();
-  stale_edges_.clear();
 }
 
 GraphImpl::Ptr GraphImpl::clone() const {
@@ -62,12 +61,11 @@ GraphImpl::Ptr GraphImpl::clone() const {
     other->emplace(node->layer, id, node->attributes().clone());
   }
 
-  other->node_status_ = node_status_;
-
   for (const auto& [key, edge] : edges_) {
-    other->connect(edge.source, edge.target, edge.info->clone());
+    other->connect(edge->source, edge->target, edge->info->clone());
   }
 
+  other->node_status_ = node_status_;
   other->edge_status_ = edge_status_;
   return other;
 }
@@ -78,10 +76,17 @@ void GraphImpl::transform(const Eigen::Isometry3d& transform) {
   }
 }
 
-// TODO(nathan) drop deleted nodes
 void GraphImpl::merge(const GraphImpl& other,
                       const GraphMergeConfig& config,
                       const Eigen::Isometry3d* new_node_transform) {
+  for (const auto& node_id : other.removed_nodes(config.clear_removed)) {
+    remove(node_id);
+  }
+
+  for (const auto& key : other.removed_edges(config.clear_removed)) {
+    remove(key.k1, key.k2);
+  }
+
   for (const auto& [node_id, node] : other.nodes_) {
     const auto siter = node_status_.find(node_id);
     if (siter != node_status_.end() && siter->second == NodeStatus::MERGED) {
@@ -110,17 +115,17 @@ void GraphImpl::merge(const GraphImpl& other,
     const auto prev_edge = edges_.find(key);
     if (prev_edge != edges_.end()) {
       // Overwrite existing edge attributes if they already exist.
-      prev_edge->second.info = edge.info->clone();
+      prev_edge->second->info = edge->info->clone();
       continue;
     }
 
-    const auto new_source = config.getMergedId(edge.source);
-    const auto new_target = config.getMergedId(edge.target);
-    if (new_source == new_target) {
+    const auto new_src = config.getMergedId(edge->source);
+    const auto new_tgt = config.getMergedId(edge->target);
+    if (new_src == new_tgt) {
       continue;
     }
 
-    connect(new_source, new_target, edge.info->clone());
+    connect(new_src, new_tgt, edge->info->clone(), config.enforce_parent_constraints);
   }
 }
 
@@ -141,8 +146,8 @@ size_t GraphImpl::memory_usage() const {
   total_memory += edges_.size() * sizeof(EdgeKey);
   for (const auto& [key, edge] : edges_) {
     total_memory += sizeof(SceneGraphEdge);
-    if (edge.info) {
-      total_memory += edge.info->memoryUsage();
+    if (edge->info) {
+      total_memory += edge->info->memoryUsage();
     }
   }
 
@@ -175,7 +180,7 @@ const Node* GraphImpl::find(NodeId node_id) const {
 
 const Edge* GraphImpl::find(NodeId source, NodeId target) const {
   auto iter = edges_.find(EdgeKey{source, target});
-  return iter == edges_.end() ? nullptr : &iter->second;
+  return iter == edges_.end() ? nullptr : iter->second.get();
 }
 
 const SceneGraphNode& GraphImpl::get(NodeId node_id) const {
@@ -237,26 +242,20 @@ bool GraphImpl::set(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs) {
   return true;
 }
 
-/*
-void SceneGraph::dropAllParents(NodeId source,
-                                NodeId target,
-                                const LayerKey& source_key,
-                                const LayerKey& target_key) {
-  auto* source_node = getNodePtr(source, source_key);
-  auto* target_node = getNodePtr(target, target_key);
-  const auto source_is_parent = source_key.isParentOf(target_key);
-  std::set<NodeId> parents_to_clear =
-      source_is_parent ? target_node->parents_ : source_node->parents_;
-  NodeId child_to_clear = source_is_parent ? target : source;
-  for (const auto parent_to_clear : parents_to_clear) {
-    removeEdge(child_to_clear, parent_to_clear);
+void GraphImpl::drop_parents(SceneGraphNode& source, SceneGraphNode& target) {
+  // force single parent to exist
+  const auto source_is_parent = source.layer.isParentOf(target.layer);
+  const auto to_clear = source_is_parent ? target.parents_ : source.parents_;
+  NodeId child = source_is_parent ? target.id : source.id;
+  for (const auto parent_to_clear : to_clear) {
+    remove(child, parent_to_clear);
   }
 }
-*/
 
 bool GraphImpl::connect(NodeId source,
                         NodeId target,
-                        std::unique_ptr<EdgeAttributes>&& attrs) {
+                        std::unique_ptr<EdgeAttributes>&& attrs,
+                        bool enforce_parent_constraints) {
   if (source == target) {
     return false;
   }
@@ -271,23 +270,24 @@ bool GraphImpl::connect(NodeId source,
     return false;
   }
 
-  const EdgeKey key{source, target};
-  source_iter->second->addConnection(*target_iter->second);
-  target_iter->second->addConnection(*source_iter->second);
-
-  /*
-  if (enforce_parent_constraints) {
-    // force single parent to exist
-    dropAllParents(source, target, lookup.source, lookup.target);
+  auto& source_node = *source_iter->second;
+  auto& target_node = *target_iter->second;
+  const auto same_layer = source_node.layer.layer == target_node.layer.layer;
+  if (enforce_parent_constraints && !same_layer) {
+    drop_parents(source_node, target_node);
   }
-  */
 
-  // TODO(nathan) drop piecewise_construct when edge iterator implemented
-  edges_.emplace(std::piecewise_construct,
-                 std::forward_as_tuple(key),
-                 std::forward_as_tuple(source, target, std::move(attrs)));
-  edge_status_[key] = EdgeStatus::NEW;
-  return true;
+  source_node.addConnection(target_node);
+  target_node.addConnection(source_node);
+
+  const EdgeKey key{source, target};
+  auto edge = std::make_unique<Edge>(source, target, std::move(attrs));
+  auto emplaced = edges_.emplace(std::make_pair(key, std::move(edge))).second;
+  if (emplaced) {
+    edge_status_[key] = EdgeStatus::NEW;
+  }
+
+  return emplaced;
 }
 
 bool GraphImpl::remove(NodeId node_id) {
@@ -354,14 +354,14 @@ bool GraphImpl::contract(NodeId node_from, NodeId node_to) {
     to->second->addConnection(target_node);
 
     const EdgeKey prev_key{node_from, target};
+    const EdgeKey new_key{node_to, target};
+
     auto prev = edges_.find(prev_key);
-    auto attrs = prev->second.info->clone();
+    auto attrs = prev->second->info->clone();
     edges_.erase(prev);
 
-    const EdgeKey new_key{node_to, target};
-    edges_.emplace(std::piecewise_construct,
-                   std::forward_as_tuple(new_key),
-                   std::forward_as_tuple(node_to, target, std::move(attrs)));
+    auto edge = std::make_unique<Edge>(node_to, target, std::move(attrs));
+    edges_.emplace(new_key, std::move(edge));
     edge_status_[new_key] = edge_status_.at(prev_key);
     edge_status_[prev_key] = EdgeStatus::DELETED;
   }
@@ -372,50 +372,73 @@ bool GraphImpl::contract(NodeId node_from, NodeId node_to) {
   return true;
 }
 
-/*
-void SceneGraphLayer::getNewNodes(std::vector<NodeId>& new_nodes,
-                                  bool clear_new) const {
-  auto iter = nodes_status_.begin();
-  while (iter != nodes_status_.end()) {
-    if (iter->second == NodeStatus::NEW) {
-      new_nodes.push_back(iter->first);
+std::vector<NodeId> GraphImpl::new_nodes(bool clear_new) const {
+  std::vector<NodeId> to_return;
+  for (auto& [node_id, status] : node_status_) {
+    if (status == NodeStatus::NEW) {
+      to_return.push_back(node_id);
       if (clear_new) {
-        iter->second = NodeStatus::VISIBLE;
+        status = NodeStatus::PRESENT;
       }
     }
-
-    ++iter;
   }
+
+  return to_return;
 }
 
-void SceneGraphLayer::getRemovedNodes(std::vector<NodeId>& removed_nodes,
-                                      bool clear_removed) const {
-  auto iter = nodes_status_.begin();
-  while (iter != nodes_status_.end()) {
+std::vector<NodeId> GraphImpl::removed_nodes(bool clear_removed) const {
+  std::vector<NodeId> removed;
+  auto iter = node_status_.begin();
+  while (iter != node_status_.end()) {
     if (iter->second != NodeStatus::DELETED && iter->second != NodeStatus::MERGED) {
       ++iter;
       continue;
     }
 
-    removed_nodes.push_back(iter->first);
+    removed.push_back(iter->first);
 
     if (clear_removed && iter->second == NodeStatus::DELETED) {
-      iter = nodes_status_.erase(iter);
+      iter = node_status_.erase(iter);
     } else {
       ++iter;
     }
   }
+
+  return removed;
 }
 
-void SceneGraphLayer::getNewEdges(std::vector<EdgeKey>& new_edges,
-                                  bool clear_new) const {
-  return edges_.getNew(new_edges, clear_new);
+std::vector<EdgeKey> GraphImpl::new_edges(bool clear_new) const {
+  std::vector<EdgeKey> to_return;
+  for (auto& [key, status] : edge_status_) {
+    if (status == EdgeStatus::NEW) {
+      to_return.push_back(key);
+      if (clear_new) {
+        status = EdgeStatus::PRESENT;
+      }
+    }
+  }
+
+  return to_return;
 }
 
-void SceneGraphLayer::getRemovedEdges(std::vector<EdgeKey>& removed_edges,
-                                      bool clear_removed) const {
-  return edges_.getRemoved(removed_edges, clear_removed);
+std::vector<EdgeKey> GraphImpl::removed_edges(bool clear_removed) const {
+  std::vector<EdgeKey> removed;
+  auto iter = edge_status_.begin();
+  while (iter != edge_status_.end()) {
+    if (iter->second != EdgeStatus::DELETED) {
+      ++iter;
+      continue;
+    }
+
+    removed.push_back(iter->first);
+    if (clear_removed) {
+      iter = edge_status_.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
+
+  return removed;
 }
-*/
 
 }  // namespace spark_dsg

@@ -95,11 +95,17 @@ class GraphImpl {
   bool set(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
   bool connect(NodeId source,
                NodeId target,
-               std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr);
+               std::unique_ptr<EdgeAttributes>&& attrs = nullptr,
+               bool enforce_parent_constraints = false);
   bool contract(NodeId node_from, NodeId node_to);
 
   bool remove(NodeId node_id);
   bool remove(NodeId source, NodeId target);
+
+  std::vector<NodeId> new_nodes(bool clear_status) const;
+  std::vector<NodeId> removed_nodes(bool clear_status) const;
+  std::vector<EdgeKey> new_edges(bool clear_status) const;
+  std::vector<EdgeKey> removed_edges(bool clear_status) const;
 
   //! Node iterator
   auto nodes() const {
@@ -108,15 +114,20 @@ class GraphImpl {
   }
 
   //! Edge iterator
-  auto edges() const { return edges_ | std::views::values; };
+  auto edges() const {
+    const auto deref = [](const auto& edge) -> const SceneGraphEdge& { return *edge; };
+    return edges_ | std::views::values | std::views::transform(deref);
+  };
 
  protected:
+  void drop_parents(SceneGraphNode& source, SceneGraphNode& target);
+  void clear_connection(SceneGraphNode& source, SceneGraphNode& target);
+
   std::map<NodeId, std::unique_ptr<SceneGraphNode>> nodes_;
-  std::map<EdgeKey, SceneGraphEdge> edges_;
+  std::map<EdgeKey, std::unique_ptr<SceneGraphEdge>> edges_;
 
   mutable std::map<NodeId, NodeStatus> node_status_;
   mutable std::map<EdgeKey, EdgeStatus> edge_status_;
-  mutable std::map<EdgeKey, bool> stale_edges_;
 };
 
 }  // namespace spark_dsg
