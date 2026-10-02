@@ -174,18 +174,8 @@ void init_scene_graph(py::module_& m) {
              return graph.removeEdge(source, target);
            })
       .def("num_layers", &SceneGraph::numLayers)
-      .def(
-          "num_nodes",
-          [](const SceneGraph& graph, bool include_partitions) {
-            return include_partitions ? graph.numNodes() : graph.numUnpartitionedNodes();
-          },
-          "include_partitions"_a = true)
-      .def(
-          "num_edges",
-          [](const SceneGraph& graph, bool include_partitions) {
-            return include_partitions ? graph.numEdges() : graph.numUnpartitionedEdges();
-          },
-          "include_partitions"_a = true)
+      .def("num_nodes", &SceneGraph::numNodes)
+      .def("num_edges", &SceneGraph::numEdges)
       .def("empty", &SceneGraph::empty)
       .def("get_position",
            [](const SceneGraph& graph, NodeSymbol node) -> Eigen::Vector3d {

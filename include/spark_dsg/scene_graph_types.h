@@ -34,13 +34,9 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <cstdint>
-#include <limits>
 #include <optional>
 #include <string>
 
-/**
- * @brief spark_dsg namespace
- */
 namespace spark_dsg {
 
 //! Node ID representation
@@ -55,6 +51,9 @@ struct EdgeKey {
   EdgeKey(NodeId k1, NodeId k2);
   bool operator==(const EdgeKey& other) const;
   bool operator<(const EdgeKey& other) const;
+  struct Hash {
+    std::size_t operator()(const EdgeKey&) const noexcept;
+  };
 
   NodeId k1;
   NodeId k2;
@@ -76,7 +75,7 @@ struct LayerKey {
   bool operator<(const LayerKey& other) const;
 };
 
-//! @brief Common layer names
+//! Common layer names
 struct DsgLayers {
   //! Pre-Object node layer (static)
   inline constexpr static const char* SEGMENTS = "SEGMENTS";
@@ -98,11 +97,5 @@ struct DsgLayers {
   //! Get default layer ID for each layer name
   static std::optional<LayerKey> nameToLayerId(const std::string& name);
 };
-
-namespace graph_utilities {
-// TODO(nathan) make inheritance work
-template <typename Graph>
-struct graph_traits {};
-}  // namespace graph_utilities
 
 }  // namespace spark_dsg
