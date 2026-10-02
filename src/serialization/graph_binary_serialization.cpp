@@ -140,21 +140,13 @@ void writeGraph(const SceneGraph& graph,
   serializer.write(graph.metadata().dump());
 
   serializer.startDynamicArray();
-  for (const auto& layer : graph.all_layers()) {
-    for (const auto& node : layer.nodes()) {
-      serializer.write(node);
-    }
+  for (const auto& node : graph.nodes()) {
+    serializer.write(node);
   }
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& layer : graph.all_layers()) {
-    for (const auto& edge : layer.edges()) {
-      serializer.write(edge);
-    }
-  }
-
-  for (const auto& edge : graph.interlayer_edges()) {
+  for (const auto& edge : graph.edges()) {
     serializer.write(edge);
   }
   serializer.endDynamicArray();
@@ -210,8 +202,8 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
   }
 
   std::unordered_set<NodeId> stale_nodes;
-  for (const auto& id_key_pair : graph.node_lookup()) {
-    stale_nodes.insert(id_key_pair.first);
+  for (const auto& node : graph.nodes()) {
+    stale_nodes.insert(node.id);
   }
 
   deserializer.checkDynamicArray();

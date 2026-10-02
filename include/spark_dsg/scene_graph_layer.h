@@ -38,9 +38,6 @@
 #include "spark_dsg/graph_impl.h"
 
 namespace spark_dsg {
-namespace python {
-class LayerView;
-}
 
 /**
  * @brief A layer in the scene graph (which is a graph itself)
@@ -58,7 +55,6 @@ class SceneGraphLayer {
 
   friend class SceneGraph;
   friend struct LayerView;
-  friend class python::LayerView;
 
   /**
    * @brief Makes an empty layer with the specified layer id
@@ -197,18 +193,6 @@ class SceneGraphLayer {
                   const GraphMergeConfig& config,
                   std::vector<NodeId>* new_nodes = nullptr,
                   const Eigen::Isometry3d* transform_new_nodes = nullptr);
-
-  //! Get node ids of newly inserted nodes
-  void getNewNodes(std::vector<NodeId>& new_nodes, bool clear_new) const;
-
-  //! Get node id of deleted nodes
-  void getRemovedNodes(std::vector<NodeId>& removed_nodes, bool clear_removed) const;
-
-  //! Get the source and target of newly inserted edges
-  void getNewEdges(std::vector<EdgeKey>& new_edges, bool clear_new) const;
-
-  //! Get the source and target of deleted edges
-  void getRemovedEdges(std::vector<EdgeKey>& removed_edges, bool clear_removed) const;
 
   //! Get copy of the layer
   virtual SceneGraphLayer::Ptr clone() const;

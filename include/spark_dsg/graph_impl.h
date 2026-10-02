@@ -91,6 +91,8 @@ class GraphImpl {
   const SceneGraphEdge& get(NodeId source, NodeId target) const;
 
   bool emplace(LayerKey layer, NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
+  bool update(LayerKey layer, NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
+  bool set(NodeId node_id, std::unique_ptr<NodeAttributes>&& attrs);
   bool connect(NodeId source,
                NodeId target,
                std::unique_ptr<EdgeAttributes>&& edge_attributes = nullptr);
