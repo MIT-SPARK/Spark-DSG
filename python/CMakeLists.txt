@@ -12,7 +12,6 @@ pybind11_add_module(
   bindings/src/python_layer_view.cpp
   bindings/src/python_types.cpp
   bindings/src/scene_graph.cpp
-  bindings/src/scene_graph_iterators.cpp
   bindings/src/scene_graph_layer.cpp
   bindings/src/spark_dsg_bindings.cpp
   bindings/src/spark_types.cpp

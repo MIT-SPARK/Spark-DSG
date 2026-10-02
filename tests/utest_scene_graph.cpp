@@ -851,7 +851,6 @@ TEST(SceneGraph, subgraphCorrect) {
   auto subgraph = graph.create_subgraph({"a0"_id, "a1"_id, "x0"_id, "y1"_id});
   ASSERT_TRUE(subgraph != nullptr);
   EXPECT_EQ(subgraph->metadata.get().dump(), graph.metadata.get().dump());
-  EXPECT_EQ(subgraph->layer_ids(), graph.layer_ids());
   EXPECT_EQ(subgraph->layer_keys(), graph.layer_keys());
   EXPECT_EQ(subgraph->layer_names(), graph.layer_names());
 

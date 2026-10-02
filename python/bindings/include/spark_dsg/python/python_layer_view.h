@@ -36,9 +36,9 @@
 #include <spark_dsg/node_symbol.h>
 #include <spark_dsg/scene_graph.h>
 
-#include "spark_dsg/python/scene_graph_iterators.h"
-
 namespace spark_dsg::python {
+
+struct IterSentinel {};
 
 class LayerView {
  public:
@@ -101,38 +101,6 @@ class GlobalLayerIter {
   bool include_partitions_;
   LayerIter layers_;
   PartitionIter partitions_;
-};
-
-class GlobalNodeIter {
- public:
-  GlobalNodeIter(const SceneGraph& dsg, bool include_partitions = true);
-  void setNodeIter();
-  const SceneGraphNode* operator*() const;
-  GlobalNodeIter& operator++();
-  bool operator==(const IterSentinel&);
-
- private:
-  bool valid_;
-  GlobalLayerIter layers_;
-  NodeIter curr_node_iter_;
-};
-
-class GlobalEdgeIter {
- public:
-  GlobalEdgeIter(const SceneGraph& dsg, bool include_partitions = true);
-  const SceneGraphEdge* operator*() const;
-  void setEdgeIter();
-  void findNextValidEdge();
-  GlobalEdgeIter& operator++();
-  bool operator==(const IterSentinel&);
-
- private:
-  bool include_partitions_;
-  bool started_interlayer_;
-  const SceneGraph& dsg_;
-  GlobalLayerIter layers_;
-  EdgeIter curr_edge_iter_;
-  EdgeIter interlayer_edge_iter_;
 };
 
 }  // namespace spark_dsg::python

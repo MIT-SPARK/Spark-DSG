@@ -240,7 +240,9 @@ TEST(GraphSerialization, UpdateDsgFromBinaryInterPartition) {
   EXPECT_TRUE(updated.hasNode(0));
   EXPECT_FALSE(updated.hasNode(1));
   EXPECT_FALSE(updated.hasEdge(0, 1));
-  EXPECT_TRUE(updated.interlayer_edges().empty());
+  // TODO(nathan) fix
+  // EXPECT_TRUE(updated.interlayer_edges().empty());
+  FAIL();
 }
 
 }  // namespace spark_dsg

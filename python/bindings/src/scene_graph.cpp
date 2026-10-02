@@ -46,7 +46,6 @@
 
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/python_types.h"
-#include "spark_dsg/python/scene_graph_iterators.h"
 
 namespace spark_dsg::python {
 
@@ -202,10 +201,8 @@ void init_scene_graph(py::module_& m) {
       .def("create_subgraph", &SceneGraph::create_subgraph)
       .def_static("load", [](const std::filesystem::path& filepath) { return io::loadDsgFromFile(filepath); })
       .def_readwrite("_metadata", &SceneGraph::metadata)
-      .def_property_readonly("layer_ids", &SceneGraph::layer_ids)
       .def_property_readonly("layer_keys", &SceneGraph::layer_keys)
       .def_property_readonly("layer_names", &SceneGraph::layer_names)
-      .def_property_readonly("node_lookup", &SceneGraph::node_lookup)
       .def_property(
           "layers",
           [](const SceneGraph& graph) { return py::make_iterator(LayerIter(graph.layers()), IterSentinel()); },
@@ -220,29 +217,29 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def_property(
           "nodes",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph), IterSentinel()); },
+          [](const SceneGraph& graph) { return graph.nodes(); },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph), IterSentinel()); },
+          [](const SceneGraph& graph) { return graph.edges(); },
           nullptr,
           py::return_value_policy::reference_internal)
-      .def_property(
-          "unpartitioned_nodes",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph, false), IterSentinel()); },
-          nullptr,
-          py::return_value_policy::reference_internal)
-      .def_property(
-          "unpartitioned_edges",
-          [](const SceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph, false), IterSentinel()); },
-          nullptr,
-          py::return_value_policy::reference_internal)
-      .def_property(
-          "interlayer_edges",
-          [](const SceneGraph& graph) { return graph.interlayer_edges(); },
-          nullptr,
-          py::return_value_policy::reference_internal)
+      // .def_property(
+      //     "unpartitioned_nodes",
+      //     [](const SceneGraph& graph) { return py::make_iterator(GlobalNodeIter(graph, false), IterSentinel()); },
+      //     nullptr,
+      //     py::return_value_policy::reference_internal)
+      // .def_property(
+      //     "unpartitioned_edges",
+      //     [](const SceneGraph& graph) { return py::make_iterator(GlobalEdgeIter(graph, false), IterSentinel()); },
+      //     nullptr,
+      //     py::return_value_policy::reference_internal)
+      // .def_property(
+      //     "interlayer_edges",
+      //     [](const SceneGraph& graph) { return graph.interlayer_edges(); },
+      //     nullptr,
+      //     py::return_value_policy::reference_internal)
       .def_property(
           "mesh",
           [](const SceneGraph& graph) { return graph.mesh(); },
@@ -260,7 +257,6 @@ void init_scene_graph(py::module_& m) {
           "name"_a)
       .def("clone", &SceneGraph::clone_unique)
       .def("empty_like", &SceneGraph::empty_like)
-      .def("update_from", &SceneGraph::updateFrom)
       .def("transform",
            [](SceneGraph& G, const Eigen::Matrix4d& mat) {
              Eigen::Isometry3d iso(mat);

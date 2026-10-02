@@ -37,7 +37,6 @@
 #include <filesystem>
 
 #include "spark_dsg/mesh.h"
-#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/printing.h"
 #include "spark_dsg/serialization/file_io.h"
 
@@ -76,7 +75,9 @@ SceneGraph::SceneGraph(bool empty)
                                     {DsgLayers::BUILDINGS, 5}}) {}
 
 SceneGraph::SceneGraph(const LayerKeys& layer_keys, const LayerNames& layer_names)
-    : layer_keys_(layersFromNames(layer_names, layer_keys)), layer_names_(layer_names) {
+    : layer_keys_(layersFromNames(layer_names, layer_keys)),
+      layer_names_(layer_names),
+      impl_(std::make_shared<GraphImpl>()) {
   clear();
 }
 
@@ -88,9 +89,7 @@ void SceneGraph::clear(bool include_mesh) {
   layers_.clear();
   layer_partitions_.clear();
 
-  node_lookup_.clear();
-  interlayer_edges_.reset();
-
+  impl_->clear();
   if (include_mesh) {
     mesh_.reset();
   }
@@ -219,17 +218,7 @@ void SceneGraph::removeLayer(LayerId layer_id, PartitionId partition) {
 bool SceneGraph::emplaceNode(LayerKey key,
                              NodeId node_id,
                              std::unique_ptr<NodeAttributes>&& attrs) {
-  if (node_lookup_.count(node_id)) {
-    return false;
-  }
-
-  auto& layer = layerFromKey(key);
-  const auto successful = layer.emplaceNode(node_id, std::move(attrs));
-  if (successful) {
-    node_lookup_.emplace(node_id, key);
-  }
-
-  return successful;
+  return impl_->emplace(key, node_id, std::move(attrs));
 }
 
 bool SceneGraph::emplaceNode(LayerId layer_id,
@@ -250,73 +239,36 @@ bool SceneGraph::emplaceNode(const std::string& layer,
   return emplaceNode(iter->second, node_id, std::move(attrs));
 }
 
-bool SceneGraph::addOrUpdateNode(const std::string& layer,
+bool SceneGraph::addOrUpdateNode(const std::string& name,
                                  NodeId node_id,
                                  std::unique_ptr<NodeAttributes>&& attrs) {
-  auto iter = layer_names_.find(layer);
+  auto iter = layer_names_.find(name);
   if (iter == layer_names_.end()) {
     return false;
   }
 
-  return addOrUpdateNode(
-      iter->second.layer, node_id, std::move(attrs), iter->second.partition);
+  const auto& [layer, partition] = iter->second;
+  return addOrUpdateNode(layer, node_id, std::move(attrs), partition);
 }
 
 bool SceneGraph::addOrUpdateNode(LayerId layer_id,
                                  NodeId node_id,
                                  std::unique_ptr<NodeAttributes>&& attrs,
                                  PartitionId partition) {
-  auto iter = node_lookup_.find(node_id);
-  if (iter != node_lookup_.end()) {
-    getNodePtr(node_id, iter->second)->attributes_ = std::move(attrs);
-    return true;
-  }
-
   const LayerKey key{layer_id, partition};
-  auto& layer = layerFromKey(key);
-  const auto successful = layer.emplaceNode(node_id, std::move(attrs));
-  if (successful) {
-    node_lookup_.emplace(node_id, key);
-  }
-
-  return successful;
+  return impl_->update(key, node_id, std::move(attrs));
 }
 
 bool SceneGraph::setNodeAttributes(NodeId node_id,
                                    std::unique_ptr<NodeAttributes>&& attrs) {
-  auto iter = node_lookup_.find(node_id);
-  if (iter != node_lookup_.end()) {
-    getNodePtr(node_id, iter->second)->attributes_ = std::move(attrs);
-    return true;
-  }
-
-  return false;
+  return impl_->set(node_id, std::move(attrs));
 }
 
 bool SceneGraph::insertEdge(NodeId source,
                             NodeId target,
-                            std::unique_ptr<EdgeAttributes>&& edge_info,
+                            std::unique_ptr<EdgeAttributes>&& attrs,
                             bool enforce_parent_constraints) {
-  const auto lookup = lookupEdge(source, target);
-  if (!lookup.valid || lookup.exists) {
-    // skip adding edge if nodes don't exist or if it already exists
-    return false;
-  }
-
-  auto attrs = (edge_info == nullptr) ? std::make_unique<EdgeAttributes>()
-                                      : std::move(edge_info);
-
-  if (lookup.isSameLayer()) {
-    return layerFromKey(lookup.source).insertEdge(source, target, std::move(attrs));
-  } else if (enforce_parent_constraints) {
-    // force single parent to exist
-    dropAllParents(source, target, lookup.source, lookup.target);
-  }
-
-  // add information to the nodes about the node relationship
-  addAncestry(source, target, lookup.source, lookup.target);
-  interlayer_edges_.insert(source, target, std::move(attrs));
-  return true;
+  return impl_->connect(source, target, std::move(attrs));
 }
 
 bool SceneGraph::addOrUpdateEdge(NodeId source,
@@ -332,114 +284,30 @@ bool SceneGraph::addOrUpdateEdge(NodeId source,
   return true;
 }
 
-bool SceneGraph::hasNode(NodeId node_id) const { return node_lookup_.count(node_id); }
+bool SceneGraph::hasNode(NodeId node_id) const { return impl_->has(node_id); }
 
-NodeStatus SceneGraph::checkNode(NodeId node_id) const {
-  auto iter = node_lookup_.find(node_id);
-  if (iter == node_lookup_.end()) {
-    return NodeStatus::NONEXISTENT;
-  }
-
-  return layerFromKey(iter->second).checkNode(node_id);
-}
+NodeStatus SceneGraph::checkNode(NodeId node) const { return impl_->status(node); }
 
 bool SceneGraph::hasEdge(NodeId source, NodeId target) const {
-  return lookupEdge(source, target).exists;
+  return impl_->has(source, target);
 }
 
-const Node& SceneGraph::getNode(NodeId node_id) const {
-  const auto node = findNode(node_id);
-  if (!node) {
-    throw std::out_of_range("missing node '" + NodeSymbol(node_id).str() + "'");
-  }
+const Node& SceneGraph::getNode(NodeId node_id) const { return impl_->get(node_id); }
 
-  return *node;
-}
-
-const Node* SceneGraph::findNode(NodeId node_id) const {
-  auto iter = node_lookup_.find(node_id);
-  if (iter == node_lookup_.end()) {
-    return nullptr;
-  }
-
-  return getNodePtr(node_id, iter->second);
-}
+const Node* SceneGraph::findNode(NodeId node_id) const { return impl_->find(node_id); }
 
 const Edge& SceneGraph::getEdge(NodeId source, NodeId target) const {
-  const auto edge = findEdge(source, target);
-  if (!edge) {
-    std::stringstream ss;
-    ss << "Missing edge '" << EdgeKey(source, target) << "'";
-    throw std::out_of_range(ss.str());
-  }
-
-  return *edge;
+  return impl_->get(source, target);
 }
 
 const Edge* SceneGraph::findEdge(NodeId source, NodeId target) const {
-  auto source_key = node_lookup_.find(source);
-  if (source_key == node_lookup_.end()) {
-    return nullptr;
-  }
-
-  auto target_key = node_lookup_.find(target);
-  if (target_key == node_lookup_.end()) {
-    return nullptr;
-  }
-
-  // defer to layers if it is a intralayer edge
-  if (source_key->second == target_key->second) {
-    return layerFromKey(source_key->second).findEdge(source, target);
-  }
-
-  return interlayer_edges_.find(source, target);
+  return impl_->find(source, target);
 }
 
-bool SceneGraph::removeNode(NodeId node_id) {
-  if (!hasNode(node_id)) {
-    return false;
-  }
-
-  const auto info = node_lookup_.at(node_id);
-  auto node = getNodePtr(node_id, info);
-
-  const auto children_to_erase = node->children_;
-  for (const auto& target : children_to_erase) {
-    removeInterlayerEdge(node_id, target);
-  }
-
-  const auto parents_to_erase = node->parents_;
-  for (const auto& target : parents_to_erase) {
-    removeInterlayerEdge(node_id, target);
-  }
-
-  const auto siblings = node->siblings();
-  for (const auto& target : siblings) {
-    if (node_lookup_.at(target) == node->layer) {
-      continue;
-    }
-
-    removeInterlayerEdge(node_id, target);
-  }
-
-  layerFromKey(info).removeNode(node_id);
-  node_lookup_.erase(node_id);
-  return true;
-}
+bool SceneGraph::removeNode(NodeId node) { return impl_->remove(node); }
 
 bool SceneGraph::removeEdge(NodeId source, NodeId target) {
-  const auto lookup = lookupEdge(source, target);
-  if (!lookup.exists) {
-    // also excludes invalid edges
-    return false;
-  }
-
-  if (lookup.isSameLayer()) {
-    return layerFromKey(lookup.source).removeEdge(source, target);
-  }
-
-  removeInterlayerEdge(source, target, lookup.source, lookup.target);
-  return true;
+  return impl_->remove(source, target);
 }
 
 size_t SceneGraph::numLayers() const {
@@ -455,16 +323,7 @@ size_t SceneGraph::numLayers() const {
   return static_size + unique_layer_groups;
 }
 
-size_t SceneGraph::numNodes() const {
-  size_t total_nodes = numUnpartitionedNodes();
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    for (const auto& [partition_id, partition] : partitions) {
-      total_nodes += partition->numNodes();
-    }
-  }
-
-  return total_nodes;
-}
+size_t SceneGraph::numNodes() const { return impl_->num_nodes(); }
 
 size_t SceneGraph::numUnpartitionedNodes() const {
   size_t total_nodes = 0u;
@@ -475,20 +334,7 @@ size_t SceneGraph::numUnpartitionedNodes() const {
   return total_nodes;
 }
 
-size_t SceneGraph::numEdges() const {
-  size_t total_edges = interlayer_edges_.size();
-  for (const auto& [layer_id, layer] : layers_) {
-    total_edges += layer->numEdges();
-  }
-
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    for (const auto& [partition_id, partition] : partitions) {
-      total_edges += partition->numEdges();
-    }
-  }
-
-  return total_edges;
-}
+size_t SceneGraph::numEdges() const { return impl_->num_edges(); }
 
 size_t SceneGraph::numUnpartitionedEdges() const {
   size_t total_edges = 0;
@@ -496,12 +342,13 @@ size_t SceneGraph::numUnpartitionedEdges() const {
     total_edges += layer->numEdges();
   }
 
+  /*
   for (const auto& [edge_key, edge] : interlayer_edges_.edges) {
     const auto lookup = lookupEdge(edge_key.k1, edge_key.k2);
     if (!lookup.source.partition && !lookup.target.partition) {
       ++total_edges;
     }
-  }
+  }*/
 
   return total_edges;
 }
@@ -509,127 +356,53 @@ size_t SceneGraph::numUnpartitionedEdges() const {
 bool SceneGraph::empty() const { return numNodes() == 0; }
 
 bool SceneGraph::mergeNodes(NodeId from_id, NodeId to_id) {
-  if (from_id == to_id) {
-    return false;
-  }
-
-  auto node_from = findNode(from_id);
-  auto node_to = findNode(to_id);
-  if (!node_from || !node_to) {
-    return false;
-  }
-
-  if (node_from->layer != node_to->layer) {
-    return false;  // Cannot merge nodes of different layers
-  }
-
-  // Remove parent
-  const auto parents_to_rewire = node_from->parents_;
-  for (const auto& target : parents_to_rewire) {
-    rewireInterlayerEdge(from_id, to_id, target);
-  }
-
-  // Reconnect children
-  const auto children_to_rewire = node_from->children_;
-  for (const auto& target : children_to_rewire) {
-    rewireInterlayerEdge(from_id, to_id, target);
-  }
-
-  layerFromKey(node_from->layer).mergeNodes(from_id, to_id);
-  node_lookup_.erase(from_id);
-  return true;
+  return impl_->contract(from_id, to_id);
 }
 
 bool SceneGraph::mergeGraph(const SceneGraph& other,
                             const GraphMergeConfig& config,
                             const Eigen::Isometry3d* transform_new_nodes) {
   metadata.add(other.metadata());
-
-  other.visitLayers([&](LayerKey layer_key, const SceneGraphLayer& other_layer) {
-    auto& layer = layerFromKey(layer_key);
-
-    std::vector<NodeId> removed_nodes;
-    other_layer.getRemovedNodes(removed_nodes, config.clear_removed);
-    for (const auto& removed_id : removed_nodes) {
-      removeNode(removed_id);
-    }
-
-    std::vector<EdgeKey> removed_edges;
-    // other_layer.edges_.getRemoved(removed_edges, config.clear_removed);
-    for (const auto& removed_edge : removed_edges) {
-      layer.removeEdge(removed_edge.k1, removed_edge.k2);
-    }
-
-    std::vector<NodeId> new_nodes;
-    layer.mergeLayer(other_layer, config, &new_nodes, transform_new_nodes);
-    for (const auto node_id : new_nodes) {
-      node_lookup_[node_id] = layer_key;
-    }
-  });
-
-  for (const auto& edge : other.interlayer_edges()) {
-    NodeId source = config.getMergedId(edge.source);
-    NodeId target = config.getMergedId(edge.target);
-    if (source == target) {
-      continue;
-    }
-
-    insertEdge(source, target, edge.info->clone(), config.enforce_parent_constraints);
-  }
-
-  // TODO(Yun) check the other mesh info (faces, vertices etc. )
+  impl_->merge(*other.impl_, config, transform_new_nodes);
   return true;
-}
-
-void SceneGraph::updateFrom(const SceneGraph& other, const std::vector<NodeId>& nodes) {
-  for (const auto& node_id : nodes) {
-    const auto node = other.findNode(node_id);
-    if (!node) {
-      continue;
-    }
-
-    const auto key = node->layer;
-    addOrUpdateNode(key.layer, node_id, node->attributes().clone(), key.partition);
-    for (const auto neighbor : node->connections()) {
-      const auto& edge = other.getEdge(node_id, neighbor);
-      insertEdge(node_id, neighbor, edge.attributes().clone());
-    }
-  }
 }
 
 std::vector<NodeId> SceneGraph::getRemovedNodes(bool clear_removed) {
   std::vector<NodeId> to_return;
+  /*
   visitLayers(
       [&](LayerKey, Layer& layer) { layer.getRemovedNodes(to_return, clear_removed); });
+      */
   return to_return;
 }
 
 std::vector<NodeId> SceneGraph::getNewNodes(bool clear_new) {
   std::vector<NodeId> to_return;
+  /*
   visitLayers([&](LayerKey, Layer& layer) { layer.getNewNodes(to_return, clear_new); });
+  */
   return to_return;
 }
 
 std::vector<EdgeKey> SceneGraph::getRemovedEdges(bool clear_removed) {
   std::vector<EdgeKey> to_return;
+  /*
   visitLayers(
       [&](LayerKey, Layer& layer) { layer.getRemovedEdges(to_return, clear_removed); });
 
   interlayer_edges_.getRemoved(to_return, clear_removed);
+  */
   return to_return;
 }
 
 std::vector<EdgeKey> SceneGraph::getNewEdges(bool clear_new) {
   std::vector<EdgeKey> to_return;
+  /*
   visitLayers([&](LayerKey, Layer& layer) { layer.getNewEdges(to_return, clear_new); });
 
   interlayer_edges_.getNew(to_return, clear_new);
+  */
   return to_return;
-}
-
-bool SceneGraph::edgeToPartition(const SceneGraphEdge& edge) const {
-  const auto lookup = lookupEdge(edge.source, edge.target);
-  return lookup.source.partition || lookup.target.partition;
 }
 
 void SceneGraph::markEdgesAsStale() {
@@ -667,30 +440,7 @@ SceneGraph::Ptr SceneGraph::clone() const { return clone_unique(); }
 
 UniqueGraph SceneGraph::clone_unique() const {
   auto to_return = empty_like();
-  for (const auto [node_id, key] : node_lookup_) {
-    auto node = getNodePtr(node_id, key);
-    to_return->addOrUpdateNode(
-        key.layer, node_id, node->attributes_->clone(), key.partition);
-  }
-
-  for (const auto& [layer_id, layer] : layers_) {
-    for (const auto& edge : layer->edges()) {
-      to_return->insertEdge(edge.source, edge.target, edge.info->clone());
-    }
-  }
-
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& edge : partition->edges()) {
-        to_return->insertEdge(edge.source, edge.target, edge.info->clone());
-      }
-    }
-  }
-
-  for (const auto& edge : interlayer_edges()) {
-    to_return->insertEdge(edge.source, edge.target, edge.info->clone());
-  }
-
+  to_return->impl_ = impl_->clone();
   if (mesh_) {
     to_return->mesh_ = mesh_->clone();
   }
@@ -705,7 +455,7 @@ UniqueGraph SceneGraph::empty_like() const {
 }
 
 void SceneGraph::transform(const Eigen::Isometry3d& transform) {
-  visitLayers([&](LayerKey, Layer& layer) { layer.transform(transform); });
+  impl_->transform(transform);
   if (mesh_) {
     mesh_->transform(transform.cast<float>());
   }
@@ -740,29 +490,20 @@ size_t SceneGraph::memoryUsage() const {
   for (const auto& [name, key] : layer_names_) {
     total_memory += name.size() + sizeof(LayerKey);
   }
-  total_memory += node_lookup_.size() * (sizeof(NodeId) + sizeof(LayerKey));
+
   for (const auto& [layer_id, partitions] : layer_partitions_) {
     total_memory +=
         sizeof(layer_id) + sizeof(partitions) +
         partitions.size() * (sizeof(PartitionId) + sizeof(SceneGraphLayer::Ptr));
   }
 
-  // Estimate memory usage of layers.
-  for (const auto& [layer_id, layer] : layers_) {
-    total_memory += layer->memoryUsage() + sizeof(layer_id);
-  }
-
-  // Estimate memory usage of interlayer edges.
-  total_memory += interlayer_edges_.memoryUsage();
-
-  // Estimate memory usage of the mesh.
+  total_memory += impl_->memory_usage();
   if (mesh_) {
     total_memory += mesh_->memoryUsage();
   }
 
   // Add metadata memory usage.
   total_memory += metadata.memoryUsage() - sizeof(metadata);
-
   return total_memory;
 }
 
@@ -787,154 +528,12 @@ const Layer& SceneGraph::layerFromKey(const LayerKey& key) const {
   return const_cast<SceneGraph*>(this)->layerFromKey(key);
 }
 
-SceneGraphNode* SceneGraph::getNodePtr(NodeId node, const LayerKey& info) const {
-  // return layerFromKey(info).nodes_.at(node).get();
-}
-
-EdgeLayerInfo SceneGraph::lookupEdge(NodeId source, NodeId target) const {
-  EdgeLayerInfo lookup;
-
-  auto source_iter = node_lookup_.find(source);
-  if (source_iter == node_lookup_.end()) {
-    return lookup;
-  }
-
-  auto target_iter = node_lookup_.find(target);
-  if (target_iter == node_lookup_.end()) {
-    return lookup;
-  }
-
-  // lookup is valid: both nodes exist
-  lookup.source = source_iter->second;
-  lookup.target = target_iter->second;
-  lookup.valid = true;
-
-  if (lookup.isSameLayer()) {
-    lookup.exists = layerFromKey(source_iter->second).hasEdge(source, target);
-  } else {
-    lookup.exists = interlayer_edges_.contains(source, target);
-  }
-
-  return lookup;
-}
-
-void SceneGraph::addAncestry(NodeId source,
-                             NodeId target,
-                             const LayerKey& source_key,
-                             const LayerKey& target_key) {
-  auto* source_node = getNodePtr(source, source_key);
-  auto* target_node = getNodePtr(target, target_key);
-  if (source_key.isParentOf(target_key)) {
-    source_node->children_.insert(target);
-    target_node->parents_.insert(source);
-  } else if (target_key.isParentOf(source_key)) {
-    target_node->children_.insert(source);
-    source_node->parents_.insert(target);
-  } else {
-    source_node->siblings_.insert(target);
-    target_node->siblings_.insert(source);
-  }
-}
-
-void SceneGraph::removeAncestry(NodeId source,
-                                NodeId target,
-                                const LayerKey& source_key,
-                                const LayerKey& target_key) {
-  auto* source_node = getNodePtr(source, source_key);
-  auto* target_node = getNodePtr(target, target_key);
-  if (source_key.isParentOf(target_key)) {
-    source_node->children_.erase(target);
-    target_node->parents_.erase(source);
-  } else if (target_key.isParentOf(source_key)) {
-    target_node->children_.erase(source);
-    source_node->parents_.erase(target);
-  } else {
-    source_node->siblings_.erase(target);
-    target_node->siblings_.erase(source);
-  }
-}
-
-void SceneGraph::dropAllParents(NodeId source,
-                                NodeId target,
-                                const LayerKey& source_key,
-                                const LayerKey& target_key) {
-  auto* source_node = getNodePtr(source, source_key);
-  auto* target_node = getNodePtr(target, target_key);
-  const auto source_is_parent = source_key.isParentOf(target_key);
-  std::set<NodeId> parents_to_clear =
-      source_is_parent ? target_node->parents_ : source_node->parents_;
-  NodeId child_to_clear = source_is_parent ? target : source;
-  for (const auto parent_to_clear : parents_to_clear) {
-    removeEdge(child_to_clear, parent_to_clear);
-  }
-}
-
-void SceneGraph::removeInterlayerEdge(NodeId source,
-                                      NodeId target,
-                                      const LayerKey& source_key,
-                                      const LayerKey& target_key) {
-  removeAncestry(source, target, source_key, target_key);
-  interlayer_edges_.remove(source, target);
-}
-
-void SceneGraph::removeInterlayerEdge(NodeId n1, NodeId n2) {
-  removeInterlayerEdge(n1, n2, node_lookup_.at(n1), node_lookup_.at(n2));
-}
-
-void SceneGraph::rewireInterlayerEdge(NodeId source, NodeId new_source, NodeId target) {
-  if (source == new_source) {
-    return;
-  }
-
-  const auto source_key = node_lookup_.at(source);
-  const auto lookup = lookupEdge(new_source, target);
-  if (lookup.exists) {
-    removeInterlayerEdge(source, target, source_key, lookup.target);
-    return;
-  }
-
-  // removes record of source -> target in nodes and adds new_source -> target instead
-  removeAncestry(source, target, source_key, lookup.target);
-  addAncestry(new_source, target, lookup.source, lookup.target);
-
-  EdgeAttributes::Ptr attrs;
-  const auto edge = interlayer_edges_.find(source, target);
-  if (edge) {
-    attrs = edge->info->clone();
-    interlayer_edges_.remove(source, target);
-  }
-
-  if (!attrs) {
-    // we somehow didn't have the edge
-    return;
-  }
-
-  interlayer_edges_.insert(new_source, target, std::move(attrs));
-}
-
 void SceneGraph::removeStaleEdges(EdgeContainer& edges) {
   for (const auto& edge_key_pair : edges.stale_edges) {
     if (edge_key_pair.second) {
       removeEdge(edge_key_pair.first.k1, edge_key_pair.first.k2);
     }
   }
-}
-
-void SceneGraph::visitLayers(const LayerCallback& cb) {
-  for (auto& [layer_id, layer] : layers_) {
-    cb(layer_id, *layer);
-  }
-
-  for (auto& [layer_id, partitions] : layer_partitions_) {
-    for (auto& [partition_id, partition] : partitions) {
-      cb(LayerKey(layer_id, partition_id), *partition);
-    }
-  }
-}
-
-void SceneGraph::visitLayers(const ConstLayerCallback& cb) const {
-  const_cast<SceneGraph*>(this)->visitLayers(
-      [&cb](LayerKey key, Layer& layer) { cb(key, layer); });
 }
 
 const Partitions& SceneGraph::layer_partition(LayerId layer_id) const {
@@ -947,21 +546,40 @@ const Partitions& SceneGraph::layer_partition(LayerId layer_id) const {
   return iter->second;
 }
 
+std::optional<LayerKey> SceneGraph::getLayerKey(const std::string& name) const {
+  auto iter = layer_names_.find(name);
+  return iter == layer_names_.end() ? std::nullopt
+                                    : std::optional<LayerKey>(iter->second);
+}
+
 LayerKeys SceneGraph::layer_keys() const {
   return LayerKeys(layer_keys_.begin(), layer_keys_.end());
 }
 
-std::vector<LayerId> SceneGraph::layer_ids() const {
-  std::set<LayerId> layers;
-  for (const auto& key : layer_keys_) {
-    layers.insert(key.layer);
-  }
-  return std::vector<LayerId>(layers.begin(), layers.end());
+const LayerNames SceneGraph::layer_names() const { return layer_names_; }
+
+auto SceneGraph::layers() const -> const Layers& { return layers_; };
+
+const std::map<LayerId, Partitions>& SceneGraph::layer_partitions() const {
+  return layer_partitions_;
 }
 
-UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
+UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) const {
   auto graph = empty_like();
-  graph->updateFrom(*this, nodes);
+  for (const auto& node_id : nodes) {
+    const auto node = findNode(node_id);
+    if (!node) {
+      continue;
+    }
+
+    const auto key = node->layer;
+    graph->emplaceNode(key.layer, node_id, node->attributes().clone(), key.partition);
+    for (const auto neighbor : node->connections()) {
+      const auto& edge = getEdge(node_id, neighbor);
+      graph->insertEdge(node_id, neighbor, edge.attributes().clone());
+    }
+  }
+
   return graph;
 }
 
