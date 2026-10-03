@@ -44,6 +44,15 @@ namespace spark_dsg {
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
 
+NodeId GraphMergeConfig::getMergedId(NodeId original) const {
+  if (!previous_merges) {
+    return original;
+  }
+
+  auto iter = previous_merges->find(original);
+  return iter == previous_merges->end() ? original : iter->second;
+}
+
 GraphImpl::GraphImpl() = default;
 
 GraphImpl::~GraphImpl() = default;

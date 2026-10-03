@@ -41,15 +41,6 @@ namespace spark_dsg {
 using Node = SceneGraphNode;
 using Edge = SceneGraphEdge;
 
-NodeId GraphMergeConfig::getMergedId(NodeId original) const {
-  if (!previous_merges) {
-    return original;
-  }
-
-  auto iter = previous_merges->find(original);
-  return iter == previous_merges->end() ? original : iter->second;
-}
-
 SceneGraphLayer::SceneGraphLayer(LayerKey layer_id)
     : SceneGraphLayer(layer_id, std::make_shared<GraphImpl>()) {}
 
@@ -98,13 +89,6 @@ bool SceneGraphLayer::insertEdge(NodeId source,
 
 bool SceneGraphLayer::removeEdge(NodeId source, NodeId target) {
   return impl_->remove(source, target);
-}
-
-void SceneGraphLayer::mergeLayer(const SceneGraphLayer& other_layer,
-                                 const GraphMergeConfig& config,
-                                 std::vector<NodeId>*,
-                                 const Eigen::Isometry3d* transform_new_nodes) {
-  impl_->merge(*other_layer.impl_, config, transform_new_nodes);
 }
 
 void SceneGraphLayer::reset() { impl_->clear(); }

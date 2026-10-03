@@ -56,6 +56,7 @@ bool EdgeKey::operator<(const EdgeKey& other) const {
 
 std::string EdgeKey::str() const {
   return NodeSymbol(k1).str() + " -> " + NodeSymbol(k2).str();
+}
 
 std::size_t EdgeKey::Hash::operator()(const EdgeKey& key) const noexcept {
   // https://www.boost.org/doc/libs/latest/libs/container_hash/doc/html/hash.html#notes_hash_combine

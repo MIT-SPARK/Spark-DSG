@@ -43,6 +43,9 @@
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/python_types.h"
 #include "spark_dsg/python/range_wrapper.h"
+#include "spark_dsg/scene_graph_utilities.h"
+#include "spark_dsg/serialization/file_io.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 
 namespace spark_dsg::python {
 

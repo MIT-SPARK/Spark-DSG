@@ -44,6 +44,7 @@
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/range_wrapper.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 
 namespace spark_dsg::python {
 

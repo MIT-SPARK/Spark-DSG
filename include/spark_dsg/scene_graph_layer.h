@@ -183,17 +183,6 @@ class SceneGraphLayer {
    */
   bool removeEdge(NodeId source, NodeId target);
 
-  /**
-   * @brief Add the other layer into this one
-   * @param other Layer to merge into this layer
-   * @param config Merge configuration controlling contraction and attributes
-   * @param new_nodes Optional output to register new nodes
-   */
-  void mergeLayer(const SceneGraphLayer& other,
-                  const GraphMergeConfig& config,
-                  std::vector<NodeId>* new_nodes = nullptr,
-                  const Eigen::Isometry3d* transform_new_nodes = nullptr);
-
   //! Get copy of the layer
   virtual SceneGraphLayer::Ptr clone() const;
 
