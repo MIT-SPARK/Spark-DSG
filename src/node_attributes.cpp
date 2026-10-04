@@ -117,29 +117,12 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
 void SemanticNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("name", name);
+  serialization::field("color", color);
+
   const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version <= io::Version(1, 0, 2)) {
-    io::warnOutdatedHeader(header);
-
-    Eigen::Matrix<uint8_t, 3, 1> color_uint8;
-    serialization::field("color", color_uint8);
-    color = Color(color_uint8[0], color_uint8[1], color_uint8[2]);
-  } else {
-    serialization::field("color", color);
-  }
-
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
-  if (header.version <= io::Version(1, 0, 4)) {
-    io::warnOutdatedHeader(header);
-
-    Eigen::MatrixXd feature;
-    serialization::field("semantic_feature", feature);
-    if (feature.size()) {
-      // this will lose information technically
-      semantic_feature = feature.cast<float>().col(0);
-    }
-  } else if (header.version <= io::Version(1, 1, 6)) {
+  if (header.version <= io::Version(1, 1, 6)) {
     io::warnOutdatedHeader(header);
 
     Eigen::MatrixXf feature;
@@ -437,14 +420,7 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void AgentNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
-
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    serialization::field("timestamp", timestamp);
-  }
-
+  serialization::field("timestamp", timestamp);
   serialization::field("world_R_body", world_R_body);
   serialization::field("external_key", external_key);
   serialization::field("dbow_ids", dbow_ids);

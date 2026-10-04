@@ -39,8 +39,6 @@
 
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/binary_serialization.h"
-#include "spark_dsg/serialization/json_conversions.h"
-#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg::serialization {
 
@@ -228,13 +226,9 @@ std::unique_ptr<Attrs> Visitor::from(const AttributeFactory<Attrs>& factory,
     return nullptr;
   }
 
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version >= io::Version(1, 0, 6)) {
-    std::string metadata_json;
-    deserializer.read(metadata_json);
-    attrs->metadata = nlohmann::json::parse(metadata_json);
-  }
-
+  std::string metadata_json;
+  deserializer.read(metadata_json);
+  attrs->metadata = nlohmann::json::parse(metadata_json);
   attrs->serialization_info();
   visitor.impl_.reset();
   return attrs;

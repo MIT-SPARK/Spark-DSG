@@ -68,21 +68,9 @@ void to_json(json& record, const SceneGraphEdge& edge) {
 void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& factory,
                          const json& record,
                          SceneGraph& graph) {
-  auto node_id = record.at("id").get<NodeId>();
-  auto layer = record.at("layer").get<LayerId>();
-
-  PartitionId partition = 0;
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    if (record.contains("timestamp")) {
-      partition = NodeSymbol(node_id).category();
-    }
-  } else {
-    partition = record.at("partition").get<PartitionId>();
-  }
-
+  const auto node_id = record.at("id").get<NodeId>();
+  const auto layer = record.at("layer").get<LayerId>();
+  const auto partition = record.at("partition").get<PartitionId>();
   auto attrs = serialization::Visitor::from(factory, record.at("attributes"));
   if (!attrs) {
     std::stringstream ss;
@@ -205,15 +193,7 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
   }
 
   SceneGraph::LayerNames layer_names;
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    layer_names = {{DsgLayers::OBJECTS, 2},
-                   {DsgLayers::AGENTS, 2},
-                   {DsgLayers::PLACES, 3},
-                   {DsgLayers::ROOMS, 4},
-                   {DsgLayers::BUILDINGS, 5}};
-  } else if (header.version < io::Version(1, 1, 1)) {
+  if (header.version < io::Version(1, 1, 1)) {
     io::warnOutdatedHeader(header);
 
     const auto names = record.at("layer_names").get<std::map<std::string, LayerId>>();

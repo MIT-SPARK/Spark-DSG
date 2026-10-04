@@ -73,11 +73,9 @@ Version Version::current() {
   return {SPARK_DSG_VERSION_MAJOR, SPARK_DSG_VERSION_MINOR, SPARK_DSG_VERSION_PATCH};
 }
 
-Version Version::min_supported() { return {1, 0, 0}; }
+Version Version::min_supported() { return {1, 1, 0}; }
 
 FileHeader FileHeader::current() { return {Version::current()}; }
-
-FileHeader FileHeader::min_supported() { return {Version::min_supported()}; }
 
 std::string FileHeader::toString() const {
   return std::string(PROJECT_NAME) + " v" + version.toString();

@@ -74,8 +74,6 @@ struct FileHeader {
 
   //! Current serialization (and library) version
   static FileHeader current();
-  //! Current minimum supported version
-  static FileHeader min_supported();
 
   //! get readable string
   std::string toString() const;

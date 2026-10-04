@@ -37,36 +37,16 @@
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
-#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
 void read_binary(const serialization::BinaryDeserializer& s, BoundingBox& box) {
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 0, 3)) {
-    io::warnOutdatedHeader(header);
-
-    // Legacy bboxes with min/max encoding.
-    s.checkFixedArrayLength(5);
-  } else {
-    // New bboxes with dimensions encoding.
-    s.checkFixedArrayLength(4);
-  }
+  s.checkFixedArrayLength(4);
 
   int32_t raw_type;
   s.read(raw_type);
   box.type = static_cast<BoundingBox::Type>(raw_type);
-
-  if (header.version < io::Version(1, 0, 3)) {
-    io::warnOutdatedHeader(header);
-
-    Eigen::Vector3f min, max;
-    s.read(min);
-    s.read(max);
-    box.dimensions = max - min;
-  } else {
-    s.read(box.dimensions);
-  }
+  s.read(box.dimensions);
 
   s.read(box.world_P_center);
   s.read(box.world_R_center);
@@ -93,40 +73,36 @@ void read_binary(const serialization::BinaryDeserializer& s, LayerKey& key) {
 }
 
 void read_binary(const serialization::BinaryDeserializer& s, NearestVertexInfo& info) {
-  // array: [block_index, pos, vertex_index, label]
   s.checkFixedArrayLength(4);
-  // block index
+
   s.checkFixedArrayLength(3);
   s.read(info.block[0]);
   s.read(info.block[1]);
   s.read(info.block[2]);
-  // pos
+
   s.checkFixedArrayLength(3);
   s.read(info.voxel_pos[0]);
   s.read(info.voxel_pos[1]);
   s.read(info.voxel_pos[2]);
-  // vertex
+
   s.read(info.vertex);
-  // label
   s.read(info.label);
 }
 
 void write_binary(serialization::BinarySerializer& s, const NearestVertexInfo& info) {
-  // array: [block_index, pos, vertex_index, label]
   s.startFixedArray(4);
-  // block index
+
   s.startFixedArray(3);
   s.write(info.block[0]);
   s.write(info.block[1]);
   s.write(info.block[2]);
-  // pos
+
   s.startFixedArray(3);
   s.write(info.voxel_pos[0]);
   s.write(info.voxel_pos[1]);
   s.write(info.voxel_pos[2]);
-  // vertex
+
   s.write(info.vertex);
-  // label
   s.write(info.label);
 }
 

@@ -37,6 +37,7 @@
 #include "spark_dsg/printing.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
+#include "spark_dsg/serialization/json_conversions.h"
 
 namespace spark_dsg {
 namespace {
@@ -115,12 +116,7 @@ void NodeAttributes::serialization_info() {
   serialization::field("position", position);
   serialization::field("last_update_time_ns", last_update_time_ns);
   serialization::field("is_active", is_active);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 0, 4)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    serialization::field("is_predicted", is_predicted);
-  }
+  serialization::field("is_predicted", is_predicted);
 }
 
 void NodeAttributes::serialization_info() const {

@@ -39,7 +39,6 @@
 #include "spark_dsg/mesh.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
-#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
@@ -70,17 +69,8 @@ void from_json(const json& j, BoundingBox& b) {
   if (b.type == BoundingBox::Type::INVALID) {
     return;
   }
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 0, 3)) {
-    // Legacy bboxes with min/max encoding.
-    b.dimensions =
-        j.at("max").get<Eigen::Vector3f>() - j.at("min").get<Eigen::Vector3f>();
-    io::warnOutdatedHeader(header);
-  } else {
-    // New bboxes with dimensions encoding.
-    b.dimensions = j.at("dimensions").get<Eigen::Vector3f>();
-  }
 
+  b.dimensions = j.at("dimensions").get<Eigen::Vector3f>();
   b.world_P_center = j.at("world_P_center").get<Eigen::Vector3f>();
   auto world_q_center = j.at("world_R_center").get<Eigen::Quaternionf>();
   b.world_R_center = world_q_center.toRotationMatrix();
@@ -128,20 +118,6 @@ void to_json(json& record, const Color& c) {
 }
 
 void from_json(const json& record, Color& c) {
-  // Support scene graphs 1.0.2 and earlier where colors were encoded as vectors.
-  // TODO(lschmid): Remove this in the future.
-  if (record.is_array()) {
-    io::warnOutdatedHeader(io::GlobalInfo::loadedHeader());
-    c.r = record.at(0).get<uint8_t>();
-    c.g = record.at(1).get<uint8_t>();
-    c.b = record.at(2).get<uint8_t>();
-    if (record.size() > 3) {
-      c.a = record.at(3).get<uint8_t>();
-    } else {
-      c.a = 255;
-    }
-    return;
-  }
   c.r = record.at("r").get<uint8_t>();
   c.g = record.at("g").get<uint8_t>();
   c.b = record.at("b").get<uint8_t>();

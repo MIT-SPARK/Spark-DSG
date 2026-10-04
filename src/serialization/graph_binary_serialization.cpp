@@ -35,11 +35,11 @@
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 
 #include "spark_dsg/mesh.h"
-#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/scene_graph.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
@@ -47,8 +47,6 @@ void write_binary(serialization::BinarySerializer& s, const SceneGraphNode& node
   s.startFixedArray(4);
   s.write(node.layer.layer);
   s.write(node.id);
-  // for parsing reasons for old files, this needs to be in roughly the same order as
-  // the timestamp field
   s.write(node.layer.partition);
   s.write(node.attributes());
 }
@@ -81,19 +79,7 @@ NodeId parseNode(const AttributeFactory<NodeAttributes>& factory,
   deserializer.read(node);
 
   PartitionId partition = 0;
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    std::optional<std::chrono::nanoseconds> stamp;
-    deserializer.read(stamp);
-    // guess at interlayer IDs based on node symbol prefix
-    if (stamp) {
-      partition = NodeSymbol(node).category();
-    }
-  } else {
-    deserializer.read(partition);
-  }
+  deserializer.read(partition);
 
   auto attrs = serialization::Visitor::from(factory, deserializer);
   if (!attrs) {
@@ -201,14 +187,7 @@ void writeGraph(const SceneGraph& graph,
 }
 
 template <typename Attrs>
-AttributeFactory<Attrs> loadFactory(const io::FileHeader& header,
-                                    const BinaryDeserializer& deserializer) {
-  if (header.version < io::Version(1, 0, 2)) {
-    io::warnOutdatedHeader(header);
-
-    return serialization::AttributeRegistry<Attrs>::current();
-  }
-
+AttributeFactory<Attrs> loadFactory(const BinaryDeserializer& deserializer) {
   std::vector<std::string> names;
   deserializer.read(names);
   return serialization::AttributeRegistry<Attrs>::fromNames(names);
@@ -240,27 +219,12 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
     }
   }
 
-  if (header.version < io::Version(1, 0, 2)) {
-    io::warnOutdatedHeader(header);
-
-    LayerId mesh_layer_id;
-    deserializer.read(mesh_layer_id);
-  }
-
   // load name to type index mapping if present
-  const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);
-  const auto edge_factory = loadFactory<EdgeAttributes>(header, deserializer);
+  const auto node_factory = loadFactory<NodeAttributes>(deserializer);
+  const auto edge_factory = loadFactory<EdgeAttributes>(deserializer);
 
   std::map<std::string, LayerKey> layer_names;
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    layer_names = {{DsgLayers::OBJECTS, 2},
-                   {DsgLayers::AGENTS, 2},
-                   {DsgLayers::PLACES, 3},
-                   {DsgLayers::ROOMS, 4},
-                   {DsgLayers::BUILDINGS, 5}};
-  } else if (header.version < io::Version(1, 1, 1)) {
+  if (header.version < io::Version(1, 1, 1)) {
     io::warnOutdatedHeader(header);
 
     std::map<std::string, LayerId> names;
@@ -274,16 +238,12 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
     graph.addLayer(key.layer, key.partition, name);
   }
 
-  if (header.version < io::Version(1, 0, 6)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    std::string metadata_json;
-    deserializer.read(metadata_json);
-    try {
-      graph.metadata = nlohmann::json::parse(metadata_json);
-    } catch (const std::exception& e) {
-      throw std::domain_error(std::string("Invalid json metadata: ") + e.what());
-    }
+  std::string metadata_json;
+  deserializer.read(metadata_json);
+  try {
+    graph.metadata = nlohmann::json::parse(metadata_json);
+  } catch (const std::exception& e) {
+    throw std::domain_error(std::string("Invalid json metadata: ") + e.what());
   }
 
   std::unordered_set<NodeId> stale_nodes;
@@ -299,20 +259,6 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
         [&graph](const auto& key, const auto& node, auto&& attrs) {
           graph.addOrUpdateNode(key.layer, node, std::move(attrs), key.partition);
         }));
-  }
-
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    deserializer.checkDynamicArray();
-    while (!deserializer.isDynamicArrayEnd()) {
-      stale_nodes.erase(parseNode(
-          node_factory,
-          deserializer,
-          [&graph](const auto& key, const auto& node, auto&& attrs) {
-            graph.addOrUpdateNode(key.layer, node, std::move(attrs), key.partition);
-          }));
-    }
   }
 
   for (const auto& node_id : stale_nodes) {
@@ -357,8 +303,6 @@ std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer) {
 }
 
 std::unique_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length) {
-  const auto& header = io::GlobalInfo::loadedHeader();
-
   BinaryDeserializer deserializer(buffer, length);
   LayerId layer_id;
   deserializer.read(layer_id);
@@ -366,8 +310,8 @@ std::unique_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t l
   auto graph = std::make_unique<SceneGraphLayer>(layer_id);
 
   // load name to type index mapping if present
-  const auto node_factory = loadFactory<NodeAttributes>(header, deserializer);
-  const auto edge_factory = loadFactory<EdgeAttributes>(header, deserializer);
+  const auto node_factory = loadFactory<NodeAttributes>(deserializer);
+  const auto edge_factory = loadFactory<EdgeAttributes>(deserializer);
 
   deserializer.checkDynamicArray();
   while (!deserializer.isDynamicArrayEnd()) {
