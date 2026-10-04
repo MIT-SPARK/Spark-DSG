@@ -105,7 +105,11 @@ std::unique_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath)
                             "': unable to find version");
   }
 
-  checkCompatibility(*header);
+  if (header->version < Version::min_supported()) {
+    throw std::domain_error(
+        "File version is too old to load: " + header->version.toString() + " < " +
+        Version::min_supported().toString());
+  }
 
   GlobalInfo::ScopedInfo info(*header);
   return binary::readGraph(buffer.data() + offset, buffer.size() - offset);

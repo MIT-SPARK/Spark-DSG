@@ -119,11 +119,11 @@ void SemanticNodeAttributes::serialization_info() {
   serialization::field("name", name);
   serialization::field("color", color);
 
-  const auto& header = io::GlobalInfo::loadedHeader();
+  const auto& version = io::GlobalInfo::loadedVersion();
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
-  if (header.version <= io::Version(1, 1, 6)) {
-    io::warnOutdatedHeader(header);
+  if (version <= io::Version(1, 1, 6)) {
+    io::GlobalInfo::warnOutdated();
 
     Eigen::MatrixXf feature;
     serialization::field("semantic_feature", feature);
@@ -135,11 +135,11 @@ void SemanticNodeAttributes::serialization_info() {
     serialization::field("semantic_feature", semantic_feature);
   }
 
-  if (header.version >= io::Version(1, 1, 7)) {
+  if (version >= io::Version(1, 1, 7)) {
     serialization::field("feature_concentration", feature_concentration);
   }
 
-  if (header.version >= io::Version(1, 1, 4)) {
+  if (version >= io::Version(1, 1, 4)) {
     serialization::field("label_weights", label_weights);
   }
 }
@@ -277,9 +277,9 @@ void PlaceNodeAttributes::serialization_info() {
   serialization::field("orientation", orientation);
   serialization::field("need_cleanup", need_cleanup);
   serialization::field("num_frontier_voxels", num_frontier_voxels);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 3)) {
-    io::warnOutdatedHeader(header);
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version < io::Version(1, 1, 3)) {
+    io::GlobalInfo::warnOutdated();
   } else {
     serialization::field("anti_frontier", anti_frontier);
   }
@@ -329,9 +329,9 @@ std::ostream& Place2dNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void Place2dNodeAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 4)) {
-    io::warnOutdatedHeader(header);
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version < io::Version(1, 1, 4)) {
+    io::GlobalInfo::warnOutdated();
     serialization::field("boundary", boundary);
     serialization::field("ellipse_centroid", ellipse_centroid);
     serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
@@ -535,10 +535,10 @@ void TraversabilityNodeAttributes::serialization_info() {
     }
   }
 
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 4)) {
-    io::warnOutdatedHeader(header);
-    if (header.version == io::Version(1, 1, 3)) {
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version < io::Version(1, 1, 4)) {
+    io::GlobalInfo::warnOutdated();
+    if (version == io::Version(1, 1, 3)) {
       // Backwards compatibility for cognition labels.
       std::map<int, float> temp;
       serialization::field("cognition_labels", temp);
@@ -581,9 +581,9 @@ std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
 }
 
 void TravNodeAttributes::serialization_info() {
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version <= io::Version(1, 1, 5)) {
-    io::warnOutdatedHeader(header);
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version <= io::Version(1, 1, 5)) {
+    io::GlobalInfo::warnOutdated();
     NodeAttributes::serialization_info();
   } else {
     SemanticNodeAttributes::serialization_info();

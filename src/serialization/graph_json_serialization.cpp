@@ -177,6 +177,11 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
   }
 
   const auto header = record.at(header_field_name).get<io::FileHeader>();
+  if (header.version < Version::min_supported()) {
+    throw std::domain_error(
+        "File version is too old to load: " + header.version.toString() + " < " +
+        Version::min_supported().toString());
+  }
 
   io::GlobalInfo::ScopedInfo info(header);
   const auto node_factory = serialization::AttributeRegistry<NodeAttributes>::current();
@@ -184,7 +189,7 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
 
   SceneGraph::LayerKeys layer_keys;
   if (header.version < io::Version(1, 1, 2)) {
-    io::warnOutdatedHeader(header);
+    io::GlobalInfo::warnOutdated();
 
     const auto layer_ids = record.at("layer_ids").get<std::vector<LayerId>>();
     layer_keys = SceneGraph::LayerKeys(layer_ids.begin(), layer_ids.end());
@@ -194,7 +199,7 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
 
   SceneGraph::LayerNames layer_names;
   if (header.version < io::Version(1, 1, 1)) {
-    io::warnOutdatedHeader(header);
+    io::GlobalInfo::warnOutdated();
 
     const auto names = record.at("layer_names").get<std::map<std::string, LayerId>>();
     layer_names = SceneGraph::LayerNames(names.begin(), names.end());

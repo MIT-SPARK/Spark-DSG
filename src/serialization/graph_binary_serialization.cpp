@@ -194,10 +194,9 @@ AttributeFactory<Attrs> loadFactory(const BinaryDeserializer& deserializer) {
 }
 
 bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
-  const auto& header = io::GlobalInfo::loadedHeader();
-
-  if (header.version < io::Version(1, 1, 2)) {
-    io::warnOutdatedHeader(header);
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version < io::Version(1, 1, 2)) {
+    io::GlobalInfo::warnOutdated();
 
     // NOTE(nathan) we intentionally don't try to use the layer IDs to populate anything
     // because they will not include partitions and cause lots of serialization churn
@@ -224,8 +223,8 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
   const auto edge_factory = loadFactory<EdgeAttributes>(deserializer);
 
   std::map<std::string, LayerKey> layer_names;
-  if (header.version < io::Version(1, 1, 1)) {
-    io::warnOutdatedHeader(header);
+  if (version < io::Version(1, 1, 1)) {
+    io::GlobalInfo::warnOutdated();
 
     std::map<std::string, LayerId> names;
     deserializer.read(names);

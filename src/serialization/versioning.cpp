@@ -118,43 +118,25 @@ std::optional<FileHeader> FileHeader::deserialize(const std::vector<uint8_t>& bu
   return header;
 }
 
-void warnOutdatedHeader(const FileHeader& header) {
-  if (GlobalInfo::warnedLegacy()) {
+void GlobalInfo::warnOutdated() {
+  if (warned_legacy_) {
     return;
   }
 
-  if (GlobalInfo::use_short_message) {
-    std::cout << "Loading file with encoding " << header.toString() << " (current "
-              << FileHeader::current().toString() << ")" << std::endl;
+  warned_legacy_ = true;
+  const auto ver = loaded_version_.toString();
+  if (use_short_message) {
+    std::cout << "Loading file with encoding " << ver << " (current "
+              << Version::current().toString() << ")" << std::endl;
   } else {
-    std::cerr << "[SPARK-DSG] [WARNING] Loading file with outdated encoding ("
-              << header.toString()
+    std::cerr << "[SPARK-DSG] [WARNING] Loading file with outdated encoding (" << ver
               << "). This format may be discontinued in the future. For optimal "
                  "preservation and performance load the file "
                  "and save it again to update to the current encoding ("
-              << FileHeader::current().toString() << ")." << std::endl;
+              << Version::current().toString() << ")." << std::endl;
   }
 }
 
-void checkCompatibility(const FileHeader& loaded, const FileHeader& current) {
-  // Check whether this is a legacy file. We support binary serialziation compatibility
-  // from Spark DSG v1.0.2 forward, older versions should be converted to JSON.
-  if (loaded.version < Version::min_supported()) {
-    throw std::runtime_error(
-        "Attempted to load invalid binary file: the loaded file was created with an "
-        "unsupported "
-        "legacy version of Spark DSG (" +
-        loaded.version.toString() +
-        "). Please convert the file to JSON and save it again to update to the "
-        "current encoding (" +
-        current.version.toString() + ").");
-  }
-}
-
-bool GlobalInfo::warnedLegacy() {
-  const bool already_warned = warned_legacy_;
-  warned_legacy_ = true;
-  return already_warned;
-}
+const Version& GlobalInfo::loadedVersion() { return loaded_version_; };
 
 }  // namespace spark_dsg::io

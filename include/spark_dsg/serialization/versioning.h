@@ -87,22 +87,6 @@ struct FileHeader {
 };
 
 /**
- * @brief Warn the user about loading a file with an old header, which may be
- * discontinued in the future.
- * @param header The header of the loaded file.
- */
-void warnOutdatedHeader(const FileHeader& header);
-
-/**
- * @brief Check if the loaded file is compatible with the current version of spark-dsg.
- * @param loaded The header of the loaded file.
- * @param current Optional: Specific version to compare against. Defaults to the
- * current.
- */
-void checkCompatibility(const FileHeader& loaded,
-                        const FileHeader& current = FileHeader::current());
-
-/**
  * @brief Global access to the header currently used for de-serialization. This will
  * always be set to the header of a file if a file is loaded. It will be set to the
  * current version if other serialized data is being passed around.
@@ -110,13 +94,10 @@ void checkCompatibility(const FileHeader& loaded,
 struct GlobalInfo {
  public:
   //! Get the current header used for de-serialization.
-  static const FileHeader& loadedHeader() { return loaded_header_; };
+  static const Version& loadedVersion();
 
-  /**
-   * @brief Get whether a warning about loading a legacy file has already been issued
-   * and set the flag to true.
-   */
-  static bool warnedLegacy();
+  //! Warn the user about loading a file with an old header
+  static void warnOutdated();
 
   //! Setting for legacy warning message
   inline static bool use_short_message = false;
@@ -124,16 +105,16 @@ struct GlobalInfo {
   //! Set the current header used for de-serialization.
   struct ScopedInfo {
     explicit ScopedInfo(const FileHeader& header) {
-      loaded_header_ = header;
+      loaded_version_ = header.version;
       warned_legacy_ = false;
     }
 
-    ~ScopedInfo() { loaded_header_ = FileHeader::current(); }
+    ~ScopedInfo() { loaded_version_ = Version::current(); }
   };
 
  private:
   GlobalInfo() = default;
-  thread_local inline static FileHeader loaded_header_ = FileHeader::current();
+  thread_local inline static Version loaded_version_ = Version::current();
   thread_local inline static bool warned_legacy_ = false;
 };
 

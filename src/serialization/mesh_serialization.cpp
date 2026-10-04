@@ -136,9 +136,7 @@ Mesh::Ptr Mesh::load(std::filesystem::path filepath) {
     throw std::runtime_error("invalid file: file has bad encoding");
   }
 
-  // TODO(lschmid): This check should probably be replaced to only consider things
-  // relevant to meshes.
-  io::checkCompatibility(*header);
+  // NOTE(nathan) if we change the mesh format, we should add a version check here
   return deserializeFromBinary(buffer.data() + offset, buffer.size() - offset);
 }
 
