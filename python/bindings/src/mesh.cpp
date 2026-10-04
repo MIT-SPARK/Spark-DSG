@@ -163,8 +163,6 @@ void init_mesh(py::module_& m) {
       .def("set_label", &Mesh::setLabel)
       .def("face", py::overload_cast<size_t>(&Mesh::face, py::const_))
       .def("set_face", [](Mesh& mesh, size_t index, const Mesh::Face& face) { mesh.face(index) = face; })
-      .def("to_json", &Mesh::serializeToJson)
-      .def_static("from_json", &Mesh::deserializeFromJson)
       .def("to_binary",
            [](const Mesh& mesh) {
              std::vector<uint8_t> buffer;

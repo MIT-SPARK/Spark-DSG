@@ -36,6 +36,7 @@
 
 #include "spark_dsg/bounding_box.h"
 #include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/mesh.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/versioning.h"
@@ -149,8 +150,6 @@ void from_json(const json& record, Color& c) {
   }
 }
 
-// TODO(nathan) think about mesh serialization
-
 void to_json(json& record, const NodeAttributes& attributes) {
   serialization::Visitor::to(record, attributes);
 }
@@ -159,23 +158,67 @@ void to_json(json& record, const EdgeAttributes& attributes) {
   serialization::Visitor::to(record, attributes);
 }
 
-namespace io {
+void to_json(json& record, const Mesh& mesh) {
+  record["has_colors"] = mesh.has_colors;
+  record["has_timestamps"] = mesh.has_timestamps;
+  record["has_labels"] = mesh.has_labels;
+  record["has_first_seen_stamps"] = mesh.has_first_seen_stamps;
 
-void to_json(json& record, const FileHeader& header) {
-  record = {{"project_name", header.project_name},
-            {"version",
-             {{"major", header.version.major},
-              {"minor", header.version.minor},
-              {"patch", header.version.patch}}}};
+  if (!mesh.points.empty()) {
+    record["points"] = mesh.points;
+  }
+
+  if (!mesh.colors.empty()) {
+    record["colors"] = mesh.colors;
+  }
+
+  if (!mesh.stamps.empty()) {
+    record["stamps"] = mesh.stamps;
+  }
+
+  if (!mesh.first_seen_stamps.empty()) {
+    record["first_seen_stamps"] = mesh.first_seen_stamps;
+  }
+
+  if (!mesh.labels.empty()) {
+    record["labels"] = mesh.labels;
+  }
+
+  if (!mesh.faces.empty()) {
+    record["faces"] = mesh.faces;
+  }
 }
 
-void from_json(const json& record, FileHeader& header) {
-  header.project_name = record.at("project_name").get<std::string>();
-  header.version.major = record.at("version").at("major").get<uint8_t>();
-  header.version.minor = record.at("version").at("minor").get<uint8_t>();
-  header.version.patch = record.at("version").at("patch").get<uint8_t>();
-}
+void from_json(const json& record, Mesh& mesh) {
+  const auto has_colors = record.at("has_colors").get<bool>();
+  const auto has_timestamps = record.at("has_timestamps").get<bool>();
+  const auto has_labels = record.at("has_labels").get<bool>();
+  const auto has_first_seen_stamps = record.at("has_first_seen_stamps").get<bool>();
+  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
 
-}  // namespace io
+  if (record.contains("points")) {
+    mesh.points = record.at("points").get<Mesh::Positions>();
+  }
+
+  if (record.contains("colors")) {
+    mesh.colors = record.at("colors").get<Mesh::Colors>();
+  }
+
+  if (record.contains("stamps")) {
+    mesh.stamps = record.at("stamps").get<Mesh::Timestamps>();
+  }
+
+  if (record.contains("first_seen_stamps")) {
+    mesh.first_seen_stamps = record.at("first_seen_stamps").get<Mesh::Timestamps>();
+  }
+
+  if (record.contains("labels")) {
+    mesh.labels = record.at("labels").get<Mesh::Labels>();
+  }
+
+  if (record.contains("faces")) {
+    mesh.faces = record.at("faces").get<Mesh::Faces>();
+  }
+}
 
 }  // namespace spark_dsg

@@ -54,16 +54,17 @@ FileType identifyFileType(const std::filesystem::path& filepath) {
   } else if (ext == BINARY_EXTENSION) {
     return FileType::BINARY;
   }
+
   return FileType::UNKNOWN;
 }
 
 FileType verifyFileExtension(std::filesystem::path& filepath) {
   io::FileType type = io::identifyFileType(filepath);
-
-  // If no file extension is provided, default to binary.
   if (type == io::FileType::NONE) {
+    // If no file extension is provided, default to binary.
     type = io::FileType::BINARY;
     filepath += io::BINARY_EXTENSION;
+    return type;
   }
 
   // Check the file extension is valid.
@@ -81,36 +82,32 @@ FileType verifyFileExtension(std::filesystem::path& filepath) {
 void saveDsgBinary(const SceneGraph& graph,
                    const std::filesystem::path& filepath,
                    bool include_mesh) {
-  // Get the header data.
-  const FileHeader header = FileHeader::current();
-  const std::vector<uint8_t> header_buffer = header.serializeToBinary();
+  const auto header = FileHeader::current();
+  const auto header_buffer = header.serialize();
 
-  // Get the DSG data.
   std::vector<uint8_t> graph_buffer;
   binary::writeGraph(graph, graph_buffer, include_mesh);
 
-  // Write the header and graph data to the file.
   std::ofstream out(filepath, std::ios::out | std::ios::binary);
   out.write(reinterpret_cast<const char*>(header_buffer.data()), header_buffer.size());
   out.write(reinterpret_cast<const char*>(graph_buffer.data()), graph_buffer.size());
 }
 
 std::unique_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath) {
-  // Read the file into a buffer.
   std::ifstream infile(filepath, std::ios::in | std::ios::binary);
   std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(infile)),
                               std::istreambuf_iterator<char>());
 
-  // Deserialize the header.
   size_t offset;
-  const FileHeader header =
-      FileHeader::deserializeFromBinary(buffer, &offset).value_or(FileHeader::legacy());
+  const auto header = FileHeader::deserialize(buffer, &offset);
+  if (!header) {
+    throw std::domain_error("Unable to deserialize '" + filepath.string() +
+                            "': unable to find version");
+  }
 
-  // Check for compatibility issues.
-  checkCompatibility(header);
+  checkCompatibility(*header);
 
-  // Deserialize the graph.
-  GlobalInfo::ScopedInfo info(header);
+  GlobalInfo::ScopedInfo info(*header);
   return binary::readGraph(buffer.data() + offset, buffer.size() - offset);
 }
 
@@ -139,7 +136,6 @@ std::unique_ptr<SceneGraph> loadDsgFromFile(const std::filesystem::path& filepat
     return loadDsgJson(filepath);
   }
 
-  // Can only be binary after verification (worstcase: throws meaningful error)
   return loadDsgBinary(filepath);
 }
 

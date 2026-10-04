@@ -144,8 +144,6 @@ void write_binary(serialization::BinarySerializer& s, const Color& c) {
   s.write(c.a);
 }
 
-// TODO(nathan) mesh?
-
 void write_binary(serialization::BinarySerializer& s, const NodeAttributes& attrs) {
   serialization::Visitor::to(s, attrs);
 }
@@ -153,23 +151,5 @@ void write_binary(serialization::BinarySerializer& s, const NodeAttributes& attr
 void write_binary(serialization::BinarySerializer& s, const EdgeAttributes& attrs) {
   serialization::Visitor::to(s, attrs);
 }
-
-namespace io {
-
-void read_binary(const serialization::BinaryDeserializer& s, FileHeader& header) {
-  s.read(header.project_name);
-  s.read(header.version.major);
-  s.read(header.version.minor);
-  s.read(header.version.patch);
-}
-
-void write_binary(serialization::BinarySerializer& s, const FileHeader& header) {
-  s.write(header.project_name);
-  s.write(header.version.major);
-  s.write(header.version.minor);
-  s.write(header.version.patch);
-}
-
-}  // namespace io
 
 }  // namespace spark_dsg

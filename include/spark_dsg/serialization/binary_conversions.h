@@ -65,14 +65,6 @@ void write_binary(serialization::BinarySerializer& s, const NodeAttributes& attr
 struct EdgeAttributes;
 void write_binary(serialization::BinarySerializer& s, const EdgeAttributes& attrs);
 
-namespace io {
-
-struct FileHeader;
-void read_binary(const serialization::BinaryDeserializer& s, FileHeader& header);
-void write_binary(serialization::BinarySerializer& s, const FileHeader& header);
-
-}  // namespace io
-
 }  // namespace spark_dsg
 
 namespace Eigen {

@@ -43,6 +43,13 @@
 #include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
+namespace {
+
+inline std::string header_json_key() {
+  return std::string(io::FileHeader::IDENTIFIER_STRING) + "_header";
+}
+
+}  // namespace
 
 using nlohmann::json;
 
@@ -105,11 +112,29 @@ void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& 
   }
 }
 
+namespace io {
+
+void to_json(nlohmann::json& record, const FileHeader& header) {
+  record = {{"version",
+             {{"major", header.version.major},
+              {"minor", header.version.minor},
+              {"patch", header.version.patch}}}};
+}
+
+void from_json(const nlohmann::json& record, FileHeader& header) {
+  header.version.major = record.at("version").at("major").get<uint8_t>();
+  header.version.minor = record.at("version").at("minor").get<uint8_t>();
+  header.version.patch = record.at("version").at("patch").get<uint8_t>();
+}
+
+}  // namespace io
+
 namespace io::json {
 
 std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   nlohmann::json record;
-  record[io::FileHeader::header_json_key()] = io::FileHeader::current();
+
+  record[header_json_key()] = io::FileHeader::current();
   record["directed"] = false;
   record["multigraph"] = false;
   record["nodes"] = nlohmann::json::array();
@@ -149,8 +174,7 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
     return record.dump();
   }
 
-  // TODO(nathan) push header serialization to to/from json and reuse
-  record["mesh"] = nlohmann::json::parse(mesh->serializeToJson());
+  record["mesh"] = *mesh;
   return record.dump();
 }
 
@@ -158,10 +182,14 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
   const auto record = nlohmann::json::parse(contents);
 
   // Parse header.
-  const auto header_field_name = FileHeader::header_json_key();
-  const auto header = record.contains(header_field_name)
-                          ? record.at(header_field_name).get<io::FileHeader>()
-                          : io::FileHeader::legacy();
+  const auto header_field_name = header_json_key();
+  if (!record.contains(header_field_name)) {
+    throw std::domain_error("Could not find serialization version under key '" +
+                            header_field_name + "'");
+  }
+
+  const auto header = record.at(header_field_name).get<io::FileHeader>();
+
   io::GlobalInfo::ScopedInfo info(header);
   const auto node_factory = serialization::AttributeRegistry<NodeAttributes>::current();
   const auto edge_factory = serialization::AttributeRegistry<EdgeAttributes>::current();
@@ -208,13 +236,12 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
     read_edge_from_json(edge_factory, edge, *graph);
   }
 
-  if (!record.contains("mesh")) {
-    return graph;
+  if (record.contains("mesh")) {
+    auto mesh = std::make_shared<Mesh>();
+    record.at("mesh").get_to(*mesh);
+    graph->setMesh(mesh);
   }
 
-  // TODO(nathan) push header serialization to to/from json and reuse
-  auto mesh = Mesh::deserializeFromJson(record.at("mesh").dump());
-  graph->setMesh(mesh);
   return graph;
 }
 

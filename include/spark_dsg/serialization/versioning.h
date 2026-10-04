@@ -37,47 +37,23 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace spark_dsg::io {
 
-// Define the current project and version when serializing data with this
-// implementation.
-inline constexpr static const char* CURRENT_PROJECT_NAME = "main";
-
-// Which project names are compatible to load given the current project. <current,
-// {compatible, ...}>. Projects are always assumed to be compatible with themselves.
-inline const std::unordered_map<std::string, std::unordered_set<std::string>>
-    PROJECT_COMPATIBILITY = {};
-
-// Version information for compatibility (and potential backwards compatibility)
-// within a project.
+//! Version information for serialization compatibility
 struct Version {
   uint8_t major = 0u;
   uint8_t minor = 0u;
   uint8_t patch = 0u;
 
-  // Constructors.
-  Version() = default;
-  Version(uint8_t _major, uint8_t _minor, uint8_t _patch) {
-    // manually assign fields to avoid gnu macros
-    major = _major;
-    minor = _minor;
-    patch = _patch;
-  }
-
-  // Comparison operators.
-  bool operator==(const Version& other) const;
-  bool operator!=(const Version& other) const { return !(*this == other); }
-  bool operator<(const Version& other) const;
-  bool operator>(const Version& other) const { return other < *this; }
-  bool operator<=(const Version& other) const { return !(*this > other); }
-  bool operator>=(const Version& other) const { return !(*this < other); }
-
-  // Human readable string representation.
+  Version();
+  Version(uint8_t _major, uint8_t _minor, uint8_t _patch);
+  auto operator<=>(const Version& other) const = default;
   std::string toString() const;
+
+  static Version current();
+  static Version min_supported();
 };
 
 /**
@@ -90,28 +66,26 @@ struct FileHeader {
   //           ! DO NOT CHANGE THIS VALUE !
   // (Otherwise all older files will be unreadable.)
   inline constexpr static const char* IDENTIFIER_STRING = "SPARK_DSG";
-  //! @brief Get header key used for json serialization
-  static std::string header_json_key() {
-    return std::string(IDENTIFIER_STRING) + "_header";
-  }
+  //! String identifier for project name (slowly being phased out)
+  inline constexpr static const char* PROJECT_NAME = "main";
 
-  // String identifier for different variants of spark-dsg that may not be compatible.
-  std::string project_name = "main";
-
-  // Version of the library when saved.
+  //! Version of the library when saved.
   Version version;
 
-  // Access to specific versions.
+  //! Current serialization (and library) version
   static FileHeader current();
-  static FileHeader legacy();
+  //! Current minimum supported version
+  static FileHeader min_supported();
 
-  // Serilization.
-  std::vector<uint8_t> serializeToBinary() const;
-  static std::optional<FileHeader> deserializeFromBinary(
-      const std::vector<uint8_t>& buffer, size_t* offset = nullptr);
-
-  // Stringify.
+  //! get readable string
   std::string toString() const;
+
+  //! Write header to binary
+  std::vector<uint8_t> serialize() const;
+
+  //! Read header from binary
+  static std::optional<FileHeader> deserialize(const std::vector<uint8_t>& buffer,
+                                               size_t* offset = nullptr);
 };
 
 /**
@@ -130,9 +104,6 @@ void warnOutdatedHeader(const FileHeader& header);
 void checkCompatibility(const FileHeader& loaded,
                         const FileHeader& current = FileHeader::current());
 
-void checkProjectCompatibility(const FileHeader& loaded,
-                               const FileHeader& current = FileHeader::current());
-
 /**
  * @brief Global access to the header currently used for de-serialization. This will
  * always be set to the header of a file if a file is loaded. It will be set to the
@@ -140,7 +111,7 @@ void checkProjectCompatibility(const FileHeader& loaded,
  */
 struct GlobalInfo {
  public:
-  //! @brief Get the current header used for de-serialization.
+  //! Get the current header used for de-serialization.
   static const FileHeader& loadedHeader() { return loaded_header_; };
 
   /**
@@ -149,10 +120,10 @@ struct GlobalInfo {
    */
   static bool warnedLegacy();
 
-  //! @brief Setting for legacy warning message
+  //! Setting for legacy warning message
   inline static bool use_short_message = false;
 
-  //! @brief Set the current header used for de-serialization.
+  //! Set the current header used for de-serialization.
   struct ScopedInfo {
     explicit ScopedInfo(const FileHeader& header) {
       loaded_header_ = header;

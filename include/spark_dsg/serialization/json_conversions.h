@@ -66,14 +66,6 @@ void to_json(nlohmann::json& j, const NodeAttributes& attrs);
 struct EdgeAttributes;
 void to_json(nlohmann::json& j, const EdgeAttributes& attrs);
 
-namespace io {
-
-struct FileHeader;
-void to_json(nlohmann::json& record, const FileHeader& header);
-void from_json(const nlohmann::json& record, FileHeader& header);
-
-}  // namespace io
-
 }  // namespace spark_dsg
 
 namespace nlohmann {
