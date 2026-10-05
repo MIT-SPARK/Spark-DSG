@@ -81,7 +81,7 @@ std::string FileHeader::toString() const {
   return std::string(PROJECT_NAME) + " v" + version.toString();
 }
 
-std::vector<uint8_t> FileHeader::serialize() const {
+std::vector<uint8_t> FileHeader::serializeToBinary() const {
   std::vector<uint8_t> buffer;
   serialization::BinarySerializer serializer(&buffer);
   serializer.write(std::string(IDENTIFIER_STRING));
@@ -90,8 +90,8 @@ std::vector<uint8_t> FileHeader::serialize() const {
   return buffer;
 }
 
-std::optional<FileHeader> FileHeader::deserialize(const std::vector<uint8_t>& buffer,
-                                                  size_t* offset) {
+std::optional<FileHeader> FileHeader::deserializeFromBinary(
+    const std::vector<uint8_t>& buffer, size_t* offset) {
   serialization::BinaryDeserializer deserializer(buffer);
   if (deserializer.getCurrType() != serialization::PackType::ARR32) {
     return std::nullopt;  // currently strings get packed as dynamic arrays

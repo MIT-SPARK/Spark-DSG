@@ -35,6 +35,7 @@
 #include "spark_dsg/serialization/binary_conversions.h"
 
 #include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/mesh.h"
 #include "spark_dsg/node_attributes.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 
@@ -118,6 +119,49 @@ void write_binary(serialization::BinarySerializer& s, const Color& c) {
   s.write(c.g);
   s.write(c.b);
   s.write(c.a);
+}
+
+void write_binary(serialization::BinarySerializer& serializer, const Mesh& mesh) {
+  // Write the mesh configuration.
+  serializer.write(mesh.has_colors);
+  serializer.write(mesh.has_timestamps);
+  serializer.write(mesh.has_labels);
+  serializer.write(mesh.has_first_seen_stamps);
+
+  // Write vertices.
+  serializer.write(mesh.points);
+
+  // NOTE(lschmid): I opted to save everything that is in the mesh, even if it is not
+  // in accordance with the initial mesh spec. This should not matter if the meshes are
+  // handled correctly but should save headaches if people want to use the meshes in
+  // other ways.
+  serializer.write(mesh.colors);
+  serializer.write(mesh.stamps);
+  serializer.write(mesh.labels);
+  serializer.write(mesh.first_seen_stamps);
+
+  // Write faces
+  serializer.write(mesh.faces);
+}
+
+void read_binary(const serialization::BinaryDeserializer& deserializer, Mesh& mesh) {
+  // Mesh flags.
+  bool has_colors, has_timestamps, has_labels, has_first_seen_stamps;
+  deserializer.read(has_colors);
+  deserializer.read(has_timestamps);
+  deserializer.read(has_labels);
+  deserializer.read(has_first_seen_stamps);
+  mesh = Mesh(has_colors, has_timestamps, has_labels, has_first_seen_stamps);
+
+  // Various attribute fields
+  deserializer.read(mesh.points);
+  deserializer.read(mesh.colors);
+  deserializer.read(mesh.stamps);
+  deserializer.read(mesh.labels);
+  deserializer.read(mesh.first_seen_stamps);
+
+  // Faces.
+  deserializer.read(mesh.faces);
 }
 
 void write_binary(serialization::BinarySerializer& s, const NodeAttributes& attrs) {

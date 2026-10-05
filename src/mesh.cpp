@@ -34,7 +34,13 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/mesh.h"
 
+#include <filesystem>
+#include <fstream>
 #include <unordered_map>
+
+#include "spark_dsg/serialization/binary_conversions.h"
+#include "spark_dsg/serialization/file_io.h"
+#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
@@ -277,9 +283,60 @@ Mesh& Mesh::operator+=(const Mesh& other) {
   return *this;
 }
 
-/**
- * @brief Get memory usage of the mesh in bytes.
- */
+void Mesh::serializeToBinary(std::vector<uint8_t>& buffer) const {
+  serialization::BinarySerializer serializer(&buffer);
+  serializer.write(*this);
+}
+
+Mesh::Ptr Mesh::deserializeFromBinary(const uint8_t* const buffer, size_t length) {
+  serialization::BinaryDeserializer deserializer(buffer, length);
+
+  auto mesh = std::make_shared<Mesh>();
+  deserializer.read(*mesh);
+  return mesh;
+}
+
+void Mesh::save(std::filesystem::path filepath) const {
+  const auto type = io::verifyFileExtension(filepath);
+  if (type == io::FileType::JSON) {
+    throw std::runtime_error("json is unsupported");
+  }
+
+  const auto header_buffer = io::FileHeader::current().serializeToBinary();
+  std::vector<uint8_t> mesh_buffer;
+  serializeToBinary(mesh_buffer);
+
+  // Write the header and graph data to the file.
+  std::ofstream out(filepath, std::ios::out | std::ios::binary);
+  out.write(reinterpret_cast<const char*>(header_buffer.data()), header_buffer.size());
+  out.write(reinterpret_cast<const char*>(mesh_buffer.data()), mesh_buffer.size());
+}
+
+Mesh::Ptr Mesh::load(std::filesystem::path filepath) {
+  if (!std::filesystem::exists(filepath)) {
+    throw std::runtime_error("mesh file does not exist: " + filepath.string());
+  }
+
+  const auto type = io::verifyFileExtension(filepath);
+  if (type == io::FileType::JSON) {
+    throw std::runtime_error("json is unsupported");
+  }
+
+  // Read the file into a buffer.
+  std::ifstream infile(filepath, std::ios::in | std::ios::binary);
+  std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(infile)),
+                              std::istreambuf_iterator<char>());
+
+  size_t offset;
+  const auto header = io::FileHeader::deserializeFromBinary(buffer, &offset);
+  if (!header) {
+    throw std::runtime_error("invalid file: file has bad encoding");
+  }
+
+  // NOTE(nathan) if we change the mesh format, we should add a version check here
+  return deserializeFromBinary(buffer.data() + offset, buffer.size() - offset);
+}
+
 size_t Mesh::memoryUsage() const {
   // Static parts.
   size_t total_bytes = sizeof(Mesh);

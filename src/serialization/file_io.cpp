@@ -83,7 +83,7 @@ void saveDsgBinary(const SceneGraph& graph,
                    const std::filesystem::path& filepath,
                    bool include_mesh) {
   const auto header = FileHeader::current();
-  const auto header_buffer = header.serialize();
+  const auto header_buffer = header.serializeToBinary();
 
   std::vector<uint8_t> graph_buffer;
   binary::writeGraph(graph, graph_buffer, include_mesh);
@@ -99,7 +99,7 @@ std::unique_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath)
                               std::istreambuf_iterator<char>());
 
   size_t offset;
-  const auto header = FileHeader::deserialize(buffer, &offset);
+  const auto header = FileHeader::deserializeFromBinary(buffer, &offset);
   if (!header) {
     throw std::domain_error("Unable to deserialize '" + filepath.string() +
                             "': unable to find version");

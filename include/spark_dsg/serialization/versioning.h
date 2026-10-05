@@ -79,11 +79,11 @@ struct FileHeader {
   std::string toString() const;
 
   //! Write header to binary
-  std::vector<uint8_t> serialize() const;
+  std::vector<uint8_t> serializeToBinary() const;
 
   //! Read header from binary
-  static std::optional<FileHeader> deserialize(const std::vector<uint8_t>& buffer,
-                                               size_t* offset = nullptr);
+  static std::optional<FileHeader> deserializeFromBinary(
+      const std::vector<uint8_t>& buffer, size_t* offset = nullptr);
 };
 
 /**
