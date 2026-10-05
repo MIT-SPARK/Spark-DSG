@@ -179,7 +179,6 @@ class Mesh {
    */
   Face& face(size_t index);
 
-
   //! Save mesh to binary representation
   void serializeToBinary(std::vector<uint8_t>& buffer) const;
 
