@@ -34,84 +34,32 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/versioning.h"
 
-#include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 
-#include "spark_dsg/serialization/binary_conversions.h"
+#include "spark_dsg/serialization/binary_serialization.h"
 #include "spark_dsg_version.h"
 
 namespace spark_dsg::io {
 
-void checkCompatibility(const FileHeader& loaded, const FileHeader& current) {
-  // Check whether this is a legacy file. We support binary serialziation compatibility
-  // from Spark DSG v1.0.2 forward, older versions should be converted to JSON.
-  if (loaded.version < Version(1, 0, 2)) {
-    throw std::runtime_error(
-        "Attempted to load invalid binary file: the loaded file was created with an "
-        "unsupported "
-        "legacy version of Spark DSG (" +
-        loaded.version.toString() +
-        "). Please convert the file to JSON and save it again to update to the "
-        "current encoding (" +
-        current.version.toString() + ").");
-  }
-
-  // Check the project name.
-  checkProjectCompatibility(loaded, current);
-
-  // Add version compatibility checks if needed. Currently all versons are implemented
-  // to be backwards compatible.
+void read_binary(const serialization::BinaryDeserializer& s, Version& version) {
+  s.read(version.major);
+  s.read(version.minor);
+  s.read(version.patch);
 }
 
-void checkProjectCompatibility(const FileHeader& loaded, const FileHeader& current) {
-  // Check for identical projects.
-  if (loaded.project_name == current.project_name) {
-    return;
-  }
-
-  // Check for known projects.
-  // NOTE(lschmid): Modifications for external projects will always be breaking
-  // changes that are unknown to, so we employ a hard check here. Alternatively, this
-  // distinction could also be more fine graind for known projects.
-  const auto it = PROJECT_COMPATIBILITY.find(current.project_name);
-  if (it == PROJECT_COMPATIBILITY.end()) {
-    std::stringstream msg;
-    msg << "Attempted to load invalid binary file: the loaded file was created with an "
-           "incompatible project ("
-        << loaded.project_name << ") to the current project (" << current.project_name
-        << ").";
-    throw(std::runtime_error(msg.str()));
-  }
-  const auto& compatible_projects = it->second;
-
-  const auto it2 = compatible_projects.find(loaded.project_name);
-  if (it2 == compatible_projects.end()) {
-    std::stringstream msg;
-    msg << "Attempted to load invalid binary file: the loaded file was created with an "
-           "incompatible project ("
-        << loaded.project_name << ") to the current project (" << current.project_name
-        << ").";
-    throw(std::runtime_error(msg.str()));
-  }
+void write_binary(serialization::BinarySerializer& s, const Version& version) {
+  s.write(version.major);
+  s.write(version.minor);
+  s.write(version.patch);
 }
 
-bool Version::operator==(const Version& other) const {
-  return major == other.major && minor == other.minor && patch == other.patch;
-}
+Version::Version() = default;
 
-bool Version::operator<(const Version& other) const {
-  if (major < other.major) {
-    return true;
-  } else if (major == other.major) {
-    if (minor < other.minor) {
-      return true;
-    } else if (minor == other.minor) {
-      return patch < other.patch;
-    }
-  }
-  return false;
+Version::Version(uint8_t _major, uint8_t _minor, uint8_t _patch) {
+  major = _major;
+  minor = _minor;
+  patch = _patch;
 }
 
 std::string Version::toString() const {
@@ -121,60 +69,32 @@ std::string Version::toString() const {
   return ss.str();
 }
 
+Version Version::current() {
+  return {SPARK_DSG_VERSION_MAJOR, SPARK_DSG_VERSION_MINOR, SPARK_DSG_VERSION_PATCH};
+}
+
+Version Version::min_supported() { return {1, 1, 2}; }
+
+FileHeader FileHeader::current() { return {Version::current()}; }
+
+std::string FileHeader::toString() const {
+  return std::string(PROJECT_NAME) + " v" + version.toString();
+}
+
 std::vector<uint8_t> FileHeader::serializeToBinary() const {
   std::vector<uint8_t> buffer;
   serialization::BinarySerializer serializer(&buffer);
   serializer.write(std::string(IDENTIFIER_STRING));
-  serializer.write(*this);
+  serializer.write(std::string(PROJECT_NAME));
+  serializer.write(version);
   return buffer;
 }
 
-FileHeader FileHeader::current() {
-  FileHeader header;
-  header.project_name = CURRENT_PROJECT_NAME;
-  header.version.major = SPARK_DSG_VERSION_MAJOR;
-  header.version.minor = SPARK_DSG_VERSION_MINOR;
-  header.version.patch = SPARK_DSG_VERSION_PATCH;
-  return header;
-}
-
-FileHeader FileHeader::legacy() {
-  FileHeader header;
-  header.project_name = "main";
-  header.version = Version(1, 0, 0);
-  return header;
-}
-
-std::string FileHeader::toString() const {
-  return project_name + " v" + version.toString();
-  std::stringstream ss;
-}
-
-void warnOutdatedHeader(const FileHeader& header) {
-  if (GlobalInfo::warnedLegacy()) {
-    return;
-  }
-
-  if (GlobalInfo::use_short_message) {
-    std::cout << "Loading file with encoding " << header.toString() << " (current "
-              << FileHeader::current().toString() << ")" << std::endl;
-  } else {
-    std::cerr << "[SPARK-DSG] [WARNING] Loading file with outdated encoding ("
-              << header.toString()
-              << "). This format may be discontinued in the future. For optimal "
-                 "preservation and performance load the file "
-                 "and save it again to update to the current encoding ("
-              << FileHeader::current().toString() << ")." << std::endl;
-  }
-}
-
-// TODO(nathan) this and the header write might belong in file_io instead
 std::optional<FileHeader> FileHeader::deserializeFromBinary(
     const std::vector<uint8_t>& buffer, size_t* offset) {
-  // Check the buffer is valid.
   serialization::BinaryDeserializer deserializer(buffer);
   if (deserializer.getCurrType() != serialization::PackType::ARR32) {
-    return std::nullopt;
+    return std::nullopt;  // currently strings get packed as dynamic arrays
   }
 
   std::string identifier;
@@ -183,20 +103,40 @@ std::optional<FileHeader> FileHeader::deserializeFromBinary(
     return std::nullopt;
   }
 
-  // Deserialize the header.
-  FileHeader header;
-  deserializer.read(header);
+  std::string project_name;
+  deserializer.read(project_name);
+  if (project_name != PROJECT_NAME) {
+    return std::nullopt;
+  }
 
+  FileHeader header;
+  deserializer.read(header.version);
   if (offset) {
     *offset = deserializer.pos();
   }
+
   return header;
 }
 
-bool GlobalInfo::warnedLegacy() {
-  const bool already_warned = warned_legacy_;
+void GlobalInfo::warnOutdated() {
+  if (warned_legacy_) {
+    return;
+  }
+
   warned_legacy_ = true;
-  return already_warned;
+  const auto ver = loaded_version_.toString();
+  if (use_short_message) {
+    std::cout << "Loading file with encoding " << ver << " (current "
+              << Version::current().toString() << ")" << std::endl;
+  } else {
+    std::cerr << "[SPARK-DSG] [WARNING] Loading file with outdated encoding (" << ver
+              << "). This format may be discontinued in the future. For optimal "
+                 "preservation and performance load the file "
+                 "and save it again to update to the current encoding ("
+              << Version::current().toString() << ")." << std::endl;
+  }
 }
+
+const Version& GlobalInfo::loadedVersion() { return loaded_version_; };
 
 }  // namespace spark_dsg::io

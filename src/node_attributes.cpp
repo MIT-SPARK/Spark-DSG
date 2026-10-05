@@ -117,30 +117,13 @@ std::ostream& SemanticNodeAttributes::fill_ostream(std::ostream& out) const {
 void SemanticNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
   serialization::field("name", name);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version <= io::Version(1, 0, 2)) {
-    io::warnOutdatedHeader(header);
+  serialization::field("color", color);
 
-    Eigen::Matrix<uint8_t, 3, 1> color_uint8;
-    serialization::field("color", color_uint8);
-    color = Color(color_uint8[0], color_uint8[1], color_uint8[2]);
-  } else {
-    serialization::field("color", color);
-  }
-
+  const auto& version = io::GlobalInfo::loadedVersion();
   serialization::field("bounding_box", bounding_box);
   serialization::field("semantic_label", semantic_label);
-  if (header.version <= io::Version(1, 0, 4)) {
-    io::warnOutdatedHeader(header);
-
-    Eigen::MatrixXd feature;
-    serialization::field("semantic_feature", feature);
-    if (feature.size()) {
-      // this will lose information technically
-      semantic_feature = feature.cast<float>().col(0);
-    }
-  } else if (header.version <= io::Version(1, 1, 6)) {
-    io::warnOutdatedHeader(header);
+  if (version <= io::Version(1, 1, 6)) {
+    io::GlobalInfo::warnOutdated();
 
     Eigen::MatrixXf feature;
     serialization::field("semantic_feature", feature);
@@ -152,11 +135,11 @@ void SemanticNodeAttributes::serialization_info() {
     serialization::field("semantic_feature", semantic_feature);
   }
 
-  if (header.version >= io::Version(1, 1, 7)) {
+  if (version >= io::Version(1, 1, 7)) {
     serialization::field("feature_concentration", feature_concentration);
   }
 
-  if (header.version >= io::Version(1, 1, 4)) {
+  if (version >= io::Version(1, 1, 4)) {
     serialization::field("label_weights", label_weights);
   }
 }
@@ -294,9 +277,9 @@ void PlaceNodeAttributes::serialization_info() {
   serialization::field("orientation", orientation);
   serialization::field("need_cleanup", need_cleanup);
   serialization::field("num_frontier_voxels", num_frontier_voxels);
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 3)) {
-    io::warnOutdatedHeader(header);
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version < io::Version(1, 1, 3)) {
+    io::GlobalInfo::warnOutdated();
   } else {
     serialization::field("anti_frontier", anti_frontier);
   }
@@ -346,9 +329,9 @@ std::ostream& Place2dNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void Place2dNodeAttributes::serialization_info() {
   SemanticNodeAttributes::serialization_info();
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 4)) {
-    io::warnOutdatedHeader(header);
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version < io::Version(1, 1, 4)) {
+    io::GlobalInfo::warnOutdated();
     serialization::field("boundary", boundary);
     serialization::field("ellipse_centroid", ellipse_centroid);
     serialization::field("ellipse_matrix_compress", ellipse_matrix_compress);
@@ -437,14 +420,7 @@ std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
 
 void AgentNodeAttributes::serialization_info() {
   NodeAttributes::serialization_info();
-
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-  } else {
-    serialization::field("timestamp", timestamp);
-  }
-
+  serialization::field("timestamp", timestamp);
   serialization::field("world_R_body", world_R_body);
   serialization::field("external_key", external_key);
   serialization::field("dbow_ids", dbow_ids);
@@ -498,41 +474,7 @@ void KhronosObjectAttributes::serialization_info() {
   serialization::field("trajectory_timestamps", trajectory_timestamps);
   serialization::field("dynamic_object_points", dynamic_object_points);
   serialization::field("details", details);
-
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version <= io::Version(1, 0, 1)) {
-    io::warnOutdatedHeader(header);
-
-    std::vector<float> xyz;
-    serialization::field("vertices", xyz);
-    std::vector<uint8_t> rgb;
-    serialization::field("colors", rgb);
-    std::vector<uint32_t> faces;
-    serialization::field("faces", faces);
-    const auto num_vertices = xyz.size() / 3;
-    const auto num_colors = rgb.size() / 4;
-    const auto num_faces = faces.size();
-    if (num_vertices != num_colors || num_vertices != num_faces) {
-      return;
-    }
-
-    mesh = Mesh(true, false, false, false);
-    mesh.resizeVertices(num_vertices);
-    for (size_t i = 0; i < num_vertices; ++i) {
-      mesh.setPos(i, {xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]});
-      mesh.setColor(i, {rgb[4 * i], rgb[4 * i + 1], rgb[4 * i + 2], rgb[4 * i + 3]});
-    }
-
-    mesh.resizeFaces(num_faces);
-    for (size_t i = 0; i < num_faces; ++i) {
-      auto& face = mesh.face(i);
-      for (size_t j = 0; j < 3; ++j) {
-        face[j] = faces[3 * i + j];
-      }
-    }
-  } else {
-    serialization::field("mesh", mesh);
-  }
+  serialization::field("mesh", mesh);
 }
 
 bool KhronosObjectAttributes::is_equal(const NodeAttributes& other) const {
@@ -593,10 +535,10 @@ void TraversabilityNodeAttributes::serialization_info() {
     }
   }
 
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 4)) {
-    io::warnOutdatedHeader(header);
-    if (header.version == io::Version(1, 1, 3)) {
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version < io::Version(1, 1, 4)) {
+    io::GlobalInfo::warnOutdated();
+    if (version == io::Version(1, 1, 3)) {
       // Backwards compatibility for cognition labels.
       std::map<int, float> temp;
       serialization::field("cognition_labels", temp);
@@ -639,9 +581,9 @@ std::ostream& TravNodeAttributes::fill_ostream(std::ostream& out) const {
 }
 
 void TravNodeAttributes::serialization_info() {
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version <= io::Version(1, 1, 5)) {
-    io::warnOutdatedHeader(header);
+  const auto& version = io::GlobalInfo::loadedVersion();
+  if (version <= io::Version(1, 1, 5)) {
+    io::GlobalInfo::warnOutdated();
     NodeAttributes::serialization_info();
   } else {
     SemanticNodeAttributes::serialization_info();

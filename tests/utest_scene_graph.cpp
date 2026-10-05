@@ -33,8 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/printing.h>
-#include <spark_dsg/spark_dsg.h>
+
+#include "spark_dsg/printing.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 namespace {

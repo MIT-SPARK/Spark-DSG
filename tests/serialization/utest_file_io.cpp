@@ -34,10 +34,12 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
+#include "spark_dsg/mesh.h"
+#include "spark_dsg/node_symbol.h"
+#include "spark_dsg/scene_graph.h"
+#include "spark_dsg/serialization/file_io.h"
 #include "spark_dsg/serialization/versioning.h"
-#include "spark_dsg/spark_dsg.h"
 #include "spark_dsg_tests/temp_file.h"
-#include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg::io {
 
@@ -55,7 +57,6 @@ TEST(FileIoTests, FileTypeIdentification) {
 
 TEST(FileIoTests, VersionSerialization) {
   FileHeader header;
-  header.project_name = "test";
   header.version.major = 1;
   header.version.minor = 2;
   header.version.patch = 3;
@@ -64,7 +65,6 @@ TEST(FileIoTests, VersionSerialization) {
   // Check deserialization.
   const auto result = FileHeader::deserializeFromBinary(buffer);
   ASSERT_TRUE(result.has_value());
-  EXPECT_EQ(header.project_name, result->project_name);
   EXPECT_EQ(header.version, result->version);
 
   // Check deserialization with invalid buffer.
@@ -78,8 +78,7 @@ TEST(FileIoTests, VersionSerialization) {
 
 void testSaveLoad(const std::string& file_name) {
   SceneGraph graph;
-  graph.emplaceNode(
-      2, NodeSymbol('p', 0), std::make_unique<NodeAttributes>(Eigen::Vector3d::Zero()));
+  graph.emplaceNode(2, "p0"_id, std::make_unique<NodeAttributes>());
   graph.setMesh(std::make_shared<Mesh>());
   graph.save(file_name);
   auto other = SceneGraph::load(file_name);

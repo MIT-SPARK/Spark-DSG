@@ -43,6 +43,13 @@
 #include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
+namespace {
+
+inline std::string header_json_key() {
+  return std::string(io::FileHeader::IDENTIFIER_STRING) + "_header";
+}
+
+}  // namespace
 
 using nlohmann::json;
 
@@ -61,21 +68,9 @@ void to_json(json& record, const SceneGraphEdge& edge) {
 void read_node_from_json(const serialization::AttributeFactory<NodeAttributes>& factory,
                          const json& record,
                          SceneGraph& graph) {
-  auto node_id = record.at("id").get<NodeId>();
-  auto layer = record.at("layer").get<LayerId>();
-
-  PartitionId partition = 0;
-  const auto& header = io::GlobalInfo::loadedHeader();
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    if (record.contains("timestamp")) {
-      partition = NodeSymbol(node_id).category();
-    }
-  } else {
-    partition = record.at("partition").get<PartitionId>();
-  }
-
+  const auto node_id = record.at("id").get<NodeId>();
+  const auto layer = record.at("layer").get<LayerId>();
+  const auto partition = record.at("partition").get<PartitionId>();
   auto attrs = serialization::Visitor::from(factory, record.at("attributes"));
   if (!attrs) {
     std::stringstream ss;
@@ -105,11 +100,29 @@ void read_edge_from_json(const serialization::AttributeFactory<EdgeAttributes>& 
   }
 }
 
+namespace io {
+
+void to_json(nlohmann::json& record, const FileHeader& header) {
+  record = {{"version",
+             {{"major", header.version.major},
+              {"minor", header.version.minor},
+              {"patch", header.version.patch}}}};
+}
+
+void from_json(const nlohmann::json& record, FileHeader& header) {
+  header.version.major = record.at("version").at("major").get<uint8_t>();
+  header.version.minor = record.at("version").at("minor").get<uint8_t>();
+  header.version.patch = record.at("version").at("patch").get<uint8_t>();
+}
+
+}  // namespace io
+
 namespace io::json {
 
 std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   nlohmann::json record;
-  record[io::FileHeader::header_json_key()] = io::FileHeader::current();
+
+  record[header_json_key()] = io::FileHeader::current();
   record["directed"] = false;
   record["multigraph"] = false;
   record["nodes"] = nlohmann::json::array();
@@ -149,8 +162,7 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
     return record.dump();
   }
 
-  // TODO(nathan) push header serialization to to/from json and reuse
-  record["mesh"] = nlohmann::json::parse(mesh->serializeToJson());
+  record["mesh"] = *mesh;
   return record.dump();
 }
 
@@ -158,44 +170,28 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
   const auto record = nlohmann::json::parse(contents);
 
   // Parse header.
-  const auto header_field_name = FileHeader::header_json_key();
-  const auto header = record.contains(header_field_name)
-                          ? record.at(header_field_name).get<io::FileHeader>()
-                          : io::FileHeader::legacy();
+  const auto header_field_name = header_json_key();
+  if (!record.contains(header_field_name)) {
+    throw std::domain_error("Could not find serialization version under key '" +
+                            header_field_name + "'");
+  }
+
+  const auto header = record.at(header_field_name).get<io::FileHeader>();
+  if (header.version < Version::min_supported()) {
+    throw std::domain_error(
+        "File version is too old to load: " + header.version.toString() + " < " +
+        Version::min_supported().toString());
+  }
+
   io::GlobalInfo::ScopedInfo info(header);
   const auto node_factory = serialization::AttributeRegistry<NodeAttributes>::current();
   const auto edge_factory = serialization::AttributeRegistry<EdgeAttributes>::current();
 
   SceneGraph::LayerKeys layer_keys;
-  if (header.version < io::Version(1, 1, 2)) {
-    io::warnOutdatedHeader(header);
-
-    const auto layer_ids = record.at("layer_ids").get<std::vector<LayerId>>();
-    layer_keys = SceneGraph::LayerKeys(layer_ids.begin(), layer_ids.end());
-  } else {
-    record.at("layer_keys").get_to(layer_keys);
-  }
-
   SceneGraph::LayerNames layer_names;
-  if (header.version < io::Version(1, 1, 0)) {
-    io::warnOutdatedHeader(header);
-
-    layer_names = {{DsgLayers::OBJECTS, 2},
-                   {DsgLayers::AGENTS, 2},
-                   {DsgLayers::PLACES, 3},
-                   {DsgLayers::ROOMS, 4},
-                   {DsgLayers::BUILDINGS, 5}};
-  } else if (header.version < io::Version(1, 1, 1)) {
-    io::warnOutdatedHeader(header);
-
-    const auto names = record.at("layer_names").get<std::map<std::string, LayerId>>();
-    layer_names = SceneGraph::LayerNames(names.begin(), names.end());
-  } else {
-    layer_names = record.at("layer_names").get<SceneGraph::LayerNames>();
-  }
-
+  record.at("layer_keys").get_to(layer_keys);
+  record.at("layer_names").get_to(layer_names);
   auto graph = std::make_unique<SceneGraph>(layer_keys, layer_names);
-
   if (record.contains("metadata")) {
     graph->metadata = record["metadata"];
   }
@@ -208,13 +204,12 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
     read_edge_from_json(edge_factory, edge, *graph);
   }
 
-  if (!record.contains("mesh")) {
-    return graph;
+  if (record.contains("mesh")) {
+    auto mesh = std::make_shared<Mesh>();
+    record.at("mesh").get_to(*mesh);
+    graph->setMesh(mesh);
   }
 
-  // TODO(nathan) push header serialization to to/from json and reuse
-  auto mesh = Mesh::deserializeFromJson(record.at("mesh").dump());
-  graph->setMesh(mesh);
   return graph;
 }
 

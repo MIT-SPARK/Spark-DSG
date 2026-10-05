@@ -179,23 +179,7 @@ class Mesh {
    */
   Face& face(size_t index);
 
-  // ------ I/O ------
-  /**
-   * @brief Get JSON string representing mesh
-   * @returns JSON string representing mesh
-   */
-  std::string serializeToJson() const;
-
-  /**
-   * @brief parse mesh from JSON string
-   * @param contents JSON string to parse
-   * @returns Resulting parsed mesh
-   */
-  static Ptr deserializeFromJson(const std::string& contents);
-
-  /**
-   * @brief Save mesh to binary representation
-   */
+  //! Save mesh to binary representation
   void serializeToBinary(std::vector<uint8_t>& buffer) const;
 
   /**

@@ -58,3 +58,22 @@ python -m http.server  # to serve them locally
 ### Building For ROS
 
 This repository is a valid ROS package and should build if placed in a workspace.
+
+### Loading old scene graph files
+
+As of version `1.2.0` of this package, serialization support has been dropped for versions older than `1.1.2`, and files saved in this serialization format will not be loaded.
+You can use these files by upgrading the serialization format with an older version of this package.
+The most straigthforward way to do this is to install version `1.1.2` or `1.1.3` from PyPi into a virtual environment and manually upgrade.
+This looks like:
+```
+python3 -m virtualenv /tmp/spark_dsg_upgrade --download
+source /tmp/spark_dsg_upgrade/bin/actviate
+pip install spark_dsg==1.1.3
+```
+Then in a python REPL or script:
+```python
+import spark_dsg as dsg
+G = dsg.DynamicSceneGraph.load("/path/to/file/to/upgrade")
+G.save("/path/to/file/to/upgrade", include_mesh=True)
+```
+Newer versions on develop (`1.1.5` and onwards) have a commandline tool that allows you to do this for multiple files.

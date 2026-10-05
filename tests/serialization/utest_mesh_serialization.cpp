@@ -38,35 +38,6 @@
 
 namespace spark_dsg {
 
-TEST(MeshSerialization, MeshJson) {
-  Mesh mesh;
-  mesh.points.push_back(Eigen::Vector3f::Zero());
-  mesh.points.push_back(Eigen::Vector3f::Zero());
-  mesh.points.push_back(Eigen::Vector3f::Zero());
-  mesh.colors.push_back({10, 20, 30, 255});
-  mesh.labels.push_back(2);
-  mesh.labels.push_back(8);
-  mesh.stamps.push_back(0);
-  mesh.stamps.push_back(10);
-  mesh.stamps.push_back(20);
-  mesh.stamps.push_back(30);
-  mesh.first_seen_stamps.push_back(7);
-  mesh.first_seen_stamps.push_back(14);
-  mesh.first_seen_stamps.push_back(21);
-  mesh.faces.push_back({{1, 2, 3}});
-
-  const auto output = mesh.serializeToJson();
-  auto result = Mesh::deserializeFromJson(output);
-
-  ASSERT_TRUE(result);
-  EXPECT_EQ(result->points.size(), 3u);
-  EXPECT_EQ(result->colors.size(), 1u);
-  EXPECT_EQ(result->labels.size(), 2u);
-  EXPECT_EQ(result->stamps.size(), 4u);
-  EXPECT_EQ(result->first_seen_stamps.size(), 3u);
-  EXPECT_EQ(result->faces.size(), 1u);
-}
-
 TEST(MeshSerialization, MeshBinary) {
   Mesh mesh;
   mesh.points.push_back(Eigen::Vector3f::Zero());
