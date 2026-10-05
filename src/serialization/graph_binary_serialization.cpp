@@ -39,7 +39,6 @@
 #include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
-#include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
 
@@ -194,27 +193,17 @@ AttributeFactory<Attrs> loadFactory(const BinaryDeserializer& deserializer) {
 }
 
 bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
-  const auto& version = io::GlobalInfo::loadedVersion();
-  if (version < io::Version(1, 1, 2)) {
-    io::GlobalInfo::warnOutdated();
+  SceneGraph::LayerKeys layer_keys;
+  deserializer.read(layer_keys);
+  for (const auto& key : layer_keys) {
+    graph.addLayer(key.layer, key.partition);
+  }
 
-    // NOTE(nathan) we intentionally don't try to use the layer IDs to populate anything
-    // because they will not include partitions and cause lots of serialization churn
-    std::vector<LayerId> layer_ids;
-    deserializer.read(layer_ids);
-  } else {
-    SceneGraph::LayerKeys layer_keys;
-    deserializer.read(layer_keys);
-    for (const auto& key : layer_keys) {
-      graph.addLayer(key.layer, key.partition);
-    }
-
-    std::set<LayerKey> valid(layer_keys.begin(), layer_keys.end());
-    const auto curr_keys = graph.layer_keys();
-    for (const auto& key : curr_keys) {
-      if (!valid.count(key)) {
-        graph.removeLayer(key.layer, key.partition);
-      }
+  std::set<LayerKey> valid(layer_keys.begin(), layer_keys.end());
+  const auto curr_keys = graph.layer_keys();
+  for (const auto& key : curr_keys) {
+    if (!valid.count(key)) {
+      graph.removeLayer(key.layer, key.partition);
     }
   }
 
@@ -223,16 +212,7 @@ bool updateGraph(SceneGraph& graph, const BinaryDeserializer& deserializer) {
   const auto edge_factory = loadFactory<EdgeAttributes>(deserializer);
 
   std::map<std::string, LayerKey> layer_names;
-  if (version < io::Version(1, 1, 1)) {
-    io::GlobalInfo::warnOutdated();
-
-    std::map<std::string, LayerId> names;
-    deserializer.read(names);
-    layer_names = SceneGraph::LayerNames(names.begin(), names.end());
-  } else {
-    deserializer.read(layer_names);
-  }
-
+  deserializer.read(layer_names);
   for (const auto& [name, key] : layer_names) {
     graph.addLayer(key.layer, key.partition, name);
   }

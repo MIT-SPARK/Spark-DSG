@@ -73,7 +73,7 @@ Version Version::current() {
   return {SPARK_DSG_VERSION_MAJOR, SPARK_DSG_VERSION_MINOR, SPARK_DSG_VERSION_PATCH};
 }
 
-Version Version::min_supported() { return {1, 1, 0}; }
+Version Version::min_supported() { return {1, 1, 2}; }
 
 FileHeader FileHeader::current() { return {Version::current()}; }
 
