@@ -502,10 +502,19 @@ class SceneGraph {
   //! @brief Estimate the memory usage of the scene graph in bytes.
   size_t memoryUsage() const;
 
+  std::unique_ptr<SceneGraph> create_subgraph(const std::vector<NodeId>& nodes);
+
+  //! Current layer keys of all layers in the graph
+  LayerKeys layer_keys() const;
+  //! Current name to layer mapping
+  LayerNames layer_names() const;
+  //! Constant reference to the mapping between nodes and layers
+  const std::map<NodeId, LayerKey>& node_lookup() const;
+  //! Get layer key for a named layer
+  std::optional<LayerKey> getLayerKey(const std::string& name) const;
+
   //! Any extra information about the graph
   Metadata metadata;
-
-  std::unique_ptr<SceneGraph> create_subgraph(const std::vector<NodeId>& nodes);
 
  protected:
   Layer& layerFromKey(const LayerKey& key);
@@ -559,31 +568,20 @@ class SceneGraph {
   std::shared_ptr<Mesh> mesh_;
 
  public:
-  //! @brief Get layer key for a named layer
-  std::optional<LayerKey> getLayerKey(const std::string& name) const {
-    auto iter = layer_names_.find(name);
-    return iter == layer_names_.end() ? std::nullopt
-                                      : std::optional<LayerKey>(iter->second);
-  }
-
   //! Iterator over the interlayer edges
   auto interlayer_edges() const {
     return interlayer_edges_.edges | std::views::values;
   };
 
-  //! @brief Current static layer ids in the graph
-  std::vector<LayerId> layer_ids() const;
-  //! @brief Current layer keys of all layers in the graph
-  LayerKeys layer_keys() const;
-  //! @brief Current name to layer mapping
-  const LayerNames layer_names() const { return layer_names_; }
-  //! @brief Constant reference to the layers
-  const Layers& layers() const { return layers_; };
-  //! @brief Constant reference to the mapping between nodes and layers
-  const std::map<NodeId, LayerKey>& node_lookup() const { return node_lookup_; }
-  //! @brief Constant reference to partitions for a particular layer
+  //! Iterator over layers
+  auto layers() const {
+    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
+    return layers_ | std::views::values | std::views::transform(deref);
+  };
+
+  //! Constant reference to partitions for a particular layer
   const Partitions& layer_partition(LayerId layer_id) const;
-  //! @brief Constant reference to all layer partitions
+  //! Constant reference to all layer partitions
   const std::map<LayerId, Partitions>& layer_partitions() const {
     return layer_partitions_;
   }

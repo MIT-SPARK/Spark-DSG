@@ -199,13 +199,14 @@ void init_scene_graph(py::module_& m) {
       .def("create_subgraph", &SceneGraph::create_subgraph)
       .def_static("load", [](const std::filesystem::path& filepath) { return io::loadDsgFromFile(filepath); })
       .def_readwrite("_metadata", &SceneGraph::metadata)
-      .def_property_readonly("layer_ids", &SceneGraph::layer_ids)
       .def_property_readonly("layer_keys", &SceneGraph::layer_keys)
       .def_property_readonly("layer_names", &SceneGraph::layer_names)
       .def_property_readonly("node_lookup", &SceneGraph::node_lookup)
       .def_property(
           "layers",
-          [](const SceneGraph& graph) { return py::make_iterator(LayerIter(graph.layers()), IterSentinel()); },
+          [](const SceneGraph& graph) {
+            return graph.layers() | std::views::transform([](const auto& layer) { return LayerView(layer); });
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(

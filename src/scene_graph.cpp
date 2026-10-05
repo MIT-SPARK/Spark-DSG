@@ -969,22 +969,26 @@ const Partitions& SceneGraph::layer_partition(LayerId layer_id) const {
   return iter->second;
 }
 
-LayerKeys SceneGraph::layer_keys() const {
-  return LayerKeys(layer_keys_.begin(), layer_keys_.end());
-}
-
-std::vector<LayerId> SceneGraph::layer_ids() const {
-  std::set<LayerId> layers;
-  for (const auto& key : layer_keys_) {
-    layers.insert(key.layer);
-  }
-  return std::vector<LayerId>(layers.begin(), layers.end());
-}
-
 UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
   auto graph = empty_like();
   graph->updateFrom(*this, nodes);
   return graph;
+}
+
+LayerKeys SceneGraph::layer_keys() const {
+  return LayerKeys(layer_keys_.begin(), layer_keys_.end());
+}
+
+LayerNames SceneGraph::layer_names() const { return layer_names_; }
+
+const std::map<NodeId, LayerKey>& SceneGraph::node_lookup() const {
+  return node_lookup_;
+}
+
+std::optional<LayerKey> SceneGraph::getLayerKey(const std::string& name) const {
+  auto iter = layer_names_.find(name);
+  return iter == layer_names_.end() ? std::nullopt
+                                    : std::optional<LayerKey>(iter->second);
 }
 
 }  // namespace spark_dsg

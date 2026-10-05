@@ -33,10 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/mesh.h>
-#include <spark_dsg/scene_graph.h>
-
 #include <iostream>
+
+#include "spark_dsg/mesh.h"
+#include "spark_dsg/printing.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 namespace test {
@@ -126,17 +127,16 @@ inline bool interlayerEdgesSubset(const SceneGraph& lhs, const SceneGraph& rhs) 
 }
 
 inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
-  for (const auto& [layer_id, layer] : lhs.layers()) {
-    if (!rhs.hasLayer(layer_id)) {
-      std::cout << "Missing: " << layer_id << std::endl;
+  for (const auto& layer : lhs.layers()) {
+    if (!rhs.hasLayer(layer.id.layer, layer.id.partition)) {
+      std::cout << "Missing: " << layer.id << std::endl;
       return false;
     }
 
-    const auto& rhs_layer = rhs.getLayer(layer_id);
-    const auto layers_equal =
-        isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
+    const auto& rhs_layer = rhs.getLayer(layer.id.layer, layer.id.partition);
+    const auto layers_equal = isSubset(layer, rhs_layer) && isSubset(rhs_layer, layer);
     if (!layers_equal) {
-      std::cout << "Inequal: " << layer_id << std::endl;
+      std::cout << "Inequal: " << layer.id << std::endl;
       return false;
     }
   }

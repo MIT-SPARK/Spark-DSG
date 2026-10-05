@@ -140,8 +140,8 @@ void writeGraph(const SceneGraph& graph,
   serializer.write(graph.metadata().dump());
 
   serializer.startDynamicArray();
-  for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& node : layer->nodes()) {
+  for (const auto& layer : graph.layers()) {
+    for (const auto& node : layer.nodes()) {
       serializer.write(node);
     }
   }
@@ -156,8 +156,8 @@ void writeGraph(const SceneGraph& graph,
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& edge : layer->edges()) {
+  for (const auto& layer : graph.layers()) {
+    for (const auto& edge : layer.edges()) {
       serializer.write(edge);
     }
   }

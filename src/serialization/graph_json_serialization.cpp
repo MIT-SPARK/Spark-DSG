@@ -131,12 +131,12 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   record["layer_names"] = graph.layer_names();
   record["metadata"] = graph.metadata();
 
-  for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& node : layer->nodes()) {
+  for (const auto& layer : graph.layers()) {
+    for (const auto& node : layer.nodes()) {
       record["nodes"].push_back(node);
     }
 
-    for (const auto& edge : layer->edges()) {
+    for (const auto& edge : layer.edges()) {
       record["edges"].push_back(edge);
     }
   }

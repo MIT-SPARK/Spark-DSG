@@ -59,19 +59,6 @@ class LayerView {
   const SceneGraphLayer& layer_ref;
 };
 
-class LayerIter {
- public:
-  LayerIter(const SceneGraph::Layers& container);
-  LayerView operator*() const;
-  LayerIter& operator++();
-  bool operator==(const IterSentinel&) const;
-  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
-
- private:
-  SceneGraph::Layers::const_iterator curr_iter_;
-  SceneGraph::Layers::const_iterator end_iter_;
-};
-
 class PartitionIter {
  public:
   using LayerMap = std::map<LayerId, SceneGraph::Partitions>;
@@ -101,7 +88,6 @@ class GlobalLayerIter {
 
  private:
   bool include_partitions_;
-  LayerIter layers_;
   PartitionIter partitions_;
 };
 
