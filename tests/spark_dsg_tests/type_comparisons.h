@@ -127,7 +127,7 @@ inline bool interlayerEdgesSubset(const SceneGraph& lhs, const SceneGraph& rhs) 
 }
 
 inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
-  for (const auto& layer : lhs.layers()) {
+  for (const auto& layer : lhs.all_layers()) {
     if (!rhs.hasLayer(layer.id.layer, layer.id.partition)) {
       std::cout << "Missing: " << layer.id << std::endl;
       return false;
@@ -138,21 +138,6 @@ inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
     if (!layers_equal) {
       std::cout << "Inequal: " << layer.id << std::endl;
       return false;
-    }
-  }
-
-  for (const auto& [layer_id, partitions] : lhs.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      if (!rhs.hasLayer(layer_id, partition_id)) {
-        return false;
-      }
-
-      const auto& rhs_partition = rhs.getLayer(layer_id, partition_id);
-      const auto layers_equal =
-          isSubset(*partition, rhs_partition) && isSubset(rhs_partition, *partition);
-      if (!layers_equal) {
-        return false;
-      }
     }
   }
 

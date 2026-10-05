@@ -42,8 +42,9 @@
 
 namespace spark_dsg {
 namespace python {
+class GlobalNodeIter;
 class GlobalEdgeIter;
-}
+}  // namespace python
 
 class Mesh;
 
@@ -81,23 +82,18 @@ struct EdgeLayerInfo {
 class SceneGraph {
  public:
   friend class SceneGraphLogger;
+  friend class python::GlobalNodeIter;
   friend class python::GlobalEdgeIter;
   //! Desired pointer type of the scene graph
   using Ptr = std::shared_ptr<SceneGraph>;
   //! Container type for the layer keys
   using LayerKeys = std::vector<LayerKey>;
-  //! Container type for the static layers
-  using LayerIds = std::vector<LayerId>;
   //! Container type for the layer name to ID mapping
   using LayerNames = std::map<std::string, LayerKey>;
   //! Edge container
   using Edges = EdgeContainer::Edges;
   //! Scene graph layer
   using Layer = SceneGraphLayer;
-  //! Layer container
-  using Layers = std::map<LayerId, Layer::Ptr>;
-  //! Container for layer partitions
-  using Partitions = std::map<PartitionId, Layer::Ptr>;
 
   /**
    * @brief Construct the scene graph
@@ -560,8 +556,7 @@ class SceneGraph {
   LayerNames layer_names_;
   std::map<NodeId, LayerKey> node_lookup_;
 
-  Layers layers_;
-  std::map<LayerId, Partitions> layer_partitions_;
+  std::map<LayerKey, Layer::Ptr> layers_;
 
   EdgeContainer interlayer_edges_;
 
@@ -573,17 +568,35 @@ class SceneGraph {
     return interlayer_edges_.edges | std::views::values;
   };
 
-  //! Iterator over layers
+  //! Iterator over primary layers
   auto layers() const {
+    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
+    return layers_ |
+           std::views::filter([](const auto& x) { return x.first.partition == 0; }) |
+           std::views::values | std::views::transform(deref);
+  };
+
+  //! Iterator over all layers and partitions
+  auto all_layers() const {
     const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
     return layers_ | std::views::values | std::views::transform(deref);
   };
 
-  //! Constant reference to partitions for a particular layer
-  const Partitions& layer_partition(LayerId layer_id) const;
-  //! Constant reference to all layer partitions
-  const std::map<LayerId, Partitions>& layer_partitions() const {
-    return layer_partitions_;
+  //! Iterator over non-primary partitions of a certain layer
+  auto layer_partition(LayerId layer_id) const {
+    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
+    return layers_ | std::views::filter([layer_id](const auto& x) {
+             return x.first.partition != 0 && x.first.layer == layer_id;
+           }) |
+           std::views::values | std::views::transform(deref);
+  }
+
+  //! Iterator over all non-primary partitions
+  auto layer_partitions() const {
+    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
+    return layers_ |
+           std::views::filter([](const auto& x) { return x.first.partition != 0; }) |
+           std::views::values | std::views::transform(deref);
   }
 };
 

@@ -64,7 +64,7 @@ class SceneGraphLogger {
   void save(const std::string& folder);
 
  private:
-  std::map<LayerId, std::vector<Entry>> layer_entries_;
+  std::map<LayerKey, std::vector<Entry>> layer_entries_;
 };
 
 }  // namespace spark_dsg

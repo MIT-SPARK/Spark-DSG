@@ -140,33 +140,17 @@ void writeGraph(const SceneGraph& graph,
   serializer.write(graph.metadata().dump());
 
   serializer.startDynamicArray();
-  for (const auto& layer : graph.layers()) {
+  for (const auto& layer : graph.all_layers()) {
     for (const auto& node : layer.nodes()) {
       serializer.write(node);
-    }
-  }
-
-  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& node : partition->nodes()) {
-        serializer.write(node);
-      }
     }
   }
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& layer : graph.layers()) {
+  for (const auto& layer : graph.all_layers()) {
     for (const auto& edge : layer.edges()) {
       serializer.write(edge);
-    }
-  }
-
-  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& edge : partition->edges()) {
-        serializer.write(edge);
-      }
     }
   }
 

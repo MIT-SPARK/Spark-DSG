@@ -68,77 +68,41 @@ Eigen::Vector3d LayerView::getPosition(NodeSymbol node_id) const {
   return layer_ref.getNode(node_id).attributes().position;
 }
 
-PartitionIter::PartitionIter(const LayerMap& container)
-    : valid_(true), curr_iter_(container.begin()), end_iter_(container.end()) {
-  setSubIter();
+LayerIter::LayerIter(const LayerMap& layers, bool include_partitions)
+    : include_partitions_(include_partitions), curr_iter_(layers.begin()), end_iter_(layers.end()) {
+  seekValid();
 }
 
-void PartitionIter::setSubIter() {
+LayerView LayerIter::operator*() const { return LayerView(*(curr_iter_->second)); }
+
+void LayerIter::seekValid() {
   if (curr_iter_ == end_iter_) {
-    valid_ = false;
     return;
   }
 
-  curr_layer_iter_ = curr_iter_->second.begin();
-  end_layer_iter_ = curr_iter_->second.end();
+  if (include_partitions_) {
+    return;
+  }
 
-  while (curr_layer_iter_ == end_layer_iter_) {
-    ++curr_iter_;
-    if (curr_iter_ == end_iter_) {
-      valid_ = false;
+  while (curr_iter_ != end_iter_) {
+    if (curr_iter_->first.partition == 0) {
       return;
     }
 
-    curr_layer_iter_ = curr_iter_->second.begin();
-    end_layer_iter_ = curr_iter_->second.end();
-  }
-}
-
-LayerView PartitionIter::operator*() const { return LayerView(*(curr_layer_iter_->second)); }
-
-PartitionIter& PartitionIter::operator++() {
-  ++curr_layer_iter_;
-  if (curr_layer_iter_ == end_layer_iter_) {
     ++curr_iter_;
-    setSubIter();
   }
+}
 
+LayerIter& LayerIter::operator++() {
+  ++curr_iter_;
+  seekValid();
   return *this;
 }
 
-bool PartitionIter::operator==(const IterSentinel&) const {
-  if (!valid_) {
-    return true;
-  }
-
-  return curr_layer_iter_ == end_layer_iter_ && curr_iter_ == end_iter_;
-}
-
-GlobalLayerIter::GlobalLayerIter(const SceneGraph& graph, bool include_partitions)
-    : include_partitions_(include_partitions), partitions_(graph.layer_partitions()) {}
-
-LayerView GlobalLayerIter::operator*() const {
-  if (include_partitions_ && partitions_ != IterSentinel()) {
-    return *partitions_;
-  }
-
-  throw std::runtime_error("invalid layer iterator!");
-}
-
-GlobalLayerIter& GlobalLayerIter::operator++() {
-  if (include_partitions_ && partitions_ != IterSentinel()) {
-    ++partitions_;
-  }
-
-  return *this;
-}
-
-bool GlobalLayerIter::operator==(const IterSentinel&) const {
-  return !include_partitions_ || partitions_ == IterSentinel();
-}
+bool LayerIter::operator==(const IterSentinel&) const { return curr_iter_ == end_iter_; }
 
 GlobalNodeIter::GlobalNodeIter(const SceneGraph& dsg, bool include_partitions)
-    : valid_(true), layers_(dsg, include_partitions) {
+    : valid_(true), layers_(dsg.layers_, include_partitions) {
   setNodeIter();
 }
 
@@ -184,7 +148,7 @@ GlobalEdgeIter::GlobalEdgeIter(const SceneGraph& dsg, bool include_partitions)
     : include_partitions_(include_partitions),
       started_interlayer_(false),
       dsg_(dsg),
-      layers_(dsg, include_partitions),
+      layers_(dsg.layers_, include_partitions),
       interlayer_edge_iter_(dsg.interlayer_edges_.edges) {
   setEdgeIter();
 }

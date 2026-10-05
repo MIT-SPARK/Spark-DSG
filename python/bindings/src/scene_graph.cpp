@@ -212,7 +212,7 @@ void init_scene_graph(py::module_& m) {
       .def_property(
           "layer_partitions",
           [](const SceneGraph& graph) {
-            return py::make_iterator(PartitionIter(graph.layer_partitions()), IterSentinel());
+            return graph.layer_partitions() | std::views::transform([](const auto& layer) { return LayerView(layer); });
           },
           nullptr,
           py::return_value_policy::reference_internal)
