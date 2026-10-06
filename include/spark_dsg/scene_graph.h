@@ -570,33 +570,35 @@ class SceneGraph {
 
   //! Iterator over primary layers
   auto layers() const {
-    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
     return layers_ |
            std::views::filter([](const auto& x) { return x.first.partition == 0; }) |
-           std::views::values | std::views::transform(deref);
+           std::views::values |
+           std::views::transform(
+               [](const Layer::Ptr& x) -> const Layer& { return *x; });
   };
 
   //! Iterator over all layers and partitions
   auto all_layers() const {
-    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
-    return layers_ | std::views::values | std::views::transform(deref);
+    return layers_ | std::views::values |
+           std::views::transform(
+               [](const Layer::Ptr& x) -> const Layer& { return *x; });
   };
 
   //! Iterator over non-primary partitions of a certain layer
   auto layer_partition(LayerId layer_id) const {
-    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
     return layers_ | std::views::filter([layer_id](const auto& x) {
              return x.first.partition != 0 && x.first.layer == layer_id;
            }) |
-           std::views::values | std::views::transform(deref);
+           std::views::values |
+           std::views::transform(
+               [](const Layer::Ptr& x) -> const Layer& { return *x; });
   }
 
   //! Iterator over all non-primary partitions
   auto layer_partitions() const {
-    const auto deref = [](const auto& x) -> const SceneGraphLayer& { return *x; };
-    return layers_ |
-           std::views::filter([](const auto& x) { return x.first.partition != 0; }) |
-           std::views::values | std::views::transform(deref);
+    return layers_ | std::views::values |
+           std::views::transform([](const auto& x) -> const Layer& { return *x; }) |
+           std::views::filter([](const auto& x) { return x.id.partition != 0; });
   }
 };
 

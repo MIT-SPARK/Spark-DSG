@@ -32,58 +32,35 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <ranges>
+#include <utility>
 
 namespace spark_dsg::python {
 
-template <typename T>
+template <typename T, typename R>
 struct RangeWrapper {
  public:
+  using Iter = decltype(std::declval<R>().begin());
+
   struct Sentinel {};
 
-  virtual ~RangeWrapper() = default;
-  virtual bool done() const = 0;
-  virtual RangeWrapper& next() = 0;
-  virtual T deref() const = 0;
+  explicit RangeWrapper(const R& _view) : view(_view), curr_(view.begin()) {}
 
-  RangeWrapper& operator++() { return next(); }
-  T operator*() const { return deref(); }
-  bool operator==(const Sentinel&) const { return done(); }
+  RangeWrapper& operator++() {
+    if (curr_ != view.end()) {
+      ++curr_;
+    }
+
+    return *this;
+  }
+
+  T operator*() const { return *curr_; }
+
+  bool operator==(const Sentinel&) const { return curr_ == view.end(); }
+
   bool operator!=(const Sentinel&) const { return !(*this == Sentinel()); }
-};
 
-template <typename T, typename R>
-struct RangeWrapperImpl : RangeWrapper<T> {
-  using Iter = decltype(std::ranges::begin(std::declval<R>()));
-
-  explicit RangeWrapperImpl(const R& _view);
-  bool done() const override;
-  T deref() const override;
-  RangeWrapperImpl<T, R>& next() override;
-
-  R view;
+  mutable R view;
   Iter curr_;
-  Iter end_;
 };
-
-template <typename T, typename R>
-RangeWrapperImpl<T, R>::RangeWrapperImpl(const R& _view)
-    : view(_view), curr_(std::ranges::begin(view)), end_(std::ranges::end(view)) {}
-
-template <typename T, typename R>
-bool RangeWrapperImpl<T, R>::done() const {
-  return curr_ == end_;
-}
-
-template <typename T, typename R>
-T RangeWrapperImpl<T, R>::deref() const {
-  return *curr_;
-}
-
-template <typename T, typename R>
-RangeWrapperImpl<T, R>& RangeWrapperImpl<T, R>::next() {
-  ++curr_;
-  return *this;
-}
 
 }  // namespace spark_dsg::python

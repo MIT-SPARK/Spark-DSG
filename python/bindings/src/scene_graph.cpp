@@ -54,13 +54,6 @@ namespace spark_dsg::python {
 namespace py = pybind11;
 using namespace py::literals;
 
-// TODO(nathan) drop this when we can add ndoes via layer and don't need layer view
-struct LayerViewAdapter {
-  LayerView operator()(const SceneGraphLayer& to_forward) { return LayerView(to_forward); }
-};
-
-using EdgeRangeWrapper = RangeWrapper<SceneGraphEdge>;
-
 void init_scene_graph(py::module_& m) {
   py::class_<SceneGraph>(m, "SceneGraph", py::dynamic_attr())
       .def(py::init<bool>(), "empty"_a = false)
@@ -213,19 +206,19 @@ void init_scene_graph(py::module_& m) {
       .def_property(
           "layers",
           [](const SceneGraph& graph) {
-            auto view = graph.layer_partitions() | std::views::transform([](const auto& x) { return LayerView(x); });
-            RangeWrapperImpl<LayerView, decltype(view)> impl(view);
-            return py::make_iterator(
-                impl,
-                RangeWrapper<LayerView>::Sentinel{});
+            auto view = graph.layers() | std::views::transform([](const SceneGraphLayer& x) { return LayerView(x); });
+            using LayerWrapper = RangeWrapper<LayerView, decltype(view)>;
+            return py::make_iterator(LayerWrapper(view), LayerWrapper::Sentinel{});
           },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "layer_partitions",
           [](const SceneGraph& graph) {
-            auto view = graph.layer_partitions() | std::views::transform([](const auto& x) { return LayerView(x); });
-            return py::make_iterator(view.begin(), view.end());
+            auto view =
+                graph.layer_partitions() | std::views::transform([](const SceneGraphLayer& x) { return LayerView(x); });
+            using LayerWrapper = RangeWrapper<LayerView, decltype(view)>;
+            return py::make_iterator(LayerWrapper(view), LayerWrapper::Sentinel{});
           },
           nullptr,
           py::return_value_policy::reference_internal)
@@ -253,7 +246,8 @@ void init_scene_graph(py::module_& m) {
           "interlayer_edges",
           [](const SceneGraph& graph) {
             auto view = graph.interlayer_edges();
-            return py::make_iterator(view.begin(), view.end());
+            using EdgeWrapper = RangeWrapper<const SceneGraphEdge&, decltype(view)>;
+            return py::make_iterator(EdgeWrapper(view), EdgeWrapper::Sentinel{});
           },
           nullptr,
           py::return_value_policy::reference_internal)

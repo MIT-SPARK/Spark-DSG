@@ -45,6 +45,7 @@
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include "spark_dsg/python/python_layer_view.h"
+#include "spark_dsg/python/range_wrapper.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
 
 namespace spark_dsg::python {
@@ -88,7 +89,8 @@ void init_scene_graph_layer(py::module_& m) {
           "nodes",
           [](const SceneGraphLayer& layer) {
             auto view = layer.nodes();
-            return py::make_iterator(view.begin(), view.end());
+            using NodeWrapper = RangeWrapper<const SceneGraphNode&, decltype(view)>;
+            return py::make_iterator(NodeWrapper(view), NodeWrapper::Sentinel{});
           },
           nullptr,
           py::return_value_policy::reference_internal)
@@ -96,7 +98,8 @@ void init_scene_graph_layer(py::module_& m) {
           "edges",
           [](const SceneGraphLayer& layer) {
             auto view = layer.edges();
-            return py::make_iterator(view.begin(), view.end());
+            using EdgeWrapper = RangeWrapper<const SceneGraphEdge&, decltype(view)>;
+            return py::make_iterator(EdgeWrapper(view), EdgeWrapper::Sentinel{});
           },
           nullptr,
           py::return_value_policy::reference_internal)
