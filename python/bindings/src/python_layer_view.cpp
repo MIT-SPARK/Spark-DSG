@@ -94,7 +94,10 @@ void LayerIter::seekValid() {
 }
 
 LayerIter& LayerIter::operator++() {
-  ++curr_iter_;
+  if (curr_iter_ != end_iter_) {
+    ++curr_iter_;
+  }
+
   seekValid();
   return *this;
 }

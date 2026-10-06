@@ -86,12 +86,18 @@ void init_scene_graph_layer(py::module_& m) {
            })
       .def_property(
           "nodes",
-          [](const SceneGraphLayer& view) { return view.nodes(); },
+          [](const SceneGraphLayer& layer) {
+            auto view = layer.nodes();
+            return py::make_iterator(view.begin(), view.end());
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const SceneGraphLayer& view) { return view.edges(); },
+          [](const SceneGraphLayer& layer) {
+            auto view = layer.edges();
+            return py::make_iterator(view.begin(), view.end());
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_readonly("id", &SceneGraphLayer::id)
