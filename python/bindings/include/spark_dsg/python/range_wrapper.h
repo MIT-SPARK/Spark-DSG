@@ -32,6 +32,8 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
+#pragma once
+#include <memory>
 #include <utility>
 
 namespace spark_dsg::python {
@@ -39,28 +41,28 @@ namespace spark_dsg::python {
 template <typename T, typename R>
 struct RangeWrapper {
  public:
-  using Iter = decltype(std::declval<R>().begin());
+  using Iter = decltype(std::declval<R&>().begin());
+  using End = decltype(std::declval<R&>().end());
 
   struct Sentinel {};
 
-  explicit RangeWrapper(const R& _view) : view(_view), curr_(view.begin()) {}
+  explicit RangeWrapper(const R& view) : view_(std::make_shared<R>(view)), curr_(view_->begin()), end_(view_->end()) {}
 
   RangeWrapper& operator++() {
-    if (curr_ != view.end()) {
-      ++curr_;
-    }
-
+    ++curr_;
     return *this;
   }
 
   T operator*() const { return *curr_; }
 
-  bool operator==(const Sentinel&) const { return curr_ == view.end(); }
+  bool operator==(const Sentinel&) const { return curr_ == end_; }
 
   bool operator!=(const Sentinel&) const { return !(*this == Sentinel()); }
 
-  mutable R view;
+ private:
+  std::shared_ptr<R> view_;
   Iter curr_;
+  End end_;
 };
 
 }  // namespace spark_dsg::python
