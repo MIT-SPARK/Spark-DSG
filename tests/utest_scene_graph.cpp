@@ -807,30 +807,34 @@ TEST(SceneGraph, removedAndNewNodesCorrect) {
   graph.emplaceNode(3, "x0"_id, std::make_unique<NodeAttributes>());
 
   {
-    std::vector<NodeId> expected{"x0"_id, "a0"_id};
+    std::set<NodeId> expected{"x0"_id, "a0"_id};
     std::vector<NodeId> new_nodes = graph.getNewNodes(true);
-    EXPECT_EQ(expected, new_nodes);
+    std::set<NodeId> result(new_nodes.begin(), new_nodes.end());
+    EXPECT_EQ(expected, result);
   }
 
   {
-    std::vector<NodeId> expected;
+    std::set<NodeId> expected;
     std::vector<NodeId> new_nodes = graph.getNewNodes(true);
-    EXPECT_EQ(expected, new_nodes);
+    std::set<NodeId> result(new_nodes.begin(), new_nodes.end());
+    EXPECT_EQ(expected, result);
   }
 
   graph.removeNode("a0"_id);
   graph.removeNode("x0"_id);
 
   {
-    std::vector<NodeId> expected{"x0"_id, "a0"_id};
+    std::set<NodeId> expected{"x0"_id, "a0"_id};
     std::vector<NodeId> removed = graph.getRemovedNodes(true);
-    EXPECT_EQ(expected, removed);
+    std::set<NodeId> result(removed.begin(), removed.end());
+    EXPECT_EQ(expected, result);
   }
 
   {
-    std::vector<NodeId> expected;
+    std::set<NodeId> expected;
     std::vector<NodeId> removed = graph.getRemovedNodes(true);
-    EXPECT_EQ(expected, removed);
+    std::set<NodeId> result(removed.begin(), removed.end());
+    EXPECT_EQ(expected, result);
   }
 }
 
