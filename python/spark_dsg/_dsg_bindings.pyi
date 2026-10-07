@@ -1070,6 +1070,21 @@ class SemanticNodeAttributes(NodeAttributes):
         self, arg0: typing.SupportsInt | typing.SupportsIndex
     ) -> None: ...
 
+class SubKeyframeNodeAttributes(NodeAttributes):
+    anchor_R_subframe: Quaternion
+    anchor_node_id: int
+    image_folder: str
+    timestamp: datetime.timedelta
+    def __init__(self) -> None: ...
+    @property
+    def anchor_t_subframe(
+        self,
+    ) -> typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3, 1]"]: ...
+    @anchor_t_subframe.setter
+    def anchor_t_subframe(
+        self, arg0: typing.Annotated[numpy.typing.ArrayLike, numpy.float64, "[3, 1]"]
+    ) -> None: ...
+
 class TravNodeAttributes(SemanticNodeAttributes):
     def __init__(self) -> None: ...
     @property

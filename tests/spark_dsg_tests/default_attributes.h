@@ -1,6 +1,7 @@
 #pragma once
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/node_attributes.h"
+#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 
@@ -74,7 +75,32 @@ inline KhronosObjectAttributes getKhronosObjectAttributes() {
   expected.dynamic_object_points.emplace_back(13, Eigen::Vector3f::UnitZ());
   expected.details["test"] = {14, 15, 16};
   expected.details["test2"] = {17, 18, 19};
+  expected.image_folder = "images/O_20";
   return expected;
+}
+
+inline AgentNodeAttributes getAgentNodeAttributes() {
+  AgentNodeAttributes expected;
+  expected.position = Eigen::Vector3d(1.0, 2.0, 3.0);
+  expected.timestamp = std::chrono::nanoseconds(4);
+  expected.world_R_body =
+      Eigen::Quaterniond(Eigen::AngleAxisd(0.5, Eigen::Vector3d::UnitZ()));
+  expected.external_key = 5;
+  expected.observed_semantic_labels = {6, 7};
+  expected.image_folder = "agents/agent_4";
+  return expected;
+}
+
+inline SubKeyframeNodeAttributes getSubKeyframeNodeAttributes() {
+  SubKeyframeNodeAttributes attrs;
+  attrs.position = Eigen::Vector3d(1.0, 2.0, 3.0);
+  attrs.anchor_node_id = NodeSymbol('a', 7);
+  attrs.anchor_t_subframe = Eigen::Vector3d(0.1, 0.2, 0.3);
+  attrs.anchor_R_subframe =
+      Eigen::Quaterniond(Eigen::AngleAxisd(0.5, Eigen::Vector3d::UnitZ()));
+  attrs.image_folder = "subkeyframes/subkf_42";
+  attrs.timestamp = std::chrono::nanoseconds(42);
+  return attrs;
 }
 
 inline EdgeAttributes getEdgeAttributes() {

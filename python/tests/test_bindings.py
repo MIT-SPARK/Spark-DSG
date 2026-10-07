@@ -390,3 +390,32 @@ def test_connected_component():
 
     components = G.get_layer(dsg.DsgLayers.PLACES).connected_components()
     assert components == [[0, 1], [2]]
+
+
+def test_subkeyframe_attributes_roundtrip(tmp_path):
+    import datetime
+
+    G = dsg.DynamicSceneGraph()
+    attrs = dsg.SubKeyframeNodeAttributes()
+    attrs.position = np.array([1.0, 2.0, 3.0])
+    attrs.anchor_node_id = dsg.NodeSymbol("a", 7).value
+    attrs.anchor_t_subframe = np.array([0.1, 0.2, 0.3])
+    attrs.anchor_R_subframe = dsg.Quaternion(1.0, 0.0, 0.0, 0.0)
+    attrs.image_folder = "/data/subkeyframes/subkf_42"
+    # bound as datetime.timedelta (microsecond resolution)
+    attrs.timestamp = datetime.timedelta(microseconds=42)
+
+    # partitions are ints
+    G.add_node(2, dsg.NodeSymbol("s", 0), attrs, ord("s"))
+
+    path = str(tmp_path / "g.json")
+    G.save(path)
+    G2 = dsg.DynamicSceneGraph.load(path)
+
+    node = G2.get_node(dsg.NodeSymbol("s", 0).value)
+    a2 = node.attributes
+    assert isinstance(a2, dsg.SubKeyframeNodeAttributes)
+    assert a2.image_folder == "/data/subkeyframes/subkf_42"
+    assert a2.timestamp == datetime.timedelta(microseconds=42)
+    assert a2.anchor_node_id == dsg.NodeSymbol("a", 7).value
+    assert np.allclose(a2.anchor_t_subframe, [0.1, 0.2, 0.3])

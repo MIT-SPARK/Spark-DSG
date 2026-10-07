@@ -231,6 +231,17 @@ void init_attributes(py::module_& m) {
       .def_readwrite("observed_semantic_labels", &AgentNodeAttributes::observed_semantic_labels)
       .def_readwrite("image_folder", &AgentNodeAttributes::image_folder);
 
+  py::class_<SubKeyframeNodeAttributes, NodeAttributes>(m, "SubKeyframeNodeAttributes")
+      .def(py::init<>())
+      .def_readwrite("anchor_node_id", &SubKeyframeNodeAttributes::anchor_node_id)
+      .def_readwrite("anchor_t_subframe", &SubKeyframeNodeAttributes::anchor_t_subframe)
+      .def_property(
+          "anchor_R_subframe",
+          [](const SubKeyframeNodeAttributes& attrs) { return Quaternion(attrs.anchor_R_subframe); },
+          [](SubKeyframeNodeAttributes& attrs, const Quaternion& rot) { attrs.anchor_R_subframe = rot; })
+      .def_readwrite("image_folder", &SubKeyframeNodeAttributes::image_folder)
+      .def_readwrite("timestamp", &SubKeyframeNodeAttributes::timestamp);
+
   py::class_<EdgeAttributes>(m, "EdgeAttributes")
       .def(py::init<>())
       .def_readwrite("weighted", &EdgeAttributes::weighted)
