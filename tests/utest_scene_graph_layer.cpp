@@ -38,8 +38,6 @@
 
 namespace spark_dsg {
 
-using NodeSet = std::unordered_set<NodeId>;
-
 // Test that an empty layer has no nodes and edges
 TEST(SceneGraphLayerTests, DefaultLayerInvariants) {
   SceneGraphLayer layer(1);
