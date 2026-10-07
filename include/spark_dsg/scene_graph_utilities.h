@@ -33,6 +33,10 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <filesystem>
+#include <functional>
+#include <string>
+
 #include "spark_dsg/bounding_box.h"
 #include "spark_dsg/scene_graph_types.h"
 #include "spark_dsg/spark_dsg_fwd.h"
@@ -50,5 +54,33 @@ BoundingBox computeAncestorBoundingBox(
     NodeId parent,
     size_t depth = 1,
     BoundingBox::Type bbox_type = BoundingBox::Type::AABB);
+
+/**
+ * @brief Apply a function to the image folder of every node that stores one
+ * (agent keyframes, sub-keyframes and Khronos objects).
+ * @param update Returns the new value for a non-empty image folder
+ * @returns The number of image folders that changed
+ */
+size_t updateImageFolders(SceneGraph& graph,
+                          const std::function<std::string(const std::string&)>& update);
+
+/**
+ * @brief Replace a leading path prefix in every image folder, e.g. after moving a
+ * dataset to another machine. Only matches whole path components, so `/data/run`
+ * does not match `/data/run2/images`.
+ * @returns The number of image folders that changed
+ */
+size_t remapImageFolders(SceneGraph& graph,
+                         const std::filesystem::path& old_prefix,
+                         const std::filesystem::path& new_prefix);
+
+/**
+ * @brief Make relative image folders absolute by prepending `root`. Image folders
+ * are stored relative to the parent of the image output directories (typically the
+ * run directory), so `root` should be that parent. Absolute image folders are
+ * unchanged.
+ * @returns The number of image folders that changed
+ */
+size_t resolveImageFolders(SceneGraph& graph, const std::filesystem::path& root);
 
 }  // namespace spark_dsg

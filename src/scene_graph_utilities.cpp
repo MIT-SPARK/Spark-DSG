@@ -35,6 +35,7 @@
 #include "spark_dsg/scene_graph_utilities.h"
 
 #include "spark_dsg/bounding_box_extraction.h"
+#include "spark_dsg/node_attributes.h"
 #include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
@@ -96,6 +97,70 @@ BoundingBox computeAncestorBoundingBox(const SceneGraph& graph,
       });
 
   return bounding_box::extract(adaptor, bbox_type);
+}
+
+namespace {
+
+std::string* imageFolder(NodeAttributes& attrs) {
+  if (auto agent = dynamic_cast<AgentNodeAttributes*>(&attrs)) {
+    return &agent->image_folder;
+  }
+  if (auto subframe = dynamic_cast<SubKeyframeNodeAttributes*>(&attrs)) {
+    return &subframe->image_folder;
+  }
+  if (auto object = dynamic_cast<KhronosObjectAttributes*>(&attrs)) {
+    return &object->image_folder;
+  }
+  return nullptr;
+}
+
+}  // namespace
+
+size_t updateImageFolders(
+    SceneGraph& graph, const std::function<std::string(const std::string&)>& update) {
+  size_t num_changed = 0;
+  for (const auto& layer : graph.all_layers()) {
+    for (const auto& node : layer.nodes()) {
+      auto folder = imageFolder(node.attributes());
+      if (!folder || folder->empty()) {
+        continue;
+      }
+
+      auto updated = update(*folder);
+      if (updated != *folder) {
+        *folder = std::move(updated);
+        ++num_changed;
+      }
+    }
+  }
+
+  return num_changed;
+}
+
+size_t remapImageFolders(SceneGraph& graph,
+                         const std::filesystem::path& old_prefix,
+                         const std::filesystem::path& new_prefix) {
+  if (old_prefix.empty()) {
+    return 0;
+  }
+
+  const auto old_root = old_prefix.lexically_normal();
+  const auto new_root = new_prefix.lexically_normal();
+  return updateImageFolders(graph, [&](const std::string& folder) {
+    const auto relative = std::filesystem::path(folder).lexically_relative(old_root);
+    if (relative.empty() || *relative.begin() == "..") {
+      return folder;  // not under old_prefix
+    }
+
+    return (new_root / relative).lexically_normal().string();
+  });
+}
+
+size_t resolveImageFolders(SceneGraph& graph, const std::filesystem::path& root) {
+  return updateImageFolders(graph, [&](const std::string& folder) {
+    const std::filesystem::path path(folder);
+    return path.is_absolute() ? folder : (root / path).lexically_normal().string();
+  });
 }
 
 }  // namespace spark_dsg

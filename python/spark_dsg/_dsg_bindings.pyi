@@ -39,6 +39,7 @@ __all__: list[str] = [
     "SceneGraphLayer",
     "SceneGraphNode",
     "SemanticNodeAttributes",
+    "SubKeyframeNodeAttributes",
     "TravNodeAttributes",
     "TraversabilityNodeAttributes",
     "TraversabilityState",
@@ -49,6 +50,8 @@ __all__: list[str] = [
     "get_2d_convex_hull",
     "get_min_2d_box",
     "rainbow_color",
+    "remap_image_folders",
+    "resolve_image_folders",
     "version",
 ]
 
@@ -772,7 +775,10 @@ class SceneGraph:
     @staticmethod
     def get_layer_id(graph: SceneGraph, name: str) -> LayerKey: ...
     @staticmethod
-    def load(arg0: os.PathLike[str] | str | bytes) -> SceneGraph: ...
+    def load(
+        filepath: os.PathLike[str] | str | bytes,
+        image_root: os.PathLike[str] | str | bytes | None = None,
+    ) -> SceneGraph: ...
     def to_torch(
         self,
         node_converter: typing.Optional[
@@ -1072,10 +1078,15 @@ class SemanticNodeAttributes(NodeAttributes):
 
 class SubKeyframeNodeAttributes(NodeAttributes):
     anchor_R_subframe: Quaternion
-    anchor_node_id: int
     image_folder: str
     timestamp: datetime.timedelta
     def __init__(self) -> None: ...
+    @property
+    def anchor_node_id(self) -> int: ...
+    @anchor_node_id.setter
+    def anchor_node_id(
+        self, arg0: typing.SupportsInt | typing.SupportsIndex
+    ) -> None: ...
     @property
     def anchor_t_subframe(
         self,
@@ -1208,4 +1219,12 @@ def rainbow_color(
     id: typing.SupportsInt | typing.SupportsIndex,
     ids_per_revolution: typing.SupportsInt | typing.SupportsIndex = 16,
 ) -> Color: ...
+def remap_image_folders(
+    G: SceneGraph,
+    old_prefix: os.PathLike[str] | str | bytes,
+    new_prefix: os.PathLike[str] | str | bytes,
+) -> int: ...
+def resolve_image_folders(
+    G: SceneGraph, root: os.PathLike[str] | str | bytes
+) -> int: ...
 def version() -> str: ...
