@@ -173,40 +173,41 @@ TEST(MemoryUsage, SceneGraphLayer) {
 
 TEST(MemoryUsage, SceneGraph) {
   SceneGraph graph;
-  size_t expected_size = 2409;
+  size_t expected_size = 2393;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add a layer.
   graph.addLayer(1, 0, "test_layer");
-  expected_size += 458;
+  expected_size += 466;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add a partitioned layer.
   graph.addLayer(2, 1, "test_layer_partition");
-  expected_size += 120;
+  expected_size += 476;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add some nodes.
   for (size_t i = 0; i < 20; ++i) {
-    graph.emplaceNode(1, i, std::make_unique<NodeAttributes>(), 0);
-    graph.emplaceNode(2, 20 + i, std::make_unique<NodeAttributes>(), 1);
+    ASSERT_TRUE(graph.emplaceNode(1, i, std::make_unique<NodeAttributes>(), 0));
+    ASSERT_TRUE(graph.emplaceNode(2, 20 + i, std::make_unique<NodeAttributes>(), 1));
   }
-  expected_size += 6140;
+
+  expected_size += 40 * (259 + 24);
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add some intralayer edges.
   for (size_t i = 0; i < 20; ++i) {
-    graph.insertEdge(i, (i + 1) % 20);
-    graph.insertEdge(20 + i, 20 + (i + 1) % 20);
+    ASSERT_TRUE(graph.insertEdge(i, (i + 1) % 20));
+    ASSERT_TRUE(graph.insertEdge(20 + i, 20 + (i + 1) % 20));
   }
-  expected_size += 40 * 58;
+  expected_size += 40 * 116;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add some interlayer edges.
   for (size_t i = 0; i < 20; ++i) {
     graph.insertEdge(i, 20 + i);
   }
-  expected_size += 20 * 108;
+  expected_size += 20 * 116;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add mesh.
@@ -259,10 +260,11 @@ TEST(MemoryUsage, SerializationComparison) {
     io::binary::writeGraph(*graph, buffer, true);
     const double ratio =
         static_cast<double>(buffer.size()) / static_cast<double>(graph->memoryUsage());
-    // NOTE(lschmid): The serialization adds some data-type overhead etc., so should be
-    // larger but probably not much more than 2 (empirically rather close to 2).
+    // NOTE(lschmid|nathan): The scene graph actually has more overhead that the
+    // serialization, so serialization should be smaller (but not that much smaller).
+    // Edge density influences the ratio (sparse nodes are much more efficient)
     EXPECT_LT(ratio, 2.0);
-    EXPECT_GT(ratio, 1.0);
+    EXPECT_GT(ratio, 0.75);
   }
 }
 

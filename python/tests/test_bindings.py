@@ -35,6 +35,7 @@
 """Test that the bindings are working appropriately."""
 
 import numpy as np
+import pytest
 import spark_dsg as dsg
 
 
@@ -59,6 +60,35 @@ def test_layer_ids(resource_dir):
 
     layer_ids = [layer.id for layer in G.layers]
     assert layer_ids == [2, 3, 4, 5]
+
+
+@pytest.mark.parametrize(
+    "partitions",
+    [[], [(2, 0)], [(2, 1)], [(2, 0), (2, 1), (2, 2), (3, 0), (3, 1), (4, 0)]],
+)
+@pytest.mark.parametrize("property_name", ["layers", "layer_partitions"])
+def test_layer_range_iteration(partitions, property_name):
+    """Saved layer iterators retain their views and advance independently."""
+    graph = dsg.SceneGraph(empty=True)
+    for layer, partition in partitions:
+        graph.add_layer(layer, partition)
+
+    expected = sorted(
+        (layer, partition)
+        for layer, partition in partitions
+        if (partition == 0) == (property_name == "layers")
+    )
+    first = getattr(graph, property_name)
+    second = getattr(graph, property_name)
+    for key in expected:
+        layer = next(first)
+        assert (layer.id, layer.partition) == key
+
+    assert [(layer.id, layer.partition) for layer in second] == expected
+    for iterator in (first, second):
+        for _ in range(2):
+            with pytest.raises(StopIteration):
+                next(iterator)
 
 
 def test_add_remove(resource_dir):

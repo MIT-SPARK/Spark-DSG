@@ -112,14 +112,14 @@ void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer) {
   serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
 
   serializer.startDynamicArray();
-  for (const auto& id_node_pair : graph.nodes()) {
-    serializer.write(*id_node_pair.second);
+  for (const auto& node : graph.nodes()) {
+    serializer.write(node);
   }
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& id_edge_pair : graph.edges()) {
-    serializer.write(id_edge_pair.second);
+  for (const auto& edge : graph.edges()) {
+    serializer.write(edge);
   }
   serializer.endDynamicArray();
 }
@@ -140,37 +140,21 @@ void writeGraph(const SceneGraph& graph,
   serializer.write(graph.metadata().dump());
 
   serializer.startDynamicArray();
-  for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& [node_id, node] : layer->nodes()) {
-      serializer.write(*node);
-    }
-  }
-
-  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [node_id, node] : partition->nodes()) {
-        serializer.write(*node);
-      }
+  for (const auto& layer : graph.all_layers()) {
+    for (const auto& node : layer.nodes()) {
+      serializer.write(node);
     }
   }
   serializer.endDynamicArray();
 
   serializer.startDynamicArray();
-  for (const auto& [layer_id, layer] : graph.layers()) {
-    for (const auto& [edge_id, edge] : layer->edges()) {
+  for (const auto& layer : graph.all_layers()) {
+    for (const auto& edge : layer.edges()) {
       serializer.write(edge);
     }
   }
 
-  for (const auto& [layer_id, partitions] : graph.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [edge_id, edge] : partition->edges()) {
-        serializer.write(edge);
-      }
-    }
-  }
-
-  for (const auto& [edge_id, edge] : graph.interlayer_edges()) {
+  for (const auto& edge : graph.interlayer_edges()) {
     serializer.write(edge);
   }
   serializer.endDynamicArray();

@@ -34,7 +34,6 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <cstdint>
-#include <limits>
 #include <optional>
 #include <string>
 
@@ -74,6 +73,7 @@ struct LayerKey {
     return !this->operator==(other);
   }
   bool operator<(const LayerKey& other) const;
+  std::string str() const;
 };
 
 //! @brief Common layer names
@@ -98,11 +98,5 @@ struct DsgLayers {
   //! Get default layer ID for each layer name
   static std::optional<LayerKey> nameToLayerId(const std::string& name);
 };
-
-namespace graph_utilities {
-// TODO(nathan) make inheritance work
-template <typename Graph>
-struct graph_traits {};
-}  // namespace graph_utilities
 
 }  // namespace spark_dsg

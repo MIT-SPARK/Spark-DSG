@@ -46,6 +46,7 @@
 
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/python_types.h"
+#include "spark_dsg/python/range_wrapper.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
 
 namespace spark_dsg::python {
@@ -199,19 +200,25 @@ void init_scene_graph(py::module_& m) {
       .def("create_subgraph", &SceneGraph::create_subgraph)
       .def_static("load", [](const std::filesystem::path& filepath) { return io::loadDsgFromFile(filepath); })
       .def_readwrite("_metadata", &SceneGraph::metadata)
-      .def_property_readonly("layer_ids", &SceneGraph::layer_ids)
       .def_property_readonly("layer_keys", &SceneGraph::layer_keys)
       .def_property_readonly("layer_names", &SceneGraph::layer_names)
       .def_property_readonly("node_lookup", &SceneGraph::node_lookup)
       .def_property(
           "layers",
-          [](const SceneGraph& graph) { return py::make_iterator(LayerIter(graph.layers()), IterSentinel()); },
+          [](const SceneGraph& graph) {
+            auto view = graph.layers() | std::views::transform([](const SceneGraphLayer& x) { return LayerView(x); });
+            using LayerWrapper = RangeWrapper<LayerView, decltype(view)>;
+            return py::make_iterator(LayerWrapper(view), LayerWrapper::Sentinel{});
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "layer_partitions",
           [](const SceneGraph& graph) {
-            return py::make_iterator(PartitionIter(graph.layer_partitions()), IterSentinel());
+            auto view =
+                graph.layer_partitions() | std::views::transform([](const SceneGraphLayer& x) { return LayerView(x); });
+            using LayerWrapper = RangeWrapper<LayerView, decltype(view)>;
+            return py::make_iterator(LayerWrapper(view), LayerWrapper::Sentinel{});
           },
           nullptr,
           py::return_value_policy::reference_internal)
@@ -237,7 +244,11 @@ void init_scene_graph(py::module_& m) {
           py::return_value_policy::reference_internal)
       .def_property(
           "interlayer_edges",
-          [](const SceneGraph& graph) { return py::make_iterator(EdgeIter(graph.interlayer_edges()), IterSentinel()); },
+          [](const SceneGraph& graph) {
+            auto view = graph.interlayer_edges();
+            using EdgeWrapper = RangeWrapper<const SceneGraphEdge&, decltype(view)>;
+            return py::make_iterator(EdgeWrapper(view), EdgeWrapper::Sentinel{});
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(

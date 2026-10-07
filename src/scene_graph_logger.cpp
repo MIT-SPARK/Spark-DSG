@@ -86,7 +86,7 @@ void SceneGraphLogger::logGraph(const SceneGraph& graph) {
 void SceneGraphLogger::save(const std::string& folder) {
   const std::filesystem::path output_path(folder);
   for (const auto& [layer_id, entries] : layer_entries_) {
-    std::string name = "layer_" + std::to_string(layer_id);
+    std::string name = "layer_" + layer_id.str();
     const auto csv_path = output_path / (name + "_statistics.csv");
 
     std::ofstream file(csv_path, std::ofstream::out);

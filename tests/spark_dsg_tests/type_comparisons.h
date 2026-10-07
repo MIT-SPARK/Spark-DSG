@@ -33,10 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/mesh.h>
-#include <spark_dsg/scene_graph.h>
-
 #include <iostream>
+
+#include "spark_dsg/mesh.h"
+#include "spark_dsg/printing.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg {
 namespace test {
@@ -85,53 +86,62 @@ inline bool isSubset(const std::map<EdgeKey, SceneGraphEdge>& lhs,
 }
 
 inline bool isSubset(const SceneGraphLayer& lhs, const SceneGraphLayer& rhs) {
-  for (const auto& [node_id, node] : lhs.nodes()) {
-    const auto rhs_node = rhs.findNode(node_id);
+  for (const auto& node : lhs.nodes()) {
+    const auto rhs_node = rhs.findNode(node.id);
     if (!rhs_node) {
       return false;
     }
 
-    if (*rhs_node != *node) {
+    if (*rhs_node != node) {
       return false;
     }
   }
 
-  return isSubset(lhs.edges(), rhs.edges());
+  for (const auto& edge : lhs.edges()) {
+    auto other = rhs.findEdge(edge.source, edge.target);
+    if (!other) {
+      return false;
+    }
+
+    if (*other != edge) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+inline bool interlayerEdgesSubset(const SceneGraph& lhs, const SceneGraph& rhs) {
+  for (const auto& edge : lhs.interlayer_edges()) {
+    auto other = rhs.findEdge(edge.source, edge.target);
+    if (!other) {
+      return false;
+    }
+
+    if (*other != edge) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
-  for (const auto& [layer_id, layer] : lhs.layers()) {
-    if (!rhs.hasLayer(layer_id)) {
-      std::cout << "Missing: " << layer_id << std::endl;
+  for (const auto& layer : lhs.all_layers()) {
+    if (!rhs.hasLayer(layer.id.layer, layer.id.partition)) {
+      std::cout << "Missing: " << layer.id << std::endl;
       return false;
     }
 
-    const auto& rhs_layer = rhs.getLayer(layer_id);
-    const auto layers_equal =
-        isSubset(*layer, rhs_layer) && isSubset(rhs_layer, *layer);
+    const auto& rhs_layer = rhs.getLayer(layer.id.layer, layer.id.partition);
+    const auto layers_equal = isSubset(layer, rhs_layer) && isSubset(rhs_layer, layer);
     if (!layers_equal) {
-      std::cout << "Inequal: " << layer_id << std::endl;
+      std::cout << "Inequal: " << layer.id << std::endl;
       return false;
     }
   }
 
-  for (const auto& [layer_id, partitions] : lhs.layer_partitions()) {
-    for (const auto& [partition_id, partition] : partitions) {
-      if (!rhs.hasLayer(layer_id, partition_id)) {
-        return false;
-      }
-
-      const auto& rhs_partition = rhs.getLayer(layer_id, partition_id);
-      const auto layers_equal =
-          isSubset(*partition, rhs_partition) && isSubset(rhs_partition, *partition);
-      if (!layers_equal) {
-        return false;
-      }
-    }
-  }
-
-  if (!(isSubset(lhs.interlayer_edges(), rhs.interlayer_edges()) &&
-        isSubset(rhs.interlayer_edges(), lhs.interlayer_edges()))) {
+  if (!(interlayerEdgesSubset(lhs, rhs) && interlayerEdgesSubset(rhs, lhs))) {
     return false;
   }
 

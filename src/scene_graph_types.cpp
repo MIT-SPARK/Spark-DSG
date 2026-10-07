@@ -71,6 +71,15 @@ bool LayerKey::operator<(const LayerKey& other) const {
   return layer < other.layer;
 }
 
+std::string LayerKey::str() const {
+  std::string repr = std::to_string(layer);
+  if (partition) {
+    repr += "[" + std::to_string(partition) + "]";
+  }
+
+  return repr;
+}
+
 std::optional<LayerKey> DsgLayers::nameToLayerId(const std::string& name) {
   if (name == DsgLayers::SEGMENTS) {
     return 1;

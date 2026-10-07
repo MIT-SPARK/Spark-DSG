@@ -61,52 +61,26 @@ class LayerView {
 
 class LayerIter {
  public:
-  LayerIter(const SceneGraph::Layers& container);
+  using LayerMap = std::map<LayerKey, SceneGraphLayer::Ptr>;
+
+  LayerIter(const LayerMap& layers, bool include_partitions);
   LayerView operator*() const;
   LayerIter& operator++();
   bool operator==(const IterSentinel&) const;
   bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
 
  private:
-  SceneGraph::Layers::const_iterator curr_iter_;
-  SceneGraph::Layers::const_iterator end_iter_;
-};
+  void seekValid();
 
-class PartitionIter {
- public:
-  using LayerMap = std::map<LayerId, SceneGraph::Partitions>;
-
-  PartitionIter(const LayerMap& container);
-  void setSubIter();
-  LayerView operator*() const;
-  PartitionIter& operator++();
-  bool operator==(const IterSentinel&) const;
-  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
-
- private:
-  bool valid_;
+  bool include_partitions_;
   LayerMap::const_iterator curr_iter_;
   LayerMap::const_iterator end_iter_;
-  SceneGraph::Partitions::const_iterator curr_layer_iter_;
-  SceneGraph::Partitions::const_iterator end_layer_iter_;
-};
-
-class GlobalLayerIter {
- public:
-  GlobalLayerIter(const SceneGraph& graph, bool include_partitions = true);
-  LayerView operator*() const;
-  GlobalLayerIter& operator++();
-  bool operator==(const IterSentinel&) const;
-  bool operator!=(const IterSentinel&) const { return !(*this == IterSentinel()); }
-
- private:
-  bool include_partitions_;
-  LayerIter layers_;
-  PartitionIter partitions_;
 };
 
 class GlobalNodeIter {
  public:
+  using LayerMap = std::map<LayerKey, SceneGraphLayer::Ptr>;
+
   GlobalNodeIter(const SceneGraph& dsg, bool include_partitions = true);
   void setNodeIter();
   const SceneGraphNode* operator*() const;
@@ -115,7 +89,7 @@ class GlobalNodeIter {
 
  private:
   bool valid_;
-  GlobalLayerIter layers_;
+  LayerIter layers_;
   NodeIter curr_node_iter_;
 };
 
@@ -132,7 +106,7 @@ class GlobalEdgeIter {
   bool include_partitions_;
   bool started_interlayer_;
   const SceneGraph& dsg_;
-  GlobalLayerIter layers_;
+  LayerIter layers_;
   EdgeIter curr_edge_iter_;
   EdgeIter interlayer_edge_iter_;
 };

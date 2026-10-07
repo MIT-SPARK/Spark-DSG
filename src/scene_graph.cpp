@@ -50,7 +50,6 @@ using LayerCallback = std::function<void(LayerKey, Layer&)>;
 using ConstLayerCallback = std::function<void(LayerKey, const Layer&)>;
 using UniqueGraph = std::unique_ptr<SceneGraph>;
 
-using Partitions = SceneGraph::Partitions;
 using LayerNames = SceneGraph::LayerNames;
 using LayerKeys = SceneGraph::LayerKeys;
 
@@ -86,8 +85,6 @@ SceneGraph::Ptr SceneGraph::fromNames(const LayerNames& layers) {
 
 void SceneGraph::clear(bool include_mesh) {
   layers_.clear();
-  layer_partitions_.clear();
-
   node_lookup_.clear();
   interlayer_edges_.reset();
 
@@ -120,18 +117,8 @@ bool SceneGraph::hasLayer(const std::string& layer_name) const {
 }
 
 const Layer* SceneGraph::findLayer(LayerId layer, PartitionId partition) const {
-  if (!partition) {
-    auto iter = layers_.find(layer);
-    return iter == layers_.end() ? nullptr : iter->second.get();
-  }
-
-  auto partitions = layer_partitions_.find(layer);
-  if (partitions == layer_partitions_.end()) {
-    return nullptr;
-  }
-
-  auto iter = partitions->second.find(partition);
-  return iter == partitions->second.end() ? nullptr : iter->second.get();
+  auto iter = layers_.find(LayerKey{layer, partition});
+  return iter == layers_.end() ? nullptr : iter->second.get();
 }
 
 const Layer* SceneGraph::findLayer(const std::string& name) const {
@@ -185,34 +172,21 @@ void SceneGraph::removeLayer(LayerId layer_id, PartitionId partition) {
     }
   }
 
-  auto layer = findLayer(layer_id, partition);
-  if (!layer) {
+  auto iter = layers_.find(key);
+  if (iter == layers_.end()) {
     return;
   }
 
   std::vector<NodeId> to_remove;
-  for (const auto& [node_id, node] : layer->nodes()) {
-    to_remove.push_back(node_id);
+  for (const auto& node : iter->second->nodes()) {
+    to_remove.push_back(node.id);
   }
 
   for (const auto& node_id : to_remove) {
     removeNode(node_id);
   }
 
-  if (!partition) {
-    layers_.erase(layer_id);
-  } else {
-    auto iter = layer_partitions_.find(layer_id);
-    if (iter == layer_partitions_.end()) {
-      return;
-    }
-
-    iter->second.erase(partition);
-    if (iter->second.empty()) {
-      layer_partitions_.erase(iter);
-    }
-  }
-
+  layers_.erase(iter);
   layer_keys_.erase(key);
 }
 
@@ -443,24 +417,18 @@ bool SceneGraph::removeEdge(NodeId source, NodeId target) {
 }
 
 size_t SceneGraph::numLayers() const {
-  const size_t static_size = layers_.size();
-
-  size_t unique_layer_groups = 0;
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    if (!layers_.count(layer_id)) {
-      ++unique_layer_groups;
-    }
+  std::set<LayerId> unique_layers;
+  for (const auto& [key, _] : layers_) {
+    unique_layers.insert(key.layer);
   }
 
-  return static_size + unique_layer_groups;
+  return unique_layers.size();
 }
 
 size_t SceneGraph::numNodes() const {
-  size_t total_nodes = numUnpartitionedNodes();
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    for (const auto& [partition_id, partition] : partitions) {
-      total_nodes += partition->numNodes();
-    }
+  size_t total_nodes = 0u;
+  for (const auto& [layer_id, layer] : layers_) {
+    total_nodes += layer->numNodes();
   }
 
   return total_nodes;
@@ -469,7 +437,9 @@ size_t SceneGraph::numNodes() const {
 size_t SceneGraph::numUnpartitionedNodes() const {
   size_t total_nodes = 0u;
   for (const auto& [layer_id, layer] : layers_) {
-    total_nodes += layer->numNodes();
+    if (layer_id.partition == 0) {
+      total_nodes += layer->numNodes();
+    }
   }
 
   return total_nodes;
@@ -481,19 +451,15 @@ size_t SceneGraph::numEdges() const {
     total_edges += layer->numEdges();
   }
 
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    for (const auto& [partition_id, partition] : partitions) {
-      total_edges += partition->numEdges();
-    }
-  }
-
   return total_edges;
 }
 
 size_t SceneGraph::numUnpartitionedEdges() const {
   size_t total_edges = 0;
   for (const auto& [layer_id, layer] : layers_) {
-    total_edges += layer->numEdges();
+    if (layer_id.partition == 0) {
+      total_edges += layer->numEdges();
+    }
   }
 
   for (const auto& [edge_key, edge] : interlayer_edges_.edges) {
@@ -593,7 +559,7 @@ bool SceneGraph::mergeGraph(const SceneGraph& other,
     }
   });
 
-  for (const auto& [edge_id, edge] : other.interlayer_edges()) {
+  for (const auto& edge : other.interlayer_edges()) {
     NodeId source = config.getMergedId(edge.source);
     NodeId target = config.getMergedId(edge.target);
     if (source == target) {
@@ -662,11 +628,6 @@ void SceneGraph::markEdgesAsStale() {
   for (auto& [layer_id, layer] : layers_) {
     layer->edges_.setStale();
   }
-  for (auto& [layer_id, partitions] : layer_partitions_) {
-    for (auto& [partition_id, partition] : partitions) {
-      partition->edges_.setStale();
-    }
-  }
 
   interlayer_edges_.setStale();
 }
@@ -674,12 +635,6 @@ void SceneGraph::markEdgesAsStale() {
 void SceneGraph::removeAllStaleEdges() {
   for (auto& [layer_id, layer] : layers_) {
     removeStaleEdges(layer->edges_);
-  }
-
-  for (auto& [layer_id, partitions] : layer_partitions_) {
-    for (auto& [partition_id, partition] : partitions) {
-      removeStaleEdges(partition->edges_);
-    }
   }
 
   removeStaleEdges(interlayer_edges_);
@@ -696,20 +651,12 @@ UniqueGraph SceneGraph::clone_unique() const {
   }
 
   for (const auto& [layer_id, layer] : layers_) {
-    for (const auto& [edge_id, edge] : layer->edges()) {
+    for (const auto& edge : layer->edges()) {
       to_return->insertEdge(edge.source, edge.target, edge.info->clone());
     }
   }
 
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    for (const auto& [partition_id, partition] : partitions) {
-      for (const auto& [edge_id, edge] : partition->edges()) {
-        to_return->insertEdge(edge.source, edge.target, edge.info->clone());
-      }
-    }
-  }
-
-  for (const auto& [edge_id, edge] : interlayer_edges()) {
+  for (const auto& edge : interlayer_edges()) {
     to_return->insertEdge(edge.source, edge.target, edge.info->clone());
   }
 
@@ -756,53 +703,34 @@ Mesh::Ptr SceneGraph::mesh() const { return mesh_; }
 
 size_t SceneGraph::memoryUsage() const {
   size_t total_memory = sizeof(*this);
+  total_memory += node_lookup_.size() * (sizeof(NodeId) + sizeof(LayerKey));
+  total_memory += interlayer_edges_.memoryUsage();
 
-  // Estimate memory usage of state tracking.
   total_memory += layer_keys_.size() * sizeof(LayerKey);
   for (const auto& [name, key] : layer_names_) {
     total_memory += name.size() + sizeof(LayerKey);
   }
-  total_memory += node_lookup_.size() * (sizeof(NodeId) + sizeof(LayerKey));
-  for (const auto& [layer_id, partitions] : layer_partitions_) {
-    total_memory +=
-        sizeof(layer_id) + sizeof(partitions) +
-        partitions.size() * (sizeof(PartitionId) + sizeof(SceneGraphLayer::Ptr));
-  }
 
-  // Estimate memory usage of layers.
   for (const auto& [layer_id, layer] : layers_) {
     total_memory += layer->memoryUsage() + sizeof(layer_id);
   }
 
-  // Estimate memory usage of interlayer edges.
-  total_memory += interlayer_edges_.memoryUsage();
-
-  // Estimate memory usage of the mesh.
   if (mesh_) {
     total_memory += mesh_->memoryUsage();
   }
 
-  // Add metadata memory usage.
   total_memory += metadata.memoryUsage() - sizeof(metadata);
-
   return total_memory;
 }
 
 Layer& SceneGraph::layerFromKey(const LayerKey& key) {
-  layer_keys_.insert(key);
-  if (!key.partition) {
-    auto iter = layers_.emplace(key.layer, std::make_unique<Layer>(key.layer)).first;
-    return *iter->second;
+  auto iter = layers_.find(key);
+  if (iter == layers_.end()) {
+    layer_keys_.insert(key);
+    iter = layers_.emplace(key, std::make_unique<Layer>(key)).first;
   }
 
-  auto iter = layer_partitions_.find(key.layer);
-  if (iter == layer_partitions_.end()) {
-    iter = layer_partitions_.emplace(key.layer, Partitions()).first;
-  }
-
-  auto id_layer_pair =
-      iter->second.emplace(key.partition, std::make_unique<Layer>(key)).first;
-  return *id_layer_pair->second;
+  return *iter->second;
 }
 
 const Layer& SceneGraph::layerFromKey(const LayerKey& key) const {
@@ -946,12 +874,6 @@ void SceneGraph::visitLayers(const LayerCallback& cb) {
   for (auto& [layer_id, layer] : layers_) {
     cb(layer_id, *layer);
   }
-
-  for (auto& [layer_id, partitions] : layer_partitions_) {
-    for (auto& [partition_id, partition] : partitions) {
-      cb(LayerKey(layer_id, partition_id), *partition);
-    }
-  }
 }
 
 void SceneGraph::visitLayers(const ConstLayerCallback& cb) const {
@@ -959,32 +881,26 @@ void SceneGraph::visitLayers(const ConstLayerCallback& cb) const {
       [&cb](LayerKey key, Layer& layer) { cb(key, layer); });
 }
 
-const Partitions& SceneGraph::layer_partition(LayerId layer_id) const {
-  auto iter = layer_partitions_.find(layer_id);
-  if (iter == layer_partitions_.end()) {
-    static Partitions empty;  // avoid invalid reference
-    return empty;
-  }
-
-  return iter->second;
+UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
+  auto graph = empty_like();
+  graph->updateFrom(*this, nodes);
+  return graph;
 }
 
 LayerKeys SceneGraph::layer_keys() const {
   return LayerKeys(layer_keys_.begin(), layer_keys_.end());
 }
 
-std::vector<LayerId> SceneGraph::layer_ids() const {
-  std::set<LayerId> layers;
-  for (const auto& key : layer_keys_) {
-    layers.insert(key.layer);
-  }
-  return std::vector<LayerId>(layers.begin(), layers.end());
+LayerNames SceneGraph::layer_names() const { return layer_names_; }
+
+const std::map<NodeId, LayerKey>& SceneGraph::node_lookup() const {
+  return node_lookup_;
 }
 
-UniqueGraph SceneGraph::create_subgraph(const std::vector<NodeId>& nodes) {
-  auto graph = empty_like();
-  graph->updateFrom(*this, nodes);
-  return graph;
+std::optional<LayerKey> SceneGraph::getLayerKey(const std::string& name) const {
+  auto iter = layer_names_.find(name);
+  return iter == layer_names_.end() ? std::nullopt
+                                    : std::optional<LayerKey>(iter->second);
 }
 
 }  // namespace spark_dsg

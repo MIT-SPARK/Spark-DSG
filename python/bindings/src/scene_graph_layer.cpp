@@ -45,6 +45,7 @@
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include "spark_dsg/python/python_layer_view.h"
+#include "spark_dsg/python/range_wrapper.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
 
 namespace spark_dsg::python {
@@ -86,12 +87,20 @@ void init_scene_graph_layer(py::module_& m) {
            })
       .def_property(
           "nodes",
-          [](const SceneGraphLayer& view) { return py::make_iterator(NodeIter(view.nodes()), IterSentinel()); },
+          [](const SceneGraphLayer& layer) {
+            auto view = layer.nodes();
+            using NodeWrapper = RangeWrapper<const SceneGraphNode&, decltype(view)>;
+            return py::make_iterator(NodeWrapper(view), NodeWrapper::Sentinel{});
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_property(
           "edges",
-          [](const SceneGraphLayer& view) { return py::make_iterator(EdgeIter(view.edges()), IterSentinel()); },
+          [](const SceneGraphLayer& layer) {
+            auto view = layer.edges();
+            using EdgeWrapper = RangeWrapper<const SceneGraphEdge&, decltype(view)>;
+            return py::make_iterator(EdgeWrapper(view), EdgeWrapper::Sentinel{});
+          },
           nullptr,
           py::return_value_policy::reference_internal)
       .def_readonly("id", &SceneGraphLayer::id)

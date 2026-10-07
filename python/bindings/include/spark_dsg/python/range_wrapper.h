@@ -33,9 +33,36 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
+#include <memory>
+#include <utility>
 
-#include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/node_attributes.h"
-#include "spark_dsg/node_symbol.h"
-#include "spark_dsg/scene_graph.h"
-#include "spark_dsg/serialization/file_io.h"
+namespace spark_dsg::python {
+
+template <typename T, typename R>
+struct RangeWrapper {
+ public:
+  using Iter = decltype(std::declval<R&>().begin());
+  using End = decltype(std::declval<R&>().end());
+
+  struct Sentinel {};
+
+  explicit RangeWrapper(const R& view) : view_(std::make_shared<R>(view)), curr_(view_->begin()), end_(view_->end()) {}
+
+  RangeWrapper& operator++() {
+    ++curr_;
+    return *this;
+  }
+
+  T operator*() const { return *curr_; }
+
+  bool operator==(const Sentinel&) const { return curr_ == end_; }
+
+  bool operator!=(const Sentinel&) const { return !(*this == Sentinel()); }
+
+ private:
+  std::shared_ptr<R> view_;
+  Iter curr_;
+  End end_;
+};
+
+}  // namespace spark_dsg::python

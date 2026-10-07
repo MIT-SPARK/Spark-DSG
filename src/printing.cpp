@@ -43,11 +43,7 @@ std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
 }
 
 std::ostream& operator<<(std::ostream& out, const LayerKey& key) {
-  out << key.layer;
-  if (key.partition) {
-    out << "[" << key.partition << "]";
-  }
-
+  out << key.str();
   return out;
 }
 
