@@ -151,7 +151,8 @@ void init_attributes(py::module_& m) {
       .def_readonly("trajectory_timestamps", &KhronosObjectAttributes::trajectory_timestamps)
       .def_readonly("trajectory_positions", &KhronosObjectAttributes::trajectory_positions)
       .def_readonly("dynamic_object_points", &KhronosObjectAttributes::dynamic_object_points)
-      .def_readonly("details", &KhronosObjectAttributes::details);
+      .def_readonly("details", &KhronosObjectAttributes::details)
+      .def_readwrite("image_folder", &KhronosObjectAttributes::image_folder);
 
   py::class_<RoomNodeAttributes, SemanticNodeAttributes>(m, "RoomNodeAttributes")
       .def(py::init<>())
@@ -227,7 +228,8 @@ void init_attributes(py::module_& m) {
       .def_readwrite("external_key", &AgentNodeAttributes::external_key)
       .def_readwrite("dbow_ids", &AgentNodeAttributes::dbow_ids)
       .def_readwrite("dbow_values", &AgentNodeAttributes::dbow_values)
-      .def_readwrite("observed_semantic_labels", &AgentNodeAttributes::observed_semantic_labels);
+      .def_readwrite("observed_semantic_labels", &AgentNodeAttributes::observed_semantic_labels)
+      .def_readwrite("image_folder", &AgentNodeAttributes::image_folder);
 
   py::class_<EdgeAttributes>(m, "EdgeAttributes")
       .def(py::init<>())
