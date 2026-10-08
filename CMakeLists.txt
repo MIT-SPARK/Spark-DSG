@@ -21,9 +21,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization" ON)
-
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
+option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization" ON)
 option(SPARK_DSG_BUILD_EXAMPLES "Build examples" ON)
 option(SPARK_DSG_BUILD_PYTHON "Build python bindings" ON)
 option(SPARK_DSG_BUILD_ZMQ "Build zmq message interface" ON)
