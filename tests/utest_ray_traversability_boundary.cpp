@@ -33,10 +33,11 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/traversability_boundary.h>
 
 #include <numbers>
+
+#include "spark_dsg/attributes/traversability_node_attributes.h"
 
 using State = spark_dsg::TraversabilityState;
 using States = spark_dsg::TraversabilityStates;

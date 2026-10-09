@@ -87,6 +87,13 @@ configure_file(cmake/spark_dsg_version.h.in include/spark_dsg_version.h)
 add_library(
   ${PROJECT_NAME}
   src/adjacency_matrix.cpp
+  src/attributes/agent_node_attributes.cpp
+  src/attributes/khronos_object_attributes.cpp
+  src/attributes/object_node_attributes.cpp
+  src/attributes/place_node_attributes.cpp
+  src/attributes/room_node_attributes.cpp
+  src/attributes/semantic_node_attributes.cpp
+  src/attributes/traversability_node_attributes.cpp
   src/bounding_box_extraction.cpp
   src/bounding_box.cpp
   src/color.cpp
@@ -98,7 +105,6 @@ add_library(
   src/layer_view.cpp
   src/mesh.cpp
   src/metadata.cpp
-  src/node_attributes.cpp
   src/node_symbol.cpp
   src/printing.cpp
   src/scene_graph.cpp

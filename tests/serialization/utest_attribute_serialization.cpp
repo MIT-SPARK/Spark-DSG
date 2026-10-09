@@ -34,6 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
+#include "spark_dsg/attributes/khronos_object_attributes.h"
+#include "spark_dsg/attributes/object_node_attributes.h"
+#include "spark_dsg/attributes/place_node_attributes.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"

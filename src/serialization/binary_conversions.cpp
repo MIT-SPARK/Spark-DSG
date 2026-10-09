@@ -34,9 +34,9 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/binary_conversions.h"
 
+#include "spark_dsg/attributes/place_node_attributes.h"
 #include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/mesh.h"
-#include "spark_dsg/node_attributes.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 
 namespace spark_dsg {

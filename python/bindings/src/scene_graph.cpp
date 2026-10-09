@@ -39,6 +39,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 #include <spark_dsg/labelspace.h>
+#include <spark_dsg/mesh.h>
 #include <spark_dsg/scene_graph.h>
 #include <spark_dsg/scene_graph_utilities.h>
 #include <spark_dsg/serialization/file_io.h>

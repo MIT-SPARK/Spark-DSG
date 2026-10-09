@@ -37,10 +37,16 @@
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
+#include <spark_dsg/attributes/room_node_attributes.h>
+#include <spark_dsg/attributes/semantic_node_attributes.h>
 #include <spark_dsg/edge_attributes.h>
 #include <spark_dsg/mesh.h>
-#include <spark_dsg/node_attributes.h>
 
+#include "spark_dsg/attributes/agent_node_attributes.h"
+#include "spark_dsg/attributes/khronos_object_attributes.h"
+#include "spark_dsg/attributes/object_node_attributes.h"
+#include "spark_dsg/attributes/place_node_attributes.h"
+#include "spark_dsg/attributes/traversability_node_attributes.h"
 #include "spark_dsg/python/python_types.h"
 
 namespace spark_dsg::python {

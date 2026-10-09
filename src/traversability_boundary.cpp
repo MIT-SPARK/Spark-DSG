@@ -3,6 +3,8 @@
 #include <cmath>
 #include <numbers>
 
+#include "spark_dsg/attributes/traversability_node_attributes.h"
+
 namespace spark_dsg {
 
 bool isTraversable(TraversabilityState state, bool optimistic) {

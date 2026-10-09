@@ -33,16 +33,18 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <spark_dsg/attributes/semantic_node_attributes.h>
 #include <spark_dsg/edge_container.h>
 #include <spark_dsg/mesh.h>
 #include <spark_dsg/metadata.h>
-#include <spark_dsg/node_attributes.h>
 #include <spark_dsg/scene_graph.h>
 #include <spark_dsg/scene_graph_layer.h>
 #include <spark_dsg/scene_graph_node.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include <nlohmann/json.hpp>
+
+#include "spark_dsg/attributes/object_node_attributes.h"
 
 // TODO(lschmid): These tests are a quick sanity check and might break on different
 // platforms or with some future changes.

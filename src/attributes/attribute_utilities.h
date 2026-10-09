@@ -32,29 +32,26 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <gtest/gtest.h>
-#include <spark_dsg/attributes/semantic_node_attributes.h>
+#pragma once
 
-namespace spark_dsg {
+#include <Eigen/Geometry>
+#include <sstream>
+#include <string>
 
-TEST(NodeAttributes, SemanticNodeAttributes) {
-  // by default neither are populated
-  SemanticNodeAttributes attrs;
-  EXPECT_FALSE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // setting a label should only toggle the label method
-  attrs.semantic_label = 0;
-  EXPECT_TRUE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // empty matrices should not be registered
-  attrs.semantic_feature = Eigen::MatrixXf(0, 1);
-  EXPECT_FALSE(attrs.hasFeature());
-  // vectors should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 1);
-  EXPECT_TRUE(attrs.hasFeature());
-  // matrices should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 3);
-  EXPECT_TRUE(attrs.hasFeature());
+namespace spark_dsg::attributes_detail {
+
+template <typename Scalar>
+std::string quatToString(const Eigen::Quaternion<Scalar>& q) {
+  std::stringstream ss;
+  ss << "{w: " << q.w() << ", " << q.x() << ", " << q.y() << ", " << q.z() << "}";
+  return ss.str();
 }
 
-}  // namespace spark_dsg
+template <typename Scalar>
+bool quaternionsEqual(const Eigen::Quaternion<Scalar>& lhs,
+                      const Eigen::Quaternion<Scalar>& rhs) {
+  return lhs.w() == rhs.w() && lhs.x() == rhs.x() && lhs.y() == rhs.y() &&
+         lhs.z() == rhs.z();
+}
+
+}  // namespace spark_dsg::attributes_detail

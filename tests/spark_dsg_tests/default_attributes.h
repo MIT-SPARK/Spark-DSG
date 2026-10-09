@@ -1,6 +1,10 @@
 #pragma once
+#include "spark_dsg/attributes/khronos_object_attributes.h"
+#include "spark_dsg/attributes/object_node_attributes.h"
+#include "spark_dsg/attributes/place_node_attributes.h"
+#include "spark_dsg/attributes/room_node_attributes.h"
+#include "spark_dsg/attributes/semantic_node_attributes.h"
 #include "spark_dsg/edge_attributes.h"
-#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 

@@ -32,29 +32,42 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <gtest/gtest.h>
-#include <spark_dsg/attributes/semantic_node_attributes.h>
+#pragma once
+
+#include <chrono>
+#include <vector>
+
+#include "spark_dsg/scene_graph_node.h"
 
 namespace spark_dsg {
 
-TEST(NodeAttributes, SemanticNodeAttributes) {
-  // by default neither are populated
-  SemanticNodeAttributes attrs;
-  EXPECT_FALSE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // setting a label should only toggle the label method
-  attrs.semantic_label = 0;
-  EXPECT_TRUE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // empty matrices should not be registered
-  attrs.semantic_feature = Eigen::MatrixXf(0, 1);
-  EXPECT_FALSE(attrs.hasFeature());
-  // vectors should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 1);
-  EXPECT_TRUE(attrs.hasFeature());
-  // matrices should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 3);
-  EXPECT_TRUE(attrs.hasFeature());
-}
+struct AgentNodeAttributes : public NodeAttributes {
+ public:
+  using Ptr = std::unique_ptr<AgentNodeAttributes>;
+  using BowIdVector = Eigen::Matrix<uint32_t, Eigen::Dynamic, 1>;
+
+  AgentNodeAttributes();
+  AgentNodeAttributes(std::chrono::nanoseconds timestamp,
+                      const Eigen::Quaterniond& world_R_body,
+                      const Eigen::Vector3d& world_P_body,
+                      NodeId external_key);
+  virtual ~AgentNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+  void transform(const Eigen::Isometry3d& transform) override;
+
+  std::chrono::nanoseconds timestamp;
+  Eigen::Quaterniond world_R_body;
+  NodeId external_key;
+  BowIdVector dbow_ids;
+  Eigen::VectorXf dbow_values;
+  std::vector<uint32_t> observed_semantic_labels;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  const serialization::RegistrationInfo& registrationImpl() const override;
+};
 
 }  // namespace spark_dsg

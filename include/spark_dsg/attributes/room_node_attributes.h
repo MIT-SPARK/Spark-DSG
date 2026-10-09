@@ -32,29 +32,35 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <gtest/gtest.h>
-#include <spark_dsg/attributes/semantic_node_attributes.h>
+#pragma once
+
+#include "spark_dsg/attributes/semantic_node_attributes.h"
 
 namespace spark_dsg {
 
-TEST(NodeAttributes, SemanticNodeAttributes) {
-  // by default neither are populated
-  SemanticNodeAttributes attrs;
-  EXPECT_FALSE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // setting a label should only toggle the label method
-  attrs.semantic_label = 0;
-  EXPECT_TRUE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // empty matrices should not be registered
-  attrs.semantic_feature = Eigen::MatrixXf(0, 1);
-  EXPECT_FALSE(attrs.hasFeature());
-  // vectors should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 1);
-  EXPECT_TRUE(attrs.hasFeature());
-  // matrices should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 3);
-  EXPECT_TRUE(attrs.hasFeature());
-}
+/**
+ * @brief Additional node attributes for a room
+ * For now, a room has identical attributes to any semantic node,
+ * but that may change
+ */
+struct RoomNodeAttributes : public SemanticNodeAttributes {
+ public:
+  //! desired pointer type of node
+  using Ptr = std::unique_ptr<RoomNodeAttributes>;
+
+  //!  Make a default set of attributes
+  RoomNodeAttributes();
+  virtual ~RoomNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  std::map<std::string, double> semantic_class_probabilities;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  const serialization::RegistrationInfo& registrationImpl() const override;
+};
 
 }  // namespace spark_dsg

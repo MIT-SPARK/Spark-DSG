@@ -32,29 +32,50 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <gtest/gtest.h>
-#include <spark_dsg/attributes/semantic_node_attributes.h>
+#pragma once
+
+#include "spark_dsg/attributes/object_node_attributes.h"
+#include "spark_dsg/mesh.h"
 
 namespace spark_dsg {
 
-TEST(NodeAttributes, SemanticNodeAttributes) {
-  // by default neither are populated
-  SemanticNodeAttributes attrs;
-  EXPECT_FALSE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // setting a label should only toggle the label method
-  attrs.semantic_label = 0;
-  EXPECT_TRUE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // empty matrices should not be registered
-  attrs.semantic_feature = Eigen::MatrixXf(0, 1);
-  EXPECT_FALSE(attrs.hasFeature());
-  // vectors should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 1);
-  EXPECT_TRUE(attrs.hasFeature());
-  // matrices should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 3);
-  EXPECT_TRUE(attrs.hasFeature());
-}
+/**
+ * @brief Attributes for khronos object nodes.
+ */
+struct KhronosObjectAttributes : public ObjectNodeAttributes {
+ public:
+  //! desired pointer type of node
+  using Ptr = std::unique_ptr<KhronosObjectAttributes>;
+
+  KhronosObjectAttributes();
+  virtual ~KhronosObjectAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+
+  // Attributes.
+  // Sequence of observation starts and ends.
+  std::vector<uint64_t> first_observed_ns;
+  std::vector<uint64_t> last_observed_ns;
+
+  // Mesh of the object. Positions of vertices are relative to the object bounding box
+  // origin.
+  Mesh mesh;
+
+  // If the object is considered dynamic, store the trajectory of the object.
+  // NOTE(lschmid): Currently dynamic and static objects just have the
+  // khronos-attributes. Could change in the future.
+  std::vector<uint64_t> trajectory_timestamps;
+  std::vector<Eigen::Vector3f> trajectory_positions;
+  // Store per frame the 3D dynamic points of the object in world frame.
+  std::vector<std::vector<Eigen::Vector3f>> dynamic_object_points;
+
+  // Optionally store additional detailed infos if needed.
+  std::map<std::string, std::vector<size_t>> details;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  const serialization::RegistrationInfo& registrationImpl() const override;
+};
 
 }  // namespace spark_dsg

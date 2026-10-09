@@ -32,29 +32,65 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <gtest/gtest.h>
-#include <spark_dsg/attributes/semantic_node_attributes.h>
+#pragma once
+
+#include <limits>
+#include <map>
+#include <string>
+
+#include "spark_dsg/bounding_box.h"
+#include "spark_dsg/color.h"
+#include "spark_dsg/scene_graph_node.h"
 
 namespace spark_dsg {
 
-TEST(NodeAttributes, SemanticNodeAttributes) {
-  // by default neither are populated
-  SemanticNodeAttributes attrs;
-  EXPECT_FALSE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // setting a label should only toggle the label method
-  attrs.semantic_label = 0;
-  EXPECT_TRUE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // empty matrices should not be registered
-  attrs.semantic_feature = Eigen::MatrixXf(0, 1);
-  EXPECT_FALSE(attrs.hasFeature());
-  // vectors should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 1);
-  EXPECT_TRUE(attrs.hasFeature());
-  // matrices should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 3);
-  EXPECT_TRUE(attrs.hasFeature());
-}
+/**
+ * @brief Type alias representing the semantic class of an object or other node
+ */
+using SemanticLabel = uint32_t;
+
+/**
+ * @brief Base class for any node with additional semantic meaning.
+ */
+struct SemanticNodeAttributes : public NodeAttributes {
+ public:
+  //! Pointer type for node
+  using Ptr = std::unique_ptr<SemanticNodeAttributes>;
+
+  //! Alias for semantic label
+  using Label = SemanticLabel;
+  //! Flag for whether or not semantic label should be considered valid
+  inline static constexpr Label NO_SEMANTIC_LABEL = std::numeric_limits<Label>::max();
+
+  SemanticNodeAttributes();
+  virtual ~SemanticNodeAttributes() = default;
+  NodeAttributes::Ptr clone() const override;
+  void transform(const Eigen::Isometry3d& transform) override;
+
+  bool hasLabel() const;
+  bool hasFeature() const;
+
+  //! Name of the node
+  std::string name;
+  //! Color of the node (if it exists)
+  Color color;
+  //! Extents of the node (if they exists)
+  BoundingBox bounding_box;
+  //! Semantic label of node
+  Label semantic_label;
+  //! Optional set of weights for each label <label_id, weight>
+  std::map<Label, float> label_weights;
+  //! Semantic feature of node
+  Eigen::VectorXf semantic_feature;
+  //! Parameterization of distribution around feature
+  Eigen::MatrixXf feature_concentration;
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+
+  const serialization::RegistrationInfo& registrationImpl() const override;
+};
 
 }  // namespace spark_dsg

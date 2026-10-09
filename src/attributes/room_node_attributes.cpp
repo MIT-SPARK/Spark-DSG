@@ -32,29 +32,46 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#include <gtest/gtest.h>
-#include <spark_dsg/attributes/semantic_node_attributes.h>
+#include "spark_dsg/attributes/room_node_attributes.h"
+
+#include "spark_dsg/serialization/attribute_registry.h"
+#include "spark_dsg/serialization/attribute_serialization.h"
+#include "spark_dsg/serialization/binary_conversions.h"
+#include "spark_dsg/serialization/json_conversions.h"
 
 namespace spark_dsg {
 
-TEST(NodeAttributes, SemanticNodeAttributes) {
-  // by default neither are populated
-  SemanticNodeAttributes attrs;
-  EXPECT_FALSE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // setting a label should only toggle the label method
-  attrs.semantic_label = 0;
-  EXPECT_TRUE(attrs.hasLabel());
-  EXPECT_FALSE(attrs.hasFeature());
-  // empty matrices should not be registered
-  attrs.semantic_feature = Eigen::MatrixXf(0, 1);
-  EXPECT_FALSE(attrs.hasFeature());
-  // vectors should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 1);
-  EXPECT_TRUE(attrs.hasFeature());
-  // matrices should be registered
-  attrs.semantic_feature = Eigen::MatrixXf(5, 3);
-  EXPECT_TRUE(attrs.hasFeature());
+using serialization::RegistrationInfo;
+using NodeRegistry = serialization::AttributeRegistry<NodeAttributes>;
+
+const RegistrationInfo& RoomNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("RoomNodeAttributes");
+  return info;
+}
+
+RoomNodeAttributes::RoomNodeAttributes() : SemanticNodeAttributes() {}
+
+NodeAttributes::Ptr RoomNodeAttributes::clone() const {
+  return std::make_unique<RoomNodeAttributes>(*this);
+}
+
+std::ostream& RoomNodeAttributes::fill_ostream(std::ostream& out) const {
+  SemanticNodeAttributes::fill_ostream(out);
+  return out;
+}
+
+void RoomNodeAttributes::serialization_info() {
+  SemanticNodeAttributes::serialization_info();
+  serialization::field("semantic_class_probabilities", semantic_class_probabilities);
+}
+
+bool RoomNodeAttributes::is_equal(const NodeAttributes& other) const {
+  const auto derived = dynamic_cast<const RoomNodeAttributes*>(&other);
+  if (!derived) {
+    return false;
+  }
+
+  return SemanticNodeAttributes::is_equal(other);
 }
 
 }  // namespace spark_dsg

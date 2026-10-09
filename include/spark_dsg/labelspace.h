@@ -36,7 +36,7 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 
-#include "spark_dsg/node_attributes.h"
+#include "spark_dsg/attributes/semantic_node_attributes.h"
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg {
