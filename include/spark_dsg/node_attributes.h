@@ -287,6 +287,8 @@ struct AgentNodeAttributes : public NodeAttributes {
   BowIdVector dbow_ids;
   Eigen::VectorXf dbow_values;
   std::vector<uint32_t> observed_semantic_labels;
+  //! Path prefix of the images saved for this keyframe
+  std::string image_folder;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;
@@ -294,6 +296,42 @@ struct AgentNodeAttributes : public NodeAttributes {
   bool is_equal(const NodeAttributes& other) const override;
 
   REGISTER_NODE_ATTRIBUTES(AgentNodeAttributes);
+};
+
+/**
+ * @brief Non-optimized image sub-keyframe anchored to an agent keyframe.
+ *
+ * Stores the relative transform anchor_T_subframe (durable source of truth).
+ * The world position is derived from the optimized anchor pose by the
+ * backend.
+ */
+struct SubKeyframeNodeAttributes : public NodeAttributes {
+ public:
+  using Ptr = std::unique_ptr<SubKeyframeNodeAttributes>;
+
+  SubKeyframeNodeAttributes();
+  virtual ~SubKeyframeNodeAttributes() = default;
+
+  NodeAttributes::Ptr clone() const override;
+
+  //! Agent node this sub-keyframe is anchored to
+  NodeId anchor_node_id = 0;
+  //! Translation of the sub-keyframe in the anchor frame (unchanged by graph
+  //! transforms)
+  Eigen::Vector3d anchor_t_subframe = Eigen::Vector3d::Zero();
+  //! Rotation of the sub-keyframe in the anchor frame (unchanged by graph transforms)
+  Eigen::Quaterniond anchor_R_subframe = Eigen::Quaterniond::Identity();
+  //! Path prefix of the images saved for this sub-keyframe
+  std::string image_folder;
+  //! Time the sub-keyframe was captured
+  std::chrono::nanoseconds timestamp{0};
+
+ protected:
+  std::ostream& fill_ostream(std::ostream& out) const override;
+  void serialization_info() override;
+  bool is_equal(const NodeAttributes& other) const override;
+  // registers derived attributes
+  REGISTER_NODE_ATTRIBUTES(SubKeyframeNodeAttributes);
 };
 
 /**
@@ -327,6 +365,9 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
 
   // Optionally store additional detailed infos if needed.
   std::map<std::string, std::vector<size_t>> details;
+
+  //! Folder holding the images associated with this object
+  std::string image_folder;
 
  protected:
   std::ostream& fill_ostream(std::ostream& out) const override;

@@ -44,6 +44,8 @@
 #include <spark_dsg/serialization/file_io.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
+#include <optional>
+
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/python_types.h"
 #include "spark_dsg/python/range_wrapper.h"
@@ -198,7 +200,17 @@ void init_scene_graph(py::module_& m) {
           "filepath"_a,
           "include_mesh"_a = true)
       .def("create_subgraph", &SceneGraph::create_subgraph)
-      .def_static("load", [](const std::filesystem::path& filepath) { return io::loadDsgFromFile(filepath); })
+      .def_static(
+          "load",
+          [](const std::filesystem::path& filepath, const std::optional<std::filesystem::path>& image_root) {
+            auto graph = io::loadDsgFromFile(filepath);
+            if (graph && image_root) {
+              resolveImageFolders(*graph, *image_root);
+            }
+            return graph;
+          },
+          "filepath"_a,
+          "image_root"_a = py::none())
       .def_readwrite("_metadata", &SceneGraph::metadata)
       .def_property_readonly("layer_keys", &SceneGraph::layer_keys)
       .def_property_readonly("layer_names", &SceneGraph::layer_names)
@@ -325,6 +337,9 @@ void init_scene_graph(py::module_& m) {
           "labelspace"_a,
           "name"_a,
           "resolve_layer"_a = true);
+
+  m.def("remap_image_folders", &remapImageFolders, "G"_a, "old_prefix"_a, "new_prefix"_a);
+  m.def("resolve_image_folders", &resolveImageFolders, "G"_a, "root"_a);
 
   m.def("compute_ancestor_bounding_box",
         &computeAncestorBoundingBox,

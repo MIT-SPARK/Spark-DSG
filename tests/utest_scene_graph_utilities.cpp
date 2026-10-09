@@ -33,6 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
+#include <spark_dsg/node_attributes.h>
+#include <spark_dsg/node_symbol.h>
 #include <spark_dsg/printing.h>
 #include <spark_dsg/scene_graph.h>
 #include <spark_dsg/scene_graph_utilities.h>
@@ -139,5 +141,56 @@ const BoundingBoxTestConfig bbox_test_cases[] = {
 INSTANTIATE_TEST_SUITE_P(GetChildBoundingBox,
                          BoundingBoxTestFixture,
                          testing::ValuesIn(bbox_test_cases));
+
+TEST(SceneGraphUtilities, ImageFoldersResolveAndRemap) {
+  SceneGraph graph;
+  auto agent = std::make_unique<AgentNodeAttributes>();
+  agent->image_folder = "agents/agent_1";
+  graph.emplaceNode(2, NodeSymbol('a', 0), std::move(agent), 'a');
+
+  auto subframe = std::make_unique<SubKeyframeNodeAttributes>();
+  subframe->image_folder = "subkeyframes/subkf_1";
+  graph.emplaceNode(2, NodeSymbol('s', 0), std::move(subframe), 's');
+
+  auto object = std::make_unique<KhronosObjectAttributes>();
+  object->image_folder = "/old/run/images/O_1";
+  graph.emplaceNode(2, NodeSymbol('O', 1), std::move(object));
+
+  auto other = std::make_unique<KhronosObjectAttributes>();
+  other->image_folder = "/old/run2/images/O_2";
+  graph.emplaceNode(2, NodeSymbol('O', 2), std::move(other));
+
+  graph.emplaceNode(3, NodeSymbol('p', 0), std::make_unique<NodeAttributes>());
+
+  const auto folder = [&](NodeSymbol id) -> std::string {
+    const auto& attrs = graph.getNode(id).attributes();
+    if (auto agent = dynamic_cast<const AgentNodeAttributes*>(&attrs)) {
+      return agent->image_folder;
+    }
+    if (auto subframe = dynamic_cast<const SubKeyframeNodeAttributes*>(&attrs)) {
+      return subframe->image_folder;
+    }
+    return dynamic_cast<const KhronosObjectAttributes&>(attrs).image_folder;
+  };
+
+  // only relative folders change
+  EXPECT_EQ(resolveImageFolders(graph, "/new/run/"), 2u);
+  EXPECT_EQ(folder(NodeSymbol('a', 0)), "/new/run/agents/agent_1");
+  EXPECT_EQ(folder(NodeSymbol('s', 0)), "/new/run/subkeyframes/subkf_1");
+  EXPECT_EQ(folder(NodeSymbol('O', 1)), "/old/run/images/O_1");
+
+  // prefixes only match whole path components
+  EXPECT_EQ(remapImageFolders(graph, "/old/run", "/moved"), 1u);
+  EXPECT_EQ(folder(NodeSymbol('O', 1)), "/moved/images/O_1");
+  EXPECT_EQ(folder(NodeSymbol('O', 2)), "/old/run2/images/O_2");
+  EXPECT_EQ(remapImageFolders(graph, "/new/run", "/elsewhere/"), 2u);
+  EXPECT_EQ(folder(NodeSymbol('a', 0)), "/elsewhere/agents/agent_1");
+
+  // the filesystem root is a valid prefix
+  EXPECT_EQ(remapImageFolders(graph, "/", "/mnt"), 4u);
+  EXPECT_EQ(folder(NodeSymbol('O', 2)), "/mnt/old/run2/images/O_2");
+  EXPECT_EQ(remapImageFolders(graph, "/mnt/old", "/"), 1u);
+  EXPECT_EQ(folder(NodeSymbol('O', 2)), "/run2/images/O_2");
+}
 
 }  // namespace spark_dsg

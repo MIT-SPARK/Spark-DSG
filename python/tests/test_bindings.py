@@ -390,3 +390,81 @@ def test_connected_component():
 
     components = G.get_layer(dsg.DsgLayers.PLACES).connected_components()
     assert components == [[0, 1], [2]]
+
+
+def test_subkeyframe_attributes_roundtrip(tmp_path):
+    import datetime
+
+    G = dsg.DynamicSceneGraph()
+    attrs = dsg.SubKeyframeNodeAttributes()
+    attrs.position = np.array([1.0, 2.0, 3.0])
+    attrs.anchor_node_id = dsg.NodeSymbol("a", 7).value
+    attrs.anchor_t_subframe = np.array([0.1, 0.2, 0.3])
+    attrs.anchor_R_subframe = dsg.Quaternion(1.0, 0.0, 0.0, 0.0)
+    attrs.image_folder = "subkeyframes/subkf_42"
+    # bound as datetime.timedelta (microsecond resolution)
+    attrs.timestamp = datetime.timedelta(microseconds=42)
+
+    # partitions are ints
+    G.add_node(2, dsg.NodeSymbol("s", 0), attrs, ord("s"))
+
+    path = str(tmp_path / "g.json")
+    G.save(path)
+    G2 = dsg.DynamicSceneGraph.load(path)
+
+    node = G2.get_node(dsg.NodeSymbol("s", 0).value)
+    a2 = node.attributes
+    assert isinstance(a2, dsg.SubKeyframeNodeAttributes)
+    assert a2.image_folder == "subkeyframes/subkf_42"
+    assert a2.timestamp == datetime.timedelta(microseconds=42)
+    assert a2.anchor_node_id == dsg.NodeSymbol("a", 7).value
+    assert np.allclose(a2.anchor_t_subframe, [0.1, 0.2, 0.3])
+
+
+def _graph_with_image_folders():
+    G = dsg.DynamicSceneGraph()
+    agent = dsg.AgentNodeAttributes()
+    agent.image_folder = "agents/agent_1"
+    G.add_node(2, dsg.NodeSymbol("a", 0), agent, ord("a"))
+    obj = dsg.KhronosObjectAttributes()
+    obj.image_folder = "/old/run/images/O_1"
+    G.add_node(dsg.DsgLayers.OBJECTS, dsg.NodeSymbol("O", 1), obj)
+    other = dsg.KhronosObjectAttributes()
+    other.image_folder = "/old/run2/images/O_2"
+    G.add_node(dsg.DsgLayers.OBJECTS, dsg.NodeSymbol("O", 2), other)
+    return G
+
+
+def _folder(G, symbol):
+    return G.get_node(symbol.value).attributes.image_folder
+
+
+def test_resolve_image_folders():
+    """Relative image folders resolve against a root; absolute ones are kept."""
+    G = _graph_with_image_folders()
+    assert dsg.resolve_image_folders(G, "/new/run") == 1
+    assert _folder(G, dsg.NodeSymbol("a", 0)) == "/new/run/agents/agent_1"
+    assert _folder(G, dsg.NodeSymbol("O", 1)) == "/old/run/images/O_1"
+
+
+def test_remap_image_folders():
+    """Prefix remapping only matches whole path components."""
+    G = _graph_with_image_folders()
+    assert dsg.remap_image_folders(G, "/old/run/", "/new/run") == 1
+    assert _folder(G, dsg.NodeSymbol("O", 1)) == "/new/run/images/O_1"
+    assert _folder(G, dsg.NodeSymbol("O", 2)) == "/old/run2/images/O_2"
+    assert _folder(G, dsg.NodeSymbol("a", 0)) == "agents/agent_1"
+
+
+def test_load_image_root(tmp_path):
+    """Loading leaves image folders untouched unless an image root is given."""
+    G = _graph_with_image_folders()
+    path = str(tmp_path / "g.json")
+    G.save(path)
+
+    unchanged = dsg.DynamicSceneGraph.load(path)
+    assert _folder(unchanged, dsg.NodeSymbol("a", 0)) == "agents/agent_1"
+
+    resolved = dsg.DynamicSceneGraph.load(path, image_root=str(tmp_path))
+    assert _folder(resolved, dsg.NodeSymbol("a", 0)) == str(tmp_path / "agents/agent_1")
+    assert _folder(resolved, dsg.NodeSymbol("O", 1)) == "/old/run/images/O_1"
