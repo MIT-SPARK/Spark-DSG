@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
+#include <nlohmann/json.hpp>
+
 #include "spark_dsg/printing.h"
 #include "spark_dsg/scene_graph.h"
 

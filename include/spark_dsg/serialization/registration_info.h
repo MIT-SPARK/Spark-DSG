@@ -33,68 +33,15 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <memory>
-#include <ostream>
 
-#include "spark_dsg/metadata.h"
-#include "spark_dsg/serialization/registration_info.h"
+#include <cstdint>
+#include <string>
 
-namespace spark_dsg {
-namespace serialization {
-class Visitor;
-}
+namespace spark_dsg::serialization {
 
-struct EdgeAttributes;
-
-//! Collection of information for an edge
-struct EdgeAttributes {
-  friend class serialization::Visitor;
-  //! desired pointer type for the edge attributes
-  using Ptr = std::unique_ptr<EdgeAttributes>;
-
-  //! Default constructor resulting in an unweight edge
-  EdgeAttributes();
-
-  //! Constructor that make a weighted edge
-  explicit EdgeAttributes(double weight);
-
-  virtual ~EdgeAttributes();
-
-  //! brief Get derived copy of edge attributes
-  virtual EdgeAttributes::Ptr clone() const;
-
-  //! Estimate the memory usage of the edge attributes in bytes.
-  virtual size_t memoryUsage() const;
-
-  //! whether or not the edge weight is valid
-  bool weighted;
-  //! the weight of the edge
-  double weight;
-  //! Arbitrary metadata about the edge
-  Metadata metadata;
-
-  /**
-   * @brief output attribute information
-   * @param out output stream
-   * @param attrs attributes to print
-   * @returns original output stream
-   */
-  friend std::ostream& operator<<(std::ostream& out, const EdgeAttributes& attrs);
-
-  bool operator==(const EdgeAttributes& other) const;
-
-  const serialization::RegistrationInfo& registration() const;
-
- protected:
-  virtual void fill_ostream(std::ostream& out) const;
-
-  virtual void serialization_info();
-
-  virtual void serialization_info() const;
-
-  virtual bool is_equal(const EdgeAttributes& other) const;
-
-  virtual const serialization::RegistrationInfo& registrationImpl() const;
+struct RegistrationInfo {
+  std::string name;
+  uint8_t type_id;
 };
 
-}  // namespace spark_dsg
+}  // namespace spark_dsg::serialization

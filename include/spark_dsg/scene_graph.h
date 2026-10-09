@@ -35,7 +35,6 @@
 #pragma once
 #include <Eigen/Core>
 #include <filesystem>
-#include <nlohmann/json.hpp>
 
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_layer.h"

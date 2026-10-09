@@ -34,12 +34,13 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/edge_attributes.h"
 
+#include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 
 namespace spark_dsg {
 
-decltype(EdgeAttributes::registration_) EdgeAttributes::registration_ =
-    EdgeAttributeRegistration<EdgeAttributes>("EdgeAttributes");
+using serialization::RegistrationInfo;
+using EdgeRegistry = serialization::AttributeRegistry<EdgeAttributes>;
 
 EdgeAttributes::EdgeAttributes() : weighted(false), weight(1.0) {}
 
@@ -58,7 +59,7 @@ size_t EdgeAttributes::memoryUsage() const {
   return total_size;
 }
 
-const serialization::RegistrationInfo& EdgeAttributes::registration() const {
+const RegistrationInfo& EdgeAttributes::registration() const {
   return registrationImpl();
 }
 
@@ -90,8 +91,9 @@ bool EdgeAttributes::is_equal(const EdgeAttributes& other) const {
   return weighted == other.weighted && weight == other.weight;
 }
 
-const serialization::RegistrationInfo& EdgeAttributes::registrationImpl() const {
-  return registration_.info;
+const RegistrationInfo& EdgeAttributes::registrationImpl() const {
+  static const auto info = EdgeRegistry::registration("EdgeAttributes");
+  return info;
 }
 
 }  // namespace spark_dsg

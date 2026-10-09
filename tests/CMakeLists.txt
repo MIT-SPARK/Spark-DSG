@@ -40,3 +40,7 @@ if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
     PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/utest_zmq_interface.cpp>"
   )
 endif()
+
+add_executable(utest_attribute_registry serialization/utest_attribute_registry.cpp)
+target_link_libraries(utest_attribute_registry PRIVATE ${PROJECT_NAME} GTest::gtest_main)
+gtest_add_tests(TARGET utest_attribute_registry)

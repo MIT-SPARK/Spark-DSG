@@ -49,14 +49,6 @@
 
 namespace spark_dsg {
 
-#define REGISTER_NODE_ATTRIBUTES(attr_type)                                  \
-  inline static const auto attr_type##registration_ =                        \
-      NodeAttributeRegistration<attr_type>(#attr_type);                      \
-  const serialization::RegistrationInfo& registrationImpl() const override { \
-    return attr_type##registration_.info;                                    \
-  }                                                                          \
-  static_assert(true, "")
-
 /**
  * @brief Type alias representing the semantic class of an object or other node
  */
@@ -113,7 +105,7 @@ struct SemanticNodeAttributes : public NodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(SemanticNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 /**
@@ -146,7 +138,7 @@ struct ObjectNodeAttributes : public SemanticNodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(ObjectNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 /**
@@ -171,7 +163,7 @@ struct RoomNodeAttributes : public SemanticNodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(RoomNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 /**
@@ -221,7 +213,7 @@ struct PlaceNodeAttributes : public SemanticNodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(PlaceNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 using FrontierNodeAttributes = PlaceNodeAttributes;
 
@@ -264,7 +256,7 @@ struct Place2dNodeAttributes : public SemanticNodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(Place2dNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 struct AgentNodeAttributes : public NodeAttributes {
@@ -293,7 +285,7 @@ struct AgentNodeAttributes : public NodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(AgentNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 /**
@@ -333,7 +325,7 @@ struct KhronosObjectAttributes : public ObjectNodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
   // registers derived attributes
-  REGISTER_NODE_ATTRIBUTES(KhronosObjectAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 /**
@@ -393,7 +385,7 @@ struct TraversabilityNodeAttributes : public SemanticNodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(TraversabilityNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 /**
@@ -483,7 +475,7 @@ struct TravNodeAttributes : public SemanticNodeAttributes {
   void serialization_info() override;
   bool is_equal(const NodeAttributes& other) const override;
 
-  REGISTER_NODE_ATTRIBUTES(TravNodeAttributes);
+  const serialization::RegistrationInfo& registrationImpl() const override;
 };
 
 }  // namespace spark_dsg

@@ -109,6 +109,7 @@ add_library(
   src/scene_graph_utilities.cpp
   src/traversability_boundary.cpp
   src/zmq_interface.cpp
+  src/serialization/attribute_registry.cpp
   src/serialization/attribute_serialization.cpp
   src/serialization/binary_conversions.cpp
   src/serialization/binary_serialization.cpp

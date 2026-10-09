@@ -36,12 +36,61 @@
 
 #include <numbers>
 
+#include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg {
+
+using serialization::RegistrationInfo;
+using NodeRegistry = serialization::AttributeRegistry<NodeAttributes>;
+
+const RegistrationInfo& SemanticNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("SemanticNodeAttributes");
+  return info;
+}
+
+const RegistrationInfo& ObjectNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("ObjectNodeAttributes");
+  return info;
+}
+
+const RegistrationInfo& RoomNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("RoomNodeAttributes");
+  return info;
+}
+
+const RegistrationInfo& PlaceNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("PlaceNodeAttributes");
+  return info;
+}
+
+const RegistrationInfo& Place2dNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("Place2dNodeAttributes");
+  return info;
+}
+
+const RegistrationInfo& AgentNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("AgentNodeAttributes");
+  return info;
+}
+
+const RegistrationInfo& KhronosObjectAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("KhronosObjectAttributes");
+  return info;
+}
+
+const RegistrationInfo& TraversabilityNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("TraversabilityNodeAttributes");
+  return info;
+}
+
+const RegistrationInfo& TravNodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("TravNodeAttributes");
+  return info;
+}
 
 template <typename T>
 std::string showIterable(const T& iterable, size_t max_length = 80) {

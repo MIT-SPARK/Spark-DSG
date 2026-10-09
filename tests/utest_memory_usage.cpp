@@ -42,6 +42,8 @@
 #include <spark_dsg/scene_graph_node.h>
 #include <spark_dsg/serialization/graph_binary_serialization.h>
 
+#include <nlohmann/json.hpp>
+
 // TODO(lschmid): These tests are a quick sanity check and might break on different
 // platforms or with some future changes.
 
@@ -63,7 +65,7 @@ TEST(MemoryUsage, Mesh) {
 
 TEST(MemoryUsage, Metadata) {
   Metadata metadata;
-  size_t expected_size = sizeof(Metadata);  // 16 bytes.
+  size_t expected_size = sizeof(Metadata);
   EXPECT_EQ(metadata.memoryUsage(), expected_size);
 
   nlohmann::json contents;
@@ -72,13 +74,13 @@ TEST(MemoryUsage, Metadata) {
   contents["nested"] = {{"nkey1", "nvalue1"}, {"nkey2", 3.14}};
   metadata.set(contents);
 
-  expected_size += contents.dump().size();  // 85 bytes.
+  expected_size += sizeof(nlohmann::json) + contents.dump().size();
   EXPECT_EQ(metadata.memoryUsage(), expected_size);
 }
 
 TEST(MemoryUsage, EdgeAttributes) {
   EdgeAttributes attrs;
-  size_t expected_size = sizeof(EdgeAttributes);  // 40 bytes.
+  size_t expected_size = sizeof(EdgeAttributes);
   EXPECT_EQ(attrs.memoryUsage(), expected_size);
 
   nlohmann::json meta_contents;
@@ -86,7 +88,7 @@ TEST(MemoryUsage, EdgeAttributes) {
   meta_contents["weight"] = 2.5;
   attrs.metadata.set(meta_contents);
 
-  expected_size += meta_contents.dump().size();  // 80 bytes
+  expected_size += sizeof(nlohmann::json) + meta_contents.dump().size();
   EXPECT_EQ(attrs.memoryUsage(), expected_size);
 }
 
@@ -100,6 +102,7 @@ TEST(MemoryUsage, EdgeContainer) {
   for (size_t i = 0; i < 100; ++i) {
     edge_container.insert(i, i + 1, edge_attrs->clone());
   }
+
   expected_size += 100 * (edge_attrs->memoryUsage() + 60);
   EXPECT_EQ(edge_container.memoryUsage(), expected_size);
 }
@@ -160,6 +163,7 @@ TEST(MemoryUsage, SceneGraphLayer) {
   for (size_t i = 0; i < 50; ++i) {
     layer.emplaceNode(i, std::make_unique<NodeAttributes>());
   }
+
   expected_size += 50 * 259;  // 13358 bytes
   EXPECT_EQ(layer.memoryUsage(), expected_size);
 
@@ -167,13 +171,14 @@ TEST(MemoryUsage, SceneGraphLayer) {
   for (size_t i = 0; i < 25; ++i) {
     layer.insertEdge(i, i + 1);
   }
-  expected_size += 25 * 116;  // 16258 bytes
+
+  expected_size += 25 * 108;
   EXPECT_EQ(layer.memoryUsage(), expected_size);
 }
 
 TEST(MemoryUsage, SceneGraph) {
   SceneGraph graph;
-  size_t expected_size = 2393;
+  size_t expected_size = 2385;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add a layer.
@@ -200,14 +205,16 @@ TEST(MemoryUsage, SceneGraph) {
     ASSERT_TRUE(graph.insertEdge(i, (i + 1) % 20));
     ASSERT_TRUE(graph.insertEdge(20 + i, 20 + (i + 1) % 20));
   }
-  expected_size += 40 * 116;
+
+  expected_size += 40 * 108;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add some interlayer edges.
   for (size_t i = 0; i < 20; ++i) {
     graph.insertEdge(i, 20 + i);
   }
-  expected_size += 20 * 116;
+
+  expected_size += 20 * 108;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 
   // Add mesh.
@@ -223,7 +230,7 @@ TEST(MemoryUsage, SceneGraph) {
   meta_contents["creator"] = "unit_test";
   meta_contents["description"] = "Test scene graph";
   graph.metadata.set(meta_contents);
-  expected_size += 56;
+  expected_size += sizeof(nlohmann::json) + 56;
   EXPECT_EQ(graph.memoryUsage(), expected_size);
 }
 

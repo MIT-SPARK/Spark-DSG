@@ -35,6 +35,7 @@
 #include "spark_dsg/scene_graph_node.h"
 
 #include "spark_dsg/printing.h"
+#include "spark_dsg/serialization/attribute_registry.h"
 #include "spark_dsg/serialization/attribute_serialization.h"
 #include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg/serialization/json_conversions.h"
@@ -64,8 +65,8 @@ bool matricesEqual(const Eigen::DenseBase<Derived>& lhs,
 
 }  // namespace
 
-decltype(NodeAttributes::registration_) NodeAttributes::registration_ =
-    NodeAttributeRegistration<NodeAttributes>("NodeAttributes");
+using serialization::RegistrationInfo;
+using NodeRegistry = serialization::AttributeRegistry<NodeAttributes>;
 
 std::ostream& operator<<(std::ostream& out, const NodeAttributes& attrs) {
   return attrs.fill_ostream(out);
@@ -97,7 +98,7 @@ bool NodeAttributes::operator==(const NodeAttributes& other) const {
   return is_equal(other);
 }
 
-const serialization::RegistrationInfo& NodeAttributes::registration() const {
+const RegistrationInfo& NodeAttributes::registration() const {
   return registrationImpl();
 }
 
@@ -129,8 +130,9 @@ bool NodeAttributes::is_equal(const NodeAttributes& other) const {
          is_active == other.is_active && is_predicted == other.is_predicted;
 }
 
-const serialization::RegistrationInfo& NodeAttributes::registrationImpl() const {
-  return registration_.info;
+const RegistrationInfo& NodeAttributes::registrationImpl() const {
+  static const auto info = NodeRegistry::registration("NodeAttributes");
+  return info;
 }
 
 SceneGraphNode::SceneGraphNode(NodeId node_id,
