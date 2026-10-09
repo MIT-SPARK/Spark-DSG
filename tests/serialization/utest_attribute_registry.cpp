@@ -32,69 +32,59 @@
  * Government is authorized to reproduce and distribute reprints for Government
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
-#pragma once
-#include <memory>
-#include <ostream>
+#include <gtest/gtest.h>
 
-#include "spark_dsg/metadata.h"
-#include "spark_dsg/serialization/registration_info.h"
+#include <stdexcept>
 
-namespace spark_dsg {
-namespace serialization {
-class Visitor;
-}
+#include "spark_dsg/scene_graph_node.h"
+#include "spark_dsg/serialization/attribute_registry.h"
 
-struct EdgeAttributes;
+namespace spark_dsg::serialization {
+namespace {
 
-//! Collection of information for an edge
-struct EdgeAttributes {
-  friend class serialization::Visitor;
-  //! desired pointer type for the edge attributes
-  using Ptr = std::unique_ptr<EdgeAttributes>;
-
-  //! Default constructor resulting in an unweight edge
-  EdgeAttributes();
-
-  //! Constructor that make a weighted edge
-  explicit EdgeAttributes(double weight);
-
-  virtual ~EdgeAttributes();
-
-  //! brief Get derived copy of edge attributes
-  virtual EdgeAttributes::Ptr clone() const;
-
-  //! Estimate the memory usage of the edge attributes in bytes.
-  virtual size_t memoryUsage() const;
-
-  //! whether or not the edge weight is valid
-  bool weighted;
-  //! the weight of the edge
-  double weight;
-  //! Arbitrary metadata about the edge
-  Metadata metadata;
-
-  /**
-   * @brief output attribute information
-   * @param out output stream
-   * @param attrs attributes to print
-   * @returns original output stream
-   */
-  friend std::ostream& operator<<(std::ostream& out, const EdgeAttributes& attrs);
-
-  bool operator==(const EdgeAttributes& other) const;
-
-  const serialization::RegistrationInfo& registration() const;
+struct CustomNodeAttributes : NodeAttributes {
+  CustomNodeAttributes() { position.x() = 42.0; }
 
  protected:
-  virtual void fill_ostream(std::ostream& out) const;
-
-  virtual void serialization_info();
-
-  virtual void serialization_info() const;
-
-  virtual bool is_equal(const EdgeAttributes& other) const;
-
-  virtual const serialization::RegistrationInfo& registrationImpl() const;
+  const RegistrationInfo& registrationImpl() const override {
+    static const auto info =
+        AttributeRegistry<NodeAttributes>::registration("CustomNodeAttributes");
+    return info;
+  }
 };
 
-}  // namespace spark_dsg
+}  // namespace
+
+TEST(AttributeRegistry, FileNamesDetermineTypeIds) {
+  const auto factory = AttributeRegistry<NodeAttributes>::fromNames(
+      {"ObjectNodeAttributes", "UnknownAttributes", "NodeAttributes"});
+  const auto object = factory.create(uint8_t{0});
+  ASSERT_NE(object, nullptr);
+  EXPECT_EQ(object->registration().name, "ObjectNodeAttributes");
+  EXPECT_EQ(factory.create(uint8_t{1}), nullptr);
+  const auto node = factory.create(uint8_t{2});
+  ASSERT_NE(node, nullptr);
+  EXPECT_EQ(node->registration().name, "NodeAttributes");
+  EXPECT_EQ(factory.create("UnknownAttributes"), nullptr);
+}
+
+TEST(AttributeRegistry, RejectsUnrepresentableTypeIds) {
+  const std::vector<std::string> names(257, "NodeAttributes");
+  EXPECT_THROW(AttributeRegistry<NodeAttributes>::fromNames(names), std::length_error);
+}
+
+TEST(AttributeRegistry, CustomTypesShareLibraryRegistry) {
+  const AttributeRegistration<NodeAttributes, CustomNodeAttributes> registration(
+      "CustomNodeAttributes");
+  const auto factory = AttributeRegistry<NodeAttributes>::current();
+  const auto attrs = factory.create(registration.info.type_id);
+  ASSERT_NE(attrs, nullptr);
+  EXPECT_NE(dynamic_cast<CustomNodeAttributes*>(attrs.get()), nullptr);
+  EXPECT_EQ(attrs->position.x(), 42.0);
+  EXPECT_EQ(attrs->registration().name, "CustomNodeAttributes");
+  EXPECT_THROW(AttributeRegistry<NodeAttributes>::addAttributes<CustomNodeAttributes>(
+                   "CustomNodeAttributes"),
+               std::runtime_error);
+}
+
+}  // namespace spark_dsg::serialization

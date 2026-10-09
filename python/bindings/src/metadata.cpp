@@ -37,6 +37,8 @@
 #include <pybind11/pybind11.h>
 #include <spark_dsg/metadata.h>
 
+#include <nlohmann/json.hpp>
+
 namespace spark_dsg::python {
 
 namespace py = pybind11;

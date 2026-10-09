@@ -34,11 +34,15 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/metadata.h"
 
-#include <iostream>
+#include <nlohmann/json.hpp>
 
 namespace spark_dsg {
 
-void updateNested(nlohmann::json& to_update, const nlohmann::json& to_add) {
+using nlohmann::json;
+
+namespace {
+
+void updateNested(json& to_update, const json& to_add) {
   if (!to_add.is_object()) {
     to_update = to_add;
     return;
@@ -54,32 +58,78 @@ void updateNested(nlohmann::json& to_update, const nlohmann::json& to_add) {
   }
 }
 
-Metadata::Metadata() : contents_(nlohmann::json::object()) {}
+}  // namespace
 
-Metadata::Metadata(const nlohmann::json& contents) : contents_(contents) {}
+struct Metadata::Impl {
+  json contents;
+};
 
-const nlohmann::json& Metadata::get() const { return contents_; }
+Metadata::Metadata() = default;
 
-void Metadata::set(const nlohmann::json& new_metadata) { contents_ = new_metadata; }
+Metadata::~Metadata() = default;
 
-void Metadata::add(const nlohmann::json& to_add) { updateNested(contents_, to_add); }
-
-void Metadata::add(const Metadata& to_add) { add(to_add.get()); }
-
-size_t Metadata::memoryUsage() const {
-  // Estimate memory usage of the JSON contents through serialization.
-  // TODO(lschmid): This is not a very clean method but at least does not ignore the
-  // meta data.
-  const size_t total_size = sizeof(Metadata);
-  if (empty()) {
-    return total_size;
+Metadata::Metadata(const Metadata& other) {
+  if (other.impl_) {
+    impl_ = std::make_unique<Impl>(*other.impl_);
   }
-  const std::string serialized = contents_.dump();
-  return total_size + serialized.size();
 }
 
-void Metadata::clear() { contents_.clear(); }
+Metadata& Metadata::operator=(const Metadata& other) {
+  if (this == &other) {
+    return *this;
+  }
 
-bool Metadata::empty() const { return contents_.empty(); }
+  set(other.get());
+  return *this;
+}
+
+Metadata::Metadata(Metadata&& other) noexcept = default;
+
+Metadata& Metadata::operator=(Metadata&& other) noexcept = default;
+
+Metadata::Metadata(const json& contents)
+    : impl_(std::make_unique<Impl>(Impl{contents})) {}
+
+const json& Metadata::get() const {
+  if (impl_) {
+    return impl_->contents;
+  }
+
+  static const auto empty = json::object();
+  return empty;
+}
+
+void Metadata::set(const json& contents) {
+  if (!impl_) {
+    impl_ = std::make_unique<Impl>(Impl{contents});
+    return;
+  }
+
+  impl_->contents = contents;
+}
+
+void Metadata::add(const json& contents) {
+  if (!impl_) {
+    impl_ = std::make_unique<Impl>(Impl{json::object()});
+  }
+
+  updateNested(impl_->contents, contents);
+}
+
+void Metadata::add(const Metadata& other) { add(other.get()); }
+
+size_t Metadata::memoryUsage() const {
+  // Keep the existing serialized-size estimate for the JSON payload.
+  const auto total_size = sizeof(Metadata) + (impl_ ? sizeof(Impl) : 0);
+  return empty() ? total_size : total_size + get().dump().size();
+}
+
+void Metadata::clear() {
+  if (impl_) {
+    impl_->contents.clear();
+  }
+}
+
+bool Metadata::empty() const { return !impl_ || impl_->contents.empty(); }
 
 }  // namespace spark_dsg

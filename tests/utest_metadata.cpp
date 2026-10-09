@@ -34,6 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
+#include <nlohmann/json.hpp>
+
 #include "spark_dsg/metadata.h"
 
 namespace spark_dsg {
@@ -84,6 +86,54 @@ TEST(Metadata, AddCorrect) {
 })"_json;
     EXPECT_EQ(expected.dump(), data.get().dump());
   }
+}
+
+TEST(Metadata, CopiesOwnTheirContents) {
+  const auto original = R"({"nested": {"value": 4}})"_json;
+  Metadata source(original);
+  Metadata copied(source);
+  Metadata assigned;
+  assigned = source;
+  source.add(R"({"nested": {"value": 9}})"_json);
+  EXPECT_EQ(copied.get(), original);
+  EXPECT_EQ(assigned.get(), original);
+
+  copied.clear();
+  EXPECT_TRUE(copied.empty());
+  EXPECT_EQ(assigned.get(), original);
+  EXPECT_EQ(source.get().at("nested").at("value"), 9);
+}
+
+TEST(Metadata, MovesPreserveContentsAndAllowReuse) {
+  const auto contents = R"({"value": [1, 2, 3]})"_json;
+  Metadata source(contents);
+  Metadata moved(std::move(source));
+  EXPECT_EQ(moved.get(), contents);
+  EXPECT_TRUE(source.empty());
+  source.add(R"({"new": 5})"_json);
+  EXPECT_EQ(source.get(), R"({"new": 5})"_json);
+
+  source = std::move(moved);
+  EXPECT_EQ(source.get(), contents);
+  EXPECT_TRUE(moved.empty());
+  moved.set(R"({"reused": true})"_json);
+  EXPECT_EQ(moved.get(), R"({"reused": true})"_json);
+}
+
+TEST(Metadata, EmptyAndNonObjectValues) {
+  Metadata data;
+  EXPECT_EQ(data.get(), nlohmann::json::object());
+  data.add(Metadata(R"({"nested": {"value": 4}})"_json));
+  EXPECT_EQ(data.get(), R"({"nested": {"value": 4}})"_json);
+
+  data.add(R"([1, 2])"_json);
+  EXPECT_EQ(data.get(), R"([1, 2])"_json);
+  data.clear();
+  EXPECT_EQ(data.get(), nlohmann::json::array());
+  data.set(nullptr);
+  EXPECT_TRUE(data.get().is_null());
+  data = Metadata();
+  EXPECT_EQ(data.get(), nlohmann::json::object());
 }
 
 }  // namespace spark_dsg

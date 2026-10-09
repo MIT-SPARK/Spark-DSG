@@ -34,55 +34,27 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
+
+#include "spark_dsg/serialization/registration_info.h"
+#include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::serialization {
 
 template <typename T>
 class AttributeFactory {
  public:
-  using Constructor = std::function<typename T::Ptr()>;
+  using Constructor = std::function<std::unique_ptr<T>()>;
   using FactoryMap = std::map<std::string, Constructor>;
 
-  AttributeFactory(const std::vector<std::string>& names, const FactoryMap& factories) {
-    for (size_t i = 0; i < names.size(); ++i) {
-      auto iter = factories.find(names[i]);
-      if (iter == factories.end()) {
-        // TODO(nathan) warn about unknown name
-        continue;
-      }
-
-      factories_[i] = iter->second;
-      lookup_[names[i]] = i;
-    }
-  }
-
-  ~AttributeFactory() = default;
-
-  typename T::Ptr create(uint8_t type_id) const {
-    auto iter = factories_.find(type_id);
-    if (iter == factories_.end()) {
-      return nullptr;
-    }
-
-    return iter->second ? iter->second() : nullptr;
-  }
-
-  typename T::Ptr create(const std::string& name) const {
-    auto iter = lookup_.find(name);
-    if (iter == lookup_.end()) {
-      return nullptr;
-    }
-
-    return create(iter->second);
-  }
+  AttributeFactory(const std::vector<std::string>& names, const FactoryMap& factories);
+  std::unique_ptr<T> create(uint8_t type_id) const;
+  std::unique_ptr<T> create(const std::string& name) const;
 
  private:
   std::map<std::string, uint8_t> lookup_;
@@ -92,84 +64,47 @@ class AttributeFactory {
 template <typename Attrs>
 class AttributeRegistry {
  public:
-  static AttributeRegistry<Attrs>& instance();
-
-  ~AttributeRegistry() = default;
+  static AttributeRegistry& instance();
 
   template <typename T>
-  static size_t addAttributes(const std::string& name);
+  static size_t addAttributes(const std::string& name) {
+    static_assert(std::is_base_of_v<Attrs, T>);
+    return instance().add(name, [] { return std::make_unique<T>(); });
+  }
 
   static AttributeFactory<Attrs> current();
-
   static AttributeFactory<Attrs> fromNames(const std::vector<std::string>& names);
-
-  static const std::vector<std::string>& names() {
-    auto& registry = instance();
-    return registry.names_;
-  }
+  static const std::vector<std::string>& names();
+  static const RegistrationInfo& registration(const std::string& name);
 
  private:
-  AttributeRegistry() {}
+  AttributeRegistry();
+  size_t add(const std::string& name,
+             typename AttributeFactory<Attrs>::Constructor constructor);
 
   std::vector<std::string> names_;
-  std::map<std::string, std::function<std::unique_ptr<Attrs>()>> factories_;
-  inline static std::unique_ptr<AttributeRegistry<Attrs>> s_instance_ = nullptr;
-};
-
-template <typename Attrs>
-AttributeRegistry<Attrs>& AttributeRegistry<Attrs>::instance() {
-  if (!s_instance_) {
-    s_instance_.reset(new AttributeRegistry<Attrs>());
-  }
-
-  return *s_instance_;
-}
-
-template <typename Attrs>
-template <typename T>
-size_t AttributeRegistry<Attrs>::addAttributes(const std::string& name) {
-  auto& registry = instance();
-  if (registry.factories_.count(name)) {
-    throw std::runtime_error("Registering two node attributes under '" + name + "'");
-  }
-
-  const auto index = registry.names_.size();
-  registry.names_.push_back(name);
-  registry.factories_[name] = []() { return std::make_unique<T>(); };
-  return index;
-}
-
-template <typename Attrs>
-AttributeFactory<Attrs> AttributeRegistry<Attrs>::current() {
-  auto& registry = instance();
-  return AttributeFactory<Attrs>(registry.names_, registry.factories_);
-}
-
-template <typename T>
-AttributeFactory<T> AttributeRegistry<T>::fromNames(
-    const std::vector<std::string>& names) {
-  auto& registry = instance();
-  return AttributeFactory<T>(names, registry.factories_);
-}
-
-struct RegistrationInfo {
-  std::string name;
-  uint8_t type_id;
+  typename AttributeFactory<Attrs>::FactoryMap factories_;
+  std::map<std::string, RegistrationInfo> registrations_;
 };
 
 template <typename Attrs, typename T>
 struct AttributeRegistration {
-  explicit AttributeRegistration(const std::string& name);
+  explicit AttributeRegistration(const std::string& name)
+      : info{name,
+             static_cast<uint8_t>(
+                 AttributeRegistry<Attrs>::template addAttributes<T>(name))} {}
   RegistrationInfo info;
 };
 
-template <typename Attrs, typename T>
-AttributeRegistration<Attrs, T>::AttributeRegistration(const std::string& name) {
-  static_assert(std::is_base_of<Attrs, T>::value,
-                "Derived attributes must have base NodeAttributes");
-  info = {
-      name,
-      static_cast<uint8_t>(AttributeRegistry<Attrs>::template addAttributes<T>(name))};
-}
+template <>
+AttributeRegistry<NodeAttributes>::AttributeRegistry();
+
+template <>
+AttributeRegistry<EdgeAttributes>::AttributeRegistry();
+
+extern template class AttributeFactory<NodeAttributes>;
+extern template class AttributeFactory<EdgeAttributes>;
+extern template class AttributeRegistry<NodeAttributes>;
+extern template class AttributeRegistry<EdgeAttributes>;
 
 }  // namespace spark_dsg::serialization

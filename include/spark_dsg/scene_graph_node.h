@@ -41,7 +41,7 @@
 
 #include "spark_dsg/metadata.h"
 #include "spark_dsg/scene_graph_types.h"
-#include "spark_dsg/serialization/attribute_registry.h"
+#include "spark_dsg/serialization/registration_info.h"
 
 namespace spark_dsg {
 namespace serialization {
@@ -49,10 +49,6 @@ class Visitor;
 }
 
 struct NodeAttributes;
-
-template <typename T>
-using NodeAttributeRegistration =
-    serialization::AttributeRegistration<NodeAttributes, T>;
 
 /**
  * @brief Base node attributes.
@@ -110,9 +106,6 @@ struct NodeAttributes {
   virtual bool is_equal(const NodeAttributes& other) const;
 
   virtual const serialization::RegistrationInfo& registrationImpl() const;
-
- private:
-  static const NodeAttributeRegistration<NodeAttributes> registration_;
 };
 
 /**

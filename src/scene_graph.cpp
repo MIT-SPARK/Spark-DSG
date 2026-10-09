@@ -535,7 +535,7 @@ bool SceneGraph::updateFromLayer(const SceneGraphLayer& other_layer,
 bool SceneGraph::mergeGraph(const SceneGraph& other,
                             const GraphMergeConfig& config,
                             const Eigen::Isometry3d* transform_new_nodes) {
-  metadata.add(other.metadata());
+  metadata.add(other.metadata);
 
   other.visitLayers([&](LayerKey layer_key, const SceneGraphLayer& other_layer) {
     auto& layer = layerFromKey(layer_key);

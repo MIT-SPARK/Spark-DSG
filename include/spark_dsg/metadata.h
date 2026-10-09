@@ -33,13 +33,21 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <nlohmann/json.hpp>
+#include <cstddef>
+#include <memory>
+#include <nlohmann/json_fwd.hpp>
 
 namespace spark_dsg {
 
 struct Metadata {
   Metadata();
+  ~Metadata();
+  Metadata(const Metadata& other);
+  Metadata& operator=(const Metadata& other);
+  Metadata(Metadata&& other) noexcept;
+  Metadata& operator=(Metadata&& other) noexcept;
   Metadata(const nlohmann::json& contents);
+  //! The returned view is invalidated by mutation, move, or destruction.
   const nlohmann::json& get() const;
   inline const nlohmann::json& operator()() const { return get(); }
   void set(const nlohmann::json& new_metadata);
@@ -54,7 +62,8 @@ struct Metadata {
   size_t memoryUsage() const;
 
  private:
-  nlohmann::json contents_;
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace spark_dsg
