@@ -22,6 +22,7 @@ add_executable(
   utest_scene_graph_utilities.cpp
   utest_traversability_boundary.cpp
   utest_ray_traversability_boundary.cpp
+  serialization/utest_attribute_registry.cpp
   serialization/utest_attribute_serialization.cpp
   serialization/utest_binary_serialization.cpp
   serialization/utest_binary_conversions.cpp
@@ -40,7 +41,3 @@ if(SPARK_DSG_BUILD_ZMQ AND zmq_FOUND)
     PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/utest_zmq_interface.cpp>"
   )
 endif()
-
-add_executable(utest_attribute_registry serialization/utest_attribute_registry.cpp)
-target_link_libraries(utest_attribute_registry PRIVATE ${PROJECT_NAME} GTest::gtest_main)
-gtest_add_tests(TARGET utest_attribute_registry)

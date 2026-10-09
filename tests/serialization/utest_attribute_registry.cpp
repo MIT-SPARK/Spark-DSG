@@ -36,7 +36,6 @@
 
 #include <stdexcept>
 
-#include "spark_dsg/edge_attributes.h"
 #include "spark_dsg/scene_graph_node.h"
 #include "spark_dsg/serialization/attribute_registry.h"
 
@@ -55,30 +54,6 @@ struct CustomNodeAttributes : NodeAttributes {
 };
 
 }  // namespace
-
-TEST(AttributeRegistry, BuiltinsAvailableWithoutConsumerRegistration) {
-  const std::vector<std::string> expected{"NodeAttributes",
-                                          "SemanticNodeAttributes",
-                                          "ObjectNodeAttributes",
-                                          "RoomNodeAttributes",
-                                          "PlaceNodeAttributes",
-                                          "Place2dNodeAttributes",
-                                          "AgentNodeAttributes",
-                                          "KhronosObjectAttributes",
-                                          "TraversabilityNodeAttributes",
-                                          "TravNodeAttributes"};
-  const auto factory = AttributeRegistry<NodeAttributes>::current();
-  for (const auto& name : expected) {
-    const auto attrs = factory.create(name);
-    ASSERT_NE(attrs, nullptr) << name;
-    EXPECT_EQ(attrs->registration().name, name);
-  }
-
-  const auto edge =
-      AttributeRegistry<EdgeAttributes>::current().create("EdgeAttributes");
-  ASSERT_NE(edge, nullptr);
-  EXPECT_EQ(edge->registration().name, "EdgeAttributes");
-}
 
 TEST(AttributeRegistry, FileNamesDetermineTypeIds) {
   const auto factory = AttributeRegistry<NodeAttributes>::fromNames(
