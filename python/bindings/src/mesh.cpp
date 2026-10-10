@@ -71,9 +71,7 @@ Eigen::MatrixXd getEigenVertices(const Mesh& mesh) {
 
 void setEigenVertices(Mesh& mesh, const Eigen::MatrixXd& points) {
   if (points.rows() != 6) {
-    std::stringstream ss;
-    ss << "point rows do not match expected: " << points.rows() << " != 6";
-    throw std::invalid_argument(ss.str());
+    throw std::invalid_argument("point rows do not match expected: " + std::to_string(points.rows()) + " != 6");
   }
 
   mesh.resizeVertices(points.cols());
@@ -104,9 +102,7 @@ Eigen::MatrixXi getEigenFaces(const Mesh& mesh) {
 
 void setEigenFaces(Mesh& mesh, const Eigen::MatrixXi& indices) {
   if (indices.rows() != 3) {
-    std::stringstream ss;
-    ss << "index rows do not match expected: " << indices.rows() << " != 3";
-    throw std::invalid_argument(ss.str());
+    throw std::invalid_argument("index rows do not match expected: " + std::to_string(indices.rows()) + " != 3");
   }
 
   mesh.resizeFaces(indices.cols());

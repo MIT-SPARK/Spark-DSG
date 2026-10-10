@@ -117,8 +117,6 @@ TEST(JsonConversions, EigenMatrixJson) {
 }
 
 TEST(JsonConversions, EigenQuaternionJson) {
-  std::stringstream ss;
-
   {  // single-precision
     Eigen::Quaternionf expected(0.0, 0.0, 1.0, 0.0);
     json output = expected;

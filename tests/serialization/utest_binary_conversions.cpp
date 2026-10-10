@@ -114,8 +114,6 @@ TEST(BinaryConversions, SerializeEigenMatrix) {
 }
 
 TEST(BinaryConversions, SerializeEigenQuaternion) {
-  std::stringstream ss;
-
   {  // single-precision
     Eigen::Quaternionf expected(0.0, 0.0, 1.0, 0.0);
     auto result = writeRT(expected);

@@ -108,36 +108,6 @@ const RegistrationInfo& TravNodeAttributes::registrationImpl() const {
   return info;
 }
 
-template <typename T>
-std::string showIterable(const T& iterable, size_t max_length = 80) {
-  std::stringstream ss;
-  ss << "[";
-  auto iter = iterable.begin();
-  while (iter != iterable.end()) {
-    ss << *iter;
-
-    ++iter;
-    if (iter != iterable.end()) {
-      ss << ", ";
-    }
-
-    if (max_length && ss.str().size() >= max_length) {
-      ss << "...";
-      break;
-    }
-  }
-  ss << "]";
-
-  return ss.str();
-}
-
-template <typename Scalar>
-std::string quatToString(const Eigen::Quaternion<Scalar>& q) {
-  std::stringstream ss;
-  ss << "{w: " << q.w() << ", " << q.x() << ", " << q.y() << ", " << q.z() << "}";
-  return ss.str();
-}
-
 bool operator==(const NearestVertexInfo& lhs, const NearestVertexInfo& rhs) {
   const auto block_equal = Eigen::Map<const Eigen::Vector3i>(lhs.block) ==
                            Eigen::Map<const Eigen::Vector3i>(rhs.block);
@@ -243,9 +213,11 @@ void ObjectNodeAttributes::transform(const Eigen::Isometry3d& transform) {
 
 std::ostream& ObjectNodeAttributes::fill_ostream(std::ostream& out) const {
   SemanticNodeAttributes::fill_ostream(out);
-  out << "\n  - mesh_connections: " << showIterable(mesh_connections);
+  out << "\n  - mesh_connections: " << mesh_connections.size();
   out << "\n  - registered?: " << (registered ? "yes" : "no");
-  out << "\n  - world_R_object: " << quatToString(world_R_object);
+  out << "\n  - world_R_object: " << "{w: " << world_R_object.w() << ", "
+      << world_R_object.x() << ", " << world_R_object.y() << ", " << world_R_object.z()
+      << "}";
   return out;
 }
 
@@ -478,7 +450,8 @@ void AgentNodeAttributes::transform(const Eigen::Isometry3d& transform) {
 
 std::ostream& AgentNodeAttributes::fill_ostream(std::ostream& out) const {
   NodeAttributes::fill_ostream(out);
-  out << "\n  - orientation: " << quatToString(world_R_body);
+  out << "\n  - orientation: " << "{w: " << world_R_body.w() << ", " << world_R_body.x()
+      << ", " << world_R_body.y() << ", " << world_R_body.z() << "}";
   out << "\n  - observed_semantic_labels.size(): " << observed_semantic_labels.size();
   return out;
 }
