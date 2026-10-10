@@ -83,7 +83,7 @@ struct ZmqSender::Detail {
 
   void send(const SceneGraph& graph, bool include_mesh) {
     std::vector<uint8_t> buffer;
-    io::binary::writeGraph(graph, buffer, include_mesh);
+    io::writeGraph(graph, buffer, include_mesh);
 
     // TODO(nathan) it'd be nice if we could avoid the memcpy
     zmq::message_t msg(buffer.data(), buffer.size());
@@ -146,10 +146,10 @@ struct ZmqReceiver::Detail {
 #endif
 
     if (!graph) {
-      graph = io::binary::readGraph(static_cast<uint8_t*>(msg.data()), msg.size());
+      graph = io::readGraph(static_cast<uint8_t*>(msg.data()), msg.size());
     } else {
       const auto data_ptr = static_cast<uint8_t*>(msg.data());
-      io::binary::updateGraph(*graph, data_ptr, msg.size());
+      io::updateGraph(*graph, data_ptr, msg.size());
     }
 
     return true;

@@ -36,18 +36,11 @@
 
 #include <filesystem>
 #include <memory>
-#include <optional>
-#include <string>
-#include <unordered_map>
 
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::io {
 
-// Define file extensions and types.
-inline const std::string JSON_EXTENSION = ".json";
-inline const std::string BSON_EXTENSION = ".bson";
-inline const std::string BINARY_EXTENSION = ".sparkdsg";
 enum class FileType { JSON, BINARY, NONE, UNKNOWN };
 
 /**
@@ -98,6 +91,16 @@ void saveDsgBinary(const SceneGraph& graph,
  * @return A pointer to the loaded graph or nullptr if loading failed.
  */
 std::unique_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath);
+
+/**
+ * @brief Save a SceneGraph to a provided filepath
+ * @param graph The graph to save
+ * @param filepath The filepath including extension to save to
+ * @param include_mesh If true, save the mesh data for each node
+ */
+void saveDsgToFile(const SceneGraph& graph,
+                   std::filesystem::path filepath,
+                   bool include_mesh = false);
 
 /**
  * @brief Load a SceneGraph from a provided filepath

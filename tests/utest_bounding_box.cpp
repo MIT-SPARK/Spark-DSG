@@ -33,18 +33,20 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/bounding_box.h>
 
 #include <Eigen/Geometry>
 #include <numbers>
 
-namespace spark_dsg {
+#include "spark_dsg/bounding_box.h"
 
+namespace spark_dsg {
 namespace {
+
 inline float getRotationError(const Eigen::Quaternionf& rotation,
                               const BoundingBox& box) {
   return rotation.angularDistance(Eigen::Quaternionf(box.world_R_center));
 }
+
 }  // namespace
 
 TEST(BoundingBoxTests, AABBConstructor) {

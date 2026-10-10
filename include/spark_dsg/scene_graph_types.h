@@ -54,6 +54,7 @@ struct EdgeKey {
   EdgeKey(NodeId k1, NodeId k2);
   bool operator==(const EdgeKey& other) const;
   bool operator<(const EdgeKey& other) const;
+  std::string str() const;
 
   NodeId k1;
   NodeId k2;

@@ -35,10 +35,9 @@
 #include "spark_dsg/python/color.h"
 
 #include <pybind11/eigen.h>
-#include <spark_dsg/color.h>
-#include <spark_dsg/colormaps.h>
 
-#include <Eigen/Dense>
+#include "spark_dsg/color.h"
+#include "spark_dsg/colormaps.h"
 
 namespace spark_dsg::python {
 

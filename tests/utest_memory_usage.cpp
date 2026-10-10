@@ -33,16 +33,17 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/edge_container.h>
-#include <spark_dsg/mesh.h>
-#include <spark_dsg/metadata.h>
-#include <spark_dsg/node_attributes.h>
-#include <spark_dsg/scene_graph.h>
-#include <spark_dsg/scene_graph_layer.h>
-#include <spark_dsg/scene_graph_node.h>
-#include <spark_dsg/serialization/graph_binary_serialization.h>
 
 #include <nlohmann/json.hpp>
+
+#include "spark_dsg/edge_container.h"
+#include "spark_dsg/mesh.h"
+#include "spark_dsg/metadata.h"
+#include "spark_dsg/node_attributes.h"
+#include "spark_dsg/scene_graph.h"
+#include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/scene_graph_node.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 
 // TODO(lschmid): These tests are a quick sanity check and might break on different
 // platforms or with some future changes.
@@ -264,7 +265,7 @@ TEST(MemoryUsage, SerializationComparison) {
     SCOPED_TRACE("Scene graph size: " + std::to_string(size));
     auto graph = populateSceneGraph(size);
     std::vector<uint8_t> buffer;
-    io::binary::writeGraph(*graph, buffer, true);
+    io::writeGraph(*graph, buffer, true);
     const double ratio =
         static_cast<double>(buffer.size()) / static_cast<double>(graph->memoryUsage());
     // NOTE(lschmid|nathan): The scene graph actually has more overhead that the

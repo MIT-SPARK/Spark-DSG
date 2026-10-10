@@ -1,9 +1,8 @@
-#include <spark_dsg/scene_graph.h>
-#include <spark_dsg/zmq_interface.h>
-
 #include <chrono>
 #include <iostream>
-#include <thread>
+
+#include "spark_dsg/scene_graph.h"
+#include "spark_dsg/zmq_interface.h"
 
 auto main(int argc, char* argv[]) -> int {
   if (argc < 1) {

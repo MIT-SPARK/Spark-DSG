@@ -42,6 +42,22 @@
 #include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg/serialization/versioning.h"
 
+namespace nlohmann {
+
+template <typename Rep, typename Period>
+struct adl_serializer<std::chrono::duration<Rep, Period>> {
+  static void to_json(json& j, const std::chrono::duration<Rep, Period>& duration) {
+    j = std::chrono::nanoseconds(duration).count();
+  }
+
+  static void from_json(const json& j, std::chrono::duration<Rep, Period>& duration) {
+    const auto stamp_ns = j.get<int64_t>();
+    duration = std::chrono::nanoseconds(stamp_ns);
+  }
+};
+
+}  // namespace nlohmann
+
 namespace spark_dsg {
 
 using serialization::RegistrationInfo;

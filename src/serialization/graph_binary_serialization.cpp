@@ -57,7 +57,7 @@ void write_binary(serialization::BinarySerializer& s, const SceneGraphEdge& edge
   s.write(*edge.info);
 }
 
-namespace io::binary {
+namespace io {
 
 using spark_dsg::serialization::AttributeFactory;
 using spark_dsg::serialization::BinaryDeserializer;
@@ -310,5 +310,5 @@ bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer) {
   return updateGraph(graph, buffer.data(), buffer.size());
 }
 
-}  // namespace io::binary
+}  // namespace io
 }  // namespace spark_dsg

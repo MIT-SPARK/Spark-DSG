@@ -34,18 +34,14 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/python/spark_types.h"
 
-#include <pybind11/chrono.h>
-#include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
-#include <spark_dsg/node_symbol.h>
-#include <spark_dsg/printing.h>
-#include <spark_dsg/scene_graph_types.h>
-#include <spark_dsg/serialization/versioning.h>
 
+#include "spark_dsg/node_symbol.h"
+#include "spark_dsg/printing.h"
 #include "spark_dsg/python/python_types.h"
+#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg::python {
 

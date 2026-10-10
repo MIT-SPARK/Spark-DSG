@@ -33,7 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/node_attributes.h>
+
+#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 

@@ -681,14 +681,7 @@ void SceneGraph::transform(const Eigen::Isometry3d& transform) {
 }
 
 void SceneGraph::save(std::filesystem::path filepath, bool include_mesh) const {
-  const auto type = io::verifyFileExtension(filepath);
-  if (type == io::FileType::JSON) {
-    io::saveDsgJson(*this, filepath, include_mesh);
-    return;
-  }
-
-  // Can only be binary after verification.
-  io::saveDsgBinary(*this, filepath, include_mesh);
+  io::saveDsgToFile(*this, filepath, include_mesh);
 }
 
 SceneGraph::Ptr SceneGraph::load(std::filesystem::path filepath) {

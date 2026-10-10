@@ -34,9 +34,8 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/serialization/file_io.h"
 
-#include <filesystem>
 #include <fstream>
-#include <sstream>
+#include <nlohmann/json.hpp>
 
 #include "spark_dsg/scene_graph.h"
 #include "spark_dsg/serialization/graph_binary_serialization.h"
@@ -44,6 +43,14 @@
 #include "spark_dsg/serialization/versioning.h"
 
 namespace spark_dsg::io {
+namespace {
+
+// Define file extensions and types.
+inline const std::string JSON_EXTENSION = ".json";
+inline const std::string BSON_EXTENSION = ".bson";
+inline const std::string BINARY_EXTENSION = ".sparkdsg";
+
+}  // namespace
 
 FileType identifyFileType(const std::filesystem::path& filepath) {
   const auto ext = std::filesystem::path(filepath).extension().string();
@@ -69,11 +76,10 @@ FileType verifyFileExtension(std::filesystem::path& filepath) {
 
   // Check the file extension is valid.
   if (type == io::FileType::UNKNOWN) {
-    std::stringstream msg;
-    msg << "Invalid file extension for '" << filepath << "'. Supported are '"
-        << io::BINARY_EXTENSION << "', '" << io::JSON_EXTENSION << "', '"
-        << io::BSON_EXTENSION << "', and no extension (defaults to binary save mode).";
-    throw std::runtime_error(msg.str());
+    throw std::string("Invalid file extension for '" + filepath.string() +
+                      "'. Supported are '" + io::BINARY_EXTENSION + "', '" +
+                      io::JSON_EXTENSION + "', '" + io::BSON_EXTENSION +
+                      "', and no extension (defaults to binary save mode).");
   }
 
   return type;
@@ -86,7 +92,7 @@ void saveDsgBinary(const SceneGraph& graph,
   const auto header_buffer = header.serializeToBinary();
 
   std::vector<uint8_t> graph_buffer;
-  binary::writeGraph(graph, graph_buffer, include_mesh);
+  writeGraph(graph, graph_buffer, include_mesh);
 
   std::ofstream out(filepath, std::ios::out | std::ios::binary);
   out.write(reinterpret_cast<const char*>(header_buffer.data()), header_buffer.size());
@@ -112,21 +118,35 @@ std::unique_ptr<SceneGraph> loadDsgBinary(const std::filesystem::path& filepath)
   }
 
   GlobalInfo::ScopedInfo info(*header);
-  return binary::readGraph(buffer.data() + offset, buffer.size() - offset);
+  return readGraph(buffer.data() + offset, buffer.size() - offset);
 }
 
 void saveDsgJson(const SceneGraph& graph,
                  const std::filesystem::path& filepath,
                  bool include_mesh) {
+  nlohmann::json record;
+  writeGraph(graph, record, include_mesh);
   std::ofstream outfile(filepath);
-  outfile << json::writeGraph(graph, include_mesh);
+  outfile << record;
 }
 
 std::unique_ptr<SceneGraph> loadDsgJson(const std::filesystem::path& filepath) {
   std::ifstream infile(filepath);
-  std::stringstream ss;
-  ss << infile.rdbuf();
-  return json::readGraph(ss.str());
+  const auto record = nlohmann::json::parse(infile);
+  return readGraph(record);
+}
+
+void saveDsgToFile(const SceneGraph& graph,
+                   std::filesystem::path filepath,
+                   bool include_mesh) {
+  const auto type = io::verifyFileExtension(filepath);
+  if (type == io::FileType::JSON) {
+    io::saveDsgJson(graph, filepath, include_mesh);
+    return;
+  }
+
+  // Can only be binary after verification.
+  io::saveDsgBinary(graph, filepath, include_mesh);
 }
 
 std::unique_ptr<SceneGraph> loadDsgFromFile(const std::filesystem::path& filepath) {

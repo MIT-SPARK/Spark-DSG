@@ -38,11 +38,8 @@
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
-#include <spark_dsg/mesh.h>
 
-#include <filesystem>
-#include <string>
+#include "spark_dsg/mesh.h"
 
 namespace spark_dsg::python {
 

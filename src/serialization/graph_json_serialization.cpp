@@ -115,13 +115,7 @@ void from_json(const nlohmann::json& record, FileHeader& header) {
   header.version.patch = record.at("version").at("patch").get<uint8_t>();
 }
 
-}  // namespace io
-
-namespace io::json {
-
-std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
-  nlohmann::json record;
-
+void writeGraph(const SceneGraph& graph, nlohmann::json& record, bool include_mesh) {
   record[header_json_key()] = io::FileHeader::current();
   record["directed"] = false;
   record["multigraph"] = false;
@@ -146,18 +140,12 @@ std::string writeGraph(const SceneGraph& graph, bool include_mesh) {
   }
 
   auto mesh = graph.mesh();
-  if (!mesh || !include_mesh) {
-    return record.dump();
+  if (mesh && include_mesh) {
+    record["mesh"] = *mesh;
   }
-
-  record["mesh"] = *mesh;
-  return record.dump();
 }
 
-std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
-  const auto record = nlohmann::json::parse(contents);
-
-  // Parse header.
+std::unique_ptr<SceneGraph> readGraph(const nlohmann::json& record) {
   const auto header_field_name = header_json_key();
   if (!record.contains(header_field_name)) {
     throw std::domain_error("Could not find serialization version under key '" +
@@ -201,5 +189,5 @@ std::unique_ptr<SceneGraph> readGraph(const std::string& contents) {
   return graph;
 }
 
-}  // namespace io::json
+}  // namespace io
 }  // namespace spark_dsg

@@ -33,8 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Core>
-#include <optional>
+
+#include <sstream>
 
 #include "spark_dsg/node_symbol.h"
 
@@ -47,8 +47,6 @@ std::ostream& operator<<(std::ostream& out, const EdgeKey& key);
 std::ostream& operator<<(std::ostream& out, const LayerKey& key);
 
 std::ostream& operator<<(std::ostream& out, const SceneGraphNode& node);
-
-Eigen::IOFormat getDefaultVectorFormat(std::optional<int> precision = std::nullopt);
 
 template <typename Container>
 std::string displayNodeSymbolContainer(const Container& set) {
