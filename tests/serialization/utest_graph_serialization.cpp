@@ -34,15 +34,19 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
+#include <nlohmann/json.hpp>
+
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/serialization/graph_binary_serialization.h"
 #include "spark_dsg/serialization/graph_json_serialization.h"
-#include "spark_dsg_tests/type_comparisons.h"
+#include "spark_dsg_tests/type_comparisons.h"  // IWYU pragma: keep
 
 namespace spark_dsg {
 
 void PrintTo(const SceneGraph& graph, std::ostream* os) {
-  *os << io::json::writeGraph(graph, true);
+  nlohmann::json record;
+  io::writeGraph(graph, record, true);
+  *os << record;
 }
 
 struct SerializationMethod {
@@ -57,8 +61,9 @@ struct JsonRoundTrip : SerializationMethod {
   virtual ~JsonRoundTrip() = default;
   SceneGraph::Ptr compute(const SceneGraph& graph,
                           bool include_mesh = true) const override {
-    const auto output = io::json::writeGraph(graph, include_mesh);
-    return io::json::readGraph(output);
+    nlohmann::json record;
+    io::writeGraph(graph, record, include_mesh);
+    return io::readGraph(record);
   }
 
   std::string name() const override { return "Json"; }
@@ -69,8 +74,8 @@ struct BinaryRoundTrip : SerializationMethod {
   SceneGraph::Ptr compute(const SceneGraph& graph,
                           bool include_mesh = true) const override {
     std::vector<uint8_t> buffer;
-    io::binary::writeGraph(graph, buffer, include_mesh);
-    return io::binary::readGraph(buffer);
+    io::writeGraph(graph, buffer, include_mesh);
+    return io::readGraph(buffer);
   }
 
   std::string name() const override { return "Binary"; }
@@ -209,8 +214,8 @@ TEST(GraphSerialization, UpdateDsgFromBinaryWithCorrection) {
   updated.insertEdge(0, "a0"_id);
 
   std::vector<uint8_t> buffer;
-  io::binary::writeGraph(original, buffer);
-  io::binary::updateGraph(updated, buffer);
+  io::writeGraph(original, buffer);
+  io::updateGraph(updated, buffer);
 
   EXPECT_EQ(original, updated);
 }
@@ -223,10 +228,10 @@ TEST(GraphSerialization, UpdateDsgFromBinaryInterPartition) {
   original.insertEdge(0, 1);
 
   std::vector<uint8_t> buffer;
-  io::binary::writeGraph(original, buffer);
+  io::writeGraph(original, buffer);
 
   SceneGraph updated;
-  io::binary::updateGraph(updated, buffer);
+  io::updateGraph(updated, buffer);
   EXPECT_TRUE(updated.hasNode(0));
   EXPECT_TRUE(updated.hasNode(1));
   EXPECT_TRUE(updated.hasEdge(0, 1));
@@ -234,9 +239,9 @@ TEST(GraphSerialization, UpdateDsgFromBinaryInterPartition) {
   original.removeNode(1);
   EXPECT_FALSE(original.hasEdge(0, 1));
   buffer.clear();
-  io::binary::writeGraph(original, buffer);
+  io::writeGraph(original, buffer);
 
-  io::binary::updateGraph(updated, buffer);
+  io::updateGraph(updated, buffer);
   EXPECT_TRUE(updated.hasNode(0));
   EXPECT_FALSE(updated.hasNode(1));
   EXPECT_FALSE(updated.hasEdge(0, 1));

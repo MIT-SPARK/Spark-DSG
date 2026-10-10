@@ -33,7 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/traversability_boundary.h>
+
+#include "spark_dsg/traversability_boundary.h"
 
 using spark_dsg::Boundary;
 using spark_dsg::Side;

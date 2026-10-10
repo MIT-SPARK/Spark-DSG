@@ -38,7 +38,7 @@
 
 #include "spark_dsg/spark_dsg_fwd.h"
 
-namespace spark_dsg::io::binary {
+namespace spark_dsg::io {
 
 void writeGraph(const SceneGraph& graph,
                 std::vector<uint8_t>& buffer,
@@ -58,4 +58,4 @@ bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length);
 
 bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer);
 
-}  // namespace spark_dsg::io::binary
+}  // namespace spark_dsg::io

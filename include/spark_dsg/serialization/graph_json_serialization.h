@@ -34,24 +34,25 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <memory>
-#include <string>
+#include <nlohmann/json_fwd.hpp>
 
 #include "spark_dsg/spark_dsg_fwd.h"
 
-namespace spark_dsg::io::json {
+namespace spark_dsg::io {
 
 /**
  * @brief Get JSON string representing graph
+ * @param graph Graph to encode
+ * @param record JSON to fill
  * @param include_mesh Optionally encode mesh (defaults to false)
- * @returns JSON string representing graph
  */
-std::string writeGraph(const SceneGraph& graph, bool include_mesh = false);
+void writeGraph(const SceneGraph& graph, nlohmann::json& record, bool include_mesh);
 
 /**
  * @brief parse graph from JSON string
  * @param contents JSON string to parse
  * @returns Resulting parsed scene graph
  */
-std::unique_ptr<SceneGraph> readGraph(const std::string& contents);
+std::unique_ptr<SceneGraph> readGraph(const nlohmann::json& record);
 
-}  // namespace spark_dsg::io::json
+}  // namespace spark_dsg::io

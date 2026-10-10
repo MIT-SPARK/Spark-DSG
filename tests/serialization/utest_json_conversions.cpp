@@ -33,9 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/bounding_box.h>
-#include <spark_dsg/serialization/json_conversions.h>
 
+#include "spark_dsg/bounding_box.h"
+#include "spark_dsg/serialization/json_conversions.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
@@ -117,8 +117,6 @@ TEST(JsonConversions, EigenMatrixJson) {
 }
 
 TEST(JsonConversions, EigenQuaternionJson) {
-  std::stringstream ss;
-
   {  // single-precision
     Eigen::Quaternionf expected(0.0, 0.0, 1.0, 0.0);
     json output = expected;

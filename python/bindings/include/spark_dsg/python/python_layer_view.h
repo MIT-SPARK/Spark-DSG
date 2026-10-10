@@ -33,10 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/node_symbol.h>
-#include <spark_dsg/scene_graph.h>
-
+#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
+#include "spark_dsg/scene_graph.h"
 
 namespace spark_dsg::python {
 

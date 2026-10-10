@@ -34,18 +34,13 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/python/spark_types.h"
 
-#include <pybind11/chrono.h>
-#include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
-#include <spark_dsg/node_symbol.h>
-#include <spark_dsg/printing.h>
-#include <spark_dsg/scene_graph_types.h>
-#include <spark_dsg/serialization/versioning.h>
 
+#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/python/python_types.h"
+#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg::python {
 
@@ -62,21 +57,9 @@ void init_spark_types(py::module_& m) {
       .def_readwrite("partition", &LayerKey::partition)
       .def(py::self == py::self)
       .def(py::self != py::self)
-      .def("__lt__",
-           [](const LayerKey& lhs, const LayerKey& rhs) {
-             // note that this is a partial ordering; all partitions are equal
-             return lhs.layer < rhs.layer;
-           })
-      .def("__gt__",
-           [](const LayerKey& lhs, const LayerKey& rhs) {
-             // note that this is a partial ordering; all partitions are equal
-             return lhs.layer > rhs.layer;
-           })
-      .def("__repr__", [](const LayerKey& key) {
-        std::stringstream ss;
-        ss << key;
-        return ss.str();
-      });
+      .def(py::self < py::self)
+      .def(py::self > py::self)
+      .def("__repr__", [](const LayerKey& key) { return key.str(); });
 
   py::implicitly_convertible<LayerId, LayerKey>();
 

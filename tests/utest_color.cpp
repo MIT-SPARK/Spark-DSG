@@ -34,7 +34,6 @@
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
 
-#include <iostream>
 #include <random>
 #include <unordered_map>
 
