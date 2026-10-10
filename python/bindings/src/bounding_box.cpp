@@ -36,8 +36,9 @@
 
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
-#include <spark_dsg/bounding_box.h>
-#include <spark_dsg/bounding_box_extraction.h>
+
+#include "spark_dsg/bounding_box.h"
+#include "spark_dsg/bounding_box_extraction.h"
 
 namespace spark_dsg::python {
 

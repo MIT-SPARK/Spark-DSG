@@ -103,7 +103,9 @@ const RegistrationInfo& NodeAttributes::registration() const {
 }
 
 std::ostream& NodeAttributes::fill_ostream(std::ostream& out) const {
-  auto format = getDefaultVectorFormat();
+  const Eigen::IOFormat format(
+      Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "; ", "", "", "[", "]");
+
   out << "  - position: " << position.transpose().format(format) << "\n";
   out << "  - last update time: "
       << (last_update_time_ns == 0 ? "n/a" : std::to_string(last_update_time_ns))

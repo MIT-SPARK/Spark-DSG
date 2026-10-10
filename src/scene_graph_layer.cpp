@@ -34,8 +34,6 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/scene_graph_layer.h"
 
-#include <sstream>
-
 #include "spark_dsg/graph_utilities.h"
 #include "spark_dsg/node_symbol.h"
 #include "spark_dsg/printing.h"
@@ -153,9 +151,7 @@ const Edge* SceneGraphLayer::findEdge(NodeId source, NodeId target) const {
 const SceneGraphEdge& SceneGraphLayer::getEdge(NodeId source, NodeId target) const {
   const auto edge = findEdge(source, target);
   if (!edge) {
-    std::stringstream ss;
-    ss << "Missing edge '" << EdgeKey(source, target) << "'";
-    throw std::out_of_range(ss.str());
+    throw std::out_of_range("Missing edge '" + EdgeKey(source, target).str() + "'");
   }
 
   return *edge;

@@ -33,7 +33,8 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/node_symbol.h>
+
+#include "spark_dsg/node_symbol.h"
 
 namespace spark_dsg {
 

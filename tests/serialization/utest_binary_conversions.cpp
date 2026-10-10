@@ -33,9 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/bounding_box.h>
-#include <spark_dsg/serialization/binary_conversions.h>
 
+#include "spark_dsg/bounding_box.h"
+#include "spark_dsg/serialization/binary_conversions.h"
 #include "spark_dsg_tests/type_comparisons.h"
 
 namespace spark_dsg {
@@ -114,8 +114,6 @@ TEST(BinaryConversions, SerializeEigenMatrix) {
 }
 
 TEST(BinaryConversions, SerializeEigenQuaternion) {
-  std::stringstream ss;
-
   {  // single-precision
     Eigen::Quaternionf expected(0.0, 0.0, 1.0, 0.0);
     auto result = writeRT(expected);

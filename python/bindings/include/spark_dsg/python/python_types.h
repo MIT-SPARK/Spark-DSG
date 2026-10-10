@@ -34,9 +34,10 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 #include <pybind11/pybind11.h>
-#include <spark_dsg/scene_graph_types.h>
 
 #include <Eigen/Geometry>
+
+#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg::python {
 

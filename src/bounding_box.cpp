@@ -38,11 +38,8 @@
 
 #include "spark_dsg/bounding_box_extraction.h"
 #include "spark_dsg/mesh.h"
-#include "spark_dsg/printing.h"
-#include "spark_dsg/scene_graph_types.h"
 
 namespace spark_dsg {
-
 namespace {
 
 inline double halton_number(size_t base, size_t index) {
@@ -319,22 +316,21 @@ bool BoundingBox::operator==(const BoundingBox& other) const {
   return world_R_center == other.world_R_center;
 }
 
-std::ostream& operator<<(std::ostream& out, const Eigen::Quaternionf& q) {
-  out << q.w() << " + " << q.x() << "i + " << q.y() << "j + " << q.z() << "k";
-  return out;
-}
-
 std::ostream& operator<<(std::ostream& os, const BoundingBox& box) {
   if (box.type == BoundingBox::Type::INVALID) {
     os << "invalid";
     return os;
   }
 
-  auto format = getDefaultVectorFormat();
+  const Eigen::IOFormat format(
+      Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", "; ", "", "", "[", "]");
+
   os << "{pos: " << box.world_P_center.transpose().format(format)
      << ", dim: " << box.dimensions.transpose().format(format);
   if (box.type == BoundingBox::Type::RAABB || box.type == BoundingBox::Type::OBB) {
-    os << ", rot: " << Eigen::Quaternionf(box.world_R_center);
+    const Eigen::Quaternionf q(box.world_R_center);
+    os << ", rot: " << q.w() << " + " << q.x() << "i + " << q.y() << "j + " << q.z()
+       << "k";
   }
   os << "}";
   return os;

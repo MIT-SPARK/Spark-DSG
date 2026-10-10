@@ -35,11 +35,11 @@
 #include "spark_dsg/python/graph_types.h"
 
 #include <pybind11/stl.h>
-#include <spark_dsg/edge_container.h>
-#include <spark_dsg/labelspace.h>
-#include <spark_dsg/node_symbol.h>
-#include <spark_dsg/printing.h>
-#include <spark_dsg/scene_graph_node.h>
+
+#include "spark_dsg/edge_container.h"
+#include "spark_dsg/labelspace.h"
+#include "spark_dsg/node_symbol.h"
+#include "spark_dsg/scene_graph_node.h"
 
 namespace spark_dsg::python {
 
@@ -65,9 +65,7 @@ void init_graph_types(py::module_& m) {
       .def_property_readonly("id", [](const SceneGraphNode& node) { return NodeSymbol(node.id); })
       .def_readonly("layer", &SceneGraphNode::layer)
       .def("__repr__", [](const SceneGraphNode& node) {
-        std::stringstream ss;
-        ss << node;
-        return ss.str();
+        return std::string("Node<id=") + NodeSymbol(node.id).str() + ", layer=" + node.layer.str() + ">";
       });
 
   py::class_<SceneGraphEdge>(m, "SceneGraphEdge")
@@ -78,9 +76,8 @@ void init_graph_types(py::module_& m) {
           [](const SceneGraphEdge& edge) { return *(edge.info); },
           [](SceneGraphEdge& edge, const EdgeAttributes& info) { *edge.info = info; })
       .def("__repr__", [](const SceneGraphEdge& edge) {
-        std::stringstream ss;
-        ss << "Edge<source=" << NodeSymbol(edge.source).str() << ", target=" << NodeSymbol(edge.target).str() << ">";
-        return ss.str();
+        return std::string("Edge<source=") + NodeSymbol(edge.source).str() +
+               ", target=" + NodeSymbol(edge.target).str() + ">";
       });
 
   py::class_<Labelspace>(m, "Labelspace")

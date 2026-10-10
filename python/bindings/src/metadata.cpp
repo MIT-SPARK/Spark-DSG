@@ -35,9 +35,10 @@
 #include "spark_dsg/python/metadata.h"
 
 #include <pybind11/pybind11.h>
-#include <spark_dsg/metadata.h>
 
 #include <nlohmann/json.hpp>
+
+#include "spark_dsg/metadata.h"
 
 namespace spark_dsg::python {
 

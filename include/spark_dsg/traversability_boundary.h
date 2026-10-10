@@ -34,9 +34,9 @@
  * -------------------------------------------------------------------------- */
 #pragma once
 
-#include <spark_dsg/node_attributes.h>
-
 #include <Eigen/Geometry>
+
+#include "spark_dsg/node_attributes.h"
 
 namespace spark_dsg {
 

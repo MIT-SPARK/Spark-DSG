@@ -38,16 +38,16 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-#include <spark_dsg/labelspace.h>
-#include <spark_dsg/scene_graph.h>
-#include <spark_dsg/scene_graph_utilities.h>
-#include <spark_dsg/serialization/file_io.h>
-#include <spark_dsg/serialization/graph_binary_serialization.h>
 
+#include "spark_dsg/labelspace.h"
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/python_types.h"
 #include "spark_dsg/python/range_wrapper.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
+#include "spark_dsg/scene_graph.h"
+#include "spark_dsg/scene_graph_utilities.h"
+#include "spark_dsg/serialization/file_io.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 
 namespace spark_dsg::python {
 
@@ -279,7 +279,7 @@ void init_scene_graph(py::module_& m) {
           "to_binary",
           [](const SceneGraph& graph, bool include_mesh) {
             std::vector<uint8_t> buffer;
-            io::binary::writeGraph(graph, buffer, include_mesh);
+            io::writeGraph(graph, buffer, include_mesh);
             return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
           },
           "include_mesh"_a = false)
@@ -287,13 +287,13 @@ void init_scene_graph(py::module_& m) {
           "update_from_binary",
           [](SceneGraph& graph, const py::bytes& contents) {
             const auto view = static_cast<std::string_view>(contents);
-            return io::binary::updateGraph(graph, reinterpret_cast<const uint8_t*>(view.data()), view.size());
+            return io::updateGraph(graph, reinterpret_cast<const uint8_t*>(view.data()), view.size());
           },
           "contents"_a)
       .def_static("from_binary",
                   [](const py::bytes& contents) {
                     const auto view = static_cast<std::string_view>(contents);
-                    return io::binary::readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());
+                    return io::readGraph(reinterpret_cast<const uint8_t*>(view.data()), view.size());
                   })
       .def(
           "get_labelspace",

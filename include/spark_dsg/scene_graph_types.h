@@ -54,6 +54,7 @@ struct EdgeKey {
   EdgeKey(NodeId k1, NodeId k2);
   bool operator==(const EdgeKey& other) const;
   bool operator<(const EdgeKey& other) const;
+  std::string str() const;
 
   NodeId k1;
   NodeId k2;
@@ -69,10 +70,9 @@ struct LayerKey {
   LayerKey(LayerId layer, PartitionId partition);
   bool isParentOf(const LayerKey& other) const;
   bool operator==(const LayerKey& other) const;
-  inline bool operator!=(const LayerKey& other) const {
-    return !this->operator==(other);
-  }
+  bool operator!=(const LayerKey& other) const;
   bool operator<(const LayerKey& other) const;
+  bool operator>(const LayerKey& other) const;
   std::string str() const;
 };
 

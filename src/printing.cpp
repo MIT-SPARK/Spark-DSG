@@ -39,7 +39,8 @@
 namespace spark_dsg {
 
 std::ostream& operator<<(std::ostream& out, const EdgeKey& key) {
-  return out << NodeSymbol(key.k1) << " -> " << NodeSymbol(key.k2);
+  out << key.str();
+  return out;
 }
 
 std::ostream& operator<<(std::ostream& out, const LayerKey& key) {

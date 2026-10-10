@@ -33,7 +33,7 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <spark_dsg/scene_graph.h>
+#include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg::python {
 

@@ -33,7 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <iostream>
 
 #include "spark_dsg/mesh.h"
 #include "spark_dsg/printing.h"
@@ -129,14 +128,12 @@ inline bool interlayerEdgesSubset(const SceneGraph& lhs, const SceneGraph& rhs) 
 inline bool operator==(const SceneGraph& lhs, const SceneGraph& rhs) {
   for (const auto& layer : lhs.all_layers()) {
     if (!rhs.hasLayer(layer.id.layer, layer.id.partition)) {
-      std::cout << "Missing: " << layer.id << std::endl;
       return false;
     }
 
     const auto& rhs_layer = rhs.getLayer(layer.id.layer, layer.id.partition);
     const auto layers_equal = isSubset(layer, rhs_layer) && isSubset(rhs_layer, layer);
     if (!layers_equal) {
-      std::cout << "Inequal: " << layer.id << std::endl;
       return false;
     }
   }

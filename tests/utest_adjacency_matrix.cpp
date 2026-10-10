@@ -33,8 +33,9 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/adjacency_matrix.h>
-#include <spark_dsg/scene_graph_layer.h>
+
+#include "spark_dsg/adjacency_matrix.h"
+#include "spark_dsg/scene_graph_layer.h"
 
 namespace spark_dsg {
 

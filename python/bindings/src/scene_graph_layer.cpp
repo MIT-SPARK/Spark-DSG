@@ -39,14 +39,14 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-#include <spark_dsg/graph_utilities.h>
-#include <spark_dsg/node_symbol.h>
-#include <spark_dsg/scene_graph_layer.h>
-#include <spark_dsg/serialization/graph_binary_serialization.h>
 
+#include "spark_dsg/graph_utilities.h"
+#include "spark_dsg/node_symbol.h"
 #include "spark_dsg/python/python_layer_view.h"
 #include "spark_dsg/python/range_wrapper.h"
 #include "spark_dsg/python/scene_graph_iterators.h"
+#include "spark_dsg/scene_graph_layer.h"
+#include "spark_dsg/serialization/graph_binary_serialization.h"
 
 namespace spark_dsg::python {
 
@@ -107,12 +107,12 @@ void init_scene_graph_layer(py::module_& m) {
       .def("to_binary",
            [](const SceneGraphLayer& layer) -> py::bytes {
              std::vector<uint8_t> buffer;
-             io::binary::writeLayer(layer, buffer);
+             io::writeLayer(layer, buffer);
              return py::bytes(reinterpret_cast<char*>(buffer.data()), buffer.size());
            })
       .def_static("from_binary", [](const py::bytes& contents) {
         const auto view = static_cast<std::string_view>(contents);
-        return io::binary::readLayer(reinterpret_cast<const uint8_t*>(view.data()), view.size());
+        return io::readLayer(reinterpret_cast<const uint8_t*>(view.data()), view.size());
       });
 
   py::class_<LayerView>(m, "LayerView")

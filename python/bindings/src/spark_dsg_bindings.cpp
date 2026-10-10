@@ -33,7 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <pybind11/pybind11.h>
-#include <spark_dsg/serialization/versioning.h>
 
 #include "spark_dsg/python/attributes.h"
 #include "spark_dsg/python/bounding_box.h"
@@ -45,6 +44,7 @@
 #include "spark_dsg/python/scene_graph.h"
 #include "spark_dsg/python/scene_graph_layer.h"
 #include "spark_dsg/python/spark_types.h"
+#include "spark_dsg/serialization/versioning.h"
 
 using namespace pybind11::literals;
 

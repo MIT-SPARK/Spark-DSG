@@ -37,10 +37,9 @@
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
-#include <spark_dsg/edge_attributes.h>
-#include <spark_dsg/mesh.h>
-#include <spark_dsg/node_attributes.h>
 
+#include "spark_dsg/edge_attributes.h"
+#include "spark_dsg/node_attributes.h"
 #include "spark_dsg/python/python_types.h"
 
 namespace spark_dsg::python {

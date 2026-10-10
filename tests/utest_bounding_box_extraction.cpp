@@ -33,12 +33,13 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #include <gtest/gtest.h>
-#include <spark_dsg/bounding_box_extraction.h>
 
 #include <Eigen/Geometry>
 #include <algorithm>
 #include <limits>
 #include <numbers>
+
+#include "spark_dsg/bounding_box_extraction.h"
 
 namespace spark_dsg {
 

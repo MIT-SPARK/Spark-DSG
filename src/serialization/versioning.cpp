@@ -35,7 +35,6 @@
 #include "spark_dsg/serialization/versioning.h"
 
 #include <iostream>
-#include <sstream>
 
 #include "spark_dsg/serialization/binary_serialization.h"
 #include "spark_dsg_version.h"
@@ -63,10 +62,9 @@ Version::Version(uint8_t _major, uint8_t _minor, uint8_t _patch) {
 }
 
 std::string Version::toString() const {
-  std::stringstream ss;
-  ss << static_cast<int>(major) << "." << static_cast<int>(minor) << "."
-     << static_cast<int>(patch);
-  return ss.str();
+  return std::to_string(static_cast<int>(major)) + "." +
+         std::to_string(static_cast<int>(minor)) + "." +
+         std::to_string(static_cast<int>(patch));
 }
 
 Version Version::current() {
