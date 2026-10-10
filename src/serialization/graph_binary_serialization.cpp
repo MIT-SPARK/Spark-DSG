@@ -124,51 +124,6 @@ void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer) {
   serializer.endDynamicArray();
 }
 
-void writeGraph(const SceneGraph& graph,
-                std::vector<uint8_t>& buffer,
-                bool include_mesh) {
-  BinarySerializer serializer(&buffer);
-  serializer.write(graph.layer_keys());
-
-  // saves names to type index mapping
-  serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
-  serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
-
-  serializer.write(graph.layer_names());
-
-  // dump metadata to serialized json and write
-  serializer.write(graph.metadata().dump());
-
-  serializer.startDynamicArray();
-  for (const auto& layer : graph.all_layers()) {
-    for (const auto& node : layer.nodes()) {
-      serializer.write(node);
-    }
-  }
-  serializer.endDynamicArray();
-
-  serializer.startDynamicArray();
-  for (const auto& layer : graph.all_layers()) {
-    for (const auto& edge : layer.edges()) {
-      serializer.write(edge);
-    }
-  }
-
-  for (const auto& edge : graph.interlayer_edges()) {
-    serializer.write(edge);
-  }
-  serializer.endDynamicArray();
-
-  auto mesh = graph.mesh();
-  if (!include_mesh || !mesh) {
-    serializer.write(false);
-    return;
-  }
-
-  serializer.write(true);
-  mesh->serializeToBinary(buffer);
-}
-
 template <typename Attrs>
 AttributeFactory<Attrs> loadFactory(const BinaryDeserializer& deserializer) {
   std::vector<std::string> names;
@@ -261,10 +216,6 @@ std::unique_ptr<SceneGraph> readGraph(const uint8_t* const buffer, size_t length
   return graph;
 }
 
-std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer) {
-  return readGraph(buffer.data(), buffer.size());
-}
-
 std::unique_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length) {
   BinaryDeserializer deserializer(buffer, length);
   LayerId layer_id;
@@ -306,9 +257,61 @@ bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length) 
   return updateGraph(graph, deserializer);
 }
 
-bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer) {
-  return updateGraph(graph, buffer.data(), buffer.size());
+namespace binary {
+
+void writeGraph(const SceneGraph& graph,
+                std::vector<uint8_t>& buffer,
+                bool include_mesh) {
+  BinarySerializer serializer(&buffer);
+  serializer.write(graph.layer_keys());
+
+  // saves names to type index mapping
+  serializer.write(serialization::AttributeRegistry<NodeAttributes>::names());
+  serializer.write(serialization::AttributeRegistry<EdgeAttributes>::names());
+
+  serializer.write(graph.layer_names());
+
+  // dump metadata to serialized json and write
+  serializer.write(graph.metadata().dump());
+
+  serializer.startDynamicArray();
+  for (const auto& layer : graph.all_layers()) {
+    for (const auto& node : layer.nodes()) {
+      serializer.write(node);
+    }
+  }
+  serializer.endDynamicArray();
+
+  serializer.startDynamicArray();
+  for (const auto& layer : graph.all_layers()) {
+    for (const auto& edge : layer.edges()) {
+      serializer.write(edge);
+    }
+  }
+
+  for (const auto& edge : graph.interlayer_edges()) {
+    serializer.write(edge);
+  }
+  serializer.endDynamicArray();
+
+  auto mesh = graph.mesh();
+  if (!include_mesh || !mesh) {
+    serializer.write(false);
+    return;
+  }
+
+  serializer.write(true);
+  mesh->serializeToBinary(buffer);
 }
 
+std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer) {
+  return ::spark_dsg::io::readGraph(buffer.data(), buffer.size());
+}
+
+bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer) {
+  return ::spark_dsg::io::updateGraph(graph, buffer.data(), buffer.size());
+}
+
+}  // namespace binary
 }  // namespace io
 }  // namespace spark_dsg

@@ -39,23 +39,32 @@
 #include "spark_dsg/spark_dsg_fwd.h"
 
 namespace spark_dsg::io {
+namespace binary {
 
 void writeGraph(const SceneGraph& graph,
                 std::vector<uint8_t>& buffer,
                 bool include_mesh = false);
 
+std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer);
+
+bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer);
+
+}  // namespace binary
+
+using binary::writeGraph;
+
+using binary::readGraph;
+
+using binary::updateGraph;
+
 void writeLayer(const SceneGraphLayer& graph, std::vector<uint8_t>& buffer);
 
 std::unique_ptr<SceneGraph> readGraph(const uint8_t* const buffer, size_t length);
-
-std::unique_ptr<SceneGraph> readGraph(const std::vector<uint8_t>& buffer);
 
 std::unique_ptr<SceneGraphLayer> readLayer(const uint8_t* const buffer, size_t length);
 
 std::unique_ptr<SceneGraphLayer> readLayer(const std::vector<uint8_t>& buffer);
 
 bool updateGraph(SceneGraph& graph, const uint8_t* const buffer, size_t length);
-
-bool updateGraph(SceneGraph& graph, const std::vector<uint8_t>& buffer);
 
 }  // namespace spark_dsg::io
