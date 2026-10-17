@@ -34,6 +34,7 @@
  * -------------------------------------------------------------------------- */
 #include "spark_dsg/graph_impl.h"
 
+#include <Eigen/Geometry>
 #include <sstream>
 
 #include "spark_dsg/node_symbol.h"

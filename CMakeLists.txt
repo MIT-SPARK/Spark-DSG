@@ -94,6 +94,7 @@ add_library(
   src/edge_attributes.cpp
   src/edge_container.cpp
   src/graph_impl.cpp
+  src/graph_view.cpp
   src/graph_utilities.cpp
   src/labelspace.cpp
   src/layer_view.cpp

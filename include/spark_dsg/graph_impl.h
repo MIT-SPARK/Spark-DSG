@@ -33,7 +33,6 @@
  * purposes notwithstanding any copyright notation herein.
  * -------------------------------------------------------------------------- */
 #pragma once
-#include <Eigen/Geometry>
 #include <map>
 #include <ranges>
 
@@ -63,6 +62,7 @@ class GraphImpl {
  public:
   //! desired pointer type for the layer
   using Ptr = std::shared_ptr<GraphImpl>;
+  friend class GraphView;
 
   GraphImpl();
   virtual ~GraphImpl();

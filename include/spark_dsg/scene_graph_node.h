@@ -124,6 +124,7 @@ class SceneGraphNode {
   friend class SceneGraph;
   friend class SceneGraphLayer;
   friend class GraphImpl;
+  friend class GraphView;
 
   /**
    * @brief Make a scene graph node (usually not necessary)
